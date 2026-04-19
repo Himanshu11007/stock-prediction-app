@@ -6,10 +6,13 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import confusion_matrix
 from sklearn.ensemble import RandomForestClassifier
 
+
 st.set_page_config(
     page_title="Stock Predictor",
     layout="wide"
 )
+
+st.caption("Note : this is an experimental ML Model. Not financial advice")
 
 st.title("Stock Prediction App")
 st.markdown("Predict next-day stock movement using machine learning")
