@@ -14,7 +14,7 @@ def prepare_data(data):
     data = create_features(data)
 
     # Select input features
-    X = data[["Close", "Volume", "Price_Change", "MA_5", "MA_10", "RSI"]]
+    X = data[["Close", "Volume", "Price_Change", "MA_5", "MA_10", "RSI","Momentum","Volatility","Volume_Change","Volume_MA","MA_Diff"]]
 
     # Target column (Up/Down)
     y = data["Up"]
@@ -37,6 +37,25 @@ def run_backtest(data, model, X):
 
     # Shift prediction (avoid future leakage)
     data["Prediction"] = data["Prediction"].shift(1)
+
+    # Predict for all data
+    data["Prediction"] = model.predict(X)
+
+    # Get probability for confidence
+    proba = model.predict_proba(X)
+
+    # Max probability (confidence)
+    data["Confidence"] = proba.max(axis=1)
+
+    # Shift prediction to avoid future leakage
+    data["Prediction"] = data["Prediction"].shift(1)
+
+    # Apply confidence filter (only strong signals)
+    data["Prediction"] = (
+        (data["Prediction"] == 1) &
+        (data["Confidence"] > 0.6) &
+        (data["MA_5"] > data["MA_10"] * 1.01)
+        ).astype(int)
 
     # Market return (daily % change)
     data["Market_Return"] = data["Close"].pct_change()
