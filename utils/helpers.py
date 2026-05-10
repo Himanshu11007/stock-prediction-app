@@ -1,4 +1,5 @@
 import streamlit as st
+import plotly.graph_objects as go
 from features.engineer import(
     create_features
 )
@@ -6,6 +7,32 @@ from features.engineer import(
 # HELPER FUNCTIONS
 # -------------------------------
 
+def show_candlestick_chart(data):
+    """Display professional candlestick chart using plotly"""
+
+    fig = go.Figure(
+        data=[
+            go.Candlestick(
+                x=data.index,
+                open=data["Open"],
+                high=data["High"],
+                low=data["Low"],
+                close=data["Close"],
+                name="Price"
+            )
+        ]
+    )
+
+    fig.update_layout(
+        title="Stock Candlestick Chart",
+        xaxis_title="Date",
+        yaxis_title="Price",
+        height=500,
+        xaxis_rangeslider_visible=False
+    )
+    st.plotly_chart(fig,use_container_width=True)
+
+    
 def prepare_data(data):
     """
     Create features and split data into train/test
@@ -60,13 +87,44 @@ def run_backtest(data, model, X):
     # Market return (daily % change)
     data["Market_Return"] = data["Close"].pct_change()
 
-    # Strategy return (only when model says BUY)
-    data["Strategy_Return"] = data["Prediction"] * data["Market_Return"]
+    # Strategy strategy return column
+    data["Strategy_Return"] = 0.0
 
-    # Portfolio growth (model strategy)
+    #Trading Settings
+    stop_loss = -0.02
+    take_profit = 0.05
+
+    #Track whether we are insidea trade
+    in_trade = False
+    entry_price = 0
+
+    #Loop through in rows
+
+    for i in range(1,len(data)):
+        current_price = data["Close"].iloc[i]
+
+        #Enter trade
+        if (not in_trade and data["Prediction"].iloc[i] == 1 and 40 < data ["RSI"].iloc[i] < 70):
+            in_trade = True
+            entry_price = current_price
+
+        #Manage Trade
+        elif in_trade:
+            #Calculate profit/loss %
+            trade_return = (current_price - entry_price) / entry_price
+
+            #EXIT CONDITIONS
+            if trade_return <= stop_loss or trade_return >=take_profit:
+                data.loc[data.index[i],"Strategy_Return"] = trade_return
+                in_trade=False
+        
+
+    # Cumulative growth
     data["Total_Return"] = (1 + data["Strategy_Return"].fillna(0)).cumprod()
-
-    # Market growth (buy & hold)
+    # Market Return
+    data["Market_Return"] = data["Close"].pct_change()
+    
+    #Buy & hold growth
     data["Market_Total"] = (1 + data["Market_Return"].fillna(0)).cumprod()
 
     # Clean data
@@ -105,21 +163,45 @@ def show_prediction(pred, confidence, acc, name):
     """
     st.subheader("📌 Trading Signal")
 
-    if pred[0] == 1:
+    #Hold Signal
+    if confidence < 65:
         st.markdown(f"""
-        <div style="background-color:#d4edda;padding:20px;border-radius:10px;border-left:6px solid green;">
-        <h2>📈 BUY Signal</h2>
-        <p><b>Confidence:</b> {confidence}%</p>
+        <div style="background-color:#fff3cd;padding:20px;border-radius:10px;border-left:6px solid #ffc107;box-shadow:0 2px 4px rgba(0,0,0,0.1)">
+        <h2 style="Margin:0;">Hold Signal</h2>
+                <p style ="font-size:18px;">
+                    <b>Confidence:</b> {confidence}%
+                </p>
+                <p>
+                    Model confidence is low.
+                    Waiting may be safer than entering a trade
+                </p>
         </div>
         """, unsafe_allow_html=True)
+    #BUY Signal
+    elif pred[0] == 1:
+        st.markdown(f"""
+        <div style="background-color:#d4edda;padding:20px;border-radius:10px;border-left:6px solid green;box-shadow:0 2px 4px rgba(0,0,0,0.1)">
+        <h2>📈 BUY Signal</h2>
+                <p style ="font-size:18px;">
+                    <b>Confidence:</b> {confidence}%
+                </p>
+        <p>Models expects bullish movement.</p>
+        </div>
+        """, unsafe_allow_html=True)
+
+    #Sell Signal   
     else:
         st.markdown(f"""
-        <div style="background-color:#f8d7da;padding:20px;border-radius:10px;border-left:6px solid red;">
+        <div style="background-color:#f8d7da;padding:20px;border-radius:10px;border-left:6px solid red;box-shadow:0 2px 4px rgba(0,0,0,0.1)">
         <h2>📉 SELL Signal</h2>
-        <p><b>Confidence:</b> {confidence}%</p>
+                <p style ="font-size:18px;">
+                    <b>Confidence:</b> {confidence}%
+                </p>
+                <p>Model expects bearish movement</p>
         </div>
         """, unsafe_allow_html=True)
 
     # Show model info
+    st.progress(int(confidence))
     st.metric("Model Accuracy", f"{round(acc * 100, 2)}%")
     st.caption(f"Model Used: {name}")

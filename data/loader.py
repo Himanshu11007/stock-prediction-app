@@ -1,6 +1,7 @@
 import yfinance as yf
 
-def load_data(symbol):
-    data = yf.download(symbol,start="2022-01-01")
-    data.columns = data.columns.get_level_values(0)
+def load_data(stock_name):
+    data = yf.download(stock_name,period="5y")
+
+    data.columns =[col[0]if isinstance(col,tuple) else col for col in data.columns]
     return data

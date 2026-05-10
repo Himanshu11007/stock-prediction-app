@@ -3,3 +3,6 @@ pandas
 yfinance
 scikit-learn
 numpy
+plotly
+textblob
+requests
