@@ -81,9 +81,10 @@ if st.button("Predict"):
 
     # RIGHT → Prediction
     with col2:
-        headlines = fetch_news(stock_name.replace(".NS",""))
+        show_prediction(pred, confidence, acc, name)
+        
+        headlines = fetch_news(stock_name)
         st.subheader("Latest News Sentiment")
-
         for headline in headlines:
          sentiment, score = analyze_sentiment(headline)
          st.write("📰",headline)
@@ -91,4 +92,3 @@ if st.button("Predict"):
          st.write("Score",round(score,2))
          st.divider()
          
-        show_prediction(pred, confidence, acc, name)
