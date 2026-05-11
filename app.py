@@ -28,7 +28,7 @@ st.markdown("Predict next-day stock movement using machine learning")
 # -------------------------------
 stock_name = st.selectbox(
     "Select Stock",
-    ["RELIANCE.NS","TCS.NS"]
+    ["RELIANCE.NS","TCS.NS","ATHERENERG.NS"]
 )
 
 # -------------------------------

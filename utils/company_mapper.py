@@ -4,7 +4,8 @@ COMPANY_MAPPING = {
         "TCS.NS":"Tata Consultancy Services",
         "SBIN.NS":"State bank of India",
         "HDFCBANK.NS":"HDFC Bank",
-        "ICICIBANK.NS":"ICIC Bank"
+        "ICICIBANK.NS":"ICIC Bank",
+        "ATHERENERG.NS":"Ather Energy"
 }
 
 def get_company_names(stock_symbol):
