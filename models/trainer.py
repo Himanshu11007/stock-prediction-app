@@ -1,7 +1,7 @@
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
 
-def train_model(X_train,y_train,X_test,y_test):
+def train_model(X_train,X_test,y_train,y_test):
     lr = LogisticRegression(max_iter = 1000)
     lr.fit(X_train,y_train)
     lr_acc = lr.score(X_test,y_test)

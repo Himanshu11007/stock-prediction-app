@@ -35,13 +35,18 @@ def analyze_sentiment(headline):
 def analyze_overall_sentiment(headlines):
     """Calculate overall sentiment from all headlines"""
     scores = []
-
+    headline_results =[]
     for headline in headlines:
         sentiment,score = analyze_sentiment(headline)
         scores.append(score)
+        headline_results.append({
+            "headline":headline,
+            "sentiment":sentiment,
+            "score":score
+        })
     #No headline safety
     if len(scores) == 0:
-        return "Neutral",0
+        return "Neutral",0,[]
     avg_score = sum(scores)/len(scores)
 
     #Final market mood
@@ -51,4 +56,4 @@ def analyze_overall_sentiment(headlines):
         overrall ="Bearish"
     else:
         overrall ="Neutral"
-    return overrall,round(avg_score,2)
+    return overrall,round(avg_score,2),headline_results

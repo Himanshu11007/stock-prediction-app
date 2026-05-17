@@ -157,20 +157,20 @@ def show_metrics(data):
     st.metric("Market Result (₹100 →)", f"₹{round(100 * market_value, 2)}")
 
 
-def show_prediction(pred, confidence, acc, name,final_signal,final_score):
+def show_prediction(pred, confidence, acc, name,final_signal,final_score,reason):
     """
     Show BUY/SELL signal UI
     """
     st.subheader("📌 Trading Signal")
 
     #Hold Signal
-    if (final_signal == "HOLD" or confidence < 65 or acc < 0.70 or abs(final_score) < 0.25):
+    if (final_signal == "HOLD" or confidence < 65 or acc < 0.70 or abs(final_score) < 0.15):
         hold_reason = ""
-        if confidence < 65:
+        if confidence < 55:
             hold_reason = "Model confidence is low"
         elif acc < 0.70:
             hold_reason ="Model Accuracy is weak."
-        elif abs(final_score) < 0.25:
+        elif abs(final_score) < 0.15:
             hold_reason = "Hybrid score is too weak."
         elif final_signal == "HOLD":
             hold_reason="Marker directin is uncertauin"
@@ -182,6 +182,9 @@ def show_prediction(pred, confidence, acc, name,final_signal,final_score):
                 </p>
                  <p style ="font-size:18px;">
                     <b>Hybrid Score:</b> {round(final_score,2)}%
+                </p>
+                 <p>
+                <b>Reason :</b>{reason}
                 </p>
                 <p>
                     {hold_reason}
@@ -205,6 +208,9 @@ def show_prediction(pred, confidence, acc, name,final_signal,final_score):
                  <p style ="font-size:18px;">
                     <b>Hybrid Score:</b> {round(final_score,2)}%
                 </p>
+                <p>
+                <b>Reason :</b>{reason}
+                </p>
         <p>Models expects bullish movement.</p>
         </div>
         """, unsafe_allow_html=True)
@@ -223,6 +229,9 @@ def show_prediction(pred, confidence, acc, name,final_signal,final_score):
                 </p>
                  <p style ="font-size:18px;">
                     <b>Hybrid Score:</b> {round(final_score,2)}%
+                </p>
+                 <p>
+                <b>Reason :</b>{reason}
                 </p>
                 <p>Model expects bearish movement</p>
         </div>
@@ -248,3 +257,12 @@ def show_prediction(pred, confidence, acc, name,final_signal,final_score):
     st.progress(int(confidence))
     st.metric("Model Accuracy", f"{round(acc * 100, 2)}%")
     st.caption(f"Model Used: {name}")
+
+    raw_prediction = "BUY" if pred[0] == 1 else "SELL"
+    st.info(
+        f"""
+        Raw ML Prediction:{raw_prediction}
+
+        Final Recommendation:{final_signal}
+        """
+    )

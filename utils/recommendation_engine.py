@@ -1,0 +1,98 @@
+import streamlit as st
+from data.loader import load_data
+from utils.helpers import prepare_data
+from models.trainer import train_model
+from news.api import fetch_news
+from news.sentiment import analyze_overall_sentiment
+from utils.decision_engine import generate_signal
+
+
+def get_top_recommendations(stock_list, stocks_df, _progress_bar=None):
+    """
+    Generate AI stock recommendations with quality filters.
+    
+    Args:
+        stock_list (list): List of stock symbols (e.g., ["RELIANCE.NS", "TCS.NS"])
+        stocks_df (pd.DataFrame): Stock database DataFrame with 'Symbol' and 'Company' columns
+        progress_bar (st.progress, optional): Streamlit progress bar to update
+        
+    Returns:
+        list: List of recommendation dictionaries with keys:
+            - stock (company name), symbol, signal, score, confidence, accuracy, reason
+    """
+    recommendations = []
+    
+    for idx, stock in enumerate(stock_list):
+        try:
+            # Update progress bar if provided
+            if _progress_bar is not None:
+                _progress_bar.progress(
+                    (idx + 1) / len(stock_list),
+                    text=f"Processing {stock}..."
+                )
+            
+            # Load stock data
+            data = load_data(stock)
+            if data.empty:
+                continue
+            
+            # Prepare ML data
+            data, X, y, X_train, X_test, y_train, y_test = prepare_data(data)
+            
+            # Skip if target has only one class (can't train classifier)
+            if len(set(y_train)) < 2:
+                continue
+            
+            # Train model
+            model, acc, name = train_model(X_train, X_test, y_train, y_test)
+            
+            # Filter weak models (accuracy threshold)
+            if acc < 0.50:
+                continue
+            
+            # Latest prediction
+            latest_data = X.iloc[-1:]
+            pred = model.predict(latest_data)
+            
+            # Confidence (handle models without predict_proba)
+            try:
+                proba = model.predict_proba(latest_data)
+                confidence = max(proba[0]) * 100
+            except AttributeError:
+                confidence = 50.0  # Neutral fallback
+            
+            # News sentiment
+            headlines = fetch_news(stock)
+            overall_sentiment, overall_score, headline_results = analyze_overall_sentiment(headlines)
+            
+            # Final AI signal
+            final_signal, final_score, reason = generate_signal(
+                pred[0],
+                confidence,
+                overall_score
+            )
+            
+            # Get company name from stock database
+            company_row = stocks_df[stocks_df["Symbol"] == stock]
+            company_name = (
+                company_row.iloc[0]["Company"] 
+                if not company_row.empty 
+                else stock
+            )
+            
+            # Save result
+            recommendations.append({
+                "stock": company_name,  # Display name
+                "symbol": stock,        # Keep symbol for reference
+                "signal": final_signal,
+                "score": round(final_score, 2),
+                "confidence": round(confidence, 2),
+                "accuracy": round(acc * 100, 2),
+                "reason": reason
+            })
+            
+        except Exception as e:
+            st.warning(f"⚠️ Failed to process {stock}: {str(e)}")
+            continue
+    
+    return recommendations

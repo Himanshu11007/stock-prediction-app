@@ -1,3 +1,5 @@
+import yfinance as yf
+
 COMPANY_MAPPING = {
         "RELIANCE.NS" : "Reliance Industries",
         "INFY.NS":"Infosys",
@@ -9,7 +11,17 @@ COMPANY_MAPPING = {
 }
 
 def get_company_names(stock_symbol):
-    return COMPANY_MAPPING.get(stock_symbol,stock_symbol)
+    try:
+        stock = yf.Ticker(stock_symbol)
+        info = stock.info
+
+        return info.get(
+            "longName",
+            stock_symbol.replace(".NS","")
+        )
+    
+    except Exception:
+        return stock_symbol.replace(".NS","")
 
 def get_stock_symbol(company_name):
     return list(COMPANY_MAPPING.get(company_name))

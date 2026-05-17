@@ -1,7 +1,8 @@
 import requests
 from utils.company_mapper import get_company_names
+import streamlit as st
 
-API_KEY = "2f5fdecece2a451aa78a521ef3aacd41"
+API_KEY = st.secrets["API_KEY"]
 
 def fetch_news(company_name):
 
