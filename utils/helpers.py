@@ -157,47 +157,90 @@ def show_metrics(data):
     st.metric("Market Result (₹100 →)", f"₹{round(100 * market_value, 2)}")
 
 
-def show_prediction(pred, confidence, acc, name):
+def show_prediction(pred, confidence, acc, name,final_signal,final_score):
     """
     Show BUY/SELL signal UI
     """
     st.subheader("📌 Trading Signal")
 
     #Hold Signal
-    if confidence < 65:
+    if (final_signal == "HOLD" or confidence < 65 or acc < 0.70 or abs(final_score) < 0.25):
+        hold_reason = ""
+        if confidence < 65:
+            hold_reason = "Model confidence is low"
+        elif acc < 0.70:
+            hold_reason ="Model Accuracy is weak."
+        elif abs(final_score) < 0.25:
+            hold_reason = "Hybrid score is too weak."
+        elif final_signal == "HOLD":
+            hold_reason="Marker directin is uncertauin"
         st.markdown(f"""
         <div style="background-color:#fff3cd;padding:20px;border-radius:10px;border-left:6px solid #ffc107;box-shadow:0 2px 4px rgba(0,0,0,0.1)">
         <h2 style="Margin:0;">Hold Signal</h2>
                 <p style ="font-size:18px;">
                     <b>Confidence:</b> {confidence}%
                 </p>
+                 <p style ="font-size:18px;">
+                    <b>Hybrid Score:</b> {round(final_score,2)}%
+                </p>
                 <p>
-                    Model confidence is low.
-                    Waiting may be safer than entering a trade
+                    {hold_reason}
                 </p>
         </div>
         """, unsafe_allow_html=True)
+
     #BUY Signal
-    elif pred[0] == 1:
+    elif pred[0] == 1 and final_signal == "BUY":
+        if final_score > 0.75 and confidence > 84:
+            signal_title = "🚀Strong Buy Signal"
+        else:
+            signal_title = "📈 BUY Signal"
+
         st.markdown(f"""
         <div style="background-color:#d4edda;padding:20px;border-radius:10px;border-left:6px solid green;box-shadow:0 2px 4px rgba(0,0,0,0.1)">
-        <h2>📈 BUY Signal</h2>
+        <h2>signal_title</h2>
                 <p style ="font-size:18px;">
                     <b>Confidence:</b> {confidence}%
+                </p>
+                 <p style ="font-size:18px;">
+                    <b>Hybrid Score:</b> {round(final_score,2)}%
                 </p>
         <p>Models expects bullish movement.</p>
         </div>
         """, unsafe_allow_html=True)
 
     #Sell Signal   
-    else:
+    elif (pred[0] == 0 and final_signal == "SELL"):
+        if final_score < -0.75 and confidence > 85:
+            signal_title ="🔥Strong Sell Signal"
+        else:
+            signal_title ="📉 SELL Signal"
         st.markdown(f"""
         <div style="background-color:#f8d7da;padding:20px;border-radius:10px;border-left:6px solid red;box-shadow:0 2px 4px rgba(0,0,0,0.1)">
-        <h2>📉 SELL Signal</h2>
+        <h2>signal_title</h2>
                 <p style ="font-size:18px;">
                     <b>Confidence:</b> {confidence}%
                 </p>
+                 <p style ="font-size:18px;">
+                    <b>Hybrid Score:</b> {round(final_score,2)}%
+                </p>
                 <p>Model expects bearish movement</p>
+        </div>
+        """, unsafe_allow_html=True)
+    else:
+         st.markdown(f"""
+        <div style="background-color:#e2e3e5;padding:20px;border-radius:10px;border-left:6px solid #ffc107;box-shadow:0 2px 4px rgba(0,0,0,0.1)">
+        <h2 style="Margin:0;">Hold / Uncertain Signal</h2>
+                <p style ="font-size:18px;">
+                    <b>Confidence:</b> {confidence}%
+                </p>
+                 <p style ="font-size:18px;">
+                    <b>Hybrid Score:</b> {round(final_score,2)}%
+                </p>
+                <p>
+                    Model confidence is low.
+                    Waiting may be safer than entering a trade
+                </p>
         </div>
         """, unsafe_allow_html=True)
 

@@ -11,7 +11,11 @@ from utils.company_mapper import(
 from utils.helpers import(
     prepare_data,run_backtest,show_chart,show_metrics,show_prediction,show_candlestick_chart
 )
-
+from news.sentiment import(
+    analyze_sentiment,
+    analyze_overall_sentiment
+)
+from utils.decision_engine import generate_signal
 # -------------------------------
 # PAGE CONFIGURATION
 # -------------------------------
@@ -81,9 +85,19 @@ if st.button("Predict"):
 
     # RIGHT → Prediction
     with col2:
-        show_prediction(pred, confidence, acc, name)
-        
         headlines = fetch_news(stock_name)
+        overall_sentiment,overall_score = analyze_overall_sentiment(headlines)
+        final_signal,final_score = generate_signal(pred[0],confidence,overall_score)
+        show_prediction(pred, confidence, acc, name,final_signal,final_score)
+        st.subheader("Overall Market Mood")
+        st.metric(
+            "News Sentimenet",
+            overall_sentiment
+        )
+        st.metric(
+            "Sentiment_Score",
+            overall_score
+        )
         st.subheader("Latest News Sentiment")
         for headline in headlines:
          sentiment, score = analyze_sentiment(headline)
