@@ -64,8 +64,8 @@ def update_outcome(row_id: int, next_close: float) -> None:
     if row:
         signal, entry_price = row
         correct = int(
-            (signal == "BUY"  and next_close > entry_price) or
-            (signal == "SELL" and next_close < entry_price)
+            (signal in ("BUY", "STRONG BUY")   and next_close > entry_price) or
+            (signal in ("SELL", "STRONG SELL")  and next_close < entry_price)
         )
         con.execute(
             "UPDATE signals SET next_close = ?, correct = ? WHERE id = ?",

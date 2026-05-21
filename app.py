@@ -12,6 +12,8 @@ from utils.helpers import (
 )
 from utils.stock_search import load_stock_data
 from utils.decision_engine import generate_signal
+from utils.regime import detect_regime
+from utils.risk import calculate_risk
 from scanner.cache import load_category_cache, cache_age_minutes, any_cache_exists
 from scanner.background import (
     start_background_scan, is_scan_running, scan_progress, needs_scan
@@ -30,7 +32,9 @@ st.set_page_config(
 # ─── CSS ──────────────────────────────────────────────────────────────────────
 st.markdown("""
 <style>
-.stApp { background-color: #0d1117; color: #c9d1d9; }
+.stApp { background-color: #0d1117; color: #ffffff; }
+.stApp p, .stApp span, .stApp label, .stApp div { color: #ffffff; }
+.stApp [data-testid="stMarkdownContainer"] * { color: #ffffff; }
 #MainMenu, footer, header { visibility: hidden; }
 
 .hero {
@@ -39,14 +43,14 @@ st.markdown("""
     padding: 1.6rem 2rem 1.4rem; margin-bottom: 0.8rem;
 }
 .hero-title { font-size: 2rem; font-weight: 800; color: #f0f6fc; margin: 0 0 .2rem; letter-spacing: -.5px; }
-.hero-sub   { color: #8b949e; font-size: .9rem; margin: 0; }
+.hero-sub   { color: #ffffff; font-size: .9rem; margin: 0; }
 .hero-badge { display:inline-block; margin-top:.7rem; background:#1c2128; border:1px solid #ffa028; color:#ffa028; font-size:.68rem; padding:.16rem .5rem; border-radius:20px; }
 
 .scan-badge-running { background:#0d2b1e; border:1px solid #238636; color:#3fb950; display:inline-block; padding:.2rem .7rem; border-radius:20px; font-size:.75rem; font-weight:600; }
 .scan-badge-stale   { background:#2b1d00; border:1px solid #bb8009; color:#d29922; display:inline-block; padding:.2rem .7rem; border-radius:20px; font-size:.75rem; font-weight:600; }
 .scan-badge-fresh   { background:#0d1b2e; border:1px solid #1f6feb; color:#58a6ff; display:inline-block; padding:.2rem .7rem; border-radius:20px; font-size:.75rem; font-weight:600; }
 
-.sec-title { font-size:.8rem; font-weight:700; color:#8b949e; text-transform:uppercase; letter-spacing:1px; margin:1.1rem 0 .65rem; padding-bottom:.3rem; border-bottom:1px solid #21262d; }
+.sec-title { font-size:.8rem; font-weight:700; color:#ffffff; text-transform:uppercase; letter-spacing:1px; margin:1.1rem 0 .65rem; padding-bottom:.3rem; border-bottom:1px solid #21262d; }
 
 .cap-header { font-size:1rem; font-weight:700; color:#f0f6fc; margin:.5rem 0 .8rem; padding:.5rem .9rem; background:#161b22; border-radius:8px; border-left:3px solid #58a6ff; }
 .cap-header-mid   { border-left-color: #a371f7; }
@@ -54,13 +58,14 @@ st.markdown("""
 
 .pick-card { background:#161b22; border:1px solid #30363d; border-radius:10px; padding:.9rem .8rem; text-align:center; transition:border-color .2s,transform .15s; }
 .pick-card:hover { border-color:#58a6ff; transform:translateY(-2px); }
-.pick-rank   { color:#6e7681; font-size:.65rem; font-weight:600; letter-spacing:.5px; }
-.pick-name   { color:#f0f6fc; font-size:.83rem; font-weight:700; margin:.28rem 0 .06rem; line-height:1.2; }
-.pick-symbol { color:#6e7681; font-size:.67rem; }
+.pick-rank   { color:#ffffff; font-size:.65rem; font-weight:600; letter-spacing:.5px; }
+.pick-name   { color:#ffffff; font-size:.83rem; font-weight:700; margin:.28rem 0 .06rem; line-height:1.2; }
+.pick-symbol { color:#ffffff; font-size:.67rem; }
+.pick-badge-strong-buy { display:inline-block; margin-top:.4rem; background:#0a2e1a; color:#4ade80; border:2px solid #22c55e; padding:.11rem .7rem; border-radius:20px; font-size:.75rem; font-weight:800; }
 .pick-badge-buy  { display:inline-block; margin-top:.4rem; background:#0d2b1e; color:#3fb950; border:1px solid #238636; padding:.11rem .6rem; border-radius:20px; font-size:.75rem; font-weight:700; }
 .pick-badge-sell { display:inline-block; margin-top:.4rem; background:#2d0c0c; color:#f85149; border:1px solid #da3633; padding:.11rem .6rem; border-radius:20px; font-size:.75rem; font-weight:700; }
 .pick-badge-hold { display:inline-block; margin-top:.4rem; background:#2b1d00; color:#d29922; border:1px solid #bb8009; padding:.11rem .6rem; border-radius:20px; font-size:.75rem; font-weight:700; }
-.pick-meta { color:#8b949e; font-size:.67rem; margin-top:.4rem; line-height:1.7; }
+.pick-meta { color:#ffffff; font-size:.67rem; margin-top:.4rem; line-height:1.7; }
 
 div[data-testid="metric-container"] { background:#161b22; border:1px solid #30363d; border-radius:10px; padding:.65rem .9rem; }
 div[data-testid="stExpander"] { border:1px solid #30363d !important; border-radius:8px !important; background:#161b22 !important; }
@@ -164,8 +169,8 @@ with tab_home:
     st.markdown('<div class="sec-title">📊 Market overview</div>', unsafe_allow_html=True)
     k1, k2, k3, k4, k5 = st.columns(5)
     k1.metric("Stocks analysed", len(all_recs))
-    k2.metric("📈 BUY",  sum(1 for r in all_recs if r["signal"] == "BUY"))
-    k3.metric("📉 SELL", sum(1 for r in all_recs if r["signal"] == "SELL"))
+    k2.metric("📈 BUY",  sum(1 for r in all_recs if r["signal"] in ("STRONG BUY", "BUY")))
+    k3.metric("📉 SELL", sum(1 for r in all_recs if r["signal"] in ("STRONG SELL", "SELL")))
     k4.metric("⏸️ HOLD", sum(1 for r in all_recs if r["signal"] == "HOLD"))
     best = max(all_recs, key=lambda r: r["score"], default=None)
     k5.metric("Top pick", best["symbol"] if best else "—")
@@ -181,7 +186,7 @@ with tab_home:
 
     for category in CATEGORIES:
         cat_recs = load_category_cache(category) or []
-        buy_recs = [r for r in cat_recs if r["signal"] == "BUY"][:5]
+        buy_recs = [r for r in cat_recs if r["signal"] in ("STRONG BUY", "BUY")][:5]
 
         icon = CAP_ICONS[category]
         css  = CAP_HEADERS[category]
@@ -202,17 +207,23 @@ with tab_home:
             cols = st.columns(min(len(buy_recs), 5))
             for i, (col, rec) in enumerate(zip(cols, buy_recs)):
                 with col:
+                    sig = rec['signal']
+                    if sig == "STRONG BUY":
+                        badge = '<span class="pick-badge-strong-buy">🚀 STRONG BUY</span>'
+                    else:
+                        badge = '<span class="pick-badge-buy">📈 BUY</span>'
+                    regime_tag = f'<br/>Regime <b>{rec.get("regime","—")}</b>' if rec.get("regime") else ""
                     st.markdown(f"""
 <div class="pick-card">
-  <div class="pick-rank">#{i+1} BUY PICK</div>
+  <div class="pick-rank">#{i+1} TOP PICK</div>
   <div class="pick-name">{rec['stock']}</div>
   <div class="pick-symbol">{rec['symbol']}</div>
-  <div><span class="pick-badge-buy">📈 BUY</span></div>
+  <div>{badge}</div>
   <div class="pick-meta">
-    Score <b>{rec['score']}</b><br/>
+    Score <b>{round(rec['score']*100,0):.0f}/100</b><br/>
     Conf <b>{rec['confidence']}%</b><br/>
     Acc <b>{rec['accuracy']}%</b><br/>
-    ₹ <b>{rec.get('close','—')}</b>
+    ₹ <b>{rec.get('close','—')}</b>{regime_tag}
   </div>
 </div>""", unsafe_allow_html=True)
         else:
@@ -320,12 +331,23 @@ with tab_analyse:
             overall_sentiment, overall_score, headline_results = "Neutral", 0.0, []
 
         try:
-            final_signal, final_score, reason = generate_signal(
-                pred[0] if isinstance(pred, (list, tuple)) else int(pred),
+            regime_info = detect_regime(data)
+        except Exception:
+            regime_info = None
+
+        try:
+            final_signal, final_score, reason, factors = generate_signal(
+                int(pred[0]) if hasattr(pred, "__len__") else int(pred),
                 confidence, overall_score,
+                data=data, regime_info=regime_info,
             )
         except Exception:
-            final_signal, final_score, reason = "HOLD", 0.0, "Error"
+            final_signal, final_score, reason, factors = "HOLD", 0.0, "Error", []
+
+        try:
+            risk = calculate_risk(data, final_signal)
+        except Exception:
+            risk = None
 
         close_price = float(data["Close"].iloc[-1])
 
@@ -355,8 +377,9 @@ with tab_analyse:
 
         with signal_col:
             try:
-                show_prediction(pred, confidence, acc, model_name,
-                                final_signal, final_score, reason)
+                show_prediction(confidence, acc, model_name,
+                                final_signal, final_score, reason,
+                                factors=factors, risk=risk)
             except Exception as e:
                 st.error(f"Signal display error: {e}")
 
