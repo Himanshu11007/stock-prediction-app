@@ -1,22 +1,59 @@
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import StandardScaler
+from sklearn.pipeline import Pipeline
 
-def train_model(X_train,X_test,y_train,y_test):
-    scaler = StandardScaler()
-    X_train_scaled = scaler.fit_transform(X_train)
-    X_test_scaled = scaler.transform(X_test)
+try:
+    from xgboost import XGBClassifier
+    _XGB_AVAILABLE = True
+except ImportError:
+    _XGB_AVAILABLE = False
 
-    lr = LogisticRegression(max_iter=5000)
-    lr.fit(X_train_scaled, y_train)
-    lr_acc = lr.score(X_test_scaled, y_test)
 
-    rf = RandomForestClassifier(n_estimators=100,random_state=42)
-    rf.fit(X_train,y_train)
-    rf_acc = rf.score(X_test,y_test)
+def train_model(X_train, X_test, y_train, y_test):
+    """
+    Train multiple models and return the best one wrapped in a Pipeline.
+    Using Pipeline ensures the scaler is bundled with the model, so
+    model.predict() always receives correctly-scaled data.
+    """
+    candidates = [
+        (
+            "Logistic Regression",
+            Pipeline([
+                ("scaler", StandardScaler()),
+                ("lr", LogisticRegression(max_iter=5000, random_state=42)),
+            ]),
+        ),
+        (
+            "Random Forest",
+            Pipeline([
+                ("rf", RandomForestClassifier(n_estimators=50, random_state=42, n_jobs=-1)),
+            ]),
+        ),
+    ]
 
-    if rf_acc > lr_acc:
-        return rf,rf_acc, "Random Forest"
-    else:
-        return lr,lr_acc,"Logistic Regression"
+    if _XGB_AVAILABLE:
+        candidates.append((
+            "XGBoost",
+            Pipeline([
+                ("xgb", XGBClassifier(
+                    n_estimators=50,
+                    max_depth=4,
+                    learning_rate=0.1,
+                    eval_metric="logloss",
+                    random_state=42,
+                    verbosity=0,
+                    n_jobs=-1,
+                )),
+            ]),
+        ))
 
+    best_name, best_model, best_acc = None, None, -1.0
+
+    for name, model in candidates:
+        model.fit(X_train, y_train)
+        acc = float(model.score(X_test, y_test))
+        if acc > best_acc:
+            best_name, best_model, best_acc = name, model, acc
+
+    return best_model, best_acc, best_name

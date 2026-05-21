@@ -8,3 +8,5 @@ textblob
 requests
 transformers
 torch
+xgboost
+streamlit-autorefresh

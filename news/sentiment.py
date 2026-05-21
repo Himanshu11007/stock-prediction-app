@@ -1,59 +1,56 @@
 import streamlit as st
 from transformers import pipeline
 
-#Load FinBERT once
+# ── FinBERT loaded once per process ───────────────────────────────────────────
 @st.cache_resource
 def load_finbert():
-    return pipeline(
-        "sentiment-analysis",
-        model="ProsusAI/finbert"
-    )
+    return pipeline("sentiment-analysis", model="ProsusAI/finbert")
+
 finbert = load_finbert()
 
+# ── In-memory sentiment cache — avoids re-running FinBERT on identical headlines
+_sentiment_cache: dict[str, tuple[str, float]] = {}
 
-def analyze_sentiment(headline):
+
+def analyze_sentiment(headline: str) -> tuple[str, float]:
+    if headline in _sentiment_cache:
+        return _sentiment_cache[headline]
+
     try:
-        result = finbert(headline)[0]
-        label = result["label"].lower()
-        score = result["score"]
+        result = finbert(headline[:512])[0]   # truncate to model limit
+        label  = result["label"].lower()
+        score  = result["score"]
 
-        # Convert labels
         if label == "positive":
-            sentiment = "Positive"
-            final_score = score
-
+            out = ("Positive",  round(score, 2))
         elif label == "negative":
-            sentiment = "Negative"
-            final_score = -score
+            out = ("Negative", round(-score, 2))
         else:
-            sentiment = "Neutral"
-            final_score = 0
-        return sentiment, round(final_score, 2)
-    except Exception as e:
-        return "Neutral", 0
-    
-def analyze_overall_sentiment(headlines):
-    """Calculate overall sentiment from all headlines"""
-    scores = []
-    headline_results =[]
-    for headline in headlines:
-        sentiment,score = analyze_sentiment(headline)
-        scores.append(score)
-        headline_results.append({
-            "headline":headline,
-            "sentiment":sentiment,
-            "score":score
-        })
-    #No headline safety
-    if len(scores) == 0:
-        return "Neutral",0,[]
-    avg_score = sum(scores)/len(scores)
+            out = ("Neutral", 0.0)
+    except Exception:
+        out = ("Neutral", 0.0)
 
-    #Final market mood
-    if avg_score > 0.25:
-        overrall ="Bullish"
-    elif avg_score < -0.25:
-        overrall ="Bearish"
+    _sentiment_cache[headline] = out
+    return out
+
+
+def analyze_overall_sentiment(headlines: list[str]) -> tuple[str, float, list[dict]]:
+    if not headlines:
+        return "Neutral", 0.0, []
+
+    scores  = []
+    details = []
+    for hl in headlines:
+        sentiment, score = analyze_sentiment(hl)
+        scores.append(score)
+        details.append({"headline": hl, "sentiment": sentiment, "score": score})
+
+    avg = sum(scores) / len(scores)
+    if avg > 0.25:
+        mood = "Bullish"
+    elif avg < -0.25:
+        mood = "Bearish"
     else:
-        overrall ="Neutral"
-    return overrall,round(avg_score,2),headline_results
+        mood = "Neutral"
+
+    return mood, round(avg, 2), details

@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyc
+*.pyo
+*.pyd
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# Runtime / generated data (do not commit — too large / machine-specific)
+storage/price_cache/
+storage/news_cache/
+storage/cache_*.json
+storage/recommendations_cache.json
+storage/tracker.db
+storage/.scan_*
+data/largecap.csv.tmp.*
+data/midcap.csv.tmp.*
+data/smallcap.csv.tmp.*
+data/loader.py.tmp.*
+features/engineer.py.tmp.*
+
+# Streamlit
+.streamlit/secrets.toml
+
+# IDE / OS
+.vscode/
+.idea/
+*.DS_Store
+Thumbs.db

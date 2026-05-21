@@ -1,57 +1,74 @@
 import streamlit as st
 import pandas as pd
+from streamlit_autorefresh import st_autorefresh
 
-# ---------------------------------
-# IMPORTS
-# ---------------------------------
-
-# Data
 from data.loader import load_data
-
-# Model
 from models.trainer import train_model
-
-# News
 from news.api import fetch_news
 from news.sentiment import analyze_overall_sentiment
-
-# Utils
 from utils.helpers import (
-    prepare_data,
-    run_backtest,
-    show_chart,
-    show_metrics,
-    show_prediction,
-    show_candlestick_chart
+    prepare_data, run_backtest,
+    show_chart, show_metrics, show_prediction, show_candlestick_chart,
 )
 from utils.stock_search import load_stock_data
 from utils.decision_engine import generate_signal
-from utils.recommendation_engine import get_top_recommendations
+from scanner.cache import load_category_cache, cache_age_minutes, any_cache_exists
+from scanner.background import (
+    start_background_scan, is_scan_running, scan_progress, needs_scan
+)
+from storage.tracker import save_signal, get_recent_signals, get_accuracy_stats
+from config import CATEGORIES
 
-
-# ---------------------------------
-# PAGE CONFIGURATION
-# ---------------------------------
-
+# ─── PAGE CONFIG ──────────────────────────────────────────────────────────────
 st.set_page_config(
-    page_title="Stock Predictor",
+    page_title="StockAI Pro",
+    page_icon="📈",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="collapsed",
 )
 
-# ---------------------------------
-# HEADER
-# ---------------------------------
+# ─── CSS ──────────────────────────────────────────────────────────────────────
+st.markdown("""
+<style>
+.stApp { background-color: #0d1117; color: #c9d1d9; }
+#MainMenu, footer, header { visibility: hidden; }
 
-st.caption("⚠️ Note: This is an experimental ML model. Not financial advice.")
-st.title("📈 Stock Prediction App")
-st.markdown("Predict next-day stock movement using machine learning & sentiment analysis")
+.hero {
+    background: linear-gradient(135deg, #161b22 0%, #0d1117 60%, #0f3460 100%);
+    border: 1px solid #30363d; border-radius: 16px;
+    padding: 1.6rem 2rem 1.4rem; margin-bottom: 0.8rem;
+}
+.hero-title { font-size: 2rem; font-weight: 800; color: #f0f6fc; margin: 0 0 .2rem; letter-spacing: -.5px; }
+.hero-sub   { color: #8b949e; font-size: .9rem; margin: 0; }
+.hero-badge { display:inline-block; margin-top:.7rem; background:#1c2128; border:1px solid #ffa028; color:#ffa028; font-size:.68rem; padding:.16rem .5rem; border-radius:20px; }
 
+.scan-badge-running { background:#0d2b1e; border:1px solid #238636; color:#3fb950; display:inline-block; padding:.2rem .7rem; border-radius:20px; font-size:.75rem; font-weight:600; }
+.scan-badge-stale   { background:#2b1d00; border:1px solid #bb8009; color:#d29922; display:inline-block; padding:.2rem .7rem; border-radius:20px; font-size:.75rem; font-weight:600; }
+.scan-badge-fresh   { background:#0d1b2e; border:1px solid #1f6feb; color:#58a6ff; display:inline-block; padding:.2rem .7rem; border-radius:20px; font-size:.75rem; font-weight:600; }
 
-# ---------------------------------
-# LOAD STOCK DATABASE
-# ---------------------------------
+.sec-title { font-size:.8rem; font-weight:700; color:#8b949e; text-transform:uppercase; letter-spacing:1px; margin:1.1rem 0 .65rem; padding-bottom:.3rem; border-bottom:1px solid #21262d; }
 
+.cap-header { font-size:1rem; font-weight:700; color:#f0f6fc; margin:.5rem 0 .8rem; padding:.5rem .9rem; background:#161b22; border-radius:8px; border-left:3px solid #58a6ff; }
+.cap-header-mid   { border-left-color: #a371f7; }
+.cap-header-small { border-left-color: #3fb950; }
+
+.pick-card { background:#161b22; border:1px solid #30363d; border-radius:10px; padding:.9rem .8rem; text-align:center; transition:border-color .2s,transform .15s; }
+.pick-card:hover { border-color:#58a6ff; transform:translateY(-2px); }
+.pick-rank   { color:#6e7681; font-size:.65rem; font-weight:600; letter-spacing:.5px; }
+.pick-name   { color:#f0f6fc; font-size:.83rem; font-weight:700; margin:.28rem 0 .06rem; line-height:1.2; }
+.pick-symbol { color:#6e7681; font-size:.67rem; }
+.pick-badge-buy  { display:inline-block; margin-top:.4rem; background:#0d2b1e; color:#3fb950; border:1px solid #238636; padding:.11rem .6rem; border-radius:20px; font-size:.75rem; font-weight:700; }
+.pick-badge-sell { display:inline-block; margin-top:.4rem; background:#2d0c0c; color:#f85149; border:1px solid #da3633; padding:.11rem .6rem; border-radius:20px; font-size:.75rem; font-weight:700; }
+.pick-badge-hold { display:inline-block; margin-top:.4rem; background:#2b1d00; color:#d29922; border:1px solid #bb8009; padding:.11rem .6rem; border-radius:20px; font-size:.75rem; font-weight:700; }
+.pick-meta { color:#8b949e; font-size:.67rem; margin-top:.4rem; line-height:1.7; }
+
+div[data-testid="metric-container"] { background:#161b22; border:1px solid #30363d; border-radius:10px; padding:.65rem .9rem; }
+div[data-testid="stExpander"] { border:1px solid #30363d !important; border-radius:8px !important; background:#161b22 !important; }
+hr { border-color:#21262d; }
+</style>
+""", unsafe_allow_html=True)
+
+# ─── LOAD STOCK DATABASE ──────────────────────────────────────────────────────
 try:
     stocks_df = load_stock_data()
     stocks_df.columns = stocks_df.columns.str.strip()
@@ -59,201 +76,333 @@ except Exception as e:
     st.error(f"Failed to load stock database: {e}")
     st.stop()
 
-
-# ---------------------------------
-# STOCK SELECTION
-# ---------------------------------
-
 if stocks_df.empty:
-    st.error("No stocks available in the database.")
+    st.error("No stocks found in database.")
     st.stop()
 
-selected_company = st.selectbox(
-    "🔍 Search Stock",
-    stocks_df["Company"].dropna().unique(),
-    index=0
-)
+company_map: dict = dict(zip(
+    stocks_df["Symbol"].str.strip(),
+    stocks_df["Company"].str.strip(),
+))
 
-stock_name = stocks_df.loc[
-    stocks_df["Company"] == selected_company,
-    "Symbol"
-].iloc[0]
+# ─── HERO ─────────────────────────────────────────────────────────────────────
+st.markdown("""
+<div class="hero">
+  <div class="hero-title">📈 StockAI Pro</div>
+  <div class="hero-sub">ML + FinBERT sentiment · NIFTY Large / Mid / Small Cap universe · NSE</div>
+  <span class="hero-badge">⚠️ Experimental model &nbsp;·&nbsp; Not financial advice</span>
+</div>
+""", unsafe_allow_html=True)
+
+# ─── TABS ─────────────────────────────────────────────────────────────────────
+tab_home, tab_analyse, tab_tracker = st.tabs([
+    "🏠  Dashboard",
+    "🔍  Analyse Stock",
+    "📋  My Tracker",
+])
 
 
-# ---------------------------------
-# TOP AI RECOMMENDATIONS
-# ---------------------------------
+# ══════════════════════════════════════════════════════════════════════════════
+# TAB 1 — DASHBOARD
+# ══════════════════════════════════════════════════════════════════════════════
+with tab_home:
 
-st.subheader("🔥 Top AI Stock Recommendations")
+    scanning = is_scan_running()
 
-# Safe limit for demo; increase after optimization
-top_stocks = stocks_df["Symbol"].dropna().head(50).tolist()
+    # ── Auto-refresh every 20 s while a scan is running ───────────────────────
+    if scanning:
+        st_autorefresh(interval=20_000, limit=60, key="scan_autorefresh")
 
-if not top_stocks:
-    st.warning("No valid stock symbols found.")
-else:
-    # Progress bar
-    progress_bar = st.progress(0, text="Generating recommendations...")
-    
-    try:
-        recommendations = get_top_recommendations(
-            stock_list=top_stocks, 
-            stocks_df=stocks_df,
-            _progress_bar = progress_bar
+    # ── Scan status banner ────────────────────────────────────────────────────
+    progress = scan_progress()
+    status_col, refresh_col = st.columns([5, 1])
+
+    with status_col:
+        if scanning:
+            cat   = progress.get("category", "stocks")
+            done  = progress.get("done", 0)
+            total = progress.get("total", 0)
+            pct   = f"{done}/{total}" if total else "starting…"
+            st.markdown(
+                f'<span class="scan-badge-running">'
+                f'🔄 Scanning {cat} — {pct} &nbsp;·&nbsp; page refreshes automatically'
+                f'</span>',
+                unsafe_allow_html=True,
             )
-    except Exception as e:
-        st.error(f"Error generating recommendations: {e}")
-        recommendations = []
-    
-    progress_bar.empty()
+        elif not any_cache_exists():
+            st.markdown(
+                '<span class="scan-badge-stale">⏳ No scan data yet — starting first scan…</span>',
+                unsafe_allow_html=True,
+            )
+        else:
+            ages   = [cache_age_minutes(c) for c in CATEGORIES]
+            ages   = [a for a in ages if a is not None]
+            oldest = max(ages) if ages else None
+            label  = f"Last scanned {oldest:.0f} min ago" if oldest else "Cache loaded"
+            st.markdown(
+                f'<span class="scan-badge-fresh">✅ {label} · auto-refreshes hourly</span>',
+                unsafe_allow_html=True,
+            )
 
+    with refresh_col:
+        force_refresh = st.button("🔄 Refresh", use_container_width=True)
 
-# ---------------------------------
-# RECOMMENDATION TABLE
-# ---------------------------------
+    # ── Start background scan if needed ───────────────────────────────────────
+    if force_refresh or needs_scan():
+        start_background_scan(company_map)
+        if force_refresh:
+            st.toast("Scan started — dashboard updates every 20 s automatically.", icon="🔄")
 
-if recommendations:
-    recommendation_df = pd.DataFrame(recommendations)[[
-        "stock", "signal", "score", "confidence", "accuracy", "reason"
-    ]]
+    # ── Overall KPI row ───────────────────────────────────────────────────────
+    all_recs: list[dict] = []
+    for cat in CATEGORIES:
+        recs = load_category_cache(cat) or []
+        for r in recs:
+            r["category"] = cat
+        all_recs.extend(recs)
 
-    recommendation_df.columns = [
-        "Stock", "Signal", "Hybrid Score", 
-        "Confidence %", "Model Accuracy %", "Reason"
-    ]
+    st.markdown('<div class="sec-title">📊 Market overview</div>', unsafe_allow_html=True)
+    k1, k2, k3, k4, k5 = st.columns(5)
+    k1.metric("Stocks analysed", len(all_recs))
+    k2.metric("📈 BUY",  sum(1 for r in all_recs if r["signal"] == "BUY"))
+    k3.metric("📉 SELL", sum(1 for r in all_recs if r["signal"] == "SELL"))
+    k4.metric("⏸️ HOLD", sum(1 for r in all_recs if r["signal"] == "HOLD"))
+    best = max(all_recs, key=lambda r: r["score"], default=None)
+    k5.metric("Top pick", best["symbol"] if best else "—")
 
-    # Emoji signals
-    signal_emojis = {
-        "BUY": "📈 BUY",
-        "SELL": "📉 SELL",
-        "HOLD": "⏸️ HOLD"
+    # ── Per-category sections ─────────────────────────────────────────────────
+    CAP_COLORS  = {"Large Cap": "#58a6ff", "Mid Cap": "#a371f7", "Small Cap": "#3fb950"}
+    CAP_ICONS   = {"Large Cap": "🏦", "Mid Cap": "🏢", "Small Cap": "🌱"}
+    CAP_HEADERS = {
+        "Large Cap": "cap-header",
+        "Mid Cap":   "cap-header cap-header-mid",
+        "Small Cap": "cap-header cap-header-small",
     }
-    recommendation_df["Signal"] = recommendation_df["Signal"].map(signal_emojis).fillna("⏸️ HOLD")
 
-    # Sort and format
-    recommendation_df = (
-        recommendation_df
-        .sort_values(by="Hybrid Score", ascending=False)
-        .reset_index(drop=True)
-    )
-    recommendation_df.index += 1  # Add ranking
+    for category in CATEGORIES:
+        cat_recs = load_category_cache(category) or []
+        buy_recs = [r for r in cat_recs if r["signal"] == "BUY"][:5]
 
-    st.dataframe(
-        recommendation_df.head(10),
-        use_container_width=True,
-        hide_index=True
-    )
-else:
-    st.info("No recommendations generated yet. Please wait or try again later.")
+        icon = CAP_ICONS[category]
+        css  = CAP_HEADERS[category]
+        age  = cache_age_minutes(category)
+        age_str = f"· {age:.0f} min ago" if age else "· no data yet"
+
+        st.markdown(
+            f'<div class="{css}">{icon} {category} &nbsp;<span style="color:#6e7681;font-size:.75rem;font-weight:400">'
+            f'{len(cat_recs)} scanned &nbsp;{age_str}</span></div>',
+            unsafe_allow_html=True,
+        )
+
+        if not cat_recs:
+            st.caption("⏳ Scan running in background — check back in a few minutes.")
+            continue
+
+        if buy_recs:
+            cols = st.columns(min(len(buy_recs), 5))
+            for i, (col, rec) in enumerate(zip(cols, buy_recs)):
+                with col:
+                    st.markdown(f"""
+<div class="pick-card">
+  <div class="pick-rank">#{i+1} BUY PICK</div>
+  <div class="pick-name">{rec['stock']}</div>
+  <div class="pick-symbol">{rec['symbol']}</div>
+  <div><span class="pick-badge-buy">📈 BUY</span></div>
+  <div class="pick-meta">
+    Score <b>{rec['score']}</b><br/>
+    Conf <b>{rec['confidence']}%</b><br/>
+    Acc <b>{rec['accuracy']}%</b><br/>
+    ₹ <b>{rec.get('close','—')}</b>
+  </div>
+</div>""", unsafe_allow_html=True)
+        else:
+            st.caption("No BUY signals passed quality filters in this category.")
+
+        # Collapsible full table for this category
+        if cat_recs:
+            with st.expander(f"All {category} results ({len(cat_recs)} stocks)", expanded=False):
+                df = pd.DataFrame(cat_recs)[[
+                    "stock", "symbol", "signal", "score",
+                    "confidence", "accuracy", "model", "close",
+                ]]
+                df.columns = ["Company", "Symbol", "Signal", "Score",
+                              "Conf %", "Acc %", "Model", "Close ₹"]
+                icons = {"BUY": "📈 BUY", "SELL": "📉 SELL", "HOLD": "⏸️ HOLD"}
+                df["Signal"] = df["Signal"].map(icons).fillna(df["Signal"])
+                df = df.sort_values("Score", ascending=False).reset_index(drop=True)
+                df.index += 1
+                st.dataframe(df, use_container_width=True)
+
+    if not any_cache_exists():
+        st.info(
+            "First-time setup: background scan has been started. "
+            "The dashboard will populate automatically — this takes 3–5 minutes. "
+            "You can use the **🔍 Analyse Stock** tab in the meantime."
+        )
 
 
-# ---------------------------------
-# MAIN PREDICTION
-# ---------------------------------
+# ══════════════════════════════════════════════════════════════════════════════
+# TAB 2 — ANALYSE STOCK
+# ══════════════════════════════════════════════════════════════════════════════
+with tab_analyse:
 
-if st.button("🚀 Predict", type="primary"):
-    with st.spinner("Fetching and analyzing data..."):
-        try:
-            data = load_data(stock_name)
-        except Exception as e:
-            st.error(f"Failed to load data for {stock_name}: {e}")
+    st.markdown('<div class="sec-title">🔍 Deep-dive any stock</div>', unsafe_allow_html=True)
+
+    search_col, btn_col = st.columns([5, 1])
+    with search_col:
+        selected_company = st.selectbox(
+            "Stock",
+            stocks_df["Company"].dropna().unique(),
+            index=0,
+            label_visibility="collapsed",
+        )
+    with btn_col:
+        predict_clicked = st.button("🚀 Analyse", type="primary", use_container_width=True)
+
+    stock_symbol = stocks_df.loc[
+        stocks_df["Company"] == selected_company, "Symbol"
+    ].iloc[0]
+
+    st.caption(f"Symbol: **{stock_symbol}**")
+
+    if predict_clicked:
+        st.divider()
+
+        with st.spinner(f"Loading {stock_symbol}…"):
+            try:
+                data = load_data(stock_symbol)
+            except Exception as e:
+                st.error(f"Data load failed: {e}")
+                st.stop()
+
+        if data.empty:
+            st.error("❌ No price data found.")
             st.stop()
 
-    # Validate data
-    if data.empty:
-        st.error("❌ Invalid stock symbol or no data found.")
-        st.stop()
-
-    # Prepare ML data
-    try:
-        data, X, y, X_train, X_test, y_train, y_test = prepare_data(data)
-    except Exception as e:
-        st.error(f"Data preparation failed: {e}")
-        st.stop()
-
-    # Train model
-    try:
-        model, acc, name = train_model(X_train, X_test, y_train, y_test)
-    except Exception as e:
-        st.error(f"Model training failed: {e}")
-        st.stop()
-
-    # Latest prediction
-    latest = X.tail(1)
-    pred = model.predict(latest)
-
-    # Confidence
-    try:
-        prob = model.predict_proba(latest)
-        confidence = round(max(prob[0]) * 100, 2)
-    except AttributeError:
-        confidence = "N/A (model doesn't support probability)"
-        st.warning("⚠️ Model doesn't support probability estimates.")
-
-    # Backtest
-    try:
-        data = run_backtest(data, model, X)
-    except Exception as e:
-        st.warning(f"Backtest skipped due to error: {e}")
-
-    # Layout
-    col1, col2 = st.columns(2)
-
-    # LEFT SIDE
-    with col1:
         try:
-            show_candlestick_chart(data)
-            show_chart(data)
-            show_metrics(data)
+            data, X, _, X_train, X_test, y_train, y_test = prepare_data(data)
         except Exception as e:
-            st.error(f"Visualization error: {e}")
+            st.error(f"Feature engineering failed: {e}")
+            st.stop()
 
-        trade_count = (data["Strategy_Return"] != 0).sum()
-        st.metric("Completed Trades", trade_count)
-        st.write("Latest Close Price:", round(data["Close"].iloc[-1], 2))
+        _model_key = f"_model_{stock_symbol}"
+        if _model_key in st.session_state:
+            model, acc, model_name = st.session_state[_model_key]
+        else:
+            with st.spinner("Training model…"):
+                try:
+                    model, acc, model_name = train_model(X_train, X_test, y_train, y_test)
+                    st.session_state[_model_key] = (model, acc, model_name)
+                except Exception as e:
+                    st.error(f"Model training failed: {e}")
+                    st.stop()
 
-    # RIGHT SIDE
-    with col2:
+        pred = model.predict(X.tail(1))
+        try:
+            prob       = model.predict_proba(X.tail(1))
+            confidence = round(float(max(prob[0])) * 100, 2)
+        except AttributeError:
+            confidence = 0.0
+
+        try:
+            data = run_backtest(data, model, X)
+        except Exception as e:
+            st.warning(f"Backtest skipped: {e}")
+
         try:
             headlines = fetch_news(selected_company)
-        except Exception as e:
-            st.error(f"News fetch failed: {e}")
+        except Exception:
             headlines = []
-
-        if not headlines:
-            st.warning("No recent news found.")
 
         try:
             overall_sentiment, overall_score, headline_results = analyze_overall_sentiment(headlines)
-        except Exception as e:
-            st.error(f"Sentiment analysis failed: {e}")
-            overall_sentiment, overall_score, headline_results = "Unknown", 0.0, []
+        except Exception:
+            overall_sentiment, overall_score, headline_results = "Neutral", 0.0, []
 
         try:
             final_signal, final_score, reason = generate_signal(
-                pred[0] if isinstance(pred, (list, tuple)) else pred,
-                confidence if isinstance(confidence, (int, float)) else 0.0,
-                overall_score
+                pred[0] if isinstance(pred, (list, tuple)) else int(pred),
+                confidence, overall_score,
             )
-        except Exception as e:
-            st.error(f"Signal generation failed: {e}")
-            final_signal, final_score, reason = "HOLD", 0.0, "Error in signal generation"
+        except Exception:
+            final_signal, final_score, reason = "HOLD", 0.0, "Error"
 
+        close_price = float(data["Close"].iloc[-1])
+
+        # Auto-save to tracker
         try:
-            show_prediction(
-                pred, confidence, acc, name,
-                final_signal, final_score, reason
+            save_signal(stock_symbol, selected_company, final_signal,
+                        final_score, confidence, acc, close_price)
+        except Exception:
+            pass
+
+        chart_col, signal_col = st.columns([3, 2])
+
+        with chart_col:
+            try:
+                show_candlestick_chart(data)
+                show_chart(data)
+                show_metrics(data)
+            except Exception as e:
+                st.error(f"Chart error: {e}")
+            m1, m2 = st.columns(2)
+            trade_count = (
+                int((data["Strategy_Return"] != 0).sum())
+                if "Strategy_Return" in data.columns else 0
             )
-        except Exception as e:
-            st.error(f"Prediction display failed: {e}")
+            m1.metric("Trades executed", trade_count)
+            m2.metric("Latest close",    f"₹{round(close_price, 2)}")
 
-        st.subheader("Overall Market Mood")
-        st.metric("News Sentiment", overall_sentiment)
-        st.metric("Sentiment Score", round(overall_score, 2))
+        with signal_col:
+            try:
+                show_prediction(pred, confidence, acc, model_name,
+                                final_signal, final_score, reason)
+            except Exception as e:
+                st.error(f"Signal display error: {e}")
 
-        st.subheader("Latest News Sentiment")
-        for result in headline_results:
-            st.write("📰", result.get("headline", "N/A"))
-            st.write("Sentiment:", result.get("sentiment", "N/A"))
-            st.write("Score:", round(result.get("score", 0), 2))
-            st.divider()
+            st.markdown('<div class="sec-title">📰 Market sentiment</div>', unsafe_allow_html=True)
+            s1, s2 = st.columns(2)
+            s1.metric("Mood",      overall_sentiment)
+            s2.metric("Avg score", round(overall_score, 2))
+
+            if headline_results:
+                with st.expander("Latest news", expanded=True):
+                    for item in headline_results:
+                        s   = item.get("sentiment", "Neutral")
+                        ico = {"Positive": "🟢", "Negative": "🔴", "Neutral": "🟡"}.get(s, "⚪")
+                        st.markdown(f"**{ico} {item.get('headline', '')}**")
+                        st.caption(f"{s} · {round(item.get('score', 0), 2)}")
+                        st.divider()
+            elif not headlines:
+                st.info("No recent news found.")
+
+        st.success("Signal saved — view it in the **📋 My Tracker** tab.")
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# TAB 3 — MY TRACKER
+# ══════════════════════════════════════════════════════════════════════════════
+with tab_tracker:
+
+    st.markdown('<div class="sec-title">📋 Saved prediction signals</div>', unsafe_allow_html=True)
+
+    correct, total = get_accuracy_stats()
+    if total:
+        t1, t2, t3 = st.columns(3)
+        t1.metric("Predictions tracked", total)
+        t2.metric("Outcomes validated",  correct)
+        t3.metric("Validated accuracy",  f"{round(correct/total*100,1)}%")
+    else:
+        st.info("No signals saved yet. Run an analysis to start tracking.")
+
+    signals = get_recent_signals(limit=30)
+    if signals:
+        df = pd.DataFrame(signals)
+        icons = {"BUY": "📈 BUY", "SELL": "📉 SELL", "HOLD": "⏸️ HOLD"}
+        df["Signal"]  = df["Signal"].map(icons).fillna(df["Signal"])
+        df["Correct"] = df["Correct"].map(
+            lambda v: "✅" if v == 1 else ("❌" if v == 0 else "—")
+        )
+        st.dataframe(df, use_container_width=True, hide_index=True)
+    else:
+        st.caption("No signals saved yet.")

@@ -41,7 +41,14 @@ def prepare_data(data):
     data = create_features(data)
 
     # Select input features
-    X = data[["Close", "Volume", "Price_Change", "MA_5", "MA_10", "RSI","Momentum","Volatility","Volume_Change","Volume_MA","MA_Diff"]]
+    X = data[[
+        "Close", "Volume", "Price_Change",
+        "MA_5", "MA_10", "MA_Diff",
+        "RSI", "Momentum", "Volatility",
+        "Volume_Change", "Volume_MA",
+        "MACD", "MACD_Hist",
+        "BB_Width", "BB_Position",
+    ]]
 
     # Target column (Up/Down)
     y = data["Up"]
@@ -60,12 +67,6 @@ def run_backtest(data, model, X):
     Simulate trading strategy based on model predictions
     """
     # Predict for full dataset
-    data["Prediction"] = model.predict(X)
-
-    # Shift prediction (avoid future leakage)
-    data["Prediction"] = data["Prediction"].shift(1)
-
-    # Predict for all data
     data["Prediction"] = model.predict(X)
 
     # Get probability for confidence
@@ -173,10 +174,10 @@ def show_prediction(pred, confidence, acc, name,final_signal,final_score,reason)
         elif abs(final_score) < 0.15:
             hold_reason = "Hybrid score is too weak."
         elif final_signal == "HOLD":
-            hold_reason="Marker directin is uncertauin"
+            hold_reason="Market direction is uncertain"
         st.markdown(f"""
         <div style="background-color:#fff3cd;padding:20px;border-radius:10px;border-left:6px solid #ffc107;box-shadow:0 2px 4px rgba(0,0,0,0.1)">
-        <h2 style="Margin:0;">Hold Signal</h2>
+        <h2 style="margin:0;">Hold Signal</h2>
                 <p style ="font-size:18px;">
                     <b>Confidence:</b> {confidence}%
                 </p>
@@ -201,7 +202,7 @@ def show_prediction(pred, confidence, acc, name,final_signal,final_score,reason)
 
         st.markdown(f"""
         <div style="background-color:#d4edda;padding:20px;border-radius:10px;border-left:6px solid green;box-shadow:0 2px 4px rgba(0,0,0,0.1)">
-        <h2>signal_title</h2>
+        <h2>{signal_title}</h2>
                 <p style ="font-size:18px;">
                     <b>Confidence:</b> {confidence}%
                 </p>
@@ -223,7 +224,7 @@ def show_prediction(pred, confidence, acc, name,final_signal,final_score,reason)
             signal_title ="📉 SELL Signal"
         st.markdown(f"""
         <div style="background-color:#f8d7da;padding:20px;border-radius:10px;border-left:6px solid red;box-shadow:0 2px 4px rgba(0,0,0,0.1)">
-        <h2>signal_title</h2>
+        <h2>{signal_title}</h2>
                 <p style ="font-size:18px;">
                     <b>Confidence:</b> {confidence}%
                 </p>
@@ -239,7 +240,7 @@ def show_prediction(pred, confidence, acc, name,final_signal,final_score,reason)
     else:
          st.markdown(f"""
         <div style="background-color:#e2e3e5;padding:20px;border-radius:10px;border-left:6px solid #ffc107;box-shadow:0 2px 4px rgba(0,0,0,0.1)">
-        <h2 style="Margin:0;">Hold / Uncertain Signal</h2>
+        <h2 style="margin:0;">Hold / Uncertain Signal</h2>
                 <p style ="font-size:18px;">
                     <b>Confidence:</b> {confidence}%
                 </p>

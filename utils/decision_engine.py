@@ -15,5 +15,5 @@ def generate_signal(prediction,confidence,news_score):
     if final_score > 0.25:
         return "BUY",round(final_score,2),"Strong bullish alignment between ML Model and news sentiment"
     elif final_score < -0.25:
-        return "SELL",round(final_score,2),"Negative momentum and berish news sentiment detected"
+        return "SELL",round(final_score,2),"Negative momentum and bearish news sentiment detected"
     return "HOLD",round(final_score,2),"Signals are mixed or confidence is weak"
