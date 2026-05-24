@@ -66,3 +66,57 @@ def load_data_raw(symbol: str):
     if not data.empty:
         _write_disk_cache(symbol, data)
     return data
+
+def load_multi_timeframe_data(symbol):
+
+    """
+    Load stock data for multiple timeframes.
+    
+    Returns:
+        {
+            "weekly": weekly_df,
+            "daily": daily_df
+        }
+    """
+
+    try:
+
+        # Weekly timeframe
+        weekly_data = yf.download(
+            symbol,
+            period="2y",
+            interval="1wk",
+            progress=False,
+            auto_adjust=True
+        )
+
+        # Daily timeframe
+        daily_data = yf.download(
+            symbol,
+            period="1y",
+            interval="1d",
+            progress=False,
+            auto_adjust=True
+        )
+
+        # Flatten multi-level columns from yfinance (e.g. ("Close", "AAPL") → "Close")
+        weekly_data.columns = [col[0] if isinstance(col, tuple) else col for col in weekly_data.columns]
+        daily_data.columns  = [col[0] if isinstance(col, tuple) else col for col in daily_data.columns]
+
+        # Clean empty rows
+        weekly_data.dropna(inplace=True)
+        daily_data.dropna(inplace=True)
+
+        return {
+            "weekly": weekly_data,
+            "daily": daily_data
+        }
+
+    except Exception as e:
+
+        print(f"Multi-timeframe load error for {symbol}: {e}")
+
+        return {
+            "weekly": None,
+            "daily": None
+        }

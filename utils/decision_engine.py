@@ -59,7 +59,9 @@ def _technical_score(data: pd.DataFrame) -> tuple[float, list[str]]:
     # RSI
     rsi = float(row.get("RSI", 50))
     if rsi < 35:
-        votes.append(-0.8); factors.append(f"RSI {rsi:.0f} — oversold (bearish)")
+        votes.append(0.6); factors.append(f"RSI {rsi:.0f} — oversold rebound potential")
+    elif rsi > 70:
+        votes.append(-0.6); factors.append(f"RSI {rsi:.0f} — overbought pressure")
     elif rsi < 45:
         votes.append(-0.4); factors.append(f"RSI {rsi:.0f} — below neutral")
     elif rsi < 60:
@@ -153,6 +155,7 @@ def generate_signal(
     prediction:      int,
     confidence:      float,
     news_score:      float,
+    timeframe_score: float = 0.0,
     data:            pd.DataFrame | None = None,
     regime_info:     dict | None         = None,
 ) -> tuple[str, float, str, list[str]]:
@@ -160,86 +163,174 @@ def generate_signal(
     Confluence scoring engine.
 
     Args:
-        prediction:  ML prediction (1 = bullish, 0 = bearish)
-        confidence:  Model confidence 0–100
-        news_score:  FinBERT sentiment score -1 to +1
-        data:        Feature-engineered OHLCV DataFrame (optional but recommended)
-        regime_info: Output of utils.regime.detect_regime (optional)
+        prediction:       ML prediction (1 = bullish, 0 = bearish)
+        confidence:       Model confidence 0–100
+        news_score:       FinBERT sentiment score -1 to +1
+        timeframe_score:  Multi-timeframe confluence score (-2 to +2)
+        data:             Feature-engineered OHLCV DataFrame
+        regime_info:      Output of detect_regime()
 
     Returns:
         (signal, score_0_to_1, summary_reason, factor_list)
-        - signal: "STRONG BUY" | "BUY" | "HOLD" | "SELL" | "STRONG SELL"
-        - score_0_to_1: 0.0 – 1.0 (normalised 100-point scale / 100)
-        - summary_reason: one-sentence headline
-        - factor_list: ordered list of contributing factor descriptions
     """
+
     factors: list[str] = []
 
-    # ── Pillar 1: ML direction ────────────────────────────────────────────────
+    # ── Pillar 1: ML direction ───────────────────────────────────────────────
     ml_dir = _ml_direction_score(prediction)
+
     dir_label = "Bullish" if ml_dir > 0 else "Bearish"
-    factors.append(f"ML prediction: {dir_label} ({confidence:.0f}% confidence)")
 
-    # ── Pillar 2: ML confidence ────────────────────────────────────────────────
-    ml_conf = _ml_confidence_score(confidence)
-    # no separate factor line — already shown in pillar 1
+    factors.append(
+        f"ML prediction: {dir_label} ({confidence:.0f}% confidence)"
+    )
 
-    # ── Pillar 3: Technical indicators ────────────────────────────────────────
+    # ── Pillar 2: ML confidence ──────────────────────────────────────────────
+    ml_conf = _ml_confidence_score(confidence) * ml_dir
+
+    # ── Pillar 3: Technical indicators ───────────────────────────────────────
     tech_score = 0.0
+
     if data is not None and not data.empty:
+
         tech_score, tech_factors = _technical_score(data)
+
         factors.extend(tech_factors)
+
     else:
+
         factors.append("Technical indicators: insufficient data")
 
-    # ── Pillar 4: News sentiment ──────────────────────────────────────────────
+    # ── Pillar 4: News sentiment ─────────────────────────────────────────────
     news_s, news_label = _news_score(news_score)
+
     factors.append(news_label)
 
-    # ── Pillar 5: Volume strength ─────────────────────────────────────────────
+    # ── Pillar 5: Volume strength ────────────────────────────────────────────
     vol_s, vol_label = 0.0, "Volume: no data"
+
     if data is not None and not data.empty:
+
         vol_s, vol_label = _volume_score(data)
+
     factors.append(vol_label)
 
-    # ── Pillar 6: Market regime ───────────────────────────────────────────────
+    # ── Pillar 6: Market regime ──────────────────────────────────────────────
     regime_s = 0.0
+
     if regime_info:
+
         regime_s = float(regime_info.get("regime_score", 0.0))
+
         regime_label = regime_info.get("regime", "Unknown")
-        factors.append(f"Market regime: {regime_label} — {regime_info.get('reason','')}")
+
+        factors.append(
+            f"Market regime: {regime_label} — "
+            f"{regime_info.get('reason', '')}"
+        )
+
     else:
+
         factors.append("Market regime: not analysed")
 
-    # ── Weighted confluence score [-1, +1] ────────────────────────────────────
+    # ── Pillar 7: Multi-timeframe confluence ─────────────────────────────────
+    tf_s = timeframe_score
+
+    if timeframe_score >= 2:
+
+        factors.append(
+            "Multi-timeframe trend: strong bullish alignment"
+        )
+
+    elif timeframe_score == 1:
+
+        factors.append(
+            "Multi-timeframe trend: mildly bullish"
+        )
+
+    elif timeframe_score == -1:
+
+        factors.append(
+            "Multi-timeframe trend: mildly bearish"
+        )
+
+    elif timeframe_score <= -2:
+
+        factors.append(
+            "Multi-timeframe trend: strong bearish alignment"
+        )
+
+    else:
+
+        factors.append(
+            "Multi-timeframe trend: mixed / neutral"
+        )
+
+    # ── Weighted confluence score [-1, +1] ───────────────────────────────────
     weighted = (
-        ml_dir   * W_ML_DIR  +
-        ml_conf  * W_ML_CONF +
-        tech_score * W_TECH  +
-        news_s   * W_NEWS    +
-        vol_s    * W_VOLUME  +
-        regime_s * W_REGIME
+        ml_dir     * W_ML_DIR   +
+        ml_conf    * W_ML_CONF  +
+        tech_score * W_TECH     +
+        news_s     * W_NEWS     +
+        vol_s      * W_VOLUME   +
+        regime_s   * W_REGIME   +
+        tf_s       * 0.15
     )
 
     # Map [-1, +1] → [0, 100]
     score_100 = (weighted + 1.0) * 50.0
+
     score_100 = max(0.0, min(100.0, score_100))
 
-    # ── Signal bucket ──────────────────────────────────────────────────────────
+    # ── Signal bucket ────────────────────────────────────────────────────────
     if score_100 >= STRONG_BUY_MIN:
-        signal  = "STRONG BUY"
-        summary = f"High-conviction bullish confluence (score {score_100:.0f}/100)"
-    elif score_100 >= BUY_MIN:
-        signal  = "BUY"
-        summary = f"Bullish confluence across multiple factors (score {score_100:.0f}/100)"
-    elif score_100 >= HOLD_MIN:
-        signal  = "HOLD"
-        summary = f"Mixed or insufficient confluence (score {score_100:.0f}/100)"
-    elif score_100 >= SELL_MIN:
-        signal  = "SELL"
-        summary = f"Bearish confluence — caution advised (score {score_100:.0f}/100)"
-    else:
-        signal  = "STRONG SELL"
-        summary = f"High-conviction bearish confluence (score {score_100:.0f}/100)"
 
-    return signal, round(score_100 / 100, 4), summary, factors
+        signal = "STRONG BUY"
+
+        summary = (
+            f"High-conviction bullish confluence "
+            f"(score {score_100:.0f}/100)"
+        )
+
+    elif score_100 >= BUY_MIN:
+
+        signal = "BUY"
+
+        summary = (
+            f"Bullish confluence across multiple factors "
+            f"(score {score_100:.0f}/100)"
+        )
+
+    elif score_100 >= HOLD_MIN:
+
+        signal = "HOLD"
+
+        summary = (
+            f"Mixed or insufficient confluence "
+            f"(score {score_100:.0f}/100)"
+        )
+
+    elif score_100 >= SELL_MIN:
+
+        signal = "SELL"
+
+        summary = (
+            f"Bearish confluence — caution advised "
+            f"(score {score_100:.0f}/100)"
+        )
+
+    else:
+
+        signal = "STRONG SELL"
+
+        summary = (
+            f"High-conviction bearish confluence "
+            f"(score {score_100:.0f}/100)"
+        )
+
+    return (
+        signal,
+        round(score_100 / 100, 4),
+        summary,
+        factors
+    )

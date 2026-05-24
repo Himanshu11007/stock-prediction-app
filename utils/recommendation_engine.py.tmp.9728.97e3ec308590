@@ -1,11 +1,10 @@
 import streamlit as st
-from data.loader import (load_data,load_multi_timeframe_data)
+from data.loader import load_data
 from utils.helpers import prepare_data
 from models.trainer import (train_model,ensemble_predict)
 from news.api import fetch_news
 from news.sentiment import analyze_overall_sentiment
 from utils.decision_engine import generate_signal
-from features.engineer import get_trend_signal
 
 
 def get_top_recommendations(stock_list, stocks_df, _progress_bar=None):
@@ -38,7 +37,7 @@ def get_top_recommendations(stock_list, stocks_df, _progress_bar=None):
                 continue
             
             # Prepare ML data
-            data, X, y, _, _, y_train, _ = prepare_data(data)
+            data, X, y, X_train, X_test, y_train, y_test = prepare_data(data)
             
             # Skip if target has only one class (can't train classifier)
             if len(set(y_train)) < 2:
@@ -64,29 +63,11 @@ def get_top_recommendations(stock_list, stocks_df, _progress_bar=None):
             headlines = fetch_news(stock)
             overall_sentiment, overall_score, headline_results = analyze_overall_sentiment(headlines)
             
-            multi_tf_data = load_multi_timeframe_data(stock)
-
-            weekly_trend = get_trend_signal(
-                multi_tf_data["weekly"]
-            )
-
-            daily_trend = get_trend_signal(
-                multi_tf_data["daily"]
-            )
-
-            timeframe_score= (
-                weekly_trend["score"] + 
-                daily_trend["score"]
-            )
-
             # Final AI signal
-            final_signal, final_score, reason,factors = generate_signal(
-                prediction = pred,
-                confidence = confidence,
-                news_score = overall_score,
-                timeframe_score=timeframe_score,
-                data=data,
-                regime_info=None
+            final_signal, final_score, reason = generate_signal(
+                pred,
+                confidence,
+                overall_score
             )
             
             # Get company name from stock database
@@ -105,11 +86,7 @@ def get_top_recommendations(stock_list, stocks_df, _progress_bar=None):
                 "score": round(final_score, 2),
                 "confidence": round(confidence, 2),
                 "accuracy": round(acc * 100, 2),
-                "reason": reason,
-                "weekly_trend":weekly_trend["trend"],
-                "daily_trend":daily_trend["trend"],
-                "timeframe_score":timeframe_score,
-                "factors":factors
+                "reason": reason
             })
             
         except Exception as e:

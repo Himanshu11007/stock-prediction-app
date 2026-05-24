@@ -1,6 +1,5 @@
 import numpy as np
 
-
 def create_features(data):
     # ── Target ────────────────────────────────────────────────────────────────
     data["Up"] = (data["Close"].shift(-1) > data["Close"]).astype(int)
@@ -77,14 +76,29 @@ def create_features(data):
     minus_dm  = np.where((down_move > up_move) & (down_move > 0), down_move, 0.0)
 
     import pandas as pd
-    atr14      = pd.Series(true_range).ewm(com=13, adjust=False).mean()
-    plus_di14  = 100 * pd.Series(plus_dm).ewm(com=13, adjust=False).mean()  / atr14.replace(0, np.nan)
-    minus_di14 = 100 * pd.Series(minus_dm).ewm(com=13, adjust=False).mean() / atr14.replace(0, np.nan)
-    dx         = (100 * (plus_di14 - minus_di14).abs() / (plus_di14 + minus_di14).replace(0, np.nan))
+
+    
+    plus_dm = pd.Series(plus_dm, index= data.index)
+    minus_dm = pd.Series(minus_dm,index=data.index)
+    atr14 = true_range.ewm(com=13,adjust=False).mean()
+    plus_di14 = (100 *plus_dm.ewm(com=13, adjust=False).mean() / atr14.replace(0, np.nan))
+
+    minus_di14 = (
+        100 *
+        minus_dm.ewm(com=13, adjust=False).mean()
+        / atr14.replace(0, np.nan)
+    )
+
+    dx = (
+        100 *
+        (plus_di14 - minus_di14).abs()
+        / (plus_di14 + minus_di14).replace(0, np.nan)
+    )
+
     data["ADX"]      = dx.ewm(com=13, adjust=False).mean()
     data["ADX"]      = data["ADX"].fillna(0)
-    data["Plus_DI"]  = plus_di14.values
-    data["Minus_DI"] = minus_di14.values
+    data["Plus_DI"]  = plus_di14
+    data["Minus_DI"] = minus_di14
 
     # ── Volume breakout flag ──────────────────────────────────────────────────
     # 1.0 when current volume > 1.5× 20-day avg AND price moved up
@@ -94,3 +108,84 @@ def create_features(data):
 
     data = data.replace([np.inf, -np.inf], np.nan)
     return data.dropna()
+
+
+def get_trend_signal(data):
+
+    try:
+
+        if data is None or len(data) < 60:
+            return {
+                "trend": "SIDEWAYS",
+                "score": 0
+            }
+
+        df = create_features(data.copy())
+
+        latest = df.iloc[-1]
+
+        ema20 = latest["EMA_20"]
+        ema50 = latest["EMA_50"]
+        rsi = latest["RSI"]
+        macd = latest["MACD"]
+        macd_signal = latest["MACD_Signal"]
+
+        score = 0
+
+        # EMA trend
+        ema_diff_pct = ((ema20 - ema50) / ema50) * 100
+
+        if ema_diff_pct > 1:
+            score += 1
+        elif ema_diff_pct < -1:
+            score -= 1
+
+        # RSI momentum
+        if rsi > 60:
+            score += 1
+        elif rsi < 40:
+            score -= 1
+
+        # MACD momentum
+        if macd > macd_signal:
+            score += 1
+        elif macd < macd_signal:
+            score -= 1
+
+        normalized_score = round(score / 3, 2)
+
+        # Final trend classification
+        if score >= 2:
+
+            return {
+                "trend": "BULLISH",
+                "score": normalized_score
+            }
+
+        elif score <= -2:
+
+            return {
+                "trend": "BEARISH",
+                "score": normalized_score
+            }
+
+        else:
+
+            return {
+                "trend": "SIDEWAYS",
+                "score": normalized_score
+            }
+
+    except Exception as e:
+
+        import traceback
+        traceback.print_exc()
+
+        print(f"Trend detection error: {e}")
+
+        return {
+            "trend": "SIDEWAYS",
+            "score": 0
+        }
+
+

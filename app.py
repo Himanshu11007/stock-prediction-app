@@ -2,8 +2,8 @@ import streamlit as st
 import pandas as pd
 from streamlit_autorefresh import st_autorefresh
 
-from data.loader import load_data
-from models.trainer import train_model
+from data.loader import (load_data,load_multi_timeframe_data)
+from models.trainer import(train_model,ensemble_predict)
 from news.api import fetch_news
 from news.sentiment import analyze_overall_sentiment
 from utils.helpers import (
@@ -12,6 +12,7 @@ from utils.helpers import (
 )
 from utils.stock_search import load_stock_data
 from utils.decision_engine import generate_signal
+from features.engineer import get_trend_signal
 from utils.regime import detect_regime
 from utils.risk import calculate_risk
 from scanner.cache import load_category_cache, cache_age_minutes, any_cache_exists
@@ -33,7 +34,7 @@ st.set_page_config(
 st.markdown("""
 <style>
 .stApp { background-color: #0d1117; color: #ffffff; }
-.stApp p, .stApp span, .stApp label, .stApp div { color: #ffffff; }
+.stApp p, .stApp span, .stApp label, .stApp div { color: #000
 .stApp [data-testid="stMarkdownContainer"] * { color: #ffffff; }
 #MainMenu, footer, header { visibility: hidden; }
 
@@ -291,32 +292,32 @@ with tab_analyse:
             st.stop()
 
         try:
-            data, X, _, X_train, X_test, y_train, y_test = prepare_data(data)
+            data, X, y, _, _, y_train, _ = prepare_data(data)
         except Exception as e:
             st.error(f"Feature engineering failed: {e}")
             st.stop()
 
         _model_key = f"_model_{stock_symbol}"
         if _model_key in st.session_state:
-            model, acc, model_name = st.session_state[_model_key]
+            models, acc = st.session_state[_model_key]
         else:
-            with st.spinner("Training model…"):
+            with st.spinner("Training model (walk-forward validation)…"):
                 try:
-                    model, acc, model_name = train_model(X_train, X_test, y_train, y_test)
-                    st.session_state[_model_key] = (model, acc, model_name)
+                    models, acc = train_model(X, y)
+                    st.session_state[_model_key] = (models, acc)
                 except Exception as e:
                     st.error(f"Model training failed: {e}")
                     st.stop()
 
-        pred = model.predict(X.tail(1))
+        model_name = "Ensemble"
+
         try:
-            prob       = model.predict_proba(X.tail(1))
-            confidence = round(float(max(prob[0])) * 100, 2)
+            pred, confidence, prob = ensemble_predict(models, X.tail(1))
         except AttributeError:
             confidence = 0.0
 
         try:
-            data = run_backtest(data, model, X)
+            data = run_backtest(data, models["Random Forest"], X)
         except Exception as e:
             st.warning(f"Backtest skipped: {e}")
 
@@ -335,13 +336,54 @@ with tab_analyse:
         except Exception:
             regime_info = None
 
+        # ── Multi-timeframe analysis ─────────────────────────────
+
+        try:
+
+            multi_tf_data = load_multi_timeframe_data(
+                stock_symbol
+            )
+
+            weekly_trend = get_trend_signal(
+                multi_tf_data["weekly"]
+            )
+
+            daily_trend = get_trend_signal(
+                multi_tf_data["daily"]
+            )
+
+            raw_tf_score = (
+                weekly_trend["score"] +
+                daily_trend["score"]
+            )
+
+            timeframe_score = raw_tf_score / 2
+
+        except Exception:
+
+            weekly_trend = {
+                "trend": "UNKNOWN",
+                "score": 0
+            }
+
+            daily_trend = {
+                "trend": "UNKNOWN",
+                "score": 0
+            }
+
+            timeframe_score = 0
+
         try:
             final_signal, final_score, reason, factors = generate_signal(
-                int(pred[0]) if hasattr(pred, "__len__") else int(pred),
-                confidence, overall_score,
-                data=data, regime_info=regime_info,
+                prediction=int(pred[0]) if hasattr(pred, "__len__") else int(pred),
+                confidence=confidence,
+                news_score=overall_score,
+                timeframe_score=timeframe_score,
+                data=data,
+                regime_info=regime_info,
             )
-        except Exception:
+        except Exception as e:
+            st.error(f"Signal generation failed:{e}")
             final_signal, final_score, reason, factors = "HOLD", 0.0, "Error", []
 
         try:
@@ -380,8 +422,31 @@ with tab_analyse:
                 show_prediction(confidence, acc, model_name,
                                 final_signal, final_score, reason,
                                 factors=factors, risk=risk)
+                
             except Exception as e:
                 st.error(f"Signal display error: {e}")
+
+            st.markdown(
+                '<div class="sec-title">⏱️ Multi-timeframe analysis</div>',
+                unsafe_allow_html=True
+            )
+
+            t1, t2, t3 = st.columns(3)
+
+            t1.metric(
+                "Weekly Trend",
+                weekly_trend["trend"]
+            )
+
+            t2.metric(
+                "Daily Trend",
+                daily_trend["trend"]
+            )
+
+            t3.metric(
+                "Confluence Score",
+                timeframe_score
+            )
 
             st.markdown('<div class="sec-title">📰 Market sentiment</div>', unsafe_allow_html=True)
             s1, s2 = st.columns(2)
