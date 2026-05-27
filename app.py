@@ -34,7 +34,6 @@ st.set_page_config(
 st.markdown("""
 <style>
 .stApp { background-color: #0d1117; color: #ffffff; }
-.stApp p, .stApp span, .stApp label, .stApp div { color: #000
 .stApp [data-testid="stMarkdownContainer"] * { color: #ffffff; }
 #MainMenu, footer, header { visibility: hidden; }
 
@@ -71,6 +70,19 @@ st.markdown("""
 div[data-testid="metric-container"] { background:#161b22; border:1px solid #30363d; border-radius:10px; padding:.65rem .9rem; }
 div[data-testid="stExpander"] { border:1px solid #30363d !important; border-radius:8px !important; background:#161b22 !important; }
 hr { border-color:#21262d; }
+
+button[data-testid="baseButton-secondary"],
+button[kind="secondary"] {
+    background-color: #000000 !important;
+    border: 1px solid #30363d !important;
+    color: #c9d1d9 !important;
+}
+button[data-testid="baseButton-secondary"]:hover,
+button[kind="secondary"]:hover {
+    background-color: #1a3a5c !important;
+    border-color: #58a6ff !important;
+    color: #58a6ff !important;
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -101,9 +113,9 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ─── TABS ─────────────────────────────────────────────────────────────────────
-tab_home, tab_analyse, tab_tracker = st.tabs([
-    "🏠  Dashboard",
+tab_analyse, tab_home, tab_tracker = st.tabs([
     "🔍  Analyse Stock",
+    "🏠  Dashboard",
     "📋  My Tracker",
 ])
 

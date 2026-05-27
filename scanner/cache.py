@@ -16,14 +16,13 @@ def _cache_path(category: str) -> Path:
 
 
 def load_category_cache(category: str) -> list | None:
-    """Return cached list for a category if still fresh, else None."""
+    """Return cached list for a category (fresh or stale). None only if no file exists."""
     path = _cache_path(category)
     if not path.exists():
         return None
     try:
         payload = json.loads(path.read_text(encoding="utf-8"))
-        if time.time() - payload.get("timestamp", 0) < SCAN_TTL_SECONDS:
-            return payload.get("recommendations", [])
+        return payload.get("recommendations", [])
     except Exception:
         pass
     return None

@@ -28,17 +28,17 @@ SELL_MIN        = 28
 # < 28 → STRONG SELL
 
 # ── Pillar weights ─────────────────────────────────────────────────────────
-W_ML_DIR    = 0.35
-W_ML_CONF   = 0.20
-W_TECH      = 0.25
+W_ML_DIR    = 0.25
+W_ML_CONF   = 0.15
+W_TECH      = 0.35
 W_NEWS      = 0.10
 W_VOLUME    = 0.05
-W_REGIME    = 0.05
+W_REGIME    = 0.10
 
 
 def _ml_direction_score(prediction: int) -> float:
     """+1 bullish, -1 bearish."""
-    return 1.0 if prediction == 1 else -1.0
+    return 0.7 if prediction == 1 else -0.7
 
 
 def _ml_confidence_score(confidence: float) -> float:
@@ -58,16 +58,14 @@ def _technical_score(data: pd.DataFrame) -> tuple[float, list[str]]:
 
     # RSI
     rsi = float(row.get("RSI", 50))
-    if rsi < 35:
-        votes.append(0.6); factors.append(f"RSI {rsi:.0f} — oversold rebound potential")
-    elif rsi > 70:
-        votes.append(-0.6); factors.append(f"RSI {rsi:.0f} — overbought pressure")
+    if rsi < 30:
+        votes.append(0.6); factors.append(f"RSI {rsi:.0f} — oversold weekness")
     elif rsi < 45:
-        votes.append(-0.4); factors.append(f"RSI {rsi:.0f} — below neutral")
+        votes.append(-0.2); factors.append(f"RSI {rsi:.0f} — slightly weak")
     elif rsi < 60:
-        votes.append( 0.3); factors.append(f"RSI {rsi:.0f} — neutral/bullish zone")
-    elif rsi < 70:
-        votes.append( 0.7); factors.append(f"RSI {rsi:.0f} — bullish momentum")
+        votes.append(0.2); factors.append(f"RSI {rsi:.0f} — neutral zone")
+    elif rsi < 75:
+        votes.append( 0.6); factors.append(f"RSI {rsi:.0f} — bullish zone")
     else:
         votes.append(-0.5); factors.append(f"RSI {rsi:.0f} — overbought (caution)")
 
@@ -75,13 +73,13 @@ def _technical_score(data: pd.DataFrame) -> tuple[float, list[str]]:
     macd_hist  = float(row.get("MACD_Hist", 0))
     macd_cross = float(row.get("MACD_Cross", 0))
     if macd_cross == 1.0:
-        votes.append(1.0); factors.append("MACD bullish crossover (strong signal)")
+        votes.append(0.8); factors.append("MACD bullish crossover (strong signal)")
     elif macd_cross == -1.0:
-        votes.append(-1.0); factors.append("MACD bearish crossover (strong signal)")
+        votes.append(-0.8); factors.append("MACD bearish crossover (strong signal)")
     elif macd_hist > 0:
-        votes.append(0.5); factors.append("MACD histogram positive")
+        votes.append(0.3); factors.append("MACD histogram positive")
     else:
-        votes.append(-0.5); factors.append("MACD histogram negative")
+        votes.append(-0.3); factors.append("MACD histogram negative")
 
     # EMA stack (EMA20 vs EMA50)
     ema_cross = float(row.get("EMA_Cross", 0))
