@@ -115,7 +115,7 @@ st.markdown("""
 # ─── TABS ─────────────────────────────────────────────────────────────────────
 tab_analyse, tab_home, tab_tracker = st.tabs([
     "🔍  Analyse Stock",
-    "🏠  Dashboard",
+    "🏆  Top Picks",
     "📋  My Tracker",
 ])
 

@@ -6,7 +6,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Callable
 
 from utils.helpers import prepare_data
-from models.trainer import train_model
+from models.trainer import train_model, ensemble_predict
 from news.api import fetch_news
 from news.sentiment import analyze_overall_sentiment
 from utils.decision_engine import generate_signal
@@ -23,27 +23,22 @@ def _scan_one(symbol: str, company_map: dict, loader_fn) -> dict | None:
         if data is None or data.empty:
             return None
 
-        data, X, _, X_train, X_test, y_train, y_test = prepare_data(data)
+        data, X, y, _, _, y_train, _ = prepare_data(data)
         if len(set(y_train)) < 2:
             return None
 
-        model, acc, model_name = train_model(X_train, X_test, y_train, y_test)
+        models, acc = train_model(X, y)
+        model_name  = "Ensemble"
 
         latest = X.iloc[-1:]
-        pred   = model.predict(latest)
-
-        try:
-            proba      = model.predict_proba(latest)
-            confidence = float(max(proba[0])) * 100
-        except AttributeError:
-            confidence = 50.0
+        pred, confidence, _ = ensemble_predict(models, latest)
 
         headlines = fetch_news(symbol)
         _, overall_score, _ = analyze_overall_sentiment(headlines)
 
         regime_info = detect_regime(data)
         signal, score, reason, factors = generate_signal(
-            int(pred[0]), confidence, overall_score,
+            int(pred), confidence, overall_score,
             data=data, regime_info=regime_info,
         )
 
