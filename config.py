@@ -1,10 +1,15 @@
+import os
 from pathlib import Path
 
 # ── Paths ──────────────────────────────────────────────────────────────────────
-DATA_DIR    = Path("data")
-STORAGE_DIR = Path("storage")
-CACHE_FILE  = STORAGE_DIR / "recommendations_cache.json"
-TRACKER_DB  = STORAGE_DIR / "tracker.db"
+DATA_DIR = Path("data")
+
+# On Linux (Streamlit Cloud) use /tmp — always writable and survives the session.
+# On Windows (local dev) use the local storage/ directory.
+STORAGE_DIR = Path("/tmp/stockai_storage") if os.name == "posix" else Path("storage")
+
+CACHE_FILE = STORAGE_DIR / "recommendations_cache.json"
+TRACKER_DB = STORAGE_DIR / "tracker.db"
 
 # ── Stock universes ────────────────────────────────────────────────────────────
 UNIVERSE_LARGECAP  = DATA_DIR / "largecap.csv"

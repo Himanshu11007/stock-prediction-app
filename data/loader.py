@@ -1,3 +1,4 @@
+import os
 import pickle
 import time
 from pathlib import Path
@@ -5,7 +6,10 @@ from pathlib import Path
 import yfinance as yf
 import streamlit as st
 
-_CACHE_DIR = Path("storage/price_cache")
+_CACHE_DIR = (
+    Path("/tmp/stockai_storage/price_cache") if os.name == "posix"
+    else Path("storage/price_cache")
+)
 _TTL = 3600  # 1 hour
 
 

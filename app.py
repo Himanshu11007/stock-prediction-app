@@ -127,16 +127,22 @@ with tab_home:
 
     scanning = is_scan_running()
 
-    # ── Auto-refresh every 20 s while a scan is running ───────────────────────
-    if scanning:
-        st_autorefresh(interval=20_000, limit=60, key="scan_autorefresh")
+    # ── Auto-refresh every 20 s while a scan is running or cache is empty ─────
+    if scanning or not any_cache_exists():
+        st_autorefresh(interval=20_000, limit=90, key="scan_autorefresh")
 
     # ── Scan status banner ────────────────────────────────────────────────────
     progress = scan_progress()
     status_col, refresh_col = st.columns([5, 1])
 
     with status_col:
-        if scanning:
+        _err = progress.get("category", "")
+        if isinstance(_err, str) and _err.startswith("error:"):
+            st.markdown(
+                f'<span class="scan-badge-stale">⚠️ Scan failed: {_err[6:].strip()} — click Refresh to retry</span>',
+                unsafe_allow_html=True,
+            )
+        elif scanning:
             cat   = progress.get("category", "stocks")
             done  = progress.get("done", 0)
             total = progress.get("total", 0)
