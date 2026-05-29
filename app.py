@@ -196,6 +196,13 @@ with tab_home:
         r for r in all_recs
         if r["signal"] in  ("STRONG BUY","BUY")
     ]
+
+    for r in buy_candidate:
+        r["rank_score"]=(
+            r["score"]
+              * (r["confidence"] / 100)
+              * (r["accuracy"] / 100)
+        )
       
 
     best = max(
@@ -204,7 +211,10 @@ with tab_home:
          default=None
     )
 
-    k5.metric("Top pick", best["symbol"] if best else "—")
+    if best:
+        k5.metric("Top pick", best["symbol"])
+    else:
+        k5.metric("Top pick","No BUY")
 
     # ── Per-category sections ─────────────────────────────────────────────────
     CAP_COLORS  = {"Large Cap": "#58a6ff", "Mid Cap": "#a371f7", "Small Cap": "#3fb950"}
