@@ -191,7 +191,19 @@ with tab_home:
     k2.metric("📈 BUY",  sum(1 for r in all_recs if r["signal"] in ("STRONG BUY", "BUY")))
     k3.metric("📉 SELL", sum(1 for r in all_recs if r["signal"] in ("STRONG SELL", "SELL")))
     k4.metric("⏸️ HOLD", sum(1 for r in all_recs if r["signal"] == "HOLD"))
-    best = max(all_recs, key=lambda r: r["score"], default=None)
+
+    buy_candidate = [
+        r for r in all_recs
+        if r["signal"] in  ("STRONG BUY","BUY")
+    ]
+      
+
+    best = max(
+        buy_candidate,
+        key=lambda r: r["score"],
+         default=None
+    )
+
     k5.metric("Top pick", best["symbol"] if best else "—")
 
     # ── Per-category sections ─────────────────────────────────────────────────
