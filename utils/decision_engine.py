@@ -27,6 +27,7 @@ STRONG_BUY_MIN  = 72
 BUY_MIN         = 58
 HOLD_MIN        = 42
 SELL_MIN        = 28
+W_TIMEFRAME     = 0.15
 # < 28 → STRONG SELL
 
 # ── Pillar weights ─────────────────────────────────────────────────────────
@@ -133,10 +134,38 @@ def _news_score(sentiment_score: float) -> tuple[float, str]:
 
 def _volume_score(data: pd.DataFrame) -> tuple[float, str]:
     """Volume ratio vs 20-day average → [-1, +1]."""
+
+    # print("VOLUME STOCK CALLED")
+    # print(data[["Volume"]].tail(10))
+
+    # print(
+    #     f"Current Volume = {data['Volume'].iloc[-1]}",
+    #     f"Avg Volume = {data['Volume'].tail(20).mean()}",
+    #     flush=True
+    # )
+
     try:
-        vol_ratio   = float(data.iloc[-1].get("Volume_Ratio", 1.0))
-        price_up    = float(data.iloc[-1].get("Price_Change", 0)) > 0
-        vol_breakout = float(data.iloc[-1].get("Vol_Breakout", 0)) == 1.0
+        valid_volume_data = data[data["Volume"] > 0].copy()
+        if valid_volume_data.empty:
+            return 0.0,"Volume data not available"
+        latest = valid_volume_data.iloc[-1]
+
+        current_volume = float(latest["Volume"])
+        avg_volume = float(valid_volume_data["Volume"].tail(20).mean())
+        if avg_volume <= 0:
+            return 0.0,"Volume data unavailable"
+
+        vol_ratio   = current_volume / avg_volume
+
+        # print(
+        #     f"Latest valid volume = {current_volume},"
+        #     f"Avg valid volume = {avg_volume}, "
+        #     f"Vol Ratio = {vol_ratio:.2f}",
+        #     flush=True
+        # )
+
+        price_up    = float(latest.get("Price_Change", 0)) > 0
+        vol_breakout = float(latest.get("Vol_Breakout", 0)) == 1.0
 
         if vol_breakout:
             return 1.0, f"Volume breakout ({vol_ratio:.1f}× avg) with price surge"
@@ -173,7 +202,7 @@ def generate_signal(
     Returns:
         (signal, score_0_to_1, summary_reason, factor_list)
     """
-    print("generate_signal called")
+    st.write("generate_signal called")
     factors: list[str] = []
 
     # ── Pillar 1: ML direction ───────────────────────────────────────────────
@@ -208,7 +237,7 @@ def generate_signal(
 
     # ── Pillar 5: Volume strength ────────────────────────────────────────────
     vol_s, vol_label = 0.0, "Volume: no data"
-
+  
     if data is not None and not data.empty:
 
         vol_s, vol_label = _volume_score(data)
@@ -234,34 +263,20 @@ def generate_signal(
         factors.append("Market regime: not analysed")
 
     # ── Pillar 7: Multi-timeframe confluence ─────────────────────────────────
-    tf_s = timeframe_score
+    tf_s = max(-1.0,min(1.0,float(timeframe_score)))
 
-    if timeframe_score >= 2:
+    if tf_s >= 0.75:
+        factors.append("Multi-timeframe trend: strong bullish alignment")
 
-        factors.append(
-            "Multi-timeframe trend: strong bullish alignment"
-        )
+    elif tf_s >= 0.5:
+        factors.append("Multi-timeframe trend: mildly bullish")
 
-    elif timeframe_score == 1:
+    elif tf_s <= -0.75:
+        factors.append("Multi-timeframe trend: mildly bearish alignment")
 
-        factors.append(
-            "Multi-timeframe trend: mildly bullish"
-        )
-
-    elif timeframe_score == -1:
-
-        factors.append(
-            "Multi-timeframe trend: mildly bearish"
-        )
-
-    elif timeframe_score <= -2:
-
-        factors.append(
-            "Multi-timeframe trend: strong bearish alignment"
-        )
-
+    elif tf_s <= -0.25:
+        factors.append("Multi-timeframe trend: mildy bearish")
     else:
-
         factors.append(
             "Multi-timeframe trend: mixed / neutral"
         )
@@ -274,7 +289,7 @@ def generate_signal(
         news_s     * W_NEWS     +
         vol_s      * W_VOLUME   +
         regime_s   * W_REGIME   +
-        tf_s       * 0.15
+        tf_s       * W_TIMEFRAME
     )
 
     # Map [-1, +1] → [0, 100]
@@ -328,15 +343,16 @@ def generate_signal(
             f"(score {score_100:.0f}/100)"
         )
     
-    # print("=" * 50)
+    # print("=" * 50,flush=True)
     # print(f"ml_dir={ml_dir}")
     # print(f"ml_conf={ml_conf}")
     # print(f"tech={tech_score}")
-    # print(f"sent={news_score}")
-    # print(f"tf={timeframe_score}")
+    # print(f"sent={news_s}")
+    # print(f"tf={tf_s}")
     # print(f"regime={regime_s}")
     # print(f"volume={vol_s}")
-    
+    # print("=" * 50,flush=True)
+
     return (
         signal,
         round(score_100 / 100, 4),

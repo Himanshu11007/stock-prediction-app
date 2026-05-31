@@ -13,7 +13,7 @@ _BULLISH = {"STRONG BUY", "BUY"}
 _BEARISH = {"STRONG SELL", "SELL"}
 
 
-def passes_quality_filters(data, signal: str, confidence: float, accuracy: float) -> bool:
+def passes_quality_filters(data, signal: str, confidence: float, accuracy: float,score:float = 0.0) -> bool:
     """Return True only when this stock/signal meets all quality standards."""
 
     # Weak model
@@ -22,6 +22,9 @@ def passes_quality_filters(data, signal: str, confidence: float, accuracy: float
 
     # Low confidence
     if confidence < MIN_CONFIDENCE:
+        return False
+    
+    if signal is _BULLISH and score < MIN_CONFLUENCE_SCORE:
         return False
 
     # Illiquid stock

@@ -60,14 +60,14 @@ def _scan_one(symbol: str, company_map: dict, loader_fn) -> dict | None:
            regime_info=regime_info
         )
 
-        print(
-            f"{symbol} | {signal} | "
-            f"Score = {score: .2f} | "
-            f"Conf = {confidence: .2f} |"
-            f"Acc = {acc * 100: .2f}"
-        )
+        # print(
+        #     f"{symbol} | {signal} | "
+        #     f"Score = {score: .2f} | "
+        #     f"Conf = {confidence: .2f} |"
+        #     f"Acc = {acc * 100: .2f}"
+        # )
 
-        if not passes_quality_filters(data, signal, confidence, acc):
+        if not passes_quality_filters(data, signal, confidence, acc,score):
             return None
 
         risk = calculate_risk(data, signal)

@@ -207,7 +207,7 @@ with tab_home:
 
     best = max(
         buy_candidate,
-        key=lambda r: r["rank_score"],
+        key=lambda r: r["score"],
          default=None
     )
 
@@ -255,18 +255,18 @@ with tab_home:
                         badge = '<span class="pick-badge-buy">📈 BUY</span>'
                     regime_tag = f'<br/>Regime <b>{rec.get("regime","—")}</b>' if rec.get("regime") else ""
                     st.markdown(f"""
-<div class="pick-card">
-  <div class="pick-rank">#{i+1} TOP PICK</div>
-  <div class="pick-name">{rec['stock']}</div>
-  <div class="pick-symbol">{rec['symbol']}</div>
-  <div>{badge}</div>
-  <div class="pick-meta">
-    Score <b>{round(rec['score']*100,0):.0f}/100</b><br/>
-    Conf <b>{rec['confidence']}%</b><br/>
-    Acc <b>{rec['accuracy']}%</b><br/>
-    ₹ <b>{rec.get('close','—')}</b>{regime_tag}
-  </div>
-</div>""", unsafe_allow_html=True)
+                        <div class="pick-card">
+                        <div class="pick-rank">#{i+1} TOP PICK</div>
+                        <div class="pick-name">{rec['stock']}</div>
+                        <div class="pick-symbol">{rec['symbol']}</div>
+                        <div>{badge}</div>
+                        <div class="pick-meta">
+                            Score <b>{round(rec['score']*100,0):.0f}/100</b><br/>
+                            Conf <b>{rec['confidence']}%</b><br/>
+                            Acc <b>{rec['accuracy']}%</b><br/>
+                            ₹ <b>{rec.get('close','—')}</b>{regime_tag}
+                        </div>
+                        </div>""", unsafe_allow_html=True)
         else:
             st.caption("No BUY signals passed quality filters in this category.")
 
