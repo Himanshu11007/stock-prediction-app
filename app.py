@@ -169,7 +169,7 @@ with tab_home:
             )
 
     with refresh_col:
-        force_refresh = st.button("🔄 Refresh", use_container_width=True)
+        force_refresh = st.button("🔄 Refresh", width="stretch")
 
     # ── Start background scan if needed ───────────────────────────────────────
     if force_refresh or needs_scan():
@@ -207,7 +207,7 @@ with tab_home:
 
     best = max(
         buy_candidate,
-        key=lambda r: r["score"],
+        key=lambda r: r["rank_score"],
          default=None
     )
 
@@ -283,7 +283,7 @@ with tab_home:
                 df["Signal"] = df["Signal"].map(icons).fillna(df["Signal"])
                 df = df.sort_values("Score", ascending=False).reset_index(drop=True)
                 df.index += 1
-                st.dataframe(df, use_container_width=True)
+                st.dataframe(df, width="stretch")
 
     if not any_cache_exists():
         st.info(
@@ -309,7 +309,7 @@ with tab_analyse:
             label_visibility="collapsed",
         )
     with btn_col:
-        predict_clicked = st.button("🚀 Analyse", type="primary", use_container_width=True)
+        predict_clicked = st.button("🚀 Analyse", type="primary", width="stretch")
 
     stock_symbol = stocks_df.loc[
         stocks_df["Company"] == selected_company, "Symbol"
@@ -531,6 +531,6 @@ with tab_tracker:
         df["Correct"] = df["Correct"].map(
             lambda v: "✅" if v == 1 else ("❌" if v == 0 else "—")
         )
-        st.dataframe(df, use_container_width=True, hide_index=True)
+        st.dataframe(df, width="stretch", hide_index=True)
     else:
         st.caption("No signals saved yet.")

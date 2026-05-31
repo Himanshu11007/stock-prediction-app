@@ -1,6 +1,10 @@
 import numpy as np
+import pandas as pd
+
 
 def create_features(data):
+    data = data.copy()   # avoid SettingWithCopyWarning on slice inputs
+
     # ── Target ────────────────────────────────────────────────────────────────
     data["Up"] = (data["Close"].shift(-1) > data["Close"]).astype(int)
 
@@ -65,7 +69,7 @@ def create_features(data):
     high_low   = data["High"] - data["Low"]
     high_close = (data["High"] - data["Close"].shift(1)).abs()
     low_close  = (data["Low"]  - data["Close"].shift(1)).abs()
-    true_range = high_low.combine(high_close, max).combine(low_close, max)
+    true_range = pd.concat([high_low, high_close, low_close], axis=1).max(axis=1)
     data["ATR"] = true_range.ewm(com=13, adjust=False).mean()   # Wilder ATR
     data["ATR_Pct"] = data["ATR"] / data["Close"]               # normalised
 
@@ -75,11 +79,8 @@ def create_features(data):
     plus_dm   = np.where((up_move > down_move) & (up_move > 0), up_move, 0.0)
     minus_dm  = np.where((down_move > up_move) & (down_move > 0), down_move, 0.0)
 
-    import pandas as pd
-
-    
-    plus_dm = pd.Series(plus_dm, index= data.index)
-    minus_dm = pd.Series(minus_dm,index=data.index)
+    plus_dm  = pd.Series(plus_dm,  index=data.index)
+    minus_dm = pd.Series(minus_dm, index=data.index)
     atr14 = true_range.ewm(com=13,adjust=False).mean()
     plus_di14 = (100 *plus_dm.ewm(com=13, adjust=False).mean() / atr14.replace(0, np.nan))
 

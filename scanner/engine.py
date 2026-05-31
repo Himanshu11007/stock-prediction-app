@@ -14,6 +14,8 @@ from utils.regime import detect_regime
 from utils.risk import calculate_risk
 from scanner.filters import passes_quality_filters
 from config import SCAN_MAX_STOCKS, SCAN_MAX_WORKERS
+from data.loader import load_multi_timeframe_data
+from features.engineer import get_trend_signal
 
 
 def _scan_one(symbol: str, company_map: dict, loader_fn) -> dict | None:
@@ -37,9 +39,32 @@ def _scan_one(symbol: str, company_map: dict, loader_fn) -> dict | None:
         _, overall_score, _ = analyze_overall_sentiment(headlines)
 
         regime_info = detect_regime(data)
+
+        multi_tf_data = load_multi_timeframe_data(symbol)
+        
+        weekly_trend = get_trend_signal(multi_tf_data["weekly"])
+        daily_trend = get_trend_signal(multi_tf_data["daily"])
+
+        raw_tf_score = (
+            weekly_trend["score"] + daily_trend["score"]
+        )
+        timeframe_score = raw_tf_score / 2
+
+
         signal, score, reason, factors = generate_signal(
-            int(pred), confidence, overall_score,
-            data=data, regime_info=regime_info,
+           prediction=int(pred),
+           confidence=confidence,
+           news_score= overall_score,
+           timeframe_score=timeframe_score,
+           data=data,
+           regime_info=regime_info
+        )
+
+        print(
+            f"{symbol} | {signal} | "
+            f"Score = {score: .2f} | "
+            f"Conf = {confidence: .2f} |"
+            f"Acc = {acc * 100: .2f}"
         )
 
         if not passes_quality_filters(data, signal, confidence, acc):
@@ -61,6 +86,9 @@ def _scan_one(symbol: str, company_map: dict, loader_fn) -> dict | None:
             "target":      risk["target"],
             "rr_ratio":    risk["rr_ratio"],
             "regime":      regime_info.get("regime", "Unknown"),
+            "weekly_trend":weekly_trend["trend"],
+            "daily_trend":daily_trend["trend"],
+            "timeframe_score":round(timeframe_score,2),
             "model":       model_name,
         }
     except Exception:

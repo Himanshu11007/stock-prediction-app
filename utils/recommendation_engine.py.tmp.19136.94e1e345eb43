@@ -85,8 +85,13 @@ def get_top_recommendations(stock_list, stocks_df, _progress_bar=None):
                 data=data,
                 regime_info=None
             )
-        
-
+            
+            print(
+                f"{stock} |"
+                f"{final_signal} |"
+                f"Score={final_score:.2f}"
+            )
+            
             # Get company name from stock database
             company_row = stocks_df[stocks_df["Symbol"] == stock]
             company_name = (

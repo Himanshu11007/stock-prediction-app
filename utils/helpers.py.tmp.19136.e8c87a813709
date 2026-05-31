@@ -20,7 +20,7 @@ def show_candlestick_chart(data):
         paper_bgcolor="#161b22", plot_bgcolor="#0d1117",
         font=dict(color="#c9d1d9"),
     )
-    st.plotly_chart(fig, width="stretch")
+    st.plotly_chart(fig, use_container_width=True)
 
 
 def prepare_data(data):

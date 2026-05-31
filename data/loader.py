@@ -1,10 +1,18 @@
 import os
 import pickle
 import time
+import warnings
 from pathlib import Path
 
 import yfinance as yf
 import streamlit as st
+
+# Suppress noisy yfinance / urllib3 warnings that are not actionable
+warnings.filterwarnings("ignore", category=FutureWarning,    module="yfinance")
+warnings.filterwarnings("ignore", category=UserWarning,      module="yfinance")
+warnings.filterwarnings("ignore", message=".*No price data found.*")
+warnings.filterwarnings("ignore", message=".*No timezone found.*")
+warnings.filterwarnings("ignore", message=".*auto_adjust.*")
 
 _CACHE_DIR = (
     Path("/tmp/stockai_storage/price_cache") if os.name == "posix"

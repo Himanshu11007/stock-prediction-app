@@ -1,3 +1,5 @@
+
+
 """
 utils/decision_engine.py — Multi-factor confluence scoring engine.
 
@@ -18,7 +20,7 @@ The weighted sum is mapped to [0, 100], then bucketed into a signal.
 
 from __future__ import annotations
 import pandas as pd
-
+import streamlit as st
 
 # ── Score → Signal buckets ─────────────────────────────────────────────────
 STRONG_BUY_MIN  = 72
@@ -171,7 +173,7 @@ def generate_signal(
     Returns:
         (signal, score_0_to_1, summary_reason, factor_list)
     """
-
+    print("generate_signal called")
     factors: list[str] = []
 
     # ── Pillar 1: ML direction ───────────────────────────────────────────────
@@ -325,7 +327,16 @@ def generate_signal(
             f"High-conviction bearish confluence "
             f"(score {score_100:.0f}/100)"
         )
-
+    
+    # print("=" * 50)
+    # print(f"ml_dir={ml_dir}")
+    # print(f"ml_conf={ml_conf}")
+    # print(f"tech={tech_score}")
+    # print(f"sent={news_score}")
+    # print(f"tf={timeframe_score}")
+    # print(f"regime={regime_s}")
+    # print(f"volume={vol_s}")
+    
     return (
         signal,
         round(score_100 / 100, 4),
