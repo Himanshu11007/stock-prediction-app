@@ -264,6 +264,8 @@ with tab_home:
                             Score <b>{round(rec['score']*100,0):.0f}/100</b><br/>
                             Conf <b>{rec['confidence']}%</b><br/>
                             Acc <b>{rec['accuracy']}%</b><br/>
+                            Weekely <b>{rec.get('weekly_trend','-')}<br/>
+                            Daily <b>{rec.get('daily_trend','-')}<br/>
                             ₹ <b>{rec.get('close','—')}</b>{regime_tag}
                         </div>
                         </div>""", unsafe_allow_html=True)
