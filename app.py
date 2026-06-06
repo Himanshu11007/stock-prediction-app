@@ -371,7 +371,7 @@ with tab_analyse:
             st.warning(f"Backtest skipped: {e}")
 
         try:
-            headlines = fetch_news(selected_company)
+            headlines = fetch_news(stock_symbol)
         except Exception:
             headlines = []
 

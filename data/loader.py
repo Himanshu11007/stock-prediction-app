@@ -59,7 +59,10 @@ def _fetch(symbol: str):
 
 @st.cache_data(ttl=_TTL)
 def load_data(symbol: str):
+    #print(f"Stock symbol received in load_data():",{symbol},flush=True)
     """Streamlit-cached fetch for UI session — checks disk cache first."""
+    if " " in symbol:
+        raise ValueError(f"Invalid yfinance symbol received:") 
     cached = _read_disk_cache(symbol)
     if cached is not None:
         return cached

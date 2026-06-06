@@ -4,9 +4,11 @@ import requests
 import streamlit as st
 from pathlib import Path
 from utils.company_mapper import get_company_names
+import feedparser 
+from urllib.parse import quote_plus
 
 _NEWS_CACHE_DIR = Path("storage/news_cache")
-_NEWS_TTL = 43200  # 12 hours — news doesn't change that fast
+_NEWS_TTL = 3600  # 12 hours — news doesn't change that fast
 
 
 def _cache_path(symbol: str) -> Path:
@@ -45,23 +47,31 @@ def fetch_news(symbol_or_name: str) -> list[str]:
     Fetch up to 5 recent headlines for a stock.
     Results are cached on disk for 12 h to avoid exhausting the NewsAPI quota.
     """
-    cached = _load_news_cache(symbol_or_name)
-    if cached is not None:
-        return cached
 
     try:
-        api_key    = st.secrets["API_KEY"]
+        #api_key    = st.secrets["API_KEY"]
         query_name = get_company_names(symbol_or_name)
-        url = (
-            f"https://newsapi.org/v2/everything?"
-            f"q={query_name}&language=en&sortBy=publishedAt&apiKey={api_key}"
+        query_name = (
+            query_name.lower().replace(" limited","").replace(" ltd","").strip()
         )
-        response = requests.get(url, timeout=8)
-        response.raise_for_status()
-        articles  = response.json().get("articles", [])
-        headlines = [a["title"] for a in articles[:5] if a.get("title")]
-    except Exception:
+        cache_key = query_name.replace(" ","_")
+        cached = _load_news_cache(cache_key)
+        if cached is not None:
+            return cached
+        query = quote_plus(f"{query_name} stock")
+        url = (
+            f"https://news.google.com/rss/search?q={query}&hl=en&gl=IN&cdid=IN:en"
+        )
+        feed = feedparser.parse(url)
+        headlines = []
+        for entry in feed.entries[:10]:
+            headlines.append(entry.title)
+        return headlines
+        
+      
+    except Exception as e:
+        print("Google News RSS errors:",e,flush=True)
         headlines = []
 
-    _save_news_cache(symbol_or_name, headlines)
+    _save_news_cache(cache_key, headlines)
     return headlines

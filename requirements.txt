@@ -10,3 +10,4 @@ transformers
 torch
 xgboost
 streamlit-autorefresh
+feedparser

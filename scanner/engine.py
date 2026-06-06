@@ -20,6 +20,7 @@ from features.engineer import get_trend_signal
 
 def _scan_one(symbol: str, company_map: dict, loader_fn) -> dict | None:
     """Scan a single symbol. Returns a result dict, or None on failure / filtered out."""
+    #print(f"Stock symbol received in _scan_one():",{symbol},flush=True)
     try:
         data = loader_fn(symbol)
         if data is None or data.empty:
@@ -37,6 +38,9 @@ def _scan_one(symbol: str, company_map: dict, loader_fn) -> dict | None:
 
         headlines = fetch_news(symbol)
         _, overall_score, _ = analyze_overall_sentiment(headlines)
+
+        # headlines = []
+        # overall_score = 0.0
 
         regime_info = detect_regime(data)
 
@@ -94,6 +98,28 @@ def _scan_one(symbol: str, company_map: dict, loader_fn) -> dict | None:
     except Exception:
         return None
 
+def _rerank_top_with_news(results: list[dict], top_n: int = 20) -> list[dict]:
+    top = sorted(results, key=lambda r: r["score"], reverse=True)[:top_n]
+    top_symbols = {r["symbol"] for r in top}
+
+    reranked = []
+
+    for r in top:
+        try:
+            headlines = fetch_news(r["symbol"])
+            _, news_score, _ = analyze_overall_sentiment(headlines)
+
+            r["news_score"] = round(news_score, 2)
+            r["score"] = round(min(1.0, max(0.0, r["score"] + news_score * 0.10)), 4)
+
+        except Exception:
+            r["news_score"] = 0.0
+
+        reranked.append(r)
+
+    remaining = [r for r in results if r["symbol"] not in top_symbols]
+
+    return sorted(reranked + remaining, key=lambda r: r["score"], reverse=True)
 
 def get_recommendations(
     stock_list,
@@ -126,7 +152,9 @@ def get_recommendations(
             if save_callback and done % save_interval == 0:
                 save_callback(sorted(results, key=lambda r: r["score"], reverse=True))
 
-    final = sorted(results, key=lambda r: r["score"], reverse=True)
+    
+    prelim = sorted(result,key=lambda r:r["score"],reverse=True)
+    final = _rerank_top_with_news(prelim,top_n=20)
     if save_callback:
         save_callback(final)
     return final
