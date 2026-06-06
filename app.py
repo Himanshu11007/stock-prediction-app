@@ -319,8 +319,15 @@ with tab_analyse:
 
     st.caption(f"Symbol: **{stock_symbol}**")
 
+    # ── Clear cached results if user selects a different stock ────────────────
+    if st.session_state.get("_analysed_symbol") != stock_symbol:
+        for key in ["_analysis_result", "_analysed_symbol"]:
+            st.session_state.pop(key, None)
+
+    # ── Run analysis only when button is clicked ──────────────────────────────
     if predict_clicked:
         st.divider()
+        result = {}
 
         with st.spinner(f"Loading {stock_symbol}…"):
             try:
@@ -378,41 +385,15 @@ with tab_analyse:
         except Exception:
             regime_info = None
 
-        # ── Multi-timeframe analysis ─────────────────────────────
-
         try:
-
-            multi_tf_data = load_multi_timeframe_data(
-                stock_symbol
-            )
-
-            weekly_trend = get_trend_signal(
-                multi_tf_data["weekly"]
-            )
-
-            daily_trend = get_trend_signal(
-                multi_tf_data["daily"]
-            )
-
-            raw_tf_score = (
-                weekly_trend["score"] +
-                daily_trend["score"]
-            )
-
+            multi_tf_data = load_multi_timeframe_data(stock_symbol)
+            weekly_trend = get_trend_signal(multi_tf_data["weekly"])
+            daily_trend = get_trend_signal(multi_tf_data["daily"])
+            raw_tf_score = (weekly_trend["score"] + daily_trend["score"])
             timeframe_score = raw_tf_score / 2
-
         except Exception:
-
-            weekly_trend = {
-                "trend": "UNKNOWN",
-                "score": 0
-            }
-
-            daily_trend = {
-                "trend": "UNKNOWN",
-                "score": 0
-            }
-
+            weekly_trend = {"trend": "UNKNOWN", "score": 0}
+            daily_trend = {"trend": "UNKNOWN", "score": 0}
             timeframe_score = 0
 
         try:
@@ -435,13 +416,52 @@ with tab_analyse:
 
         close_price = float(data["Close"].iloc[-1])
 
-        # Auto-save to tracker
         try:
             save_signal(stock_symbol, selected_company, final_signal,
                         final_score, confidence, acc, close_price)
         except Exception:
             pass
 
+        # ── Persist everything to session state ───────────────────────────────
+        st.session_state["_analysed_symbol"] = stock_symbol
+        st.session_state["_analysis_result"] = dict(
+            data=data, X=X, models=models, acc=acc,
+            model_name=model_name, pred=pred, confidence=confidence,
+            overall_sentiment=overall_sentiment, overall_score=overall_score,
+            headline_results=headline_results, headlines=headlines,
+            regime_info=regime_info, weekly_trend=weekly_trend,
+            daily_trend=daily_trend, timeframe_score=timeframe_score,
+            final_signal=final_signal, final_score=final_score,
+            reason=reason, factors=factors, risk=risk,
+            close_price=close_price,
+        )
+
+    # ── Render results from session state (survives autorefresh reruns) ───────
+    if "_analysis_result" in st.session_state:
+        r = st.session_state["_analysis_result"]
+
+        # Unpack
+        data            = r["data"]
+        X               = r["X"]
+        models          = r["models"]
+        acc             = r["acc"]
+        model_name      = r["model_name"]
+        confidence      = r["confidence"]
+        overall_sentiment  = r["overall_sentiment"]
+        overall_score      = r["overall_score"]
+        headline_results   = r["headline_results"]
+        headlines          = r["headlines"]
+        weekly_trend    = r["weekly_trend"]
+        daily_trend     = r["daily_trend"]
+        timeframe_score = r["timeframe_score"]
+        final_signal    = r["final_signal"]
+        final_score     = r["final_score"]
+        reason          = r["reason"]
+        factors         = r["factors"]
+        risk            = r["risk"]
+        close_price     = r["close_price"]
+
+        st.divider()
         chart_col, signal_col = st.columns([3, 2])
 
         with chart_col:
@@ -464,7 +484,6 @@ with tab_analyse:
                 show_prediction(confidence, acc, model_name,
                                 final_signal, final_score, reason,
                                 factors=factors, risk=risk)
-                
             except Exception as e:
                 st.error(f"Signal display error: {e}")
 
@@ -472,28 +491,15 @@ with tab_analyse:
                 '<div class="sec-title">⏱️ Multi-timeframe analysis</div>',
                 unsafe_allow_html=True
             )
-
             t1, t2, t3 = st.columns(3)
-
-            t1.metric(
-                "Weekly Trend",
-                weekly_trend["trend"]
-            )
-
-            t2.metric(
-                "Daily Trend",
-                daily_trend["trend"]
-            )
-
-            t3.metric(
-                "Confluence Score",
-                timeframe_score
-            )
+            t1.metric("Weekly Trend",      weekly_trend["trend"])
+            t2.metric("Daily Trend",       daily_trend["trend"])
+            t3.metric("Confluence Score",  timeframe_score)
 
             st.markdown('<div class="sec-title">📰 Market sentiment</div>', unsafe_allow_html=True)
             s1, s2 = st.columns(2)
-            s1.metric("Mood",      overall_sentiment)
-            s2.metric("Avg score", round(overall_score, 2))
+            s1.metric("Mood",       overall_sentiment)
+            s2.metric("Avg score",  round(overall_score, 2))
 
             if headline_results:
                 with st.expander("Latest news", expanded=True):
