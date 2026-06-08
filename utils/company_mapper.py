@@ -24,9 +24,9 @@ def get_company_names(stock_symbol: str) -> str:
       3. Strip '.NS' suffix                     (last resort)
     """
 
-    print(f"Stock symbol received in get_company_names():",{stock_symbol},flush=True)
+    #print(f"Stock symbol received in get_company_names():",{stock_symbol},flush=True)
     if stock_symbol in COMPANY_MAPPING:
-        print(f"Mapped :{stock_symbol} -> {COMPANY_MAPPING[stock_symbol]}",flush=True)
+        #print(f"Mapped :{stock_symbol} -> {COMPANY_MAPPING[stock_symbol]}",flush=True)
         return COMPANY_MAPPING[stock_symbol]
     return stock_symbol.replace(".NS","")
     # try:
