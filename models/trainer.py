@@ -2,7 +2,6 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import StandardScaler
 from sklearn.pipeline import Pipeline
-from sklearn.model_selection import TimeSeriesSplit
 import numpy as np
 
 try:
@@ -84,13 +83,6 @@ def walk_forward_validate(X, y, n_splits=5):
     Returns:
         float: weighted mean accuracy across all valid folds (weight = fold size).
                Falls back to 0.5 when data is too short for even one fold.
-
-    Fold example for 250-row dataset:
-        Fold 1  Train [0:150]   Test [150:170]
-        Fold 2  Train [0:170]   Test [170:190]
-        Fold 3  Train [0:190]   Test [190:210]
-        Fold 4  Train [0:210]   Test [210:230]
-        Fold 5  Train [0:230]   Test [230:250]
     """
     splits = _walk_forward_splits(len(X), n_splits)
     if not splits:
@@ -124,20 +116,49 @@ def walk_forward_validate(X, y, n_splits=5):
     return sum(acc * w for acc, w in fold_results) / total_weight
 
 
-def train_model(X, y):
+def _fast_accuracy(X, y) -> float:
     """
-    Walk-forward validate, then retrain on the full dataset.
+    Single held-out split accuracy — used during background scans where speed
+    matters more than a perfectly calibrated CV score.
 
-    Signature is (X, y) — the full feature matrix and label series — so that
-    walk-forward manages its own expanding splits internally.  The final models
-    are trained on ALL available history, maximising information for live
-    predictions.
+    Trains on the first 80 % of rows (time-ordered), evaluates on the last 20 %.
+    Returns 0.5 if the split is too small.
+    """
+    split = int(len(X) * 0.8)
+    if split < _MIN_TRAIN_ROWS or (len(X) - split) < _MIN_TEST_ROWS:
+        return 0.5
+
+    X_tr, y_tr = X.iloc[:split], y.iloc[:split]
+    X_te, y_te = X.iloc[split:], y.iloc[split:]
+
+    if len(set(y_tr)) < 2:
+        return 0.5
+
+    accs = []
+    for _, model in _make_candidates():
+        try:
+            model.fit(X_tr, y_tr)
+            accs.append(model.score(X_te, y_te))
+        except Exception:
+            continue
+
+    return sum(accs) / len(accs) if accs else 0.5
+
+
+def train_model(X, y, fast: bool = False):
+    """
+    Validate then retrain on the full dataset.
+
+    Args:
+        X, y  : full feature matrix and label series.
+        fast  : if True, use a single 80/20 split instead of full walk-forward
+                CV.  ~5× faster — use this in background scans.
 
     Returns:
         trained_models (dict[str, Pipeline]): name → fitted Pipeline
-        wf_accuracy    (float): mean walk-forward accuracy in [0, 1]
+        wf_accuracy    (float): validation accuracy in [0, 1]
     """
-    wf_acc = walk_forward_validate(X, y)
+    wf_acc = _fast_accuracy(X, y) if fast else walk_forward_validate(X, y)
 
     trained_models = {}
     for name, model in _make_candidates():

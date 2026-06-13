@@ -4,7 +4,7 @@ scanner/background.py — fire-and-forget background scan manager.
 Key design:
   - Priority stocks are scanned first so the UI shows results in ~60 s
   - Results are saved progressively every 5 stocks (not at the end)
-  - A JSON progress file lets the UI show X / Y completed
+  - A JSON progress file lets the UI show X / Y completed (global across categories)
   - A lock file prevents duplicate concurrent scans
 """
 import json
@@ -22,8 +22,6 @@ from scanner.cache import save_category_cache, cache_age_minutes
 _LOCK_FILE     = STORAGE_DIR / ".scan_running"
 _PROGRESS_FILE = STORAGE_DIR / ".scan_progress.json"
 
-# Well-known, liquid stocks that are scanned first so the dashboard
-# populates quickly (~60 s) before the full universe finishes.
 _PRIORITY = {
     "Large Cap": [
         "RELIANCE.NS", "TCS.NS", "HDFCBANK.NS", "INFY.NS", "ICICIBANK.NS",
@@ -46,7 +44,7 @@ def is_scan_running() -> bool:
     if not _LOCK_FILE.exists():
         return False
     try:
-        if time.time() - _LOCK_FILE.stat().st_mtime > 1800:   # stale after 30 min
+        if time.time() - _LOCK_FILE.stat().st_mtime > 1800:
             _LOCK_FILE.unlink(missing_ok=True)
             return False
     except Exception:
@@ -68,7 +66,6 @@ def _write_progress(category: str, done: int, total: int) -> None:
 
 
 def scan_progress() -> dict:
-    """Return current progress dict or empty dict."""
     try:
         if _PROGRESS_FILE.exists():
             return json.loads(_PROGRESS_FILE.read_text(encoding="utf-8"))
@@ -84,15 +81,19 @@ def _load_universe(csv_path) -> tuple[list, dict]:
     try:
         df = pd.read_csv(csv_path)
         df.columns = df.columns.str.strip()
-        symbols = df["Symbol"].str.strip().dropna().tolist()
-        cmap    = dict(zip(df["Symbol"].str.strip(), df["Company"].str.strip()))
+        # Drop rows where Symbol is missing or contains spaces (malformed entries)
+        df = df[df["Symbol"].notna()]
+        df["Symbol"] = df["Symbol"].str.strip()
+        df = df[df["Symbol"].str.len() > 0]
+        df = df[~df["Symbol"].str.contains(r"\s", regex=True)]
+        symbols = df["Symbol"].tolist()
+        cmap    = dict(zip(df["Symbol"], df["Company"].str.strip()))
         return symbols, cmap
     except Exception:
         return [], {}
 
 
 def _ordered_symbols(all_symbols: list, priority: list) -> list:
-    """Return priority symbols first, then the rest (deduped)."""
     seen = set(priority)
     rest = [s for s in all_symbols if s not in seen]
     return priority + rest
@@ -101,43 +102,63 @@ def _ordered_symbols(all_symbols: list, priority: list) -> list:
 # ── Background worker ─────────────────────────────────────────────────────────
 
 def _run_scan(universes: dict, global_company_map: dict) -> None:
-    """Runs in a daemon thread. Saves progressively so UI sees results fast."""
+    """
+    Runs in a daemon thread. Tracks a global done counter across all categories
+    so the UI progress never resets mid-scan.
+    """
     from scanner.engine import get_recommendations
 
     STORAGE_DIR.mkdir(parents=True, exist_ok=True)
     _LOCK_FILE.touch()
+
+    # ── Compute global total across all categories upfront ───────────────────
+    global_total = sum(len(syms) for syms, _ in universes.values())
+    global_done  = 0          # incremented by every save_callback call
+    _write_progress("Starting", 0, global_total)
+
+    # Thread-safe counter so parallel futures don't race on global_done
+    _lock = threading.Lock()
 
     try:
         for category, (all_symbols, cmap) in universes.items():
             if not all_symbols:
                 continue
 
-            merged_map = {**global_company_map, **cmap}
-            priority   = _PRIORITY.get(category, [])
-            symbols    = _ordered_symbols(all_symbols, priority)
-            total      = len(symbols)
+            merged_map   = {**global_company_map, **cmap}
+            priority     = _PRIORITY.get(category, [])
+            symbols      = _ordered_symbols(all_symbols, priority)
+            cat_total    = len(symbols)
+            cat_done_ref = [0]   # mutable container so closure can mutate it
 
-            _write_progress(category, 0, total)
-
-            # Closure captures `category` correctly via default arg
-            def _save(results, cat=category, tot=total):
+            def _save(results, cat=category, c_ref=cat_done_ref):
                 save_category_cache(cat, results)
-                prog = scan_progress()
-                done = prog.get("done", 0) + 1  # rough increment
-                _write_progress(cat, min(done, tot), tot)
+                # Advance both the per-category and global counters by save_interval
+                nonlocal global_done
+                with _lock:
+                    # Each save_callback represents `save_interval` stocks processed
+                    c_ref[0] = min(c_ref[0] + 5, cat_total)
+                    global_done = min(global_done + 5, global_total)
+                    _write_progress(cat, global_done, global_total)
 
             get_recommendations(
                 symbols,
                 merged_map,
                 use_raw_loader=True,
                 save_callback=_save,
-                save_interval=5,      # write to disk every 5 stocks
+                save_interval=5,
             )
 
-        _write_progress("done", 0, 0)
+            # Mark category as fully done (handle remainder stocks < save_interval)
+            with _lock:
+                remainder = cat_total - cat_done_ref[0]
+                if remainder > 0:
+                    global_done = min(global_done + remainder, global_total)
+                    _write_progress(category, global_done, global_total)
+
+        _write_progress("done", global_total, global_total)
 
     except Exception as e:
-        _write_progress(f"error: {e}", 0, 0)
+        _write_progress(f"error: {e}", global_done, global_total)
     finally:
         _LOCK_FILE.unlink(missing_ok=True)
 
@@ -145,10 +166,6 @@ def _run_scan(universes: dict, global_company_map: dict) -> None:
 # ── Public API ────────────────────────────────────────────────────────────────
 
 def start_background_scan(global_company_map: dict) -> bool:
-    """
-    Launch a background scan of Large / Mid / Small Cap universes.
-    Returns True if a new scan started, False if one is already running.
-    """
     if is_scan_running():
         return False
 
@@ -168,7 +185,6 @@ def start_background_scan(global_company_map: dict) -> bool:
 
 
 def needs_scan() -> bool:
-    """True when any category cache is missing or older than TTL."""
     if is_scan_running():
         return False
     for cat in CATEGORIES:

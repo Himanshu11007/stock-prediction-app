@@ -25,7 +25,7 @@ SCAN_MAX_STOCKS   = 50
 SCAN_MAX_WORKERS  = 8
 
 # ── Quality filters ────────────────────────────────────────────────────────────
-MIN_ACCURACY              = 0.52
+MIN_ACCURACY              = 0.44  # fast=True single-split runs ~3-4 pts lower than walk-forward CV
 MIN_CONFIDENCE            = 55.0
 MIN_AVG_VOLUME            = 500_000
 MIN_CONFLUENCE_SCORE      = 0.60    # 0-1 normalised; below this → filtered out

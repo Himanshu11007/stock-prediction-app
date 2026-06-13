@@ -1,3 +1,4 @@
+import threading
 import streamlit as st
 
 # ── FinBERT loaded lazily — not at import time — to avoid OOM on Streamlit Cloud
@@ -9,8 +10,10 @@ def _load_finbert():
     except Exception:
         return None
 
-# ── In-memory sentiment cache — avoids re-running FinBERT on identical headlines
+
+# ── Thread-safe in-memory sentiment cache ─────────────────────────────────────
 _sentiment_cache: dict[str, tuple[str, float]] = {}
+_cache_lock = threading.Lock()
 
 
 def _textblob_sentiment(text: str) -> tuple[str, float]:
@@ -28,8 +31,9 @@ def _textblob_sentiment(text: str) -> tuple[str, float]:
 
 
 def analyze_sentiment(headline: str) -> tuple[str, float]:
-    if headline in _sentiment_cache:
-        return _sentiment_cache[headline]
+    with _cache_lock:
+        if headline in _sentiment_cache:
+            return _sentiment_cache[headline]
 
     finbert = _load_finbert()
     if finbert is None:
@@ -48,7 +52,8 @@ def analyze_sentiment(headline: str) -> tuple[str, float]:
         except Exception:
             out = _textblob_sentiment(headline)
 
-    _sentiment_cache[headline] = out
+    with _cache_lock:
+        _sentiment_cache[headline] = out
     return out
 
 
@@ -56,6 +61,35 @@ def analyze_overall_sentiment(headlines: list[str]) -> tuple[str, float, list[di
     if not headlines:
         return "Neutral", 0.0, []
 
+    finbert = _load_finbert()
+
+    # ── Batch mode: run all uncached headlines through FinBERT in one call ───
+    # This is significantly faster than calling finbert() one headline at a time.
+    with _cache_lock:
+        uncached = [h for h in headlines if h not in _sentiment_cache]
+
+    if finbert is not None and uncached:
+        try:
+            batch_results = finbert([h[:512] for h in uncached])
+            with _cache_lock:
+                for headline, res in zip(uncached, batch_results):
+                    label = res["label"].lower()
+                    score = res["score"]
+                    if label == "positive":
+                        out = ("Positive",  round(score, 2))
+                    elif label == "negative":
+                        out = ("Negative", round(-score, 2))
+                    else:
+                        out = ("Neutral", 0.0)
+                    _sentiment_cache[headline] = out
+        except Exception:
+            # Fall back to per-headline TextBlob if batch fails
+            for headline in uncached:
+                out = _textblob_sentiment(headline)
+                with _cache_lock:
+                    _sentiment_cache[headline] = out
+
+    # ── Now all headlines are in cache — read results ────────────────────────
     scores  = []
     details = []
     for hl in headlines:

@@ -11,3 +11,5 @@ xgboost
 streamlit-autorefresh
 feedparser
 torch
+torchvision
+torchaudio
