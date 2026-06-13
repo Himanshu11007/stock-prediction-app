@@ -24,7 +24,7 @@ def passes_quality_filters(data, signal: str, confidence: float, accuracy: float
     if confidence < MIN_CONFIDENCE:
         return False
     
-    if signal is _BULLISH and score < MIN_CONFLUENCE_SCORE:
+    if signal in _BULLISH and score < MIN_CONFLUENCE_SCORE:
         return False
 
     # Illiquid stock

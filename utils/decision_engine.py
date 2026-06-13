@@ -31,15 +31,11 @@ HOLD_MIN       = 42
 SELL_MIN       = 28
 # < 28 → STRONG SELL
 
-# ── Pillar weights (must sum to 1.0) ───────────────────────────────────────
-W_ML_DIR    = 0.20
-W_ML_CONF   = 0.10
-W_TECH      = 0.25
-W_NEWS      = 0.10
-W_VOLUME    = 0.05
-W_REGIME    = 0.10
-W_TIMEFRAME = 0.10  # FIX: was 0.15, adjusted so all weights sum to 1.0
-W_MOMENTUM  = 0.10
+# ── Pillar weights (imported from config — single source of truth) ──────────
+from config import (
+    W_ML_DIR, W_ML_CONF, W_TECH, W_NEWS,
+    W_VOLUME, W_REGIME, W_TIMEFRAME, W_MOMENTUM,
+)
 
 # Guard: catch any future accidental weight edits immediately
 _WEIGHT_SUM = W_ML_DIR + W_ML_CONF + W_TECH + W_NEWS + W_VOLUME + W_REGIME + W_TIMEFRAME + W_MOMENTUM

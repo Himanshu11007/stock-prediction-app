@@ -66,12 +66,9 @@ def fetch_news(symbol_or_name: str) -> list[str]:
         headlines = []
         for entry in feed.entries[:10]:
             headlines.append(entry.title)
+        _save_news_cache(cache_key, headlines)
         return headlines
-        
-      
+
     except Exception as e:
         print("Google News RSS errors:",e,flush=True)
-        headlines = []
-
-    _save_news_cache(cache_key, headlines)
-    return headlines
+        return []

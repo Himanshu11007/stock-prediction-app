@@ -153,7 +153,7 @@ def get_recommendations(
                 save_callback(sorted(results, key=lambda r: r["score"], reverse=True))
 
     
-    prelim = sorted(result,key=lambda r:r["score"],reverse=True)
+    prelim = sorted(results,key=lambda r:r["score"],reverse=True)
     final = _rerank_top_with_news(prelim,top_n=20)
     if save_callback:
         save_callback(final)
