@@ -19,7 +19,10 @@ from scanner.cache import load_category_cache, cache_age_minutes, any_cache_exis
 from scanner.background import (
     start_background_scan, is_scan_running, scan_progress, needs_scan
 )
-from storage.tracker import save_signal, get_recent_signals, get_accuracy_stats
+from storage.tracker import (
+    save_signal, get_recent_signals, get_accuracy_stats,
+    save_recommendation,
+)
 from config import CATEGORIES
 
 # ─── PAGE CONFIG ──────────────────────────────────────────────────────────────
@@ -423,6 +426,22 @@ with tab_analyse:
         except Exception:
             pass
 
+        try:
+            save_recommendation(
+                symbol           = stock_symbol,
+                stock            = selected_company,
+                signal           = final_signal,
+                cmp              = close_price,
+                confluence_score = final_score,
+                ml_confidence    = confidence,
+                news_score       = overall_score,
+                accuracy         = acc,
+                target           = risk.get("target")    if risk else None,
+                stop_loss        = risk.get("stop_loss") if risk else None,
+            )
+        except Exception:
+            pass
+
         # ── Persist everything to session state ───────────────────────────────
         st.session_state["_analysed_symbol"] = stock_symbol
         st.session_state["_analysis_result"] = dict(
@@ -500,13 +519,11 @@ with tab_analyse:
             t3.metric("Confluence Score",  timeframe_score)
 
             st.markdown('<div class="sec-title">📰 Market sentiment</div>', unsafe_allow_html=True)
-
-            # ── Row 1: Mood + Avg score ───────────────────────────────────────
             s1, s2 = st.columns(2)
-            s1.metric("Mood",      overall_sentiment)
-            s2.metric("Avg score", round(overall_score, 2))
+            s1.metric("Mood",       overall_sentiment)
+            s2.metric("Avg score",  round(overall_score, 2))
 
-            # ── Row 2: Headline counts ────────────────────────────────────────
+             # ── Row 2: Headline counts ────────────────────────────────────────
             c1, c2, c3 = st.columns(3)
             c1.metric("🟢 Positive News", sentiment_counts.get("positive", 0))
             c2.metric("🟡 Neutral News",  sentiment_counts.get("neutral",  0))
