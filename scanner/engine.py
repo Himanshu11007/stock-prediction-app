@@ -64,7 +64,7 @@ def _scan_one(symbol: str, company_map: dict, loader_fn) -> dict | None:
         pred, confidence, _ = ensemble_predict(models, latest)
 
         headlines = fetch_news(symbol)
-        _, overall_score, _ = analyze_overall_sentiment(headlines)
+        _, overall_score, _, _ = analyze_overall_sentiment(headlines)
 
         regime_info = detect_regime(data)
 

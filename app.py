@@ -376,9 +376,10 @@ with tab_analyse:
             headlines = []
 
         try:
-            overall_sentiment, overall_score, headline_results = analyze_overall_sentiment(headlines)
+            overall_sentiment, overall_score, headline_results, sentiment_counts = analyze_overall_sentiment(headlines)
         except Exception:
             overall_sentiment, overall_score, headline_results = "Neutral", 0.0, []
+            sentiment_counts = {"positive": 0, "neutral": 0, "negative": 0}
 
         try:
             regime_info = detect_regime(data)
@@ -429,6 +430,7 @@ with tab_analyse:
             model_name=model_name, pred=pred, confidence=confidence,
             overall_sentiment=overall_sentiment, overall_score=overall_score,
             headline_results=headline_results, headlines=headlines,
+            sentiment_counts=sentiment_counts,
             regime_info=regime_info, weekly_trend=weekly_trend,
             daily_trend=daily_trend, timeframe_score=timeframe_score,
             final_signal=final_signal, final_score=final_score,
@@ -451,6 +453,7 @@ with tab_analyse:
         overall_score      = r["overall_score"]
         headline_results   = r["headline_results"]
         headlines          = r["headlines"]
+        sentiment_counts   = r.get("sentiment_counts", {"positive": 0, "neutral": 0, "negative": 0})
         weekly_trend    = r["weekly_trend"]
         daily_trend     = r["daily_trend"]
         timeframe_score = r["timeframe_score"]
@@ -497,9 +500,17 @@ with tab_analyse:
             t3.metric("Confluence Score",  timeframe_score)
 
             st.markdown('<div class="sec-title">📰 Market sentiment</div>', unsafe_allow_html=True)
+
+            # ── Row 1: Mood + Avg score ───────────────────────────────────────
             s1, s2 = st.columns(2)
-            s1.metric("Mood",       overall_sentiment)
-            s2.metric("Avg score",  round(overall_score, 2))
+            s1.metric("Mood",      overall_sentiment)
+            s2.metric("Avg score", round(overall_score, 2))
+
+            # ── Row 2: Headline counts ────────────────────────────────────────
+            c1, c2, c3 = st.columns(3)
+            c1.metric("🟢 Positive News", sentiment_counts.get("positive", 0))
+            c2.metric("🟡 Neutral News",  sentiment_counts.get("neutral",  0))
+            c3.metric("🔴 Negative News", sentiment_counts.get("negative", 0))
 
             if headline_results:
                 with st.expander("Latest news", expanded=True):

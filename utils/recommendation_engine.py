@@ -62,7 +62,7 @@ def get_top_recommendations(stock_list, stocks_df, _progress_bar=None):
             
             # News sentiment
             headlines = fetch_news(stock)
-            overall_sentiment, overall_score, headline_results = analyze_overall_sentiment(headlines)
+            overall_sentiment, overall_score, headline_results, _ = analyze_overall_sentiment(headlines)
             
             multi_tf_data = load_multi_timeframe_data(stock)
 

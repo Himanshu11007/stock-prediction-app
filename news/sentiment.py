@@ -57,9 +57,18 @@ def analyze_sentiment(headline: str) -> tuple[str, float]:
     return out
 
 
-def analyze_overall_sentiment(headlines: list[str]) -> tuple[str, float, list[dict]]:
+def analyze_overall_sentiment(headlines: list[str]) -> tuple[str, float, list[dict], dict]:
+    """
+    Analyze sentiment of a list of headlines.
+
+    Returns:
+        mood      (str)        — "Bullish" | "Neutral" | "Bearish"
+        avg_score (float)      — mean sentiment score across all headlines
+        details   (list[dict]) — per-headline breakdown
+        counts    (dict)       — {"positive": int, "neutral": int, "negative": int}
+    """
     if not headlines:
-        return "Neutral", 0.0, []
+        return "Neutral", 0.0, [], {"positive": 0, "neutral": 0, "negative": 0}
 
     finbert = _load_finbert()
 
@@ -89,13 +98,16 @@ def analyze_overall_sentiment(headlines: list[str]) -> tuple[str, float, list[di
                 with _cache_lock:
                     _sentiment_cache[headline] = out
 
-    # ── Now all headlines are in cache — read results ────────────────────────
+    # ── Read results from cache — no re-analysis ─────────────────────────────
     scores  = []
     details = []
+    counts  = {"positive": 0, "neutral": 0, "negative": 0}
+
     for hl in headlines:
         sentiment, score = analyze_sentiment(hl)
         scores.append(score)
         details.append({"headline": hl, "sentiment": sentiment, "score": score})
+        counts[sentiment.lower()] = counts.get(sentiment.lower(), 0) + 1
 
     avg = sum(scores) / len(scores)
     if avg > 0.25:
@@ -105,4 +117,4 @@ def analyze_overall_sentiment(headlines: list[str]) -> tuple[str, float, list[di
     else:
         mood = "Neutral"
 
-    return mood, round(avg, 2), details
+    return mood, round(avg, 2), details, counts
