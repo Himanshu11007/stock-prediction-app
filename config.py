@@ -41,11 +41,11 @@ SELL_MIN        = 28
 # below SELL_MIN → STRONG SELL
 
 # ── Confluence pillar weights (must sum to 1.0) ────────────────────────────────
-W_ML_DIR    = 0.20
-W_ML_CONF   = 0.10
+W_ML_DIR    = 0.15
+W_ML_CONF   = 0.05
 W_TECH      = 0.25
 W_NEWS      = 0.10
 W_VOLUME    = 0.05
 W_REGIME    = 0.10
-W_TIMEFRAME = 0.10
-W_MOMENTUM  = 0.10
+W_TIMEFRAME = 0.15
+W_MOMENTUM  = 0.15

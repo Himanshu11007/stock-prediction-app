@@ -88,7 +88,7 @@ def _scan_one(symbol: str, company_map: dict, loader_fn) -> dict | None:
 
         risk = calculate_risk(data, signal)
 
-        print(f"[SCAN] {symbol}: PASSED → {signal} | score={score:.2f} conf={confidence:.1f} acc={acc*100:.1f}%", flush=True)
+        #print(f"[SCAN] {symbol}: PASSED → {signal} | score={score:.2f} conf={confidence:.1f} acc={acc*100:.1f}%", flush=True)
 
         return {
             "stock":           company_map.get(symbol, symbol.replace(".NS", "")),
@@ -152,7 +152,7 @@ def get_recommendations(
     results: list[dict] = []
     done    = 0
 
-    print(f"[SCAN] Starting scan of {len(stocks)} stocks with {SCAN_MAX_WORKERS} workers", flush=True)
+    #print(f"[SCAN] Starting scan of {len(stocks)} stocks with {SCAN_MAX_WORKERS} workers", flush=True)
 
     with ThreadPoolExecutor(max_workers=SCAN_MAX_WORKERS) as pool:
         futures = {pool.submit(_scan_one, s, company_map, loader_fn): s for s in stocks}
@@ -165,7 +165,7 @@ def get_recommendations(
             if save_callback and done % save_interval == 0:
                 save_callback(sorted(results, key=lambda r: r["score"], reverse=True))
 
-    print(f"[SCAN] Finished: {done} processed, {len(results)} passed filters", flush=True)
+    #print(f"[SCAN] Finished: {done} processed, {len(results)} passed filters", flush=True)
 
     final = sorted(results, key=lambda r: r["score"], reverse=True)
     if save_callback:

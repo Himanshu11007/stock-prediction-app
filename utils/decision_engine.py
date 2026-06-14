@@ -314,6 +314,22 @@ def generate_signal(
         momentum_s * W_MOMENTUM
     )
 
+    # print(
+    #     f"""
+    #     ML_DIR={ml_dir:.2f}
+    #     ML_CONFIG={ml_conf:.2f}
+    #     TECH={tech_score:.2f}
+    #     NEWS={news_s:.2f}
+    #     VOL={vol_s:.2f}
+    #     REGIME={regime_s:.2f}
+    #     TF={tf_s:.2f}
+    #     MOM={momentum_s:.2f}
+    #     WEIGHTED={weighted:.2f}
+    #     SCORE={((weighted+1)*50):.2f}
+    #     """
+    # )
+
+
     # Map [-1, +1] → [0, 100]
     score_100 = max(0.0, min(100.0, (weighted + 1.0) * 50.0))
 
