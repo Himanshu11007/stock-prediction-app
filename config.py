@@ -28,7 +28,7 @@ SCAN_MAX_WORKERS  = 8
 MIN_ACCURACY              = 0.44  # fast=True single-split runs ~3-4 pts lower than walk-forward CV
 MIN_CONFIDENCE            = 55.0
 MIN_AVG_VOLUME            = 500_000
-MIN_CONFLUENCE_SCORE      = 0.60    # 0-1 normalised; below this → filtered out
+MIN_CONFLUENCE_SCORE      = 0.55    # 0-1 normalised; below this → filtered out
 RSI_BUY_MIN               = 35
 RSI_BUY_MAX               = 70      # relaxed from 65 — ADX filter handles trend
 VOLATILITY_SPIKE_MULTIPLIER = 2.5
@@ -43,7 +43,7 @@ SELL_MIN        = 28
 # ── Confluence pillar weights (must sum to 1.0) ────────────────────────────────
 W_ML_DIR    = 0.15
 W_ML_CONF   = 0.05
-W_TECH      = 0.25
+W_TECH      = 0.30
 W_NEWS      = 0.10
 W_VOLUME    = 0.05
 W_REGIME    = 0.10

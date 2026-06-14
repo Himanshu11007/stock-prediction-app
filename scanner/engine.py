@@ -143,6 +143,7 @@ def get_recommendations(
     Scan stocks in parallel. Calls save_callback every save_interval stocks
     so the UI can display partial results before the full scan ends.
     """
+    #print("GET_RECOMMENDATAIONS STARTED",flush=True)
     if use_raw_loader:
         from data.loader import load_data_raw as loader_fn
     else:
@@ -160,6 +161,11 @@ def get_recommendations(
             done += 1
             result = future.result()
             if result:
+                # print(
+                #     f"{result['symbol']} |"
+                #     f"{result['signal']} |"
+                #     f"{result['score']} |",flush=True
+                # )
                 results.append(result)
 
             if save_callback and done % save_interval == 0:

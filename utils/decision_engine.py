@@ -313,6 +313,7 @@ def generate_signal(
         tf_s       * W_TIMEFRAME +
         momentum_s * W_MOMENTUM
     )
+    # print("Generate signal called---------------:",flush=True)
 
     # print(
     #     f"""
