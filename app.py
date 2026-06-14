@@ -23,6 +23,12 @@ from storage.tracker import (
     save_signal, get_recent_signals, get_accuracy_stats,
     save_recommendation,
 )
+from storage.recommendation_validation import (
+    validate_old_recommendations,
+    load_validated_recommendations,
+    migrate_schema as _migrate_validation_schema,
+)
+_migrate_validation_schema()   # ensure validation columns exist on every start
 from config import CATEGORIES
 
 # ─── PAGE CONFIG ──────────────────────────────────────────────────────────────
@@ -519,11 +525,11 @@ with tab_analyse:
             t3.metric("Confluence Score",  timeframe_score)
 
             st.markdown('<div class="sec-title">📰 Market sentiment</div>', unsafe_allow_html=True)
-            s1, s2 = st.columns(2)
-            s1.metric("Mood",       overall_sentiment)
-            s2.metric("Avg score",  round(overall_score, 2))
 
-             # ── Row 2: Headline counts ────────────────────────────────────────
+            s1, s2 = st.columns(2)
+            s1.metric("Mood",      overall_sentiment)
+            s2.metric("Avg score", round(overall_score, 2))
+
             c1, c2, c3 = st.columns(3)
             c1.metric("🟢 Positive News", sentiment_counts.get("positive", 0))
             c2.metric("🟡 Neutral News",  sentiment_counts.get("neutral",  0))
@@ -570,3 +576,51 @@ with tab_tracker:
         st.dataframe(df, width="stretch", hide_index=True)
     else:
         st.caption("No signals saved yet.")
+
+    st.divider()
+
+    # ── Recommendation Validation ─────────────────────────────────────────────
+    st.markdown('<div class="sec-title">🎯 Recommendation Validation (5-Day)</div>', unsafe_allow_html=True)
+    st.caption("Validates recommendations that are at least 5 trading days old.")
+
+    if st.button("🔄 Validate Old Recommendations", use_container_width=True):
+        with st.spinner("Fetching prices and validating recommendations..."):
+            try:
+                count = validate_old_recommendations()
+                if count > 0:
+                    st.success(f"✅ Validated {count} recommendation{'s' if count != 1 else ''}.")
+                else:
+                    st.info("No recommendations ready for validation yet (need 5 trading days).")
+            except Exception as _ve:
+                st.error(f"Validation error: {_ve}")
+
+    validated_rows = load_validated_recommendations(limit=50)
+    if validated_rows:
+        st.markdown("**Recent validated recommendations**")
+        vdf = pd.DataFrame(validated_rows)
+
+        # Format columns for display
+        vdf["Success"] = vdf["Success"].map(
+            lambda v: "✅ Success" if v == 1 else ("❌ Failed" if v == 0 else "—")
+        )
+        vdf["Return %"] = vdf["Return %"].apply(
+            lambda v: f"{v:+.2f}%" if v is not None else "—"
+        )
+        signal_icons = {
+            "STRONG BUY": "🚀 STRONG BUY", "BUY": "📈 BUY",
+            "HOLD": "⏸️ HOLD",
+            "SELL": "📉 SELL", "STRONG SELL": "🔥 STRONG SELL",
+        }
+        vdf["Signal"] = vdf["Signal"].map(signal_icons).fillna(vdf["Signal"])
+
+        st.dataframe(vdf, use_container_width=True, hide_index=True)
+
+        # Summary metrics
+        total_v  = len(validated_rows)
+        success_v = sum(1 for r in validated_rows if r.get("Success") == 1)
+        v1, v2, v3 = st.columns(3)
+        v1.metric("Total Validated",  total_v)
+        v2.metric("Successful",       success_v)
+        v3.metric("Success Rate",     f"{round(success_v / total_v * 100, 1)}%" if total_v else "—")
+    else:
+        st.caption("No validated recommendations yet.")

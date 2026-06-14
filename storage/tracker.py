@@ -106,11 +106,14 @@ def get_accuracy_stats() -> tuple[int | None, int | None]:
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# Recommendation Validation
+# Recommendation Validation Storage
 # ══════════════════════════════════════════════════════════════════════════════
 
 def _ensure_validation_table(con: sqlite3.Connection) -> None:
-    """Create recommendation_validation table + indexes if they don't exist yet."""
+    """
+    Create recommendation_validation table + indexes if not already present.
+    Uses is_validated (not 'validated') to match recommendation_validation.py.
+    """
     con.execute("""
         CREATE TABLE IF NOT EXISTS recommendation_validation (
             id               INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -125,15 +128,16 @@ def _ensure_validation_table(con: sqlite3.Connection) -> None:
             accuracy         REAL,
             target           REAL,
             stop_loss        REAL,
-            validated        INTEGER DEFAULT 0,
+            is_validated     INTEGER DEFAULT 0,
             validation_date  TEXT,
-            outcome_price    REAL,
+            validation_price REAL,
+            return_pct       REAL,
             success          INTEGER
         )
     """)
     con.execute("""
         CREATE INDEX IF NOT EXISTS idx_rv_pending
-        ON recommendation_validation (validated, saved_date)
+        ON recommendation_validation (is_validated, saved_date)
     """)
     con.execute("""
         CREATE INDEX IF NOT EXISTS idx_rv_symbol
@@ -156,20 +160,7 @@ def save_recommendation(
     saved_date:       str | None = None,
 ) -> int:
     """
-    Save one scanner recommendation for future 5-day outcome validation.
-
-    Args:
-        symbol           : Yahoo Finance ticker e.g. "RELIANCE.NS"
-        stock            : Display company name
-        signal           : "STRONG BUY" | "BUY" | "HOLD" | "SELL" | "STRONG SELL"
-        cmp              : Current market price at save time
-        confluence_score : Weighted confluence score (0–1)
-        ml_confidence    : Model confidence (0–100)
-        news_score       : FinBERT average sentiment score (-1 to +1)
-        accuracy         : Model accuracy (0–1)
-        target           : ATR-based target price (None for HOLD)
-        stop_loss        : ATR-based stop-loss price (None for HOLD)
-        saved_date       : Override date (ISO string); defaults to today
+    Persist one scanner recommendation for future 5-day outcome validation.
 
     Returns:
         int: rowid of the inserted row
@@ -207,12 +198,10 @@ def save_recommendation(
 
 def load_pending_recommendations(as_of_date: str | None = None) -> list[dict]:
     """
-    Return all unvalidated recommendations.
+    Return all recommendations where is_validated = 0.
 
     Args:
-        as_of_date : Only return rows saved on or before this ISO date.
-                     Pass a date 5 trading days ago to get rows ready for validation.
-                     Omit to return all pending rows.
+        as_of_date: Only return rows saved on or before this ISO date.
 
     Returns:
         list[dict] with keys: id, Date, Symbol, Stock, Signal, CMP,
@@ -236,18 +225,16 @@ def load_pending_recommendations(as_of_date: str | None = None) -> list[dict]:
             target           AS "Target",
             stop_loss        AS "Stop Loss"
         FROM  recommendation_validation
-        WHERE validated = 0
+        WHERE is_validated = 0
     """
     params = []
     if as_of_date:
         query  += " AND saved_date <= ?"
         params.append(as_of_date)
-
     query += " ORDER BY saved_date ASC, id ASC"
 
     rows = con.execute(query, params).fetchall()
     con.close()
-
     keys = ["id", "Date", "Symbol", "Stock", "Signal", "CMP",
             "Confluence Score", "ML Confidence", "News Score",
             "Accuracy", "Target", "Stop Loss"]
