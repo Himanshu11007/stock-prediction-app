@@ -6,8 +6,9 @@ from pathlib import Path
 from utils.company_mapper import get_company_names
 import feedparser 
 from urllib.parse import quote_plus
+from config import STORAGE_DIR
 
-_NEWS_CACHE_DIR = Path("storage/news_cache")
+_NEWS_CACHE_DIR = STORAGE_DIR/ "news_cache"
 _NEWS_TTL = 3600  # 12 hours — news doesn't change that fast
 
 
@@ -60,7 +61,7 @@ def fetch_news(symbol_or_name: str) -> list[str]:
             return cached
         query = quote_plus(f"{query_name} stock")
         url = (
-            f"https://news.google.com/rss/search?q={query}&hl=en&gl=IN&cdid=IN:en"
+            f"https://news.google.com/rss/search?q={query}&hl=en&gl=IN&ceid=IN:en"
         )
         feed = feedparser.parse(url)
         headlines = []

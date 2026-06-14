@@ -216,7 +216,7 @@ with tab_home:
 
     best = max(
         buy_candidate,
-        key=lambda r: r["score"],
+        key=lambda r: r.get("rank_score",r["score"]),
          default=None
     )
 
@@ -273,8 +273,8 @@ with tab_home:
                             Score <b>{round(rec['score']*100,0):.0f}/100</b><br/>
                             Conf <b>{rec['confidence']}%</b><br/>
                             Acc <b>{rec['accuracy']}%</b><br/>
-                            Weekely <b>{rec.get('weekly_trend','-')}<br/>
-                            Daily <b>{rec.get('daily_trend','-')}<br/>
+                            Weekly <b>{rec.get('weekly_trend','-')}</b><br/>
+                            Daily <b>{rec.get('daily_trend','-')}</b><br/>
                             ₹ <b>{rec.get('close','—')}</b>{regime_tag}
                         </div>
                         </div>""", unsafe_allow_html=True)

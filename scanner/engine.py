@@ -167,8 +167,7 @@ def get_recommendations(
 
     print(f"[SCAN] Finished: {done} processed, {len(results)} passed filters", flush=True)
 
-    prelim = sorted(results, key=lambda r: r["score"], reverse=True)
-    final  = _rerank_top_with_news(prelim, top_n=20)
+    final = sorted(results, key=lambda r: r["score"], reverse=True)
     if save_callback:
         save_callback(final)
     return final
