@@ -18,26 +18,30 @@ from scanner.filters import passes_quality_filters
 from config import SCAN_MAX_STOCKS, SCAN_MAX_WORKERS
 from data.loader import load_multi_timeframe_data
 from features.engineer import get_trend_signal
+from utils.logger import get_logger, log_stock_diagnostics, log_exception
 
-# How many times to retry a symbol that returns a 401/crumb error from yfinance
+logger = get_logger(__name__)
+
 _FETCH_RETRIES = 2
 _RETRY_DELAY   = 2  # seconds
 
 
 def _load_with_retry(loader_fn, symbol: str):
-    """Call loader_fn(symbol) with retries on transient yfinance 401/crumb errors."""
+    """Call loader_fn with retries on transient 401/crumb errors."""
     for attempt in range(_FETCH_RETRIES + 1):
         try:
             data = loader_fn(symbol)
             if data is not None and not data.empty:
                 return data
-            # Empty result — not a transient error, no point retrying
             return None
         except Exception as e:
             err = str(e).lower()
             is_transient = "401" in err or "crumb" in err or "unauthorized" in err
             if is_transient and attempt < _FETCH_RETRIES:
-                print(f"[SCAN] {symbol}: transient error ({e}), retrying in {_RETRY_DELAY}s (attempt {attempt+1}/{_FETCH_RETRIES})", flush=True)
+                logger.warning(
+                    "%s: transient error — %s (retry %d/%d in %ds)",
+                    symbol, e, attempt + 1, _FETCH_RETRIES, _RETRY_DELAY,
+                )
                 time.sleep(_RETRY_DELAY)
                 continue
             raise
@@ -45,19 +49,18 @@ def _load_with_retry(loader_fn, symbol: str):
 
 
 def _scan_one(symbol: str, company_map: dict, loader_fn) -> dict | None:
-    """Scan a single symbol. Returns a result dict, or None on failure / filtered out."""
+    """Scan a single symbol. Returns a result dict, or None on failure/filter."""
     try:
         data = _load_with_retry(loader_fn, symbol)
         if data is None or data.empty:
-            print(f"[SCAN] {symbol}: no data returned", flush=True)
+            logger.warning("%s: no data returned", symbol)
             return None
 
         data, X, y, _, _, y_train, _ = prepare_data(data)
         if len(set(y_train)) < 2:
-            print(f"[SCAN] {symbol}: single-class target — skipping", flush=True)
+            logger.info("%s: single-class target — skipping", symbol)
             return None
 
-        # fast=True: single 80/20 split instead of 5-fold walk-forward CV (~5× faster)
         models, acc = train_model(X, y, fast=True)
 
         latest = X.iloc[-1:]
@@ -82,13 +85,34 @@ def _scan_one(symbol: str, company_map: dict, loader_fn) -> dict | None:
             regime_info=regime_info,
         )
 
+        # ── Detailed pillar diagnostics (DEBUG level only) ────────────────────
+        log_stock_diagnostics(
+            symbol=symbol, prediction=pred, confidence=confidence,
+            accuracy=acc, signal=signal, final_score=score,
+            ml_dir=0.7 if pred == 1 else -0.7,
+            ml_conf=(max(50.0, min(100.0, confidence)) - 50.0) / 50.0,
+            tech_score=0.0,   # detailed breakdown available inside generate_signal
+            news_score=overall_score,
+            volume_score=0.0,
+            regime_score=float(regime_info.get("regime_score", 0.0)),
+            timeframe_score=timeframe_score,
+            momentum_score=0.0,
+            weighted_score=score,
+        )
+
         if not passes_quality_filters(data, signal, confidence, acc, score):
-            print(f"[SCAN] {symbol}: filtered out (signal={signal}, conf={confidence:.1f}, acc={acc:.2f}, score={score:.2f})", flush=True)
+            logger.info(
+                "FILTERED | %-20s | signal=%-11s | conf=%6.2f | acc=%.4f | score=%.4f",
+                symbol, signal, confidence, acc, score,
+            )
             return None
 
         risk = calculate_risk(data, signal)
 
-        #print(f"[SCAN] {symbol}: PASSED → {signal} | score={score:.2f} conf={confidence:.1f} acc={acc*100:.1f}%", flush=True)
+        logger.info(
+            "PASSED   | %-20s | signal=%-11s | score=%.4f | conf=%6.2f | acc=%.4f",
+            symbol, signal, score, confidence, acc,
+        )
 
         return {
             "stock":           company_map.get(symbol, symbol.replace(".NS", "")),
@@ -112,8 +136,7 @@ def _scan_one(symbol: str, company_map: dict, loader_fn) -> dict | None:
         }
 
     except Exception as e:
-        print(f"[SCAN] {symbol}: EXCEPTION — {e}", flush=True)
-        traceback.print_exc()
+        log_exception(logger, f"{symbol}: scan failed", e)
         return None
 
 
@@ -139,11 +162,6 @@ def get_recommendations(
     save_callback: Callable[[list], None] | None = None,
     save_interval: int = 5,
 ) -> list[dict]:
-    """
-    Scan stocks in parallel. Calls save_callback every save_interval stocks
-    so the UI can display partial results before the full scan ends.
-    """
-    #print("GET_RECOMMENDATAIONS STARTED",flush=True)
     if use_raw_loader:
         from data.loader import load_data_raw as loader_fn
     else:
@@ -153,7 +171,7 @@ def get_recommendations(
     results: list[dict] = []
     done    = 0
 
-    #print(f"[SCAN] Starting scan of {len(stocks)} stocks with {SCAN_MAX_WORKERS} workers", flush=True)
+    logger.info("Parallel scan: %d stocks / %d workers", len(stocks), SCAN_MAX_WORKERS)
 
     with ThreadPoolExecutor(max_workers=SCAN_MAX_WORKERS) as pool:
         futures = {pool.submit(_scan_one, s, company_map, loader_fn): s for s in stocks}
@@ -161,19 +179,14 @@ def get_recommendations(
             done += 1
             result = future.result()
             if result:
-                # print(
-                #     f"{result['symbol']} |"
-                #     f"{result['signal']} |"
-                #     f"{result['score']} |",flush=True
-                # )
                 results.append(result)
-
             if save_callback and done % save_interval == 0:
                 save_callback(sorted(results, key=lambda r: r["score"], reverse=True))
 
-    #print(f"[SCAN] Finished: {done} processed, {len(results)} passed filters", flush=True)
+    logger.info("Scan batch done: %d processed, %d passed filters", done, len(results))
 
-    final = sorted(results, key=lambda r: r["score"], reverse=True)
+    prelim = sorted(results, key=lambda r: r["score"], reverse=True)
+    final  = _rerank_top_with_news(prelim, top_n=20)
     if save_callback:
         save_callback(final)
     return final

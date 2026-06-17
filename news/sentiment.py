@@ -1,32 +1,35 @@
 import threading
 import streamlit as st
+from utils.logger import get_logger, log_exception
 
-# ── FinBERT loaded lazily — not at import time — to avoid OOM on Streamlit Cloud
+logger = get_logger(__name__)
+
 @st.cache_resource(show_spinner=False)
 def _load_finbert():
     try:
         from transformers import pipeline
-        return pipeline("sentiment-analysis", model="ProsusAI/finbert")
-    except Exception:
+        logger.info("Loading FinBERT sentiment model...")
+        model = pipeline("sentiment-analysis", model="ProsusAI/finbert")
+        logger.info("FinBERT loaded successfully")
+        return model
+    except Exception as e:
+        log_exception(logger, "Failed to load FinBERT — falling back to TextBlob", e)
         return None
 
-
-# ── Thread-safe in-memory sentiment cache ─────────────────────────────────────
 _sentiment_cache: dict[str, tuple[str, float]] = {}
 _cache_lock = threading.Lock()
 
 
 def _textblob_sentiment(text: str) -> tuple[str, float]:
-    """Lightweight fallback when FinBERT is unavailable."""
     try:
         from textblob import TextBlob
-        polarity = TextBlob(text).sentiment.polarity  # -1 to +1
+        polarity = TextBlob(text).sentiment.polarity
         if polarity > 0.1:
             return "Positive", round(polarity, 2)
         elif polarity < -0.1:
             return "Negative", round(polarity, 2)
-    except Exception:
-        pass
+    except Exception as e:
+        logger.debug("TextBlob fallback failed: %s", e)
     return "Neutral", 0.0
 
 
@@ -49,7 +52,8 @@ def analyze_sentiment(headline: str) -> tuple[str, float]:
                 out = ("Negative", round(-score, 2))
             else:
                 out = ("Neutral", 0.0)
-        except Exception:
+        except Exception as e:
+            logger.debug("FinBERT inference failed for headline, using TextBlob: %s", e)
             out = _textblob_sentiment(headline)
 
     with _cache_lock:
@@ -59,21 +63,16 @@ def analyze_sentiment(headline: str) -> tuple[str, float]:
 
 def analyze_overall_sentiment(headlines: list[str]) -> tuple[str, float, list[dict], dict]:
     """
-    Analyze sentiment of a list of headlines.
-
     Returns:
-        mood      (str)        — "Bullish" | "Neutral" | "Bearish"
-        avg_score (float)      — mean sentiment score across all headlines
-        details   (list[dict]) — per-headline breakdown
-        counts    (dict)       — {"positive": int, "neutral": int, "negative": int}
+        mood, avg_score, details, counts
+        counts = {"positive": int, "neutral": int, "negative": int}
     """
     if not headlines:
         return "Neutral", 0.0, [], {"positive": 0, "neutral": 0, "negative": 0}
 
     finbert = _load_finbert()
 
-    # ── Batch mode: run all uncached headlines through FinBERT in one call ───
-    # This is significantly faster than calling finbert() one headline at a time.
+    # Batch uncached headlines through FinBERT in one call
     with _cache_lock:
         uncached = [h for h in headlines if h not in _sentiment_cache]
 
@@ -91,14 +90,14 @@ def analyze_overall_sentiment(headlines: list[str]) -> tuple[str, float, list[di
                     else:
                         out = ("Neutral", 0.0)
                     _sentiment_cache[headline] = out
-        except Exception:
-            # Fall back to per-headline TextBlob if batch fails
+            logger.debug("FinBERT batch: %d headlines analyzed", len(uncached))
+        except Exception as e:
+            logger.warning("FinBERT batch failed, falling back to TextBlob: %s", e)
             for headline in uncached:
                 out = _textblob_sentiment(headline)
                 with _cache_lock:
                     _sentiment_cache[headline] = out
 
-    # ── Read results from cache — no re-analysis ─────────────────────────────
     scores  = []
     details = []
     counts  = {"positive": 0, "neutral": 0, "negative": 0}
@@ -117,4 +116,8 @@ def analyze_overall_sentiment(headlines: list[str]) -> tuple[str, float, list[di
     else:
         mood = "Neutral"
 
+    logger.debug(
+        "Sentiment summary: mood=%s avg=%.3f pos=%d neu=%d neg=%d",
+        mood, avg, counts["positive"], counts["neutral"], counts["negative"],
+    )
     return mood, round(avg, 2), details, counts

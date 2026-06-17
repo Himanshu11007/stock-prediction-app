@@ -49,3 +49,8 @@ W_VOLUME    = 0.05
 W_REGIME    = 0.10
 W_TIMEFRAME = 0.15
 W_MOMENTUM  = 0.10
+
+# ── Logging ────────────────────────────────────────────────────────────────────
+LOG_DIR          = STORAGE_DIR / "logs"
+LOG_FILE         = LOG_DIR / "app.log"
+ENABLE_DEBUG_LOGS = False   # set True to write DEBUG-level pillar diagnostics

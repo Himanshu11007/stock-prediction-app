@@ -26,7 +26,6 @@ from __future__ import annotations
 
 import sqlite3
 import datetime
-import logging
 from typing import Optional
 
 import numpy as np
@@ -34,14 +33,9 @@ import pandas as pd
 import yfinance as yf
 
 from config import TRACKER_DB
+from utils.logger import get_logger, log_exception
 
-# ── Module logger ──────────────────────────────────────────────────────────────
-logger = logging.getLogger(__name__)
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s  %(levelname)-8s  %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S",
-)
+logger = get_logger(__name__)
 
 # ── Constants ──────────────────────────────────────────────────────────────────
 _TRADING_DAYS_REQUIRED = 5
@@ -411,7 +405,7 @@ def validate_old_recommendations() -> int:
                 con.commit()
                 validated += 1
             except sqlite3.Error as db_err:
-                logger.error("DB write failed for %s (id=%s): %s", symbol, row_id, db_err)
+                log_exception(logger, f"DB write failed for {symbol} (id={row_id})", db_err)
                 con.rollback()
                 continue
 

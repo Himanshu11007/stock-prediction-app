@@ -23,6 +23,9 @@ from __future__ import annotations
 from typing import Optional
 
 import pandas as pd
+from utils.logger import get_logger, log_stock_diagnostics
+
+logger = get_logger(__name__)
 
 # ── Score → Signal buckets ─────────────────────────────────────────────────
 STRONG_BUY_MIN = 72
@@ -31,7 +34,7 @@ HOLD_MIN       = 42
 SELL_MIN       = 28
 # < 28 → STRONG SELL
 
-# ── Pillar weights (imported from config — single source of truth) ──────────
+# ── Pillar weights (must sum to 1.0) ───────────────────────────────────────
 from config import (
     W_ML_DIR, W_ML_CONF, W_TECH, W_NEWS,
     W_VOLUME, W_REGIME, W_TIMEFRAME, W_MOMENTUM,
@@ -313,23 +316,6 @@ def generate_signal(
         tf_s       * W_TIMEFRAME +
         momentum_s * W_MOMENTUM
     )
-    # print("Generate signal called---------------:",flush=True)
-
-    # print(
-    #     f"""
-    #     ML_DIR={ml_dir:.2f}
-    #     ML_CONFIG={ml_conf:.2f}
-    #     TECH={tech_score:.2f}
-    #     NEWS={news_s:.2f}
-    #     VOL={vol_s:.2f}
-    #     REGIME={regime_s:.2f}
-    #     TF={tf_s:.2f}
-    #     MOM={momentum_s:.2f}
-    #     WEIGHTED={weighted:.2f}
-    #     SCORE={((weighted+1)*50):.2f}
-    #     """
-    # )
-
 
     # Map [-1, +1] → [0, 100]
     score_100 = max(0.0, min(100.0, (weighted + 1.0) * 50.0))
@@ -350,6 +336,34 @@ def generate_signal(
     else:
         signal  = "STRONG SELL"
         summary = f"High-conviction bearish confluence (score {score_100:.0f}/100)"
+
+    # ── Log full pillar breakdown at DEBUG level ─────────────────────────────
+    log_stock_diagnostics(
+        symbol          = "?",          # symbol not available in this scope; set by engine.py
+        prediction      = prediction,
+        confidence      = confidence,
+        accuracy        = 0.0,          # accuracy not available in this scope
+        signal          = signal,
+        final_score     = round(score_100 / 100, 4),
+        ml_dir          = ml_dir,
+        ml_conf         = ml_conf,
+        tech_score      = tech_score,
+        news_score      = news_s,
+        volume_score    = vol_s,
+        regime_score    = regime_s,
+        timeframe_score = tf_s,
+        momentum_score  = momentum_s,
+        weighted_score  = weighted,
+    )
+
+    logger.debug(
+        "Signal %-11s | score=%5.1f/100 | weighted=%+.4f | "
+        "ml_dir=%+.2f ml_conf=%+.2f tech=%+.2f news=%+.2f "
+        "vol=%+.2f regime=%+.2f tf=%+.2f mom=%+.2f",
+        signal, score_100, weighted,
+        ml_dir, ml_conf, tech_score, news_s,
+        vol_s, regime_s, tf_s, momentum_s,
+    )
 
     return (
         signal,
