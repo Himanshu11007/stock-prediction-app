@@ -732,251 +732,251 @@ with tab_performance:
             "Recommendations are validated automatically after 5 trading days. "
             "Use the **📋 My Tracker** tab to trigger validation."
         )
-        st.stop()
 
-    _metrics = summary_metrics(_df)
+    else:
+        _metrics = summary_metrics(_df)
 
-    # ══════════════════════════════════════════════════════════════════════════
-    # SECTION 1 — Summary Metrics
-    # ══════════════════════════════════════════════════════════════════════════
-    st.markdown("### 📈 Summary")
-    m1, m2, m3, m4 = st.columns(4)
-    m1.metric("Total Recommendations", _metrics["total"])
-    m2.metric("Successful",            _metrics["successful"])
-    m3.metric("Failed",                _metrics["failed"])
-    m4.metric("Overall Success Rate",  f"{_metrics['success_rate']}%")
+        # ══════════════════════════════════════════════════════════════════════════
+        # SECTION 1 — Summary Metrics
+        # ══════════════════════════════════════════════════════════════════════════
+        st.markdown("### 📈 Summary")
+        m1, m2, m3, m4 = st.columns(4)
+        m1.metric("Total Recommendations", _metrics["total"])
+        m2.metric("Successful",            _metrics["successful"])
+        m3.metric("Failed",                _metrics["failed"])
+        m4.metric("Overall Success Rate",  f"{_metrics['success_rate']}%")
 
-    m5, m6, m7 = st.columns(3)
-    m5.metric("Average Return",  f"{_metrics['avg_return']:+.2f}%")
-    m6.metric("Best Return",     f"{_metrics['best_return']:+.2f}%")
-    m7.metric("Worst Return",    f"{_metrics['worst_return']:+.2f}%")
+        m5, m6, m7 = st.columns(3)
+        m5.metric("Average Return",  f"{_metrics['avg_return']:+.2f}%")
+        m6.metric("Best Return",     f"{_metrics['best_return']:+.2f}%")
+        m7.metric("Worst Return",    f"{_metrics['worst_return']:+.2f}%")
 
-    st.divider()
+        st.divider()
 
-    # ══════════════════════════════════════════════════════════════════════════
-    # SECTION 2 — Signal Performance
-    # ══════════════════════════════════════════════════════════════════════════
-    st.markdown("### 🎯 Signal Performance")
-    col_a, col_b = st.columns([1, 1])
+        # ══════════════════════════════════════════════════════════════════════════
+        # SECTION 2 — Signal Performance
+        # ══════════════════════════════════════════════════════════════════════════
+        st.markdown("### 🎯 Signal Performance")
+        col_a, col_b = st.columns([1, 1])
 
-    with col_a:
-        st.markdown("**By Signal Type**")
+        with col_a:
+            st.markdown("**By Signal Type**")
+            if not _sig.empty:
+                st.dataframe(_sig, use_container_width=True, hide_index=True)
+            else:
+                st.caption("No data.")
+
+        with col_b:
+            if not _sig.empty:
+                import plotly.graph_objects as go
+
+                # Success Rate by Signal
+                fig_sig = go.Figure()
+                colours = {
+                    "STRONG BUY": "#22c55e", "BUY": "#4ade80",
+                    "HOLD": "#f59e0b",
+                    "SELL": "#f87171", "STRONG SELL": "#ef4444",
+                }
+                bar_colours = [colours.get(s, "#8b949e") for s in _sig["Signal"]]
+                fig_sig.add_trace(go.Bar(
+                    x=_sig["Signal"], y=_sig["Success Rate %"],
+                    marker_color=bar_colours,
+                    text=_sig["Success Rate %"].astype(str) + "%",
+                    textposition="outside",
+                    name="Success Rate %",
+                ))
+                fig_sig.update_layout(
+                    title="Success Rate by Signal",
+                    yaxis_title="Success Rate %",
+                    yaxis=dict(range=[0, 110]),
+                    paper_bgcolor="#161b22", plot_bgcolor="#0d1117",
+                    font=dict(color="#c9d1d9"),
+                    height=320,
+                    showlegend=False,
+                )
+                st.plotly_chart(fig_sig, use_container_width=True)
+
+        # Average Return by Signal
         if not _sig.empty:
-            st.dataframe(_sig, use_container_width=True, hide_index=True)
-        else:
-            st.caption("No data.")
-
-    with col_b:
-        if not _sig.empty:
-            import plotly.graph_objects as go
-
-            # Success Rate by Signal
-            fig_sig = go.Figure()
-            colours = {
-                "STRONG BUY": "#22c55e", "BUY": "#4ade80",
-                "HOLD": "#f59e0b",
-                "SELL": "#f87171", "STRONG SELL": "#ef4444",
-            }
-            bar_colours = [colours.get(s, "#8b949e") for s in _sig["Signal"]]
-            fig_sig.add_trace(go.Bar(
-                x=_sig["Signal"], y=_sig["Success Rate %"],
-                marker_color=bar_colours,
-                text=_sig["Success Rate %"].astype(str) + "%",
+            fig_ret = go.Figure()
+            ret_colours = ["#22c55e" if v >= 0 else "#ef4444" for v in _sig["Avg Return %"]]
+            fig_ret.add_trace(go.Bar(
+                x=_sig["Signal"], y=_sig["Avg Return %"],
+                marker_color=ret_colours,
+                text=_sig["Avg Return %"].apply(lambda v: f"{v:+.2f}%"),
                 textposition="outside",
-                name="Success Rate %",
             ))
-            fig_sig.update_layout(
-                title="Success Rate by Signal",
-                yaxis_title="Success Rate %",
-                yaxis=dict(range=[0, 110]),
+            fig_ret.update_layout(
+                title="Average Return % by Signal",
+                yaxis_title="Avg Return %",
                 paper_bgcolor="#161b22", plot_bgcolor="#0d1117",
                 font=dict(color="#c9d1d9"),
-                height=320,
-                showlegend=False,
+                height=300, showlegend=False,
             )
-            st.plotly_chart(fig_sig, use_container_width=True)
+            st.plotly_chart(fig_ret, use_container_width=True)
 
-    # Average Return by Signal
-    if not _sig.empty:
-        fig_ret = go.Figure()
-        ret_colours = ["#22c55e" if v >= 0 else "#ef4444" for v in _sig["Avg Return %"]]
-        fig_ret.add_trace(go.Bar(
-            x=_sig["Signal"], y=_sig["Avg Return %"],
-            marker_color=ret_colours,
-            text=_sig["Avg Return %"].apply(lambda v: f"{v:+.2f}%"),
-            textposition="outside",
-        ))
-        fig_ret.update_layout(
-            title="Average Return % by Signal",
-            yaxis_title="Avg Return %",
-            paper_bgcolor="#161b22", plot_bgcolor="#0d1117",
-            font=dict(color="#c9d1d9"),
-            height=300, showlegend=False,
-        )
-        st.plotly_chart(fig_ret, use_container_width=True)
+        st.divider()
 
-    st.divider()
+        # ══════════════════════════════════════════════════════════════════════════
+        # SECTION 3 — Confidence & Confluence Analysis
+        # ══════════════════════════════════════════════════════════════════════════
+        st.markdown("### 🧠 Confidence & Confluence Analysis")
+        cc1, cc2 = st.columns(2)
 
-    # ══════════════════════════════════════════════════════════════════════════
-    # SECTION 3 — Confidence & Confluence Analysis
-    # ══════════════════════════════════════════════════════════════════════════
-    st.markdown("### 🧠 Confidence & Confluence Analysis")
-    cc1, cc2 = st.columns(2)
+        with cc1:
+            st.markdown("**ML Confidence Bands**")
+            st.caption("Does higher model confidence produce better results?")
+            if not _conf.empty:
+                st.dataframe(_conf, use_container_width=True, hide_index=True)
+                fig_conf = go.Figure()
+                fig_conf.add_trace(go.Scatter(
+                    x=_conf["Confidence Band"], y=_conf["Success Rate %"],
+                    mode="lines+markers+text",
+                    text=_conf["Success Rate %"].astype(str) + "%",
+                    textposition="top center",
+                    line=dict(color="#4ade80", width=2),
+                    marker=dict(size=8, color="#22c55e"),
+                ))
+                fig_conf.update_layout(
+                    title="Confidence vs Success Rate",
+                    yaxis_title="Success Rate %",
+                    yaxis=dict(range=[0, 110]),
+                    paper_bgcolor="#161b22", plot_bgcolor="#0d1117",
+                    font=dict(color="#c9d1d9"), height=280,
+                )
+                st.plotly_chart(fig_conf, use_container_width=True)
+            else:
+                st.caption("No data.")
 
-    with cc1:
-        st.markdown("**ML Confidence Bands**")
-        st.caption("Does higher model confidence produce better results?")
-        if not _conf.empty:
-            st.dataframe(_conf, use_container_width=True, hide_index=True)
-            fig_conf = go.Figure()
-            fig_conf.add_trace(go.Scatter(
-                x=_conf["Confidence Band"], y=_conf["Success Rate %"],
+        with cc2:
+            st.markdown("**Confluence Score Bands**")
+            st.caption("Is the confluence score meaningful?")
+            if not _confl.empty:
+                st.dataframe(_confl, use_container_width=True, hide_index=True)
+                fig_confl = go.Figure()
+                fig_confl.add_trace(go.Scatter(
+                    x=_confl["Confluence Band"], y=_confl["Success Rate %"],
+                    mode="lines+markers+text",
+                    text=_confl["Success Rate %"].astype(str) + "%",
+                    textposition="top center",
+                    line=dict(color="#f59e0b", width=2),
+                    marker=dict(size=8, color="#d97706"),
+                ))
+                fig_confl.update_layout(
+                    title="Confluence Score vs Success Rate",
+                    yaxis_title="Success Rate %",
+                    yaxis=dict(range=[0, 110]),
+                    paper_bgcolor="#161b22", plot_bgcolor="#0d1117",
+                    font=dict(color="#c9d1d9"), height=280,
+                )
+                st.plotly_chart(fig_confl, use_container_width=True)
+            else:
+                st.caption("No data.")
+
+        st.divider()
+
+        # ══════════════════════════════════════════════════════════════════════════
+        # SECTION 4 — News Sentiment Analysis
+        # ══════════════════════════════════════════════════════════════════════════
+        st.markdown("### 📰 News Sentiment Analysis")
+        st.caption("Does news sentiment help or hurt predictions?")
+        ns1, ns2 = st.columns([1, 1])
+
+        with ns1:
+            if not _sent.empty:
+                st.dataframe(_sent, use_container_width=True, hide_index=True)
+            else:
+                st.caption("No data.")
+
+        with ns2:
+            if not _sent.empty:
+                sent_colours = {"🟢 Positive": "#22c55e", "🟡 Neutral": "#f59e0b", "🔴 Negative": "#ef4444"}
+                fig_sent = go.Figure(go.Bar(
+                    x=_sent["Sentiment"], y=_sent["Success Rate %"],
+                    marker_color=[sent_colours.get(s, "#8b949e") for s in _sent["Sentiment"]],
+                    text=_sent["Success Rate %"].astype(str) + "%",
+                    textposition="outside",
+                ))
+                fig_sent.update_layout(
+                    title="Sentiment vs Success Rate",
+                    yaxis_title="Success Rate %",
+                    yaxis=dict(range=[0, 110]),
+                    paper_bgcolor="#161b22", plot_bgcolor="#0d1117",
+                    font=dict(color="#c9d1d9"), height=300, showlegend=False,
+                )
+                st.plotly_chart(fig_sent, use_container_width=True)
+
+        st.divider()
+
+        # ══════════════════════════════════════════════════════════════════════════
+        # SECTION 5 — Monthly Trend
+        # ══════════════════════════════════════════════════════════════════════════
+        st.markdown("### 📅 Monthly Success Rate Trend")
+        if not _mon.empty and len(_mon) > 1:
+            fig_mon = go.Figure()
+            fig_mon.add_trace(go.Scatter(
+                x=_mon["Month"], y=_mon["Success Rate %"],
                 mode="lines+markers+text",
-                text=_conf["Success Rate %"].astype(str) + "%",
+                text=_mon["Success Rate %"].astype(str) + "%",
                 textposition="top center",
+                fill="tozeroy",
                 line=dict(color="#4ade80", width=2),
-                marker=dict(size=8, color="#22c55e"),
+                marker=dict(size=7),
+                fillcolor="rgba(34,197,94,0.15)",
             ))
-            fig_conf.update_layout(
-                title="Confidence vs Success Rate",
+            fig_mon.update_layout(
+                title="Monthly Success Rate Trend",
                 yaxis_title="Success Rate %",
                 yaxis=dict(range=[0, 110]),
                 paper_bgcolor="#161b22", plot_bgcolor="#0d1117",
-                font=dict(color="#c9d1d9"), height=280,
+                font=dict(color="#c9d1d9"), height=320,
             )
-            st.plotly_chart(fig_conf, use_container_width=True)
+            st.plotly_chart(fig_mon, use_container_width=True)
+        elif not _mon.empty:
+            st.info("Need at least 2 months of data to show the trend.")
         else:
-            st.caption("No data.")
+            st.caption("No monthly data yet.")
 
-    with cc2:
-        st.markdown("**Confluence Score Bands**")
-        st.caption("Is the confluence score meaningful?")
-        if not _confl.empty:
-            st.dataframe(_confl, use_container_width=True, hide_index=True)
-            fig_confl = go.Figure()
-            fig_confl.add_trace(go.Scatter(
-                x=_confl["Confluence Band"], y=_confl["Success Rate %"],
-                mode="lines+markers+text",
-                text=_confl["Success Rate %"].astype(str) + "%",
-                textposition="top center",
-                line=dict(color="#f59e0b", width=2),
-                marker=dict(size=8, color="#d97706"),
-            ))
-            fig_confl.update_layout(
-                title="Confluence Score vs Success Rate",
-                yaxis_title="Success Rate %",
-                yaxis=dict(range=[0, 110]),
-                paper_bgcolor="#161b22", plot_bgcolor="#0d1117",
-                font=dict(color="#c9d1d9"), height=280,
-            )
-            st.plotly_chart(fig_confl, use_container_width=True)
+        st.divider()
+
+        # ══════════════════════════════════════════════════════════════════════════
+        # SECTION 6 — Top Winners & Losers
+        # ══════════════════════════════════════════════════════════════════════════
+        st.markdown("### 🏅 Top Winners & Losers")
+        w_col, l_col = st.columns(2)
+
+        _winners = top_winners(_df, n=10)
+        _losers  = top_losers(_df,  n=10)
+
+        with w_col:
+            st.markdown("**🏆 Top 10 Winners**")
+            if not _winners.empty:
+                _winners["Return %"] = _winners["Return %"].apply(lambda v: f"{v:+.2f}%")
+                st.dataframe(_winners, use_container_width=True, hide_index=True)
+            else:
+                st.caption("No data.")
+
+        with l_col:
+            st.markdown("**📉 Top 10 Losers**")
+            if not _losers.empty:
+                _losers["Return %"] = _losers["Return %"].apply(lambda v: f"{v:+.2f}%")
+                st.dataframe(_losers, use_container_width=True, hide_index=True)
+            else:
+                st.caption("No data.")
+
+        st.divider()
+
+        # ══════════════════════════════════════════════════════════════════════════
+        # SECTION 7 — Auto Insights
+        # ══════════════════════════════════════════════════════════════════════════
+        st.markdown("### 💡 Automated Insights")
+        _insights = generate_insights(_df, _sig, _conf, _confl, _sent)
+
+        if _insights:
+            for i, insight in enumerate(_insights, 1):
+                st.markdown(
+                    f'<div style="background:#161b22;border-left:3px solid #4ade80;'                f'padding:.6rem 1rem;margin:.4rem 0;border-radius:4px;'                f'color:#c9d1d9;font-size:.88rem;">'                f'<b style="color:#4ade80">{i}.</b> {insight}</div>',
+                    unsafe_allow_html=True,
+                )
         else:
-            st.caption("No data.")
-
-    st.divider()
-
-    # ══════════════════════════════════════════════════════════════════════════
-    # SECTION 4 — News Sentiment Analysis
-    # ══════════════════════════════════════════════════════════════════════════
-    st.markdown("### 📰 News Sentiment Analysis")
-    st.caption("Does news sentiment help or hurt predictions?")
-    ns1, ns2 = st.columns([1, 1])
-
-    with ns1:
-        if not _sent.empty:
-            st.dataframe(_sent, use_container_width=True, hide_index=True)
-        else:
-            st.caption("No data.")
-
-    with ns2:
-        if not _sent.empty:
-            sent_colours = {"🟢 Positive": "#22c55e", "🟡 Neutral": "#f59e0b", "🔴 Negative": "#ef4444"}
-            fig_sent = go.Figure(go.Bar(
-                x=_sent["Sentiment"], y=_sent["Success Rate %"],
-                marker_color=[sent_colours.get(s, "#8b949e") for s in _sent["Sentiment"]],
-                text=_sent["Success Rate %"].astype(str) + "%",
-                textposition="outside",
-            ))
-            fig_sent.update_layout(
-                title="Sentiment vs Success Rate",
-                yaxis_title="Success Rate %",
-                yaxis=dict(range=[0, 110]),
-                paper_bgcolor="#161b22", plot_bgcolor="#0d1117",
-                font=dict(color="#c9d1d9"), height=300, showlegend=False,
-            )
-            st.plotly_chart(fig_sent, use_container_width=True)
-
-    st.divider()
-
-    # ══════════════════════════════════════════════════════════════════════════
-    # SECTION 5 — Monthly Trend
-    # ══════════════════════════════════════════════════════════════════════════
-    st.markdown("### 📅 Monthly Success Rate Trend")
-    if not _mon.empty and len(_mon) > 1:
-        fig_mon = go.Figure()
-        fig_mon.add_trace(go.Scatter(
-            x=_mon["Month"], y=_mon["Success Rate %"],
-            mode="lines+markers+text",
-            text=_mon["Success Rate %"].astype(str) + "%",
-            textposition="top center",
-            fill="tozeroy",
-            line=dict(color="#4ade80", width=2),
-            marker=dict(size=7),
-            fillcolor="rgba(34,197,94,0.15)",
-        ))
-        fig_mon.update_layout(
-            title="Monthly Success Rate Trend",
-            yaxis_title="Success Rate %",
-            yaxis=dict(range=[0, 110]),
-            paper_bgcolor="#161b22", plot_bgcolor="#0d1117",
-            font=dict(color="#c9d1d9"), height=320,
-        )
-        st.plotly_chart(fig_mon, use_container_width=True)
-    elif not _mon.empty:
-        st.info("Need at least 2 months of data to show the trend.")
-    else:
-        st.caption("No monthly data yet.")
-
-    st.divider()
-
-    # ══════════════════════════════════════════════════════════════════════════
-    # SECTION 6 — Top Winners & Losers
-    # ══════════════════════════════════════════════════════════════════════════
-    st.markdown("### 🏅 Top Winners & Losers")
-    w_col, l_col = st.columns(2)
-
-    _winners = top_winners(_df, n=10)
-    _losers  = top_losers(_df,  n=10)
-
-    with w_col:
-        st.markdown("**🏆 Top 10 Winners**")
-        if not _winners.empty:
-            _winners["Return %"] = _winners["Return %"].apply(lambda v: f"{v:+.2f}%")
-            st.dataframe(_winners, use_container_width=True, hide_index=True)
-        else:
-            st.caption("No data.")
-
-    with l_col:
-        st.markdown("**📉 Top 10 Losers**")
-        if not _losers.empty:
-            _losers["Return %"] = _losers["Return %"].apply(lambda v: f"{v:+.2f}%")
-            st.dataframe(_losers, use_container_width=True, hide_index=True)
-        else:
-            st.caption("No data.")
-
-    st.divider()
-
-    # ══════════════════════════════════════════════════════════════════════════
-    # SECTION 7 — Auto Insights
-    # ══════════════════════════════════════════════════════════════════════════
-    st.markdown("### 💡 Automated Insights")
-    _insights = generate_insights(_df, _sig, _conf, _confl, _sent)
-
-    if _insights:
-        for i, insight in enumerate(_insights, 1):
-            st.markdown(
-                f'<div style="background:#161b22;border-left:3px solid #4ade80;'                f'padding:.6rem 1rem;margin:.4rem 0;border-radius:4px;'                f'color:#c9d1d9;font-size:.88rem;">'                f'<b style="color:#4ade80">{i}.</b> {insight}</div>',
-                unsafe_allow_html=True,
-            )
-    else:
-        st.caption("Insights will appear once enough recommendations are validated.")
+            st.caption("Insights will appear once enough recommendations are validated.")
