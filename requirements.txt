@@ -13,3 +13,6 @@ feedparser
 torch
 torchvision
 torchaudio
+fastapi
+uvicorn
+pydantic
