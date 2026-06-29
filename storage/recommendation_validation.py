@@ -382,6 +382,14 @@ def validate_old_recommendations() -> int:
                 )
                 continue
 
+            # Defensive guard: load_pending_recommendations() already filters
+            # WHERE is_validated = 0, so this row should never already be
+            # validated. Logged explicitly per spec in case this function is
+            # ever called with a hand-built row dict from elsewhere.
+            if rec.get("is_validated") == 1:
+                logger.info("VALIDATION_ALREADY_DONE | symbol=%s | id=%s", symbol, row_id)
+                continue
+
             # ── Fetch current price ───────────────────────────────────────────
             current_price = get_latest_close(symbol)
             if current_price is None:
@@ -417,6 +425,10 @@ def validate_old_recommendations() -> int:
                 "Current: %8.2f | Return: %+.2f%% | %s %s",
                 symbol, signal, float(cmp), current_price, ret,
                 direction, result_label,
+            )
+            logger.info(
+                "VALIDATION_UPDATED | symbol=%s | id=%d | return_pct=%.2f | success=%d",
+                symbol, row_id, ret, success,
             )
 
     finally:

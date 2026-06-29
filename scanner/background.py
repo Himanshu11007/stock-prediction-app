@@ -87,10 +87,14 @@ def _ordered_symbols(all_symbols: list, priority: list) -> list:
 
 def _run_scan(universes: dict, global_company_map: dict) -> None:
     from scanner.engine import get_recommendations
+    from storage.tracker import generate_scan_id
     STORAGE_DIR.mkdir(parents=True, exist_ok=True)
     _LOCK_FILE.touch()
 
-    scan_run_id  = uuid.uuid4().hex[:8]
+    # One scan_id shared by every category in this run, formatted as
+    # SCAN-YYYYMMDD-HHMMSS per the spec — used to tag every persisted
+    # recommendation so the whole run is traceable end-to-end.
+    scan_run_id  = generate_scan_id("SCAN")
     global_total = sum(len(syms) for syms, _ in universes.values())
     global_done  = 0
     _write_progress("Starting", 0, global_total)
@@ -131,6 +135,7 @@ def _run_scan(universes: dict, global_company_map: dict) -> None:
                 use_raw_loader=True,
                 save_callback=_save,
                 save_interval=5,
+                scan_id=scan_run_id,
             )
 
             with _lock:

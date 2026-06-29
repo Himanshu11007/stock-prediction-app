@@ -1,6 +1,9 @@
 import sqlite3
 import datetime
 from config import TRACKER_DB
+from utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 
 def _connect() -> sqlite3.Connection:
@@ -111,8 +114,15 @@ def get_accuracy_stats() -> tuple[int | None, int | None]:
 
 def _ensure_validation_table(con: sqlite3.Connection) -> None:
     """
-    Create recommendation_validation table + indexes if not already present.
+    Create recommendation_validation table + indexes if not already present,
+    and migration-safely add the scan_id column for duplicate prevention.
+
     Uses is_validated (not 'validated') to match recommendation_validation.py.
+
+    Migration safety: existing data is NEVER deleted. PRAGMA table_info is
+    used to check for the scan_id column before attempting to add it, so
+    this function is safe to call on every connection regardless of whether
+    the table is brand new or has existing rows from before this change.
     """
     con.execute("""
         CREATE TABLE IF NOT EXISTS recommendation_validation (
@@ -132,9 +142,19 @@ def _ensure_validation_table(con: sqlite3.Connection) -> None:
             validation_date  TEXT,
             validation_price REAL,
             return_pct       REAL,
-            success          INTEGER
+            success          INTEGER,
+            scan_id          TEXT
         )
     """)
+
+    # ── Migration-safe column add: check PRAGMA table_info before ALTER ───────
+    existing_cols = {
+        row[1] for row in con.execute("PRAGMA table_info(recommendation_validation)")
+    }
+    if "scan_id" not in existing_cols:
+        con.execute("ALTER TABLE recommendation_validation ADD COLUMN scan_id TEXT")
+        logger.info("Schema: added column 'scan_id' to recommendation_validation")
+
     con.execute("""
         CREATE INDEX IF NOT EXISTS idx_rv_pending
         ON recommendation_validation (is_validated, saved_date)
@@ -143,7 +163,222 @@ def _ensure_validation_table(con: sqlite3.Connection) -> None:
         CREATE INDEX IF NOT EXISTS idx_rv_symbol
         ON recommendation_validation (symbol, saved_date)
     """)
+    # Unique key for duplicate prevention: one row per symbol per day.
+    # Using a UNIQUE INDEX (not a UNIQUE constraint on the column) so this
+    # is also migration-safe — CREATE UNIQUE INDEX IF NOT EXISTS will simply
+    # fail loudly (not silently corrupt data) if pre-existing duplicate rows
+    # violate it; see migrate_duplicates() below for the cleanup step that
+    # must run once before this index can be created on a table that
+    # already has duplicates.
+    try:
+        con.execute("""
+            CREATE UNIQUE INDEX IF NOT EXISTS idx_rv_unique_symbol_date
+            ON recommendation_validation (symbol, saved_date)
+        """)
+    except sqlite3.IntegrityError:
+        logger.warning(
+            "Could not create unique index idx_rv_unique_symbol_date — "
+            "existing duplicate (symbol, saved_date) rows present. "
+            "Run storage.tracker.dedupe_existing_recommendations() once to clean up."
+        )
     con.commit()
+
+
+def dedupe_existing_recommendations() -> int:
+    """
+    One-time cleanup helper: collapse existing duplicate (symbol, saved_date)
+    rows down to the most recent row (highest id) per group, deleting the
+    older duplicates. Safe to run multiple times — a no-op once duplicates
+    are gone.
+
+    This does NOT delete any data that isn't a confirmed duplicate. It is
+    intended to be run once after upgrading to this schema version, before
+    the unique index can be created successfully.
+
+    Returns:
+        int — number of duplicate rows deleted
+    """
+    con = _connect()
+    try:
+        # Ensure base table/columns exist first
+        con.execute("""
+            CREATE TABLE IF NOT EXISTS recommendation_validation (
+                id INTEGER PRIMARY KEY AUTOINCREMENT, saved_date TEXT, symbol TEXT
+            )
+        """)
+        rows_before = con.execute(
+            "SELECT COUNT(*) FROM recommendation_validation"
+        ).fetchone()[0]
+
+        con.execute("""
+            DELETE FROM recommendation_validation
+            WHERE id NOT IN (
+                SELECT MAX(id)
+                FROM recommendation_validation
+                GROUP BY symbol, saved_date
+            )
+        """)
+        con.commit()
+
+        rows_after = con.execute(
+            "SELECT COUNT(*) FROM recommendation_validation"
+        ).fetchone()[0]
+        deleted = rows_before - rows_after
+        if deleted:
+            logger.info("Dedup: removed %d duplicate recommendation row(s)", deleted)
+        return deleted
+    finally:
+        con.close()
+
+
+def generate_scan_id(prefix: str = "MANUAL") -> str:
+    """
+    Generate a unique scan_id stamped with the current timestamp.
+
+    Example: "MANUAL-20260628-143522" or "SCAN-20260628-143522"
+    """
+    return f"{prefix}-{datetime.datetime.now().strftime('%Y%m%d-%H%M%S')}"
+
+
+def recommendation_exists(symbol: str, saved_date: str | None = None) -> bool:
+    """
+    Check whether a recommendation already exists for this symbol on this date.
+
+    The duplicate-prevention key is (symbol, saved_date) — one row per stock
+    per day, regardless of which scan_id produced it. This matches the
+    intended behaviour: re-analysing the same stock on the same day should
+    update the existing row, not create a second one.
+
+    Args:
+        symbol:     e.g. "RELIANCE.NS"
+        saved_date: ISO date string; defaults to today.
+
+    Returns:
+        bool — True if a row for (symbol, saved_date) already exists.
+    """
+    row_date = saved_date or datetime.date.today().isoformat()
+    con = _connect()
+    _ensure_validation_table(con)
+    try:
+        row = con.execute(
+            "SELECT 1 FROM recommendation_validation WHERE symbol = ? AND saved_date = ? LIMIT 1",
+            (symbol, row_date),
+        ).fetchone()
+        return row is not None
+    finally:
+        con.close()
+
+
+def upsert_recommendation(
+    symbol:           str,
+    stock:            str,
+    signal:           str,
+    cmp:              float,
+    confluence_score: float,
+    ml_confidence:    float,
+    news_score:       float,
+    accuracy:         float,
+    target:           float | None,
+    stop_loss:        float | None,
+    saved_date:       str | None = None,
+    scan_id:          str | None = None,
+) -> int:
+    """
+    Insert a new recommendation, or update the existing row for the same
+    (symbol, saved_date) pair if one already exists.
+
+    This is the duplicate-safe replacement for the old insert-only
+    save_recommendation(). Behaviour:
+
+        - If no row exists for (symbol, saved_date): INSERT a new row.
+          Logs: RECOMMENDATION_INSERTED
+        - If a row already exists for (symbol, saved_date): UPDATE it with
+          the new values (latest analysis wins) and reset is_validated to 0
+          so the fresh recommendation gets its own 5-day validation window.
+          Logs: RECOMMENDATION_UPDATED
+
+    Args:
+        scan_id: Optional identifier for the scan/analysis run that produced
+                 this recommendation (e.g. "SCAN-20260628-143522" or
+                 "MANUAL-20260628-143522"). Stored for traceability; the
+                 actual dedup key remains (symbol, saved_date) — see
+                 recommendation_exists() docstring for why.
+
+    Returns:
+        int: rowid of the inserted or updated row
+    """
+    row_date = saved_date or datetime.date.today().isoformat()
+    scan_id  = scan_id or generate_scan_id()
+
+    con = _connect()
+    _ensure_validation_table(con)
+    try:
+        existing = con.execute(
+            "SELECT id FROM recommendation_validation WHERE symbol = ? AND saved_date = ? LIMIT 1",
+            (symbol, row_date),
+        ).fetchone()
+
+        if existing is None:
+            cur = con.execute(
+                """
+                INSERT INTO recommendation_validation (
+                    saved_date, symbol, stock, signal, cmp,
+                    confluence_score, ml_confidence, news_score, accuracy,
+                    target, stop_loss, scan_id
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    row_date, symbol, stock, signal,
+                    round(float(cmp), 2),
+                    round(float(confluence_score), 4),
+                    round(float(ml_confidence), 2),
+                    round(float(news_score), 4),
+                    round(float(accuracy), 4),
+                    round(float(target), 2)    if target    is not None else None,
+                    round(float(stop_loss), 2) if stop_loss is not None else None,
+                    scan_id,
+                ),
+            )
+            con.commit()
+            row_id = cur.lastrowid
+            logger.info(
+                "RECOMMENDATION_INSERTED | symbol=%s | date=%s | scan_id=%s | id=%d",
+                symbol, row_date, scan_id, row_id,
+            )
+            return row_id
+
+        row_id = existing[0]
+        con.execute(
+            """
+            UPDATE recommendation_validation
+            SET stock = ?, signal = ?, cmp = ?,
+                confluence_score = ?, ml_confidence = ?, news_score = ?,
+                accuracy = ?, target = ?, stop_loss = ?, scan_id = ?,
+                is_validated = 0, validation_date = NULL,
+                validation_price = NULL, return_pct = NULL, success = NULL
+            WHERE id = ?
+            """,
+            (
+                stock, signal,
+                round(float(cmp), 2),
+                round(float(confluence_score), 4),
+                round(float(ml_confidence), 2),
+                round(float(news_score), 4),
+                round(float(accuracy), 4),
+                round(float(target), 2)    if target    is not None else None,
+                round(float(stop_loss), 2) if stop_loss is not None else None,
+                scan_id,
+                row_id,
+            ),
+        )
+        con.commit()
+        logger.info(
+            "RECOMMENDATION_UPDATED | symbol=%s | date=%s | scan_id=%s | id=%d",
+            symbol, row_date, scan_id, row_id,
+        )
+        return row_id
+    finally:
+        con.close()
 
 
 def save_recommendation(
@@ -160,40 +395,19 @@ def save_recommendation(
     saved_date:       str | None = None,
 ) -> int:
     """
-    Persist one scanner recommendation for future 5-day outcome validation.
+    Backward-compatible wrapper around upsert_recommendation().
 
-    Returns:
-        int: rowid of the inserted row
+    Kept so existing callers (e.g. app.py) continue to work unchanged.
+    New code should call upsert_recommendation() directly when a scan_id
+    is available.
     """
-    row_date = saved_date or datetime.date.today().isoformat()
-    con = _connect()
-    _ensure_validation_table(con)
-    cur = con.execute(
-        """
-        INSERT INTO recommendation_validation (
-            saved_date, symbol, stock, signal, cmp,
-            confluence_score, ml_confidence, news_score, accuracy,
-            target, stop_loss
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """,
-        (
-            row_date,
-            symbol,
-            stock,
-            signal,
-            round(float(cmp),              2),
-            round(float(confluence_score), 4),
-            round(float(ml_confidence),    2),
-            round(float(news_score),       4),
-            round(float(accuracy),         4),
-            round(float(target),    2) if target    is not None else None,
-            round(float(stop_loss), 2) if stop_loss is not None else None,
-        ),
+    return upsert_recommendation(
+        symbol=symbol, stock=stock, signal=signal, cmp=cmp,
+        confluence_score=confluence_score, ml_confidence=ml_confidence,
+        news_score=news_score, accuracy=accuracy,
+        target=target, stop_loss=stop_loss, saved_date=saved_date,
+        scan_id=generate_scan_id("MANUAL"),
     )
-    con.commit()
-    row_id = cur.lastrowid
-    con.close()
-    return row_id
 
 
 def load_pending_recommendations(as_of_date: str | None = None) -> list[dict]:
@@ -223,7 +437,8 @@ def load_pending_recommendations(as_of_date: str | None = None) -> list[dict]:
             news_score       AS "News Score",
             accuracy         AS "Accuracy",
             target           AS "Target",
-            stop_loss        AS "Stop Loss"
+            stop_loss        AS "Stop Loss",
+            scan_id          AS "Scan ID"
         FROM  recommendation_validation
         WHERE is_validated = 0
     """
@@ -237,5 +452,5 @@ def load_pending_recommendations(as_of_date: str | None = None) -> list[dict]:
     con.close()
     keys = ["id", "Date", "Symbol", "Stock", "Signal", "CMP",
             "Confluence Score", "ML Confidence", "News Score",
-            "Accuracy", "Target", "Stop Loss"]
+            "Accuracy", "Target", "Stop Loss", "Scan ID"]
     return [dict(zip(keys, r)) for r in rows]

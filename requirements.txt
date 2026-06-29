@@ -16,3 +16,5 @@ torchaudio
 fastapi
 uvicorn
 pydantic
+pytest
+pytest-cov

@@ -19,6 +19,7 @@ from config import SCAN_MAX_STOCKS, SCAN_MAX_WORKERS
 from data.loader import load_multi_timeframe_data
 from features.engineer import get_trend_signal
 from utils.logger import get_logger, log_stock_diagnostics, log_exception
+from storage.tracker import upsert_recommendation, generate_scan_id
 
 logger = get_logger(__name__)
 
@@ -155,23 +156,60 @@ def _rerank_top_with_news(results: list[dict], top_n: int = 20) -> list[dict]:
     return sorted(reranked + remaining, key=lambda r: r["score"], reverse=True)
 
 
+def _persist_recommendation(result: dict, scan_id: str) -> None:
+    """
+    Upsert one scan result into recommendation_validation, tagged with the
+    scan_id for this run. Uses (symbol, saved_date) as the dedup key — see
+    storage.tracker.upsert_recommendation for full behaviour. A failure
+    here is logged and swallowed; it must never abort the scan.
+    """
+    try:
+        upsert_recommendation(
+            symbol           = result["symbol"],
+            stock            = result["stock"],
+            signal           = result["signal"],
+            cmp              = result["close"],
+            confluence_score = result["score"],
+            ml_confidence    = result["confidence"],
+            news_score       = result.get("news_score", 0.0),
+            accuracy         = result["accuracy"] / 100.0,  # stored as 0-1 in DB
+            target           = result.get("target"),
+            stop_loss        = result.get("stop_loss"),
+            scan_id          = scan_id,
+        )
+    except Exception as e:
+        log_exception(logger, f"Failed to persist recommendation for {result.get('symbol')}", e)
+
+
 def get_recommendations(
     stock_list,
     company_map: dict,
     use_raw_loader: bool = False,
     save_callback: Callable[[list], None] | None = None,
     save_interval: int = 5,
+    scan_id: str | None = None,
 ) -> list[dict]:
+    """
+    Args:
+        scan_id: Identifier for this scan run, used to tag every persisted
+                 recommendation for traceability. If not provided, one is
+                 generated automatically (prefix "SCAN").
+    """
     if use_raw_loader:
         from data.loader import load_data_raw as loader_fn
     else:
         from data.loader import load_data as loader_fn
 
+    scan_id = scan_id or generate_scan_id("SCAN")
+
     stocks  = list(stock_list)[:SCAN_MAX_STOCKS]
     results: list[dict] = []
     done    = 0
 
-    logger.info("Parallel scan: %d stocks / %d workers", len(stocks), SCAN_MAX_WORKERS)
+    logger.info(
+        "Parallel scan: %d stocks / %d workers | scan_id=%s",
+        len(stocks), SCAN_MAX_WORKERS, scan_id,
+    )
 
     with ThreadPoolExecutor(max_workers=SCAN_MAX_WORKERS) as pool:
         futures = {pool.submit(_scan_one, s, company_map, loader_fn): s for s in stocks}
@@ -180,6 +218,7 @@ def get_recommendations(
             result = future.result()
             if result:
                 results.append(result)
+                _persist_recommendation(result, scan_id)
             if save_callback and done % save_interval == 0:
                 save_callback(sorted(results, key=lambda r: r["score"], reverse=True))
 

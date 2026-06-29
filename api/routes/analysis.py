@@ -1,19 +1,23 @@
 """
 api/routes/analysis.py — Single-stock analysis endpoint.
+
+Routes contain no business logic — they call services.py and wrap the
+result in the standard response envelope. ValueError / KeyError / generic
+Exception raised by services.py are caught by the centralized handlers in
+api/main.py (400 / 404 / 500 respectively), so no local try/except is
+needed here for those cases.
 """
 from __future__ import annotations
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter
 
 from api import services
-from api.schemas import AnalyzeStockRequest, AnalyzeStockResponse
-from utils.logger import get_logger, log_exception
+from api.schemas import AnalyzeStockRequest, success_envelope
 
-logger = get_logger(__name__)
 router = APIRouter()
 
 
-@router.post("/analyze-stock", response_model=AnalyzeStockResponse)
+@router.post("/analyze-stock")
 def analyze_stock(payload: AnalyzeStockRequest):
     """
     Run the full StockAI Pro analysis pipeline for one symbol.
@@ -21,23 +25,13 @@ def analyze_stock(payload: AnalyzeStockRequest):
     Reuses the exact same step order as app.py's "Analyse Stock" tab:
     load data → engineer features → train model → predict → fetch news →
     sentiment → regime → multi-timeframe trend → confluence signal → risk.
+
+    Raises ValueError (→ 400) for invalid/unknown symbols or insufficient
+    data — handled centrally in api/main.py.
     """
     symbol = payload.symbol.strip()
     if not symbol:
-        raise HTTPException(status_code=400, detail="symbol must not be empty")
+        raise ValueError("symbol must not be empty")
 
-    try:
-        result = services.analyze_stock(symbol)
-        return result
-
-    except ValueError as e:
-        # Invalid symbol / no data / bad target distribution
-        raise HTTPException(status_code=400, detail=str(e))
-
-    except RuntimeError as e:
-        log_exception(logger, f"analyze_stock pipeline error for {symbol}", e)
-        raise HTTPException(status_code=500, detail=str(e))
-
-    except Exception as e:
-        log_exception(logger, f"analyze_stock unexpected error for {symbol}", e)
-        raise HTTPException(status_code=500, detail="Internal error during analysis")
+    result = services.analyze_stock(symbol)
+    return success_envelope(result, message=f"Analysis complete for {symbol}")

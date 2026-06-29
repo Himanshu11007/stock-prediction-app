@@ -3,57 +3,44 @@ api/routes/tracker.py — Saved recommendations + manual save + validation trigg
 """
 from __future__ import annotations
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter
 
 from api import services
-from api.schemas import (
-    RecommendationSaveRequest, RecommendationSaveResponse,
-    ValidateOldResponse,
-)
-from utils.logger import get_logger, log_exception
+from api.schemas import RecommendationSaveRequest, success_envelope
 
-logger = get_logger(__name__)
 router = APIRouter()
 
 
 @router.get("/tracker/recommendations")
 def get_recommendations(limit: int = 50):
     """Return recently saved prediction signals."""
-    try:
-        return services.get_saved_recommendations(limit=limit)
-    except Exception as e:
-        log_exception(logger, "get_recommendations failed", e)
-        raise HTTPException(status_code=500, detail="Failed to fetch recommendations")
+    result = services.get_saved_recommendations(limit=limit)
+    return success_envelope(result, message=f"Retrieved {len(result)} recommendation(s)")
 
 
-@router.post("/tracker/save", response_model=RecommendationSaveResponse)
+@router.post("/tracker/save")
 def save_recommendation(payload: RecommendationSaveRequest):
-    """Manually save a recommendation row."""
-    try:
-        row_id = services.save_manual_recommendation(
-            symbol=payload.symbol,
-            stock=payload.stock,
-            signal=payload.signal,
-            cmp=payload.cmp,
-            score=payload.score,
-            confidence=payload.confidence,
-            news_score=payload.news_score,
-            accuracy=payload.accuracy or 0.0,
-            target=payload.target,
-            stop_loss=payload.stop_loss,
-        )
-        return {"success": True, "row_id": row_id}
-    except Exception as e:
-        log_exception(logger, "save_recommendation failed", e)
-        raise HTTPException(status_code=500, detail="Failed to save recommendation")
+    """Manually save (or update, if symbol+date already exists) a recommendation row."""
+    row_id = services.save_manual_recommendation(
+        symbol=payload.symbol,
+        stock=payload.stock,
+        signal=payload.signal,
+        cmp=payload.cmp,
+        score=payload.score,
+        confidence=payload.confidence,
+        news_score=payload.news_score,
+        accuracy=payload.accuracy or 0.0,
+        target=payload.target,
+        stop_loss=payload.stop_loss,
+    )
+    return success_envelope({"row_id": row_id}, message="Recommendation saved")
 
 
-@router.post("/tracker/validate-old", response_model=ValidateOldResponse)
+@router.post("/tracker/validate-old")
 def validate_old():
     """Run the existing 5-trading-day validation engine."""
-    try:
-        count = services.run_validation()
-        return {"validated_count": count, "status": "success"}
-    except Exception as e:
-        log_exception(logger, "validate_old failed", e)
-        raise HTTPException(status_code=500, detail="Validation run failed")
+    count = services.run_validation()
+    return success_envelope(
+        {"validated_count": count},
+        message=f"Validated {count} recommendation(s)",
+    )

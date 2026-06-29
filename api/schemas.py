@@ -153,3 +153,19 @@ class LogsResponse(BaseModel):
 
 class ClearLogsResponse(BaseModel):
     success: bool
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# Response envelope helper
+# ══════════════════════════════════════════════════════════════════════════════
+
+def success_envelope(data, message: str = "OK") -> dict:
+    """
+    Wrap a successful result in the standard API response shape:
+        {"success": true, "data": {...}, "message": "..."}
+
+    `data` can be a dict, list, or any JSON-serialisable value — FastAPI
+    handles serialisation of nested Pydantic models / dataclasses / plain
+    dicts the same way it would for a raw return value.
+    """
+    return {"success": True, "data": data, "message": message}
