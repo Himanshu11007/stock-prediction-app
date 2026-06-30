@@ -47,6 +47,7 @@ from storage.performance_analytics import (
 )
 
 from utils.logger import get_logger, log_exception, read_last_log_lines, clear_log_file
+from utils.explainability import build_recommendation_explanation
 
 logger = get_logger(__name__)
 
@@ -164,6 +165,34 @@ def analyze_stock(symbol: str) -> dict:
     except Exception as e:
         log_exception(logger, f"save_recommendation failed for {symbol}", e)
 
+    # ── Build the explanation panel ───────────────────────────────────────────
+    # Purely additive: a failure here must NEVER break the analysis response.
+    # build_recommendation_explanation() already has its own internal
+    # try/except and returns a safe fallback dict on failure, but we wrap
+    # the call itself defensively too, so a completely unexpected error
+    # (e.g. a bad import) still degrades to explanation=None rather than
+    # failing the whole /analyze-stock request.
+    explanation = None
+    try:
+        explanation = build_recommendation_explanation(
+            symbol=symbol,
+            stock_name=company_name,
+            signal=final_signal,
+            score=final_score,
+            confidence=confidence,
+            accuracy=acc,
+            prediction=int(pred[0]) if hasattr(pred, "__len__") else int(pred),
+            news_score=overall_score,
+            timeframe_score=timeframe_score,
+            regime_info=regime_info,
+            factors=factors,
+            risk=risk,
+            data=data,
+        )
+    except Exception as e:
+        log_exception(logger, f"Explanation build failed for {symbol}", e)
+        explanation = None
+
     return {
         "symbol":       symbol,
         "stock":        company_name,
@@ -178,6 +207,7 @@ def analyze_stock(symbol: str) -> dict:
         "target":       risk.get("target")    if risk else None,
         "stop_loss":    risk.get("stop_loss") if risk else None,
         "factors":      factors,
+        "explanation":  explanation,
     }
 
 

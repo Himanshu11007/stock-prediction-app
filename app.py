@@ -15,6 +15,7 @@ from utils.decision_engine import generate_signal
 from features.engineer import get_trend_signal
 from utils.regime import detect_regime
 from utils.risk import calculate_risk
+from utils.explainability import build_recommendation_explanation, build_card_summary
 from scanner.cache import load_category_cache, cache_age_minutes, any_cache_exists
 from scanner.background import (
     start_background_scan, is_scan_running, scan_progress, needs_scan
@@ -303,6 +304,22 @@ with tab_home:
                             ₹ <b>{rec.get('close','—')}</b>{regime_tag}
                         </div>
                         </div>""", unsafe_allow_html=True)
+
+                    with st.expander("🧠 Why?", expanded=False):
+                        try:
+                            card_exp = build_card_summary(rec)
+                            st.caption(card_exp["signal_explanation"])
+                            if card_exp.get("reason"):
+                                st.markdown(f"**{card_exp['reason']}**")
+                            factors_list = card_exp.get("factors", [])
+                            if factors_list:
+                                for f in factors_list[:5]:
+                                    st.markdown(f"- {f}")
+                            st.caption(card_exp.get("risk_summary", ""))
+                            for wp in card_exp.get("watch_points", []):
+                                st.caption(f"👀 {wp}")
+                        except Exception:
+                            st.caption("Explanation unavailable for this pick.")
         else:
             st.caption("No BUY signals passed quality filters in this category.")
 
@@ -451,6 +468,27 @@ with tab_analyse:
 
         close_price = float(data["Close"].iloc[-1])
 
+        # ── Build the explanation panel (purely additive — never breaks the page) ──
+        try:
+            explanation = build_recommendation_explanation(
+                symbol=stock_symbol,
+                stock_name=selected_company,
+                signal=final_signal,
+                score=final_score,
+                confidence=confidence,
+                accuracy=acc,
+                prediction=int(pred[0]) if hasattr(pred, "__len__") else int(pred),
+                news_score=overall_score,
+                timeframe_score=timeframe_score,
+                regime_info=regime_info,
+                factors=factors,
+                risk=risk,
+                data=data,
+            )
+        except Exception as e:
+            st.warning(f"Explanation unavailable: {e}")
+            explanation = None
+
         try:
             save_signal(stock_symbol, selected_company, final_signal,
                         final_score, confidence, acc, close_price)
@@ -485,7 +523,7 @@ with tab_analyse:
             daily_trend=daily_trend, timeframe_score=timeframe_score,
             final_signal=final_signal, final_score=final_score,
             reason=reason, factors=factors, risk=risk,
-            close_price=close_price,
+            close_price=close_price, explanation=explanation,
         )
 
     # ── Render results from session state (survives autorefresh reruns) ───────
@@ -513,6 +551,7 @@ with tab_analyse:
         factors         = r["factors"]
         risk            = r["risk"]
         close_price     = r["close_price"]
+        explanation     = r.get("explanation")
 
         st.divider()
         chart_col, signal_col = st.columns([3, 2])
@@ -539,6 +578,77 @@ with tab_analyse:
                                 factors=factors, risk=risk)
             except Exception as e:
                 st.error(f"Signal display error: {e}")
+
+            # ── Explainability panel ──────────────────────────────────────────
+            if explanation:
+                with st.expander("🧠 Why this recommendation?", expanded=False):
+                    st.markdown(f"**{explanation.get('final_interpretation', '')}**")
+                    st.caption(explanation.get("signal_explanation", ""))
+                    if explanation.get("confidence_note"):
+                        st.caption(explanation["confidence_note"])
+
+                    st.markdown("---")
+
+                    sw_col1, sw_col2 = st.columns(2)
+                    with sw_col1:
+                        st.markdown("**✅ Strengths**")
+                        strengths = explanation.get("strengths", [])
+                        if strengths:
+                            for s in strengths:
+                                st.markdown(f"- {s}")
+                        else:
+                            st.caption("No standout strengths identified.")
+                    with sw_col2:
+                        st.markdown("**⚠️ Weaknesses**")
+                        weaknesses = explanation.get("weaknesses", [])
+                        if weaknesses:
+                            for w in weaknesses:
+                                st.markdown(f"- {w}")
+                        else:
+                            st.caption("No notable weaknesses identified.")
+
+                    st.markdown("---")
+                    st.markdown("**📊 Pillar Contribution**")
+                    pillar_rows = explanation.get("pillar_breakdown", [])
+                    if pillar_rows:
+                        pillar_df = pd.DataFrame(pillar_rows)
+                        pillar_df = pillar_df.rename(columns={
+                            "pillar": "Pillar",
+                            "score": "Raw Score",
+                            "impact": "Impact",
+                            "weight": "Weight",
+                            "weighted_contribution": "Weighted Contribution",
+                            "explanation": "Explanation",
+                        })
+
+                        def _impact_colour(val):
+                            colours = {
+                                "positive": "color: #3fb950",
+                                "negative": "color: #f85149",
+                                "neutral":  "color: #d29922",
+                            }
+                            return colours.get(val, "")
+
+                        try:
+                            styled = pillar_df.style.applymap(
+                                _impact_colour, subset=["Impact"]
+                            )
+                            st.dataframe(styled, width="stretch", hide_index=True)
+                        except Exception:
+                            st.dataframe(pillar_df, width="stretch", hide_index=True)
+                    else:
+                        st.caption("Pillar breakdown not available.")
+
+                    st.markdown("---")
+                    st.markdown("**💰 Risk Summary**")
+                    st.caption(explanation.get("risk_summary", "Risk data unavailable."))
+
+                    watch_points = explanation.get("watch_points", [])
+                    if watch_points:
+                        st.markdown("---")
+                        st.markdown("**👀 Watch Points**")
+                        for wp in watch_points:
+                            st.markdown(f"- {wp}")
 
             st.markdown(
                 '<div class="sec-title">⏱️ Multi-timeframe analysis</div>',

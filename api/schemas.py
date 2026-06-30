@@ -40,6 +40,33 @@ class AnalyzeStockRequest(BaseModel):
     symbol: str = Field(..., examples=["RELIANCE.NS"])
 
 
+class PillarBreakdown(BaseModel):
+    """One row of the explainability pillar table — see utils/explainability.py."""
+    pillar:                 str
+    score:                  float
+    impact:                 str   # "positive" | "neutral" | "negative"
+    weight:                 float
+    weighted_contribution:  float
+    explanation:            str
+
+
+class RecommendationExplanation(BaseModel):
+    """
+    Structured, human-readable explanation for a recommendation.
+    Built by utils.explainability.build_recommendation_explanation() —
+    purely presentational, never influences the signal/score itself.
+    """
+    summary:               str
+    signal_explanation:    str
+    strengths:             list[str] = []
+    weaknesses:            list[str] = []
+    watch_points:          list[str] = []
+    pillar_breakdown:      list[PillarBreakdown] = []
+    risk_summary:          str
+    confidence_note:       str = ""
+    final_interpretation:  str
+
+
 class AnalyzeStockResponse(BaseModel):
     symbol:        str
     stock:         str
@@ -54,6 +81,7 @@ class AnalyzeStockResponse(BaseModel):
     target:        Optional[float] = None
     stop_loss:     Optional[float] = None
     factors:       list[str] = []
+    explanation:   Optional[RecommendationExplanation] = None
 
 
 # ══════════════════════════════════════════════════════════════════════════════
