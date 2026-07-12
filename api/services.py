@@ -33,7 +33,9 @@ from scanner.background import start_background_scan, is_scan_running, scan_prog
 from scanner.cache import load_category_cache, cache_age_minutes
 from config import CATEGORIES
 
-from storage.tracker import save_signal, save_recommendation, get_recent_signals
+from storage.tracker import save_signal, save_recommendation, upsert_recommendation, get_recent_signals
+from utils.explainability import build_recommendation_explanation, compute_pillar_scores, compute_weighted_score
+from utils.company_mapper import get_sector
 from storage.recommendation_validation import (
     validate_old_recommendations,
     migrate_schema,
@@ -47,7 +49,6 @@ from storage.performance_analytics import (
 )
 
 from utils.logger import get_logger, log_exception, read_last_log_lines, clear_log_file
-from utils.explainability import build_recommendation_explanation
 
 logger = get_logger(__name__)
 
@@ -150,7 +151,20 @@ def analyze_stock(symbol: str) -> dict:
         log_exception(logger, f"save_signal failed for {symbol}", e)
 
     try:
-        save_recommendation(
+        _pred_int = int(pred[0]) if hasattr(pred, "__len__") else int(pred)
+        _pillar_scores = compute_pillar_scores(
+            prediction=_pred_int, confidence=confidence,
+            news_score=overall_score, timeframe_score=timeframe_score,
+            data=data, regime_info=regime_info,
+        )
+        _weighted_score = compute_weighted_score(_pillar_scores)
+        _sector = None
+        try:
+            _sector = get_sector(symbol)
+        except Exception:
+            pass
+
+        upsert_recommendation(
             symbol           = symbol,
             stock            = company_name,
             signal           = final_signal,
@@ -161,6 +175,11 @@ def analyze_stock(symbol: str) -> dict:
             accuracy         = acc,
             target           = risk.get("target")    if risk else None,
             stop_loss        = risk.get("stop_loss") if risk else None,
+            pillar_scores    = _pillar_scores,
+            weighted_score   = _weighted_score,
+            sector           = _sector,
+            market_regime    = (regime_info or {}).get("regime"),
+            engine_version   = "v1.0",
         )
     except Exception as e:
         log_exception(logger, f"save_recommendation failed for {symbol}", e)
@@ -412,3 +431,16 @@ def get_latest_logs(lines: int = 100) -> list[str]:
 
 def clear_logs() -> bool:
     return clear_log_file()
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# Intelligence Engine
+# ══════════════════════════════════════════════════════════════════════════════
+
+def get_intelligence_report() -> dict:
+    """
+    Return the full Recommendation Intelligence Report.
+    Read-only — delegates entirely to the analytics engine.
+    """
+    from analytics.recommendation_intelligence import generate_engine_report
+    return generate_engine_report()

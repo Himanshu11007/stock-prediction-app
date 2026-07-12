@@ -20,6 +20,8 @@ from data.loader import load_multi_timeframe_data
 from features.engineer import get_trend_signal
 from utils.logger import get_logger, log_stock_diagnostics, log_exception
 from storage.tracker import upsert_recommendation, generate_scan_id
+from utils.explainability import compute_pillar_scores, compute_weighted_score
+from utils.company_mapper import get_sector
 
 logger = get_logger(__name__)
 
@@ -86,19 +88,30 @@ def _scan_one(symbol: str, company_map: dict, loader_fn) -> dict | None:
             regime_info=regime_info,
         )
 
-        # ── Detailed pillar diagnostics (DEBUG level only) ────────────────────
+        # ── Recompute the 8 raw pillar scores for diagnostics + persistence ───
+        # Reuses decision_engine's own pillar functions (see
+        # utils/explainability.py module docstring) — does not duplicate or
+        # alter the scoring logic, just recovers the intermediate values
+        # generate_signal() already used internally.
+        pillar_scores = compute_pillar_scores(
+            prediction=int(pred), confidence=confidence,
+            news_score=overall_score, timeframe_score=timeframe_score,
+            data=data, regime_info=regime_info,
+        )
+        weighted_score = compute_weighted_score(pillar_scores)
+
         log_stock_diagnostics(
             symbol=symbol, prediction=pred, confidence=confidence,
             accuracy=acc, signal=signal, final_score=score,
-            ml_dir=0.7 if pred == 1 else -0.7,
-            ml_conf=(max(50.0, min(100.0, confidence)) - 50.0) / 50.0,
-            tech_score=0.0,   # detailed breakdown available inside generate_signal
-            news_score=overall_score,
-            volume_score=0.0,
-            regime_score=float(regime_info.get("regime_score", 0.0)),
-            timeframe_score=timeframe_score,
-            momentum_score=0.0,
-            weighted_score=score,
+            ml_dir=pillar_scores["ML Direction"],
+            ml_conf=pillar_scores["ML Confidence"],
+            tech_score=pillar_scores["Technical Analysis"],
+            news_score=pillar_scores["News Sentiment"],
+            volume_score=pillar_scores["Volume"],
+            regime_score=pillar_scores["Market Regime"],
+            timeframe_score=pillar_scores["Multi-Timeframe"],
+            momentum_score=pillar_scores["Momentum"],
+            weighted_score=weighted_score,
         )
 
         if not passes_quality_filters(data, signal, confidence, acc, score):
@@ -114,6 +127,12 @@ def _scan_one(symbol: str, company_map: dict, loader_fn) -> dict | None:
             "PASSED   | %-20s | signal=%-11s | score=%.4f | conf=%6.2f | acc=%.4f",
             symbol, signal, score, confidence, acc,
         )
+
+        sector = None
+        try:
+            sector = get_sector(symbol)
+        except Exception:
+            sector = None
 
         return {
             "stock":           company_map.get(symbol, symbol.replace(".NS", "")),
@@ -134,6 +153,11 @@ def _scan_one(symbol: str, company_map: dict, loader_fn) -> dict | None:
             "timeframe_score": round(timeframe_score, 2),
             "model":           "Ensemble",
             "news_score":      round(overall_score, 2),
+            # ── Recommendation Intelligence Engine fields ──────────────────────
+            "pillar_scores":   pillar_scores,
+            "weighted_score":  weighted_score,
+            "sector":          sector,
+            "engine_version":  "v1.0",
         }
 
     except Exception as e:
@@ -176,6 +200,11 @@ def _persist_recommendation(result: dict, scan_id: str) -> None:
             target           = result.get("target"),
             stop_loss        = result.get("stop_loss"),
             scan_id          = scan_id,
+            pillar_scores    = result.get("pillar_scores"),
+            weighted_score   = result.get("weighted_score"),
+            sector           = result.get("sector"),
+            market_regime    = result.get("regime"),
+            engine_version   = result.get("engine_version"),
         )
     except Exception as e:
         log_exception(logger, f"Failed to persist recommendation for {result.get('symbol')}", e)

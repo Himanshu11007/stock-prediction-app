@@ -33,7 +33,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from api.routes import analysis, top_picks, tracker, performance, logs
+from api.routes import analysis, top_picks, tracker, performance, logs, intelligence
 from api.schemas import HealthResponse
 
 from storage.recommendation_validation import migrate_schema
@@ -137,7 +137,8 @@ app.include_router(analysis.router,    prefix=API_PREFIX, tags=["Analysis"])
 app.include_router(top_picks.router,   prefix=API_PREFIX, tags=["Top Picks"])
 app.include_router(tracker.router,     prefix=API_PREFIX, tags=["Tracker"])
 app.include_router(performance.router, prefix=API_PREFIX, tags=["Performance"])
-app.include_router(logs.router,        prefix=API_PREFIX, tags=["Logs"])
+app.include_router(logs.router,         prefix=API_PREFIX, tags=["Logs"])
+app.include_router(intelligence.router, prefix=API_PREFIX, tags=["Intelligence"])
 
 
 @app.get(f"{API_PREFIX}/health", response_model=HealthResponse, tags=["Health"])

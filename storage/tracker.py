@@ -126,34 +126,66 @@ def _ensure_validation_table(con: sqlite3.Connection) -> None:
     """
     con.execute("""
         CREATE TABLE IF NOT EXISTS recommendation_validation (
-            id               INTEGER PRIMARY KEY AUTOINCREMENT,
-            saved_date       TEXT    NOT NULL,
-            symbol           TEXT    NOT NULL,
-            stock            TEXT    NOT NULL,
-            signal           TEXT    NOT NULL,
-            cmp              REAL    NOT NULL,
-            confluence_score REAL,
-            ml_confidence    REAL,
-            news_score       REAL,
-            accuracy         REAL,
-            target           REAL,
-            stop_loss        REAL,
-            is_validated     INTEGER DEFAULT 0,
-            validation_date  TEXT,
-            validation_price REAL,
-            return_pct       REAL,
-            success          INTEGER,
-            scan_id          TEXT
+            id                INTEGER PRIMARY KEY AUTOINCREMENT,
+            saved_date        TEXT    NOT NULL,
+            symbol            TEXT    NOT NULL,
+            stock             TEXT    NOT NULL,
+            signal            TEXT    NOT NULL,
+            cmp               REAL    NOT NULL,
+            confluence_score  REAL,
+            ml_confidence     REAL,
+            news_score        REAL,
+            accuracy          REAL,
+            target            REAL,
+            stop_loss         REAL,
+            is_validated      INTEGER DEFAULT 0,
+            validation_date   TEXT,
+            validation_price  REAL,
+            return_pct        REAL,
+            success           INTEGER,
+            scan_id           TEXT,
+            pillar_ml_dir     REAL,
+            pillar_ml_conf    REAL,
+            pillar_tech       REAL,
+            pillar_news       REAL,
+            pillar_volume     REAL,
+            pillar_regime     REAL,
+            pillar_timeframe  REAL,
+            pillar_momentum   REAL,
+            weighted_score    REAL,
+            sector            TEXT,
+            market_regime     TEXT,
+            engine_version    TEXT
         )
     """)
 
     # ── Migration-safe column add: check PRAGMA table_info before ALTER ───────
+    # Every column below is nullable, so existing rows remain valid with NULL
+    # in the new fields — no backfill, no data loss, no rewrite of old rows.
     existing_cols = {
         row[1] for row in con.execute("PRAGMA table_info(recommendation_validation)")
     }
-    if "scan_id" not in existing_cols:
-        con.execute("ALTER TABLE recommendation_validation ADD COLUMN scan_id TEXT")
-        logger.info("Schema: added column 'scan_id' to recommendation_validation")
+    _new_columns = {
+        "scan_id":          "TEXT",
+        "pillar_ml_dir":    "REAL",
+        "pillar_ml_conf":   "REAL",
+        "pillar_tech":      "REAL",
+        "pillar_news":      "REAL",
+        "pillar_volume":    "REAL",
+        "pillar_regime":    "REAL",
+        "pillar_timeframe": "REAL",
+        "pillar_momentum":  "REAL",
+        "weighted_score":   "REAL",
+        "sector":           "TEXT",
+        "market_regime":    "TEXT",
+        "engine_version":   "TEXT",
+    }
+    for col_name, col_type in _new_columns.items():
+        if col_name not in existing_cols:
+            con.execute(
+                f"ALTER TABLE recommendation_validation ADD COLUMN {col_name} {col_type}"
+            )
+            logger.info("Schema: added column '%s' to recommendation_validation", col_name)
 
     con.execute("""
         CREATE INDEX IF NOT EXISTS idx_rv_pending
@@ -282,6 +314,11 @@ def upsert_recommendation(
     stop_loss:        float | None,
     saved_date:       str | None = None,
     scan_id:          str | None = None,
+    pillar_scores:    dict | None = None,
+    weighted_score:   float | None = None,
+    sector:           str | None = None,
+    market_regime:    str | None = None,
+    engine_version:   str | None = None,
 ) -> int:
     """
     Insert a new recommendation, or update the existing row for the same
@@ -303,12 +340,42 @@ def upsert_recommendation(
                  "MANUAL-20260628-143522"). Stored for traceability; the
                  actual dedup key remains (symbol, saved_date) — see
                  recommendation_exists() docstring for why.
+        pillar_scores: Optional dict with keys matching
+                 utils.explainability._PILLAR_WEIGHTS (e.g. "ML Direction",
+                 "Technical Analysis", ...). When provided, the eight raw
+                 pillar scores are persisted alongside the recommendation
+                 so the Recommendation Intelligence Engine can analyze them
+                 later without ever recomputing history. All optional and
+                 nullable — omitting this has no effect on existing callers.
+        weighted_score: The pre-mapped [-1, +1] confluence value (distinct
+                 from confluence_score, which is the 0-1 mapped value).
+        sector:  Stock sector, if known at save time (e.g. from a CSV
+                 mapping). Falls back to NULL if not provided — historical
+                 rows without a sector can still be backfilled via mapping
+                 at analysis time by the intelligence engine.
+        market_regime: The regime *label* (e.g. "Bullish", "Sideways") —
+                 distinct from pillar_scores["Market Regime"], which is the
+                 numeric regime_score.
+        engine_version: Free-text tag for which recommendation engine
+                 version produced this row (e.g. "v1.0"). Useful for
+                 intelligence analysis if the scoring logic changes later.
 
     Returns:
         int: rowid of the inserted or updated row
     """
     row_date = saved_date or datetime.date.today().isoformat()
     scan_id  = scan_id or generate_scan_id()
+
+    # ── Unpack pillar scores (all nullable — None if not provided) ───────────
+    p = pillar_scores or {}
+    pillar_ml_dir    = p.get("ML Direction")
+    pillar_ml_conf   = p.get("ML Confidence")
+    pillar_tech      = p.get("Technical Analysis")
+    pillar_news      = p.get("News Sentiment")
+    pillar_volume    = p.get("Volume")
+    pillar_regime    = p.get("Market Regime")
+    pillar_timeframe = p.get("Multi-Timeframe")
+    pillar_momentum  = p.get("Momentum")
 
     con = _connect()
     _ensure_validation_table(con)
@@ -324,8 +391,11 @@ def upsert_recommendation(
                 INSERT INTO recommendation_validation (
                     saved_date, symbol, stock, signal, cmp,
                     confluence_score, ml_confidence, news_score, accuracy,
-                    target, stop_loss, scan_id
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    target, stop_loss, scan_id,
+                    pillar_ml_dir, pillar_ml_conf, pillar_tech, pillar_news,
+                    pillar_volume, pillar_regime, pillar_timeframe, pillar_momentum,
+                    weighted_score, sector, market_regime, engine_version
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     row_date, symbol, stock, signal,
@@ -337,6 +407,18 @@ def upsert_recommendation(
                     round(float(target), 2)    if target    is not None else None,
                     round(float(stop_loss), 2) if stop_loss is not None else None,
                     scan_id,
+                    round(float(pillar_ml_dir), 4)    if pillar_ml_dir    is not None else None,
+                    round(float(pillar_ml_conf), 4)   if pillar_ml_conf   is not None else None,
+                    round(float(pillar_tech), 4)      if pillar_tech      is not None else None,
+                    round(float(pillar_news), 4)      if pillar_news      is not None else None,
+                    round(float(pillar_volume), 4)    if pillar_volume    is not None else None,
+                    round(float(pillar_regime), 4)    if pillar_regime    is not None else None,
+                    round(float(pillar_timeframe), 4) if pillar_timeframe is not None else None,
+                    round(float(pillar_momentum), 4)  if pillar_momentum  is not None else None,
+                    round(float(weighted_score), 4)   if weighted_score   is not None else None,
+                    sector,
+                    market_regime,
+                    engine_version,
                 ),
             )
             con.commit()
@@ -354,6 +436,9 @@ def upsert_recommendation(
             SET stock = ?, signal = ?, cmp = ?,
                 confluence_score = ?, ml_confidence = ?, news_score = ?,
                 accuracy = ?, target = ?, stop_loss = ?, scan_id = ?,
+                pillar_ml_dir = ?, pillar_ml_conf = ?, pillar_tech = ?, pillar_news = ?,
+                pillar_volume = ?, pillar_regime = ?, pillar_timeframe = ?, pillar_momentum = ?,
+                weighted_score = ?, sector = ?, market_regime = ?, engine_version = ?,
                 is_validated = 0, validation_date = NULL,
                 validation_price = NULL, return_pct = NULL, success = NULL
             WHERE id = ?
@@ -368,6 +453,18 @@ def upsert_recommendation(
                 round(float(target), 2)    if target    is not None else None,
                 round(float(stop_loss), 2) if stop_loss is not None else None,
                 scan_id,
+                round(float(pillar_ml_dir), 4)    if pillar_ml_dir    is not None else None,
+                round(float(pillar_ml_conf), 4)   if pillar_ml_conf   is not None else None,
+                round(float(pillar_tech), 4)      if pillar_tech      is not None else None,
+                round(float(pillar_news), 4)      if pillar_news      is not None else None,
+                round(float(pillar_volume), 4)    if pillar_volume    is not None else None,
+                round(float(pillar_regime), 4)    if pillar_regime    is not None else None,
+                round(float(pillar_timeframe), 4) if pillar_timeframe is not None else None,
+                round(float(pillar_momentum), 4)  if pillar_momentum  is not None else None,
+                round(float(weighted_score), 4)   if weighted_score   is not None else None,
+                sector,
+                market_regime,
+                engine_version,
                 row_id,
             ),
         )

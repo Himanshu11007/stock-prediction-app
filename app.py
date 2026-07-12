@@ -15,14 +15,19 @@ from utils.decision_engine import generate_signal
 from features.engineer import get_trend_signal
 from utils.regime import detect_regime
 from utils.risk import calculate_risk
-from utils.explainability import build_recommendation_explanation, build_card_summary
+from utils.explainability import (
+    build_recommendation_explanation, build_card_summary,
+    compute_pillar_scores, compute_weighted_score,
+)
+from utils.company_mapper import get_sector
+from analytics.recommendation_intelligence import generate_engine_report
 from scanner.cache import load_category_cache, cache_age_minutes, any_cache_exists
 from scanner.background import (
     start_background_scan, is_scan_running, scan_progress, needs_scan
 )
 from storage.tracker import (
     save_signal, get_recent_signals, get_accuracy_stats,
-    save_recommendation,
+    save_recommendation, upsert_recommendation,
 )
 from utils.logger import (
     get_logger, configure_logging,
@@ -147,11 +152,12 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ─── TABS ─────────────────────────────────────────────────────────────────────
-tab_analyse, tab_home, tab_tracker, tab_performance = st.tabs([
+tab_analyse, tab_home, tab_tracker, tab_performance, tab_intel = st.tabs([
     "🔍  Analyse Stock",
     "🏆  Top Picks",
     "📋  My Tracker",
     "📊  Performance",
+    "🧪  Intelligence",
 ])
 
 
@@ -496,7 +502,19 @@ with tab_analyse:
             pass
 
         try:
-            save_recommendation(
+            _pred_int = int(pred[0]) if hasattr(pred, "__len__") else int(pred)
+            _pillar_scores = compute_pillar_scores(
+                prediction=_pred_int, confidence=confidence,
+                news_score=overall_score, timeframe_score=timeframe_score,
+                data=data, regime_info=regime_info,
+            )
+            _weighted_score = compute_weighted_score(_pillar_scores)
+            _sector = None
+            try:
+                _sector = get_sector(stock_symbol)
+            except Exception:
+                pass
+            upsert_recommendation(
                 symbol           = stock_symbol,
                 stock            = selected_company,
                 signal           = final_signal,
@@ -507,6 +525,11 @@ with tab_analyse:
                 accuracy         = acc,
                 target           = risk.get("target")    if risk else None,
                 stop_loss        = risk.get("stop_loss") if risk else None,
+                pillar_scores    = _pillar_scores,
+                weighted_score   = _weighted_score,
+                sector           = _sector,
+                market_regime    = (regime_info or {}).get("regime"),
+                engine_version   = "v1.0",
             )
         except Exception:
             pass
@@ -1090,3 +1113,252 @@ with tab_performance:
                 )
         else:
             st.caption("Insights will appear once enough recommendations are validated.")
+# ══════════════════════════════════════════════════════════════════════════════
+# TAB 5 — RECOMMENDATION INTELLIGENCE
+# ══════════════════════════════════════════════════════════════════════════════
+with tab_intel:
+    st.markdown('<div class="sec-title">🧪 Recommendation Intelligence Engine</div>',
+                unsafe_allow_html=True)
+    st.caption("Read-only analytics over historical validated recommendations. "
+               "This engine never modifies weights, thresholds, or any configuration.")
+
+    @st.cache_data(ttl=600, show_spinner=False)
+    def _load_intelligence():
+        return generate_engine_report()
+
+    if st.button("🔄 Refresh Intelligence Report", use_container_width=True):
+        st.cache_data.clear()
+
+    with st.spinner("Analysing historical recommendations..."):
+        _report = _load_intelligence()
+
+    _meta = _report.get("meta", {})
+    _sum  = _report.get("summary", {})
+
+    st.caption(
+        f"Engine v{_meta.get('engine_version','?')} · "
+        f"{_meta.get('records_analyzed',0)} records analysed · "
+        f"{_meta.get('execution_time_ms',0):.0f}ms · "
+        f"{_sum.get('data_quality','')}"
+    )
+
+    if _meta.get("records_analyzed", 0) == 0:
+        st.info(
+            "No validated recommendations yet. "
+            "Recommendations are validated after 5 trading days — "
+            "use the **📋 My Tracker** tab to trigger validation."
+        )
+    else:
+        # ── Section 1: Overall Health ─────────────────────────────────────────
+        st.markdown("### 📈 Overall Health")
+        h1, h2, h3, h4 = st.columns(4)
+        h1.metric("Total Validated",  _sum.get("total", 0))
+        h2.metric("Successful",       _sum.get("successful", 0))
+        h3.metric("Failed",           _sum.get("failed", 0))
+        h4.metric("Success Rate",     f"{_sum.get('success_rate', 0)}%")
+        r1, r2, r3 = st.columns(3)
+        r1.metric("Avg Return",    f"{_sum.get('avg_return', 0):+.2f}%")
+        r2.metric("Best Return",   f"{_sum.get('best_return', 0):+.2f}%")
+        r3.metric("Worst Return",  f"{_sum.get('worst_return', 0):+.2f}%")
+        st.divider()
+
+        # ── Section 2: Threshold Analysis ────────────────────────────────────
+        with st.expander("📊 Threshold Analysis", expanded=True):
+            st.caption("Performance of recommendations at each confluence score threshold. Read-only observation only.")
+            _tdata = _report.get("threshold_analysis", [])
+            if _tdata:
+                _tdf = pd.DataFrame(_tdata)
+                st.dataframe(_tdf, use_container_width=True, hide_index=True)
+                import plotly.graph_objects as go
+                _fig_t = go.Figure()
+                _fig_t.add_trace(go.Bar(
+                    x=[str(r["threshold"]) for r in _tdata],
+                    y=[r["success_rate"] for r in _tdata],
+                    marker_color="#4ade80",
+                    text=[f"{r['success_rate']}%" for r in _tdata],
+                    textposition="outside",
+                ))
+                _fig_t.update_layout(
+                    title="Success Rate by Confluence Threshold",
+                    yaxis=dict(range=[0, 110]),
+                    paper_bgcolor="#161b22", plot_bgcolor="#0d1117",
+                    font=dict(color="#c9d1d9"), height=300, showlegend=False,
+                )
+                st.plotly_chart(_fig_t, use_container_width=True)
+            else:
+                st.caption("No threshold data available.")
+
+        # ── Section 3: Confidence Analysis ───────────────────────────────────
+        with st.expander("🎯 Confidence Analysis", expanded=False):
+            st.caption("Does higher ML confidence produce better outcomes?")
+            _cdata = _report.get("confidence_analysis", [])
+            if _cdata:
+                _cdf = pd.DataFrame(_cdata)
+                st.dataframe(_cdf, use_container_width=True, hide_index=True)
+                _fig_c = go.Figure()
+                _fig_c.add_trace(go.Scatter(
+                    x=[r["confidence_band"] for r in _cdata],
+                    y=[r["success_rate"] for r in _cdata],
+                    mode="lines+markers+text",
+                    text=[f"{r['success_rate']}%" for r in _cdata],
+                    textposition="top center",
+                    line=dict(color="#f59e0b", width=2),
+                    marker=dict(size=8),
+                ))
+                _fig_c.update_layout(
+                    title="Confidence Band vs Success Rate",
+                    yaxis=dict(range=[0, 110]),
+                    paper_bgcolor="#161b22", plot_bgcolor="#0d1117",
+                    font=dict(color="#c9d1d9"), height=280,
+                )
+                st.plotly_chart(_fig_c, use_container_width=True)
+            else:
+                st.caption("No confidence data available.")
+
+        # ── Section 4: Pillar Analytics ───────────────────────────────────────
+        with st.expander("🔩 Pillar Analytics", expanded=False):
+            st.caption("Correlation of each pillar score with successful outcomes. Requires new recommendations (pillar scores stored from v1.0 onwards).")
+            _pdata = _report.get("pillar_analysis", [])
+            if _pdata:
+                _pdf = pd.DataFrame(_pdata)
+                _has_data = _pdf["corr_with_success"].notna().any()
+                if _has_data:
+                    _pdf_disp = _pdf[_pdf["corr_with_success"].notna()].copy()
+                    st.dataframe(
+                        _pdf_disp[["pillar", "avg_score", "corr_with_success", "corr_with_return", "interpretation"]],
+                        use_container_width=True, hide_index=True,
+                    )
+                    _fig_p = go.Figure()
+                    _colours = ["#22c55e" if v >= 0 else "#ef4444"
+                                for v in _pdf_disp["corr_with_success"]]
+                    _fig_p.add_trace(go.Bar(
+                        x=_pdf_disp["pillar"],
+                        y=_pdf_disp["corr_with_success"],
+                        marker_color=_colours,
+                        text=[f"{v:.2f}" for v in _pdf_disp["corr_with_success"]],
+                        textposition="outside",
+                    ))
+                    _fig_p.update_layout(
+                        title="Pillar Correlation with Success",
+                        yaxis=dict(range=[-1.1, 1.1]),
+                        paper_bgcolor="#161b22", plot_bgcolor="#0d1117",
+                        font=dict(color="#c9d1d9"), height=320, showlegend=False,
+                    )
+                    st.plotly_chart(_fig_p, use_container_width=True)
+                else:
+                    st.info("Pillar scores not yet stored. Analyse stocks with v1.0 engine to populate this section.")
+                    _pdf_msg = _pdf[["pillar", "interpretation"]]
+                    st.dataframe(_pdf_msg, use_container_width=True, hide_index=True)
+            else:
+                st.caption("No pillar data available.")
+
+        # ── Section 5: Sector Analytics ──────────────────────────────────────
+        with st.expander("🏭 Sector Analytics", expanded=False):
+            _sdata = _report.get("sector_analysis", [])
+            if _sdata and _sdata[0].get("note"):
+                st.info(_sdata[0]["note"])
+            elif _sdata:
+                st.dataframe(pd.DataFrame(_sdata), use_container_width=True, hide_index=True)
+                _fig_s = go.Figure()
+                _fig_s.add_trace(go.Bar(
+                    x=[r["sector"] for r in _sdata],
+                    y=[r["success_rate"] for r in _sdata],
+                    marker_color="#4ade80",
+                    text=[f"{r['success_rate']}%" for r in _sdata],
+                    textposition="outside",
+                ))
+                _fig_s.update_layout(
+                    title="Success Rate by Sector",
+                    yaxis=dict(range=[0, 110]),
+                    paper_bgcolor="#161b22", plot_bgcolor="#0d1117",
+                    font=dict(color="#c9d1d9"), height=300, showlegend=False,
+                )
+                st.plotly_chart(_fig_s, use_container_width=True)
+            else:
+                st.caption("No sector data available.")
+
+        # ── Section 6: Regime Analytics ──────────────────────────────────────
+        with st.expander("🌐 Regime Analytics", expanded=False):
+            _rdata = _report.get("regime_analysis", [])
+            if _rdata and _rdata[0].get("note"):
+                st.info(_rdata[0]["note"])
+            elif _rdata:
+                st.dataframe(pd.DataFrame(_rdata), use_container_width=True, hide_index=True)
+                _fig_r = go.Figure()
+                _rcolours = {
+                    "Bullish": "#22c55e", "Bearish": "#ef4444",
+                    "Sideways": "#f59e0b", "High Volatility": "#8b5cf6",
+                    "Unknown": "#6b7280",
+                }
+                _fig_r.add_trace(go.Bar(
+                    x=[r["regime"] for r in _rdata],
+                    y=[r["success_rate"] for r in _rdata],
+                    marker_color=[_rcolours.get(r["regime"], "#6b7280") for r in _rdata],
+                    text=[f"{r['success_rate']}%" for r in _rdata],
+                    textposition="outside",
+                ))
+                _fig_r.update_layout(
+                    title="Success Rate by Market Regime",
+                    yaxis=dict(range=[0, 110]),
+                    paper_bgcolor="#161b22", plot_bgcolor="#0d1117",
+                    font=dict(color="#c9d1d9"), height=300, showlegend=False,
+                )
+                st.plotly_chart(_fig_r, use_container_width=True)
+            else:
+                st.caption("No regime data available.")
+
+        # ── Section 7: Signal Analytics ───────────────────────────────────────
+        with st.expander("📡 Signal Analytics", expanded=False):
+            _sigdata = _report.get("signal_analysis", [])
+            if _sigdata:
+                st.dataframe(pd.DataFrame(_sigdata), use_container_width=True, hide_index=True)
+                _sig_colours = {
+                    "STRONG BUY": "#22c55e", "BUY": "#4ade80",
+                    "HOLD": "#f59e0b", "SELL": "#f87171", "STRONG SELL": "#ef4444",
+                }
+                _fig_sig = go.Figure()
+                _fig_sig.add_trace(go.Bar(
+                    x=[r["signal"] for r in _sigdata],
+                    y=[r["success_rate"] for r in _sigdata],
+                    marker_color=[_sig_colours.get(r["signal"], "#6b7280") for r in _sigdata],
+                    text=[f"{r['success_rate']}%" for r in _sigdata],
+                    textposition="outside",
+                ))
+                _fig_sig.update_layout(
+                    title="Success Rate by Signal Type",
+                    yaxis=dict(range=[0, 110]),
+                    paper_bgcolor="#161b22", plot_bgcolor="#0d1117",
+                    font=dict(color="#c9d1d9"), height=300, showlegend=False,
+                )
+                st.plotly_chart(_fig_sig, use_container_width=True)
+            else:
+                st.caption("No signal data available.")
+
+        # ── Section 8: AI Recommendations ────────────────────────────────────
+        st.markdown("### 💡 Developer Recommendations")
+        st.caption("Deterministic, evidence-based observations. Read-only — no weights or thresholds are changed.")
+        _recdata = _report.get("recommendations", [])
+        _priority_colours = {
+            "High":   ("#0a2e1a", "#22c55e", "#4ade80"),
+            "Medium": ("#2b1d00", "#bb8009", "#d29922"),
+            "Low":    ("#161b22", "#30363d", "#8b949e"),
+        }
+        for _rec in _recdata:
+            _pri = _rec.get("priority", "Low")
+            _bg, _border, _text = _priority_colours.get(_pri, _priority_colours["Low"])
+            st.markdown(f"""
+<div style="background:{_bg};border:1px solid {_border};border-radius:8px;
+            padding:.8rem 1rem;margin:.4rem 0;">
+  <div style="color:{_text};font-weight:700;font-size:.85rem;">
+    [{_pri}] {_rec.get('title','')}
+    <span style="color:#8b949e;font-weight:400;font-size:.75rem;margin-left:.5rem;">
+      Confidence: {_rec.get('confidence',0)}%
+    </span>
+  </div>
+  <div style="color:#c9d1d9;font-size:.82rem;margin-top:.3rem;">
+    {_rec.get('recommendation','')}
+  </div>
+  <div style="color:#8b949e;font-size:.76rem;margin-top:.2rem;">
+    Evidence: {_rec.get('evidence','')}
+  </div>
+</div>""", unsafe_allow_html=True)

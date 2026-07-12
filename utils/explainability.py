@@ -233,6 +233,35 @@ def _compute_pillar_scores(
     }
 
 
+def compute_pillar_scores(
+    prediction:      int,
+    confidence:      float,
+    news_score:      float,
+    timeframe_score: float,
+    data,
+    regime_info:     Optional[dict],
+) -> dict[str, float]:
+    """
+    Public entry point for recomputing the eight raw pillar scores —
+    used by recommendation persistence call sites (scanner/engine.py,
+    api/services.py, app.py) so a recommendation can be saved with its
+    full pillar breakdown for later analysis by the Recommendation
+    Intelligence Engine (analytics/recommendation_intelligence.py).
+
+    Thin public wrapper around _compute_pillar_scores() — see that
+    function's docstring and the module docstring for why this reuses
+    decision_engine's own pillar functions instead of duplicating them.
+    """
+    return _compute_pillar_scores(
+        prediction=prediction,
+        confidence=confidence,
+        news_score=news_score,
+        timeframe_score=timeframe_score,
+        data=data,
+        regime_info=regime_info,
+    )
+
+
 _PILLAR_WEIGHTS: dict[str, float] = {
     "ML Direction":       W_ML_DIR,
     "ML Confidence":      W_ML_CONF,
@@ -732,3 +761,19 @@ def build_card_summary(rec: dict) -> dict:
             "risk_summary": "Risk data unavailable.",
             "watch_points": [],
         }
+
+
+def compute_weighted_score(pillar_scores: dict[str, float]) -> float:
+    """
+    Compute the weighted confluence score [-1, +1] from raw pillar scores,
+    using the same weights generate_signal() uses internally (imported
+    from config.py — never hardcoded).
+
+    This is the same value decision_engine.generate_signal() computes as
+    its internal `weighted` variable before mapping to the final 0-100
+    score, recovered here for persistence/analysis purposes only.
+    """
+    total = 0.0
+    for pillar_name, weight in _PILLAR_WEIGHTS.items():
+        total += float(pillar_scores.get(pillar_name, 0.0) or 0.0) * weight
+    return round(total, 4)
