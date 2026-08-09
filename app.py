@@ -324,6 +324,7 @@ with tab_home:
                         </div>""", unsafe_allow_html=True)
 
                     st.markdown("<div style='margin-top:.3rem'></div>", unsafe_allow_html=True)
+                    st.markdown("<div style='height:10px></div>", unsafe_allow_html=True)
                     if st.button("Add to Watchlist", key=f"watchlist_{rec['symbol']}", use_container_width=True):
                         try:
                             added = add_to_watchlist(
@@ -1415,18 +1416,12 @@ with tab_watchlist:
                 left,mid,right=st.columns([2,2,1])
 
                 with left:
-                    st.markdown(f"###{row['symbol']}']")
+                    st.markdown(f"### {row['symbol']}")
                 with mid:
-                    st.metric("Current price",f"${row['current_price']:.2f}", delta=f"{row['pl_pct']:+.2f}%", delta_color=color)
+                    st.metric("Current price",f"₹{row['current_price']:.2f}", delta=f"{row['pl_pct']:+.2f}%", delta_color=color)
                     st.caption(f"Bought at ₹{row['buy_price']:.2f} on {row['buy_date']}")
                 with right:
                     st.markdown(f"""<div style="text-align:center;color:{color};font-size:1.2rem;font-weight:600;">{row['pl_pct']:+.2f}%</div>""", unsafe_allow_html=True)
                     if st.button("❌ Remove", key=f"remove_{row['symbol']}", use_container_width=True):
                         remove_from_watchlist(int(row["id"]))
-                        st.experimental_rerun()
-
-    if watchlist:
-        df_watch = pd.DataFrame(watchlist)
-        st.dataframe(df_watch, use_container_width=True, hide_index=True)
-    else:
-        st.info("No stocks in the watchlist yet. Add stocks from the **📊 Analysis** tab.")
+                        st.rerun()

@@ -18,11 +18,11 @@ def init_watchlist_table() -> None:
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS watchlist (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                symbol TEXT  NOT NULL,
+                symbol TEXT  NOT NULL UNIQUE,
                 stock_name TEXT NOT NULL,
                 buy_price REAL NOT NULL,
                 buy_date TEXT NOT NULL,
-                quatity REAL NOT NULL,
+                quantity REAL NOT NULL DEFAULT 1,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 unique(symbol, buy_date)  -- Ensure unique combination of symbol and buy_date
             )
@@ -38,22 +38,20 @@ def add_to_watchlist(symbol: str, stock_name: str, buy_price: float) -> bool:
             if cursor.fetchone():
                 return False  # Stock already exists in the watchlist
             cursor.execute("""
-                INSERT INTO watchlist (symbol, stock_name, buy_price, buy_date, quatity)
+                INSERT INTO watchlist (symbol, stock_name, buy_price, buy_date, quantity)
                 VALUES (?, ?, ?, ?, ?)
             """, (symbol, stock_name, buy_price, datetime.now().strftime("%Y-%m-%d"), 1.0))
             conn.commit()
             logger.info(f"Added {symbol} to watchlist.")
             return True
         except sqlite3.IntegrityError:
-            logger.warning(f"{symbol} already exists in the watchlist for the date {datetime.now().strftime('%Y-%m-%d')}.")
+            logger.warning(f"{symbol} already exists in the watchlist.")
 
 def remove_from_watchlist(watchlist_id: int) -> None:
     """Remove a stock from the watchlist."""
     with sqlite3.connect(TRACKER_DB) as conn:
         cursor = conn.cursor()
-        cursor.execute("""
-            DELETE FROM watchlist WHERE id = ?,(watchlist_id,)
-        """, (watchlist_id,))
+        cursor.execute("DELETE FROM watchlist WHERE id = ?", (watchlist_id,))
         conn.commit()
         if cursor.rowcount > 0:
             logger.info(f"Removed stock with ID {watchlist_id} from watchlist.")
@@ -91,7 +89,7 @@ def get_watchlist() -> pd.DataFrame:
         df['current_price'] = current_price
         df["pl_pct"]= ((df["current_price"] - df["buy_price"]) / df["buy_price"]) * 100
         df["pl_pct"] = df["pl_pct"].round(2)
-        df["investment_value"] = df["buy_price"] * df["quatity"].round(2)
-        df["curreent_value"] = df["current_price"] * df["quatity"].round(2)
-        df["pl_amount"] = df["curreent_value"] - df["investment_value"].round(2)
+        df["investment_value"] = df["buy_price"] * df["quantity"].round(2)
+        df["current_value"] = df["current_price"] * df["quantity"].round(2)
+        df["pl_amount"] = df["current_value"] - df["investment_value"].round(2)
         return df
