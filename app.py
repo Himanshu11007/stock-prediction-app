@@ -6,6 +6,7 @@ from data.loader import (load_data,load_multi_timeframe_data)
 from models.trainer import(train_model,ensemble_predict)
 from news.api import fetch_news
 from news.sentiment import analyze_overall_sentiment
+from storage import watchlist
 from utils.helpers import (
     prepare_data, run_backtest,
     show_chart, show_metrics, show_prediction, show_candlestick_chart,
@@ -58,6 +59,15 @@ from storage.performance_analytics import (
     top_losers,
     generate_insights,
 )
+
+from storage.watchlist import (
+    init_watchlist_table,
+    add_to_watchlist,
+    get_watchlist,
+    remove_from_watchlist,
+)
+
+init_watchlist_table()  # ensure watchlist table exists on every start
 
 from config import CATEGORIES
 
@@ -152,12 +162,13 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ─── TABS ─────────────────────────────────────────────────────────────────────
-tab_analyse, tab_home, tab_tracker, tab_performance, tab_intel = st.tabs([
+tab_analyse, tab_home, tab_tracker, tab_performance, tab_intel, tab_watchlist = st.tabs([
     "🔍  Analyse Stock",
     "🏆  Top Picks",
     "📋  My Tracker",
     "📊  Performance",
     "🧪  Intelligence",
+    "📋  My Watchlist"
 ])
 
 
@@ -224,6 +235,7 @@ with tab_home:
         recs = load_category_cache(cat) or []
         for r in recs:
             r["category"] = cat
+           
         all_recs.extend(recs)
 
     st.markdown('<div class="sec-title">📊 Market overview</div>', unsafe_allow_html=True)
@@ -310,6 +322,21 @@ with tab_home:
                             ₹ <b>{rec.get('close','—')}</b>{regime_tag}
                         </div>
                         </div>""", unsafe_allow_html=True)
+
+                    st.markdown("<div style='margin-top:.3rem'></div>", unsafe_allow_html=True)
+                    if st.button("Add to Watchlist", key=f"watchlist_{rec['symbol']}", use_container_width=True):
+                        try:
+                            added = add_to_watchlist(
+                                symbol=rec['symbol'],
+                                stock_name=rec['stock'],
+                                buy_price=rec.get('close', 0.0)
+                            )
+                            if added:
+                                st.toast(f"{rec['symbol']} added to watchlist.", icon="✅")
+                            else:
+                                st.toast(f"{rec['symbol']} is already in the watchlist.", icon="⚠️")
+                        except Exception as e:
+                            st.toast(f"Failed to add {rec['symbol']} to watchlist: {e}", icon="❌")
 
                     with st.expander("🧠 Why?", expanded=False):
                         try:
@@ -1115,7 +1142,7 @@ with tab_performance:
             st.caption("Insights will appear once enough recommendations are validated.")
 # ══════════════════════════════════════════════════════════════════════════════
 # TAB 5 — RECOMMENDATION INTELLIGENCE
-# ══════════════════════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════        
 with tab_intel:
     st.markdown('<div class="sec-title">🧪 Recommendation Intelligence Engine</div>',
                 unsafe_allow_html=True)
@@ -1362,3 +1389,44 @@ with tab_intel:
     Evidence: {_rec.get('evidence','')}
   </div>
 </div>""", unsafe_allow_html=True)
+
+with tab_watchlist:
+    st.markdown('<div class="sec-title">👀 Watchlist</div>', unsafe_allow_html=True)
+    st.caption("Monitor stocks of interest without saving predictions. "
+               "Watchlist stocks are not used in the recommendation engine.")
+
+    df=get_watchlist()
+    if df.empty:
+        st.info("No stocks in the watchlist yet. Add stocks from the **📊 Analysis** tab.")
+    else:
+        gainer = int((df["pl_pct"] > 0).sum())
+        losers = int((df["pl_pct"] < 0).sum())
+
+        c1,c2,c3=st.columns(3)
+        c1.metric("Stocks", len(df))
+        c2.metric("Gainers", gainer)
+        c3.metric("Losers", losers)
+
+        st.divider()
+
+        for _, row in df.iterrows():
+            color ="green" if row["pl_pct"] > 0 else ("red" if row["pl_pct"] < 0 else "gray")
+            with st.container(border=True):
+                left,mid,right=st.columns([2,2,1])
+
+                with left:
+                    st.markdown(f"###{row['symbol']}']")
+                with mid:
+                    st.metric("Current price",f"${row['current_price']:.2f}", delta=f"{row['pl_pct']:+.2f}%", delta_color=color)
+                    st.caption(f"Bought at ₹{row['buy_price']:.2f} on {row['buy_date']}")
+                with right:
+                    st.markdown(f"""<div style="text-align:center;color:{color};font-size:1.2rem;font-weight:600;">{row['pl_pct']:+.2f}%</div>""", unsafe_allow_html=True)
+                    if st.button("❌ Remove", key=f"remove_{row['symbol']}", use_container_width=True):
+                        remove_from_watchlist(int(row["id"]))
+                        st.experimental_rerun()
+
+    if watchlist:
+        df_watch = pd.DataFrame(watchlist)
+        st.dataframe(df_watch, use_container_width=True, hide_index=True)
+    else:
+        st.info("No stocks in the watchlist yet. Add stocks from the **📊 Analysis** tab.")
