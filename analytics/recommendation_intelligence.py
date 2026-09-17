@@ -454,7 +454,7 @@ def _generate_recommendations(
         improvement = best_t["success_rate"] - lowest_t["success_rate"]
         if improvement >= 3.0 and best_t["trades"] >= 5:
             recs.append({
-                "title":          "BUY Threshold Observation",
+                "title":          "Confluence Threshold Observation",
                 "priority":       "High" if improvement >= 10 else "Medium",
                 "confidence":     min(95, int(60 + improvement * 2)),
                 "recommendation": (
@@ -566,7 +566,7 @@ def _generate_recommendations(
         best_conf = max(conf_with_data, key=lambda c: c.get("success_rate", 0))
         if best_conf.get("success_rate", 0) >= 70:
             recs.append({
-                "title":          "High-Confidence Zone",
+                "title":          "Best observed ML Confidence Band",
                 "priority":       "Medium",
                 "confidence":     80,
                 "recommendation": (

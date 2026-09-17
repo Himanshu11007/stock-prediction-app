@@ -382,9 +382,9 @@ def generate_insights(
         if len(conf_valid) > 1:
             best_band = conf_valid.loc[conf_valid["Success Rate %"].idxmax()]
             insights.append(
-                f"Stocks with **{best_band['Confidence Band']}** ML confidence "
-                f"achieve a **{best_band['Success Rate %']}%** success rate "
-                f"— the strongest confidence band."
+               f"The **{best_band ['Confidence Band']}** ML Confidence band has the "
+               f"highest observed success rate at **{best_band ['Success Rate %']}%** "
+               f"across **{best_band['Count']} ** recommendations."
             )
             # Check if high confidence truly beats low confidence
             first_rate = conf_valid["Success Rate %"].iloc[0]
@@ -406,26 +406,38 @@ def generate_insights(
         if not confl_valid.empty:
             best_confl = confl_valid.loc[confl_valid["Success Rate %"].idxmax()]
             insights.append(
-                f"Confluence band **{best_confl['Confluence Band']}** produces the best results "
-                f"({best_confl['Success Rate %']}% success, "
-                f"avg return {best_confl['Avg Return %']:+.2f}%)."
+                f"Confluence band **{best_confl['Confluence Band']} ** has the highest"
+                f"observed success rate at ** {best_confl['Success Rate %']}%** "
+                f"across **{best_confl['Count']}** recommendations "
+                f"(avg return {best_confl['Avg Return %']:+.2f}%)."
             )
 
     # ── 4. News sentiment insight ─────────────────────────────────────────────
     if not sent_df.empty and len(sent_df) > 1:
         best_sent = sent_df.loc[sent_df["Success Rate %"].idxmax()]
         insights.append(
-            f"{best_sent['Sentiment']} news sentiment correlates with the best outcomes "
-            f"({best_sent['Success Rate %']}% success rate)."
+            f"{best_sent['Sentiment']} news sentiment has the highest observed success rate"
+            f"among the sentiment buckets({best_sent['Success Rate %']}%)"
         )
 
     # ── 5. Overall return insight ─────────────────────────────────────────────
     avg = df["Return %"].mean()
-    positive_pct = (df["Return %"] > 0).mean() * 100
-    insights.append(
-        f"Across all {len(df)} validated recommendations, the average return is "
-        f"**{avg:+.2f}%** with **{positive_pct:.0f}%** of picks moving in the "
-        f"predicted direction."
-    )
+
+    if "Signal" in df.columns:
+        direction_correct = (df["Signal"].isin(["BUY","STRONG BUY"]) & (df["Return %"] > 0)) |(df["Signal"].isin(["SELL","STRONG SELL"]) & (df["Return %"] < 0))|((df["Signal"] == "HOLD") & (df["Return %"].abs() <= 3.0))
+        predicted_direction_pct = direction_correct.mean() * 100
+    else:
+        predicted_direction_pct = None
+    if predicted_direction_pct is not None:
+        insights.append(
+            f"Across all {len(df)} validated recommendation, the average return is"
+            f"**{avg:+.2f}%** with **{predicted_direction_pct:.0f}%** of picks"
+            f"matching the validation outcome for their signal"
+        )
+    else:
+        insights.append(
+            f"Across all{len(df)} validated recommendation, the average return is"
+            f"**{avg:+2.f}%**."
+        )
 
     return insights
