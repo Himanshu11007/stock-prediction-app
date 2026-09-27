@@ -58,7 +58,11 @@ def get_user_roles(session: Session, user: User) -> list[str]:
     return list(session.exec(stmt).all())
 
 
-def assign_role(session: Session, user: User, role_name: str) -> None:
+def assign_role(session: Session, user: User, role_name: str, *, commit: bool = True) -> bool:
+    """Returns True if a role assignment was newly added, False if the user
+    already had that role (no-op, not an error). commit=False lets a caller
+    (e.g. admin/service.py) stage this as part of a larger single transaction
+    instead of committing it in isolation."""
     role = session.exec(select(Role).where(Role.name == role_name)).first()
     if role is None:
         raise ValueError(f"Unknown role: {role_name!r}. Call ensure_roles_exist() first.")
@@ -67,14 +71,18 @@ def assign_role(session: Session, user: User, role_name: str) -> None:
             UserRoleLink.user_id == user.id, UserRoleLink.role_id == role.id
         )
     ).first()
-    if existing is None:
-        session.add(UserRoleLink(user_id=user.id, role_id=role.id))
+    if existing is not None:
+        return False
+    session.add(UserRoleLink(user_id=user.id, role_id=role.id))
+    if commit:
         session.commit()
+    return True
 
 
-def remove_role(session: Session, user: User, role_name: str) -> bool:
+def remove_role(session: Session, user: User, role_name: str, *, commit: bool = True) -> bool:
     """Returns True if a role assignment was removed, False if the user
-    didn't have that role (no-op, not an error)."""
+    didn't have that role (no-op, not an error). commit=False lets a caller
+    stage this as part of a larger single transaction."""
     role = session.exec(select(Role).where(Role.name == role_name)).first()
     if role is None:
         raise ValueError(f"Unknown role: {role_name!r}. Call ensure_roles_exist() first.")
@@ -86,7 +94,8 @@ def remove_role(session: Session, user: User, role_name: str) -> bool:
     if existing is None:
         return False
     session.delete(existing)
-    session.commit()
+    if commit:
+        session.commit()
     return True
 
 

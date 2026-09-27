@@ -93,7 +93,12 @@ def deactivate_user(
     session: Session = Depends(get_session),
 ):
     user = _get_user_or_404(session, user_id)
-    user = admin_service.set_user_active(session, current_admin, user, False)
+    try:
+        user = admin_service.set_user_active(session, current_admin, user, False)
+    except admin_service.SelfActionNotAllowedError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    except admin_service.LastAdminError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     return _user_response(session, user)
 
 
@@ -122,7 +127,7 @@ def remove_role(
     user = _get_user_or_404(session, user_id)
     try:
         admin_service.remove_role_from_user(session, current_admin, user, role_name)
-    except ValueError as e:
+    except (ValueError, admin_service.SelfActionNotAllowedError, admin_service.LastAdminError) as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     return _user_response(session, user)
 
