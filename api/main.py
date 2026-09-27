@@ -33,7 +33,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from api.routes import analysis, top_picks, tracker, performance, logs, intelligence, auth, admin
+from api.routes import analysis, top_picks, tracker, performance, logs, intelligence, auth, admin, watchlist, stocks
 from api.schemas import HealthResponse
 
 from storage.recommendation_validation import migrate_schema
@@ -139,6 +139,8 @@ async def unhandled_exception_handler(request: Request, exc: Exception):
 # ── Routers — all under /api/v1 ───────────────────────────────────────────────
 app.include_router(auth.router,        prefix=API_PREFIX, tags=["Auth"])
 app.include_router(admin.router,       prefix=API_PREFIX, tags=["Admin"])
+app.include_router(watchlist.router,   prefix=API_PREFIX, tags=["Watchlist"])
+app.include_router(stocks.router,      prefix=API_PREFIX, tags=["Stocks"])
 app.include_router(analysis.router,    prefix=API_PREFIX, tags=["Analysis"])
 app.include_router(top_picks.router,   prefix=API_PREFIX, tags=["Top Picks"])
 app.include_router(tracker.router,     prefix=API_PREFIX, tags=["Tracker"])

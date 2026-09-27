@@ -1,14 +1,18 @@
 """
 api/routes/top_picks.py — Background scan trigger, status, and result.
+
+Requires an authenticated user (any role) - a normal mobile/web user's Top
+Picks action, not an admin-only operation.
 """
 from __future__ import annotations
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 
 from api import services
 from api.schemas import StartScanRequest, success_envelope
+from auth.dependencies import get_current_user
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(get_current_user)])
 
 
 @router.post("/top-picks/start")

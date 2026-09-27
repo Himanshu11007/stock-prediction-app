@@ -6,15 +6,19 @@ result in the standard response envelope. ValueError / KeyError / generic
 Exception raised by services.py are caught by the centralized handlers in
 api/main.py (400 / 404 / 500 respectively), so no local try/except is
 needed here for those cases.
+
+Requires an authenticated user (any role) - a normal mobile/web user's
+Analyse Stock action, not an admin-only operation.
 """
 from __future__ import annotations
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 
 from api import services
 from api.schemas import AnalyzeStockRequest, success_envelope
+from auth.dependencies import get_current_user
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(get_current_user)])
 
 
 @router.post("/analyze-stock")

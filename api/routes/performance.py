@@ -1,14 +1,18 @@
 """
 api/routes/performance.py — Read-only performance analytics endpoints.
+
+Requires an authenticated user (any role) - a normal mobile/web user's
+Performance screen, not an admin-only view.
 """
 from __future__ import annotations
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 
 from api import services
 from api.schemas import success_envelope
+from auth.dependencies import get_current_user
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(get_current_user)])
 
 
 @router.get("/performance/summary")

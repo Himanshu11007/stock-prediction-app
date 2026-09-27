@@ -5,15 +5,18 @@ GET /api/v1/intelligence/report
 
 Read-only analytics over historical validated recommendations.
 Never modifies the database, weights, thresholds, or any configuration.
+
+Requires an authenticated user (any role).
 """
 from __future__ import annotations
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 
 from api import services
 from api.schemas import success_envelope
+from auth.dependencies import get_current_user
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(get_current_user)])
 
 
 @router.get("/intelligence/report")

@@ -16,6 +16,7 @@ forward. See scripts/migrate_legacy_tracker.py for the migration itself.
 from datetime import datetime, timezone
 from typing import Optional
 
+from sqlalchemy import Index
 from sqlmodel import Field, SQLModel
 
 
@@ -117,6 +118,14 @@ class WatchlistItem(SQLModel, table=True):
     placeholder account genuinely created that watchlist entry."""
 
     __tablename__ = "watchlist_items"
+    # A unique index rather than a table-level UniqueConstraint: the table
+    # already existed (Phase 4) when this was added, and SQLite can't ALTER
+    # a table to add a constraint (only supported at CREATE TABLE time,
+    # without batch/rebuild mode) - a unique index enforces the same rule
+    # and both dialects support adding it after the fact.
+    __table_args__ = (
+        Index("uq_watchlist_items_user_symbol", "user_id", "symbol", unique=True),
+    )
 
     id: Optional[int] = Field(default=None, primary_key=True)
     legacy_id: Optional[int] = Field(default=None, unique=True, index=True)
