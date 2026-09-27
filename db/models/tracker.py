@@ -98,6 +98,7 @@ class RecommendationValidation(SQLModel, table=True):
 
     id: Optional[int] = Field(default=None, primary_key=True)
     recommendation_id: int = Field(foreign_key="recommendations.id", unique=True, index=True)
+    legacy_id: Optional[int] = Field(default=None, unique=True, index=True)
     is_legacy_migration: bool = Field(default=False)
 
     validation_date: Optional[str] = None

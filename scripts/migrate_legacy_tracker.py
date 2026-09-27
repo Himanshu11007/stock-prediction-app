@@ -146,12 +146,7 @@ def migrate_recommendations(legacy_conn: sqlite3.Connection, session: Session) -
     val_report.old_count = sum(1 for r in rows if r["is_validated"])
 
     existing_recs = _already_migrated_legacy_ids(session, Recommendation)
-    existing_vals = set(
-        session.exec(
-            select(Recommendation.legacy_id)
-            .join(RecommendationValidation, RecommendationValidation.recommendation_id == Recommendation.id)
-        ).all()
-    )
+    existing_vals = _already_migrated_legacy_ids(session, RecommendationValidation)
 
     for row in rows:
         already_migrated = row["id"] in existing_recs
@@ -234,6 +229,7 @@ def migrate_recommendations(legacy_conn: sqlite3.Connection, session: Session) -
             session.add(
                 RecommendationValidation(
                     recommendation_id=rec.id,
+                    legacy_id=row["id"],
                     is_legacy_migration=True,
                     validation_date=row["validation_date"],
                     validation_price=row["validation_price"],

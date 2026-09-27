@@ -157,6 +157,8 @@ def test_migrate_recommendations_splits_generation_and_validation(legacy_conn, s
     assert len(validations) == 1
     assert validations[0].recommendation_id == recs["TCS.NS"].id
     assert validations[0].return_pct == 2.86
+    assert validations[0].legacy_id == 1  # legacy recommendation_validation.id
+    assert validations[0].is_legacy_migration is True
 
     # not-yet-validated recommendation must NOT have a validation row
     unvalidated_has_no_validation = session.exec(
