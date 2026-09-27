@@ -16,5 +16,8 @@ torchaudio
 fastapi
 uvicorn
 pydantic
+sqlmodel
+alembic
+psycopg2-binary
 pytest
 pytest-cov

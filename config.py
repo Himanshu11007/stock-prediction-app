@@ -50,6 +50,14 @@ W_REGIME    = 0.10
 W_TIMEFRAME = 0.15
 W_MOMENTUM  = 0.10
 
+# ── Database ───────────────────────────────────────────────────────────────────
+# Dev default: SQLite file under STORAGE_DIR. Production: set the DATABASE_URL
+# env var to a PostgreSQL DSN, e.g. postgresql+psycopg2://user:pass@host/dbname.
+# All application code must go through db/session.py — never hardcode a dialect.
+DATABASE_URL = os.environ.get(
+    "DATABASE_URL", f"sqlite:///{(STORAGE_DIR / 'app.db').as_posix()}"
+)
+
 # ── Logging ────────────────────────────────────────────────────────────────────
 LOG_DIR          = STORAGE_DIR / "logs"
 LOG_FILE         = LOG_DIR / "app.log"

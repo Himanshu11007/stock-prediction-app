@@ -22,6 +22,7 @@ storage/news_cache/
 storage/cache_*.json
 storage/recommendations_cache.json
 storage/tracker.db
+storage/app.db
 storage/.scan_*
 data/largecap.csv.tmp.*
 data/midcap.csv.tmp.*
