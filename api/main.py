@@ -63,10 +63,14 @@ app = FastAPI(
 )
 
 # ── CORS — open for MVP; restrict allow_origins before production ────────────
+# allow_credentials must be False here: browsers reject allow_origins=["*"]
+# combined with allow_credentials=True, which silently breaks any credentialed
+# cross-origin request. This API doesn't use cookie-based auth, so no
+# credentialed requests are expected.
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_credentials=True,
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
