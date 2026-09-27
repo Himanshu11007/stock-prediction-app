@@ -46,6 +46,7 @@ def add_to_watchlist(symbol: str, stock_name: str, buy_price: float) -> bool:
             return True
         except sqlite3.IntegrityError:
             logger.warning(f"{symbol} already exists in the watchlist.")
+            return False
 
 def remove_from_watchlist(watchlist_id: int) -> None:
     """Remove a stock from the watchlist."""
@@ -67,11 +68,11 @@ def _get_current_price(symbol: str) -> float | None:
         hist = ticker.history(period="1d")
         if hist.empty:
             logger.warning(f"No historical data found for {symbol}.")
-            return 0.0
+            return None
         return round(hist['Close'].iloc[-1], 2)  # Return the last closing price rounded to 2 decimal places
     except Exception as e:
         logger.error(f"Error fetching current price for {symbol}: {e}")
-        return 0.0
+        return None
 
 def get_watchlist() -> pd.DataFrame:
     """Retrieve the watchlist as a pandas DataFrame."""
@@ -86,7 +87,7 @@ def get_watchlist() -> pd.DataFrame:
             price = _get_current_price(symbol)
             current_price.append(price)
             
-        df['current_price'] = current_price
+        df['current_price'] = pd.to_numeric(pd.Series(current_price), errors="coerce")
         df["pl_pct"]= ((df["current_price"] - df["buy_price"]) / df["buy_price"]) * 100
         df["pl_pct"] = df["pl_pct"].round(2)
         df["investment_value"] = df["buy_price"] * df["quantity"].round(2)

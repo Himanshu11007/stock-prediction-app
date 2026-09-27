@@ -255,6 +255,10 @@ def get_recommendations(
 
     prelim = sorted(results, key=lambda r: r["score"], reverse=True)
     final  = _rerank_top_with_news(prelim, top_n=20)
+    # Re-persist the reranked top-N: _persist_recommendation() above stored each
+    # result's pre-rerank score, which _rerank_top_with_news() has since mutated.
+    for result in final[:20]:
+        _persist_recommendation(result, scan_id)
     if save_callback:
         save_callback(final)
     return final

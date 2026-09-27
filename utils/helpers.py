@@ -42,7 +42,7 @@ def prepare_data(data):
     feature_cols = [c for c in feature_cols if c in data.columns]
 
     X = data[feature_cols]
-    y = data["Up"]
+    y = data["Up"].astype(int)
 
     split   = int(len(X) * 0.8)
     X_train, X_test = X[:split], X[split:]

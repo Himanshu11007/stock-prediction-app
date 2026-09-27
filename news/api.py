@@ -60,7 +60,7 @@ def fetch_news(symbol_or_name: str) -> list[str]:
 
         logger.debug("Fetching news for %s (query: %s)", symbol_or_name, query_name)
         query = quote_plus(f"{query_name} stock")
-        url   = f"https://news.google.com/rss/search?q={query}&hl=en&gl=IN&cdid=IN:en"
+        url   = f"https://news.google.com/rss/search?q={query}&hl=en&gl=IN&ceid=IN:en"
         feed  = feedparser.parse(url)
 
         headlines = [entry.title for entry in feed.entries[:10]]

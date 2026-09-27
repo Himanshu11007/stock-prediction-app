@@ -27,15 +27,11 @@ from utils.logger import get_logger, log_stock_diagnostics
 
 logger = get_logger(__name__)
 
-# ── Score → Signal buckets ─────────────────────────────────────────────────
-STRONG_BUY_MIN = 72
-BUY_MIN        = 58
-HOLD_MIN       = 42
-SELL_MIN       = 28
-# < 28 → STRONG SELL
-
-# ── Pillar weights (must sum to 1.0) ───────────────────────────────────────
+# ── Score → Signal buckets + pillar weights (must sum to 1.0) ───────────────
+# Imported from config.py (single source of truth) rather than redeclared here,
+# so the generated signal and the thresholds shown in its explanation can't drift.
 from config import (
+    STRONG_BUY_MIN, BUY_MIN, HOLD_MIN, SELL_MIN,
     W_ML_DIR, W_ML_CONF, W_TECH, W_NEWS,
     W_VOLUME, W_REGIME, W_TIMEFRAME, W_MOMENTUM,
 )

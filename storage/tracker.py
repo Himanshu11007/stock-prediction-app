@@ -95,6 +95,44 @@ def get_recent_signals(limit: int = 20) -> list[dict]:
     return [dict(zip(keys, r)) for r in rows]
 
 
+def validate_pending_signals() -> int:
+    """
+    Fill in outcomes for signals rows where `correct` is still NULL and at
+    least 1 trading day has elapsed since `date`, by fetching each symbol's
+    latest close via yfinance and calling update_outcome().
+
+    Without this, update_outcome() is never invoked anywhere, so every saved
+    signal's `correct` column stays NULL forever and get_accuracy_stats()
+    always reports zero validated outcomes.
+
+    Returns:
+        int — number of signals successfully validated in this run
+    """
+    import numpy as np
+    from storage.recommendation_validation import get_latest_close
+
+    con = _connect()
+    rows = con.execute(
+        "SELECT id, date, symbol FROM signals WHERE correct IS NULL"
+    ).fetchall()
+    con.close()
+
+    today = datetime.date.today().isoformat()
+    validated = 0
+    for row_id, saved_date, symbol in rows:
+        if np.busday_count(saved_date, today) < 1:
+            continue
+        next_close = get_latest_close(symbol)
+        if next_close is None:
+            logger.warning("Skip signal id=%s (%s) — could not fetch price", row_id, symbol)
+            continue
+        update_outcome(row_id, next_close)
+        validated += 1
+
+    logger.info("Signal validation complete — %d validated out of %d pending", validated, len(rows))
+    return validated
+
+
 def get_accuracy_stats() -> tuple[int | None, int | None]:
     """Return (correct_count, total_count) for predictions that have outcomes."""
     con = _connect()
@@ -505,6 +543,50 @@ def save_recommendation(
         target=target, stop_loss=stop_loss, saved_date=saved_date,
         scan_id=generate_scan_id("MANUAL"),
     )
+
+
+def get_recent_recommendations(limit: int = 50) -> list[dict]:
+    """
+    Return the most recently saved rows from recommendation_validation.
+
+    Used by GET /tracker/recommendations so it reads from the same table
+    that POST /tracker/save (upsert_recommendation) writes to — the two
+    endpoints previously pointed at different tables (recommendation_validation
+    vs. signals), so a saved recommendation never showed up in the list.
+    """
+    con = _connect()
+    _ensure_validation_table(con)
+
+    query = """
+        SELECT
+            id,
+            saved_date       AS "Date",
+            symbol           AS "Symbol",
+            stock            AS "Stock",
+            signal           AS "Signal",
+            cmp              AS "CMP",
+            confluence_score AS "Confluence Score",
+            ml_confidence    AS "ML Confidence",
+            news_score       AS "News Score",
+            accuracy         AS "Accuracy",
+            target           AS "Target",
+            stop_loss        AS "Stop Loss",
+            scan_id          AS "Scan ID",
+            is_validated     AS "Is Validated",
+            validation_price AS "Validation Price",
+            return_pct       AS "Return %",
+            success          AS "Success"
+        FROM  recommendation_validation
+        ORDER BY id DESC
+        LIMIT ?
+    """
+    rows = con.execute(query, (limit,)).fetchall()
+    con.close()
+    keys = ["id", "Date", "Symbol", "Stock", "Signal", "CMP",
+            "Confluence Score", "ML Confidence", "News Score",
+            "Accuracy", "Target", "Stop Loss", "Scan ID",
+            "Is Validated", "Validation Price", "Return %", "Success"]
+    return [dict(zip(keys, r)) for r in rows]
 
 
 def load_pending_recommendations(as_of_date: str | None = None) -> list[dict]:

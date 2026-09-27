@@ -33,7 +33,7 @@ from scanner.background import start_background_scan, is_scan_running, scan_prog
 from scanner.cache import load_category_cache, cache_age_minutes
 from config import CATEGORIES
 
-from storage.tracker import save_signal, save_recommendation, upsert_recommendation, get_recent_signals
+from storage.tracker import save_signal, save_recommendation, upsert_recommendation, get_recent_recommendations
 from utils.explainability import build_recommendation_explanation, compute_pillar_scores, compute_weighted_score
 from utils.company_mapper import get_sector
 from storage.recommendation_validation import (
@@ -367,8 +367,12 @@ def get_scan_result(scan_id: str) -> dict:
 # ══════════════════════════════════════════════════════════════════════════════
 
 def get_saved_recommendations(limit: int = 50) -> list[dict]:
-    """Return recently saved signals (storage.tracker.get_recent_signals)."""
-    return get_recent_signals(limit=limit)
+    """Return recently saved recommendations (storage.tracker.get_recent_recommendations).
+
+    Reads from recommendation_validation — the same table save_manual_recommendation()
+    (POST /tracker/save) writes to — so a saved recommendation is reflected here.
+    """
+    return get_recent_recommendations(limit=limit)
 
 
 def save_manual_recommendation(

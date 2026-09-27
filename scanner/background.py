@@ -53,6 +53,9 @@ def _write_progress(category: str, done: int, total: int) -> None:
             json.dumps({"category": category, "done": done, "total": total}),
             encoding="utf-8",
         )
+        # Refresh the lock's mtime so is_scan_running() doesn't treat a still-active,
+        # long-running scan as stale after 30 minutes.
+        _LOCK_FILE.touch(exist_ok=True)
     except Exception:
         pass
 

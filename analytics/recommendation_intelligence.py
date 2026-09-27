@@ -142,7 +142,9 @@ def _stats(series: pd.Series, success: pd.Series) -> dict:
     med     = round(float(series.median()), 4) if total > 0 else 0.0
     rate    = round(s_count / total * 100, 1) if total > 0 else 0.0
     fails   = total - s_count
-    wl      = round(s_count / fails, 2) if fails > 0 else float("inf")
+    # None (JSON null) rather than float('inf') — Infinity isn't valid per RFC 8259
+    # and breaks strict JSON clients consuming the API response.
+    wl      = round(s_count / fails, 2) if fails > 0 else None
     return {
         "trades":       total,
         "successful":   s_count,

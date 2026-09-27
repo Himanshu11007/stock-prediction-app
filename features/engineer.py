@@ -6,7 +6,10 @@ def create_features(data):
     data = data.copy()   # avoid SettingWithCopyWarning on slice inputs
 
     # ── Target ────────────────────────────────────────────────────────────────
-    data["Up"] = (data["Close"].shift(-1) > data["Close"]).astype(int)
+    next_close = data["Close"].shift(-1)
+    # Keep NaN (rather than coercing to False/0) where next-day close is unknown,
+    # so the final dropna() removes the row instead of training on a fabricated label.
+    data["Up"] = np.where(next_close.isna(), np.nan, (next_close > data["Close"]).astype(float))
 
     # ── Price change & momentum ───────────────────────────────────────────────
     data["Price_Change"] = data["Close"].pct_change()

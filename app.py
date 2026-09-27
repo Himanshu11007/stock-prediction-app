@@ -27,7 +27,7 @@ from scanner.background import (
     start_background_scan, is_scan_running, scan_progress, needs_scan
 )
 from storage.tracker import (
-    save_signal, get_recent_signals, get_accuracy_stats,
+    save_signal, get_recent_signals, get_accuracy_stats, validate_pending_signals,
     save_recommendation, upsert_recommendation,
 )
 from utils.logger import (
@@ -421,7 +421,7 @@ with tab_analyse:
                 st.error(f"Data load failed: {e}")
                 st.stop()
 
-        if data.empty:
+        if data is None or data.empty:
             st.error("❌ No price data found.")
             st.stop()
 
@@ -447,8 +447,9 @@ with tab_analyse:
 
         try:
             pred, confidence, prob = ensemble_predict(models, X.tail(1))
-        except AttributeError:
-            confidence = 0.0
+        except AttributeError as e:
+            st.warning(f"Ensemble prediction failed, falling back to neutral: {e}")
+            pred, confidence, prob = [0], 0.0, None
 
         try:
             data = run_backtest(data, models["Random Forest"], X)
@@ -741,6 +742,17 @@ with tab_analyse:
 with tab_tracker:
 
     st.markdown('<div class="sec-title">📋 Saved prediction signals</div>', unsafe_allow_html=True)
+
+    if st.button("🔄 Validate Pending Signals", use_container_width=True):
+        with st.spinner("Fetching prices and validating signals..."):
+            try:
+                sig_count = validate_pending_signals()
+                if sig_count > 0:
+                    st.success(f"✅ Validated {sig_count} signal{'s' if sig_count != 1 else ''}.")
+                else:
+                    st.info("No signals ready for validation yet (need 1 trading day).")
+            except Exception as _sve:
+                st.error(f"Validation error: {_sve}")
 
     correct, total = get_accuracy_stats()
     if total:
