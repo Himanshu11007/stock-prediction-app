@@ -16,8 +16,12 @@ torchaudio
 fastapi
 uvicorn
 pydantic
+email-validator
 sqlmodel
 alembic
 psycopg2-binary
+bcrypt
+pyjwt
+python-multipart
 pytest
 pytest-cov
