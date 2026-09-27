@@ -24,6 +24,7 @@ storage/recommendations_cache.json
 storage/tracker.db
 storage/app.db
 storage/.scan_*
+storage/logs/
 data/largecap.csv.tmp.*
 data/midcap.csv.tmp.*
 data/smallcap.csv.tmp.*
