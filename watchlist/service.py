@@ -48,8 +48,12 @@ def add_watchlist_item(
     symbol = symbol.strip().upper()
 
     company = session.get(Company, symbol)
-    if company is None:
-        raise UnknownSymbolError(f"Unknown stock symbol: {symbol!r}")
+    if company is None or not company.active:
+        # Same treatment for "doesn't exist" and "exists but inactive": the
+        # stock-search endpoint (stocks/service.py) only ever surfaces
+        # active stocks, so a client should never be able to add a symbol
+        # here that it could not have discovered through search.
+        raise UnknownSymbolError(f"Stock symbol {symbol!r} is not available")
 
     existing = session.exec(
         select(WatchlistItem).where(WatchlistItem.user_id == user.id, WatchlistItem.symbol == symbol)

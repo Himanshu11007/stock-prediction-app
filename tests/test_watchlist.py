@@ -44,6 +44,7 @@ def seed(engine):
         user_b = auth_service.create_user(session, "b@example.com", "PassB1234!", roles=[auth_service.USER_ROLE])
         session.add(Company(symbol="TCS.NS", name="Tata Consultancy Services Ltd.", active=True))
         session.add(Company(symbol="INFY.NS", name="Infosys Ltd.", active=True))
+        session.add(Company(symbol="DEAD.NS", name="Delisted Corp Ltd.", active=False))
         session.commit()
         return {"a_id": user_a.id, "b_id": user_b.id}
 
@@ -90,6 +91,35 @@ def test_add_unknown_symbol_returns_400(client, seed):
         headers=_headers("a@example.com"),
     )
     assert resp.status_code == 400
+
+
+def test_add_inactive_stock_rejected(client, seed):
+    """An inactive stock isn't returned by /api/v1/stocks search, so a
+    client should never be able to add it to a watchlist either - closes
+    the gap where a client could bypass the stock-universe rule by POSTing
+    a symbol directly instead of discovering it through search."""
+    resp = client.post(
+        "/api/v1/watchlist",
+        json={"symbol": "DEAD.NS", "buy_price": 100.0, "buy_date": "2026-01-01"},
+        headers=_headers("a@example.com"),
+    )
+    assert resp.status_code == 400
+
+    # confirm nothing was added
+    watchlist = client.get("/api/v1/watchlist", headers=_headers("a@example.com"))
+    assert watchlist.json() == []
+
+
+def test_add_active_stock_still_allowed(client, seed):
+    """Regression guard alongside the inactive-stock rejection above: the
+    fix must not have accidentally blocked active stocks too."""
+    resp = client.post(
+        "/api/v1/watchlist",
+        json={"symbol": "TCS.NS", "buy_price": 3500.0, "buy_date": "2026-01-01"},
+        headers=_headers("a@example.com"),
+    )
+    assert resp.status_code == 201
+    assert resp.json()["symbol"] == "TCS.NS"
 
 
 def test_duplicate_symbol_returns_409(client, seed):
