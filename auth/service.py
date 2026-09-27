@@ -72,6 +72,24 @@ def assign_role(session: Session, user: User, role_name: str) -> None:
         session.commit()
 
 
+def remove_role(session: Session, user: User, role_name: str) -> bool:
+    """Returns True if a role assignment was removed, False if the user
+    didn't have that role (no-op, not an error)."""
+    role = session.exec(select(Role).where(Role.name == role_name)).first()
+    if role is None:
+        raise ValueError(f"Unknown role: {role_name!r}. Call ensure_roles_exist() first.")
+    existing = session.exec(
+        select(UserRoleLink).where(
+            UserRoleLink.user_id == user.id, UserRoleLink.role_id == role.id
+        )
+    ).first()
+    if existing is None:
+        return False
+    session.delete(existing)
+    session.commit()
+    return True
+
+
 def create_user(
     session: Session, email: str, password: str, roles: Optional[list[str]] = None
 ) -> User:

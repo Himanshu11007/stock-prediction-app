@@ -2,6 +2,7 @@
 for both Alembic autogenerate and create_all() in tests/scripts."""
 from db.models.stock import Company, StockUniverseMember  # noqa: F401
 from db.models.user import RefreshToken, Role, User, UserRoleLink  # noqa: F401
+from db.models.admin import AdminAuditLog  # noqa: F401
 from db.models.tracker import (  # noqa: F401
     Recommendation,
     RecommendationValidation,
