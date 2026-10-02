@@ -15,6 +15,16 @@ except ImportError:
 _MIN_TRAIN_ROWS = 60
 _MIN_TEST_ROWS  = 10
 
+# Production ensemble blend weights — the single authoritative definition,
+# used by ensemble_predict() and walk_forward_validate_ensemble(). Sums to
+# 1.0; no normalisation is applied. When XGBoost is unavailable its weight
+# is applied to the Random Forest probability (RF effectively 0.80).
+ENSEMBLE_WEIGHTS = {
+    "Logistic Regression": 0.20,
+    "Random Forest":       0.30,
+    "XGBoost":             0.50,
+}
+
 
 def _make_candidates():
     """Return a fresh list of (name, Pipeline) pairs on every call."""
@@ -80,6 +90,12 @@ def walk_forward_validate(X, y, n_splits=5):
 
     No shuffling, no future leakage.
 
+    Note: the per-fold score is the MEAN of each individual model's
+    accuracy, not the accuracy of the blended production ensemble. Kept
+    unchanged because train_model() returns it and production filters
+    consume it; walk_forward_validate_ensemble() reports the actual
+    ensemble's accuracy on the same folds.
+
     Returns:
         float: weighted mean accuracy across all valid folds (weight = fold size).
                Falls back to 0.5 when data is too short for even one fold.
@@ -114,6 +130,74 @@ def walk_forward_validate(X, y, n_splits=5):
 
     total_weight = sum(w for _, w in fold_results)
     return sum(acc * w for acc, w in fold_results) / total_weight
+
+
+def walk_forward_validate_ensemble(X, y, n_splits=5) -> dict:
+    """
+    Walk-forward evaluation of the ACTUAL production ensemble.
+
+    Uses the same folds as walk_forward_validate() (_walk_forward_splits),
+    the same candidates (_make_candidates) and the same blend
+    (ensemble_proba / ENSEMBLE_WEIGHTS). Every model in a fold is fit on
+    rows [0, train_end) only and scored on rows [train_end, test_end).
+
+    Reporting only — not used by train_model() or any production filter.
+
+    Returns a dict with:
+        ensemble_accuracy               test-size-weighted ensemble accuracy
+        mean_individual_model_accuracy  identical to walk_forward_validate()
+        per_model_accuracy              test-size-weighted, per model
+        n_folds, n_test_rows, folds     per-fold detail
+    Accuracies are None when no fold could be evaluated.
+    """
+    folds = []
+    for train_end, test_end in _walk_forward_splits(len(X), n_splits):
+        X_tr, y_tr = X.iloc[:train_end],        y.iloc[:train_end]
+        X_te, y_te = X.iloc[train_end:test_end], y.iloc[train_end:test_end]
+        if len(set(y_tr)) < 2:
+            continue
+        models, per_model = {}, {}
+        for name, model in _make_candidates():
+            try:
+                model.fit(X_tr, y_tr)
+                per_model[name] = model.score(X_te, y_te)
+                models[name] = model
+            except Exception:
+                continue
+        if not per_model:
+            continue
+        fold = {
+            "train_start": 0, "train_end": train_end, "test_end": test_end,
+            "n_test": len(y_te),
+            "per_model_accuracy": per_model,
+            "mean_individual_accuracy": sum(per_model.values()) / len(per_model),
+            "ensemble_accuracy": None,
+        }
+        if "Logistic Regression" in models and "Random Forest" in models:
+            preds = (ensemble_proba(models, X_te) > 0.5).astype(int)
+            fold["ensemble_accuracy"] = float((preds == y_te.to_numpy()).mean())
+        folds.append(fold)
+
+    def _weighted(key):
+        vals = [(f[key], f["n_test"]) for f in folds if f[key] is not None]
+        total = sum(w for _, w in vals)
+        return sum(v * w for v, w in vals) / total if total else None
+
+    per_model_acc = {}
+    for name in ENSEMBLE_WEIGHTS:
+        vals = [(f["per_model_accuracy"][name], f["n_test"])
+                for f in folds if name in f["per_model_accuracy"]]
+        total = sum(w for _, w in vals)
+        per_model_acc[name] = sum(v * w for v, w in vals) / total if total else None
+
+    return {
+        "ensemble_accuracy":              _weighted("ensemble_accuracy"),
+        "mean_individual_model_accuracy": _weighted("mean_individual_accuracy"),
+        "per_model_accuracy":             per_model_acc,
+        "n_folds":                        len(folds),
+        "n_test_rows":                    sum(f["n_test"] for f in folds),
+        "folds":                          folds,
+    }
 
 
 def _fast_accuracy(X, y) -> float:
@@ -168,25 +252,31 @@ def train_model(X, y, fast: bool = False):
     return trained_models, wf_acc
 
 
-def ensemble_predict(models, latest_data):
-
-    lr_prob = models["Logistic Regression"] \
-        .predict_proba(latest_data)[0][1]
-
-    rf_prob = models["Random Forest"] \
-        .predict_proba(latest_data)[0][1]
-
+def component_probabilities(models, X) -> dict:
+    """P(up) per row of X for each ensemble member. Missing XGBoost falls
+    back to the Random Forest probability, exactly as the blend does."""
+    lr_prob = models["Logistic Regression"].predict_proba(X)[:, 1]
+    rf_prob = models["Random Forest"].predict_proba(X)[:, 1]
     if "XGBoost" in models:
-        xgb_prob = models["XGBoost"] \
-            .predict_proba(latest_data)[0][1]
+        xgb_prob = models["XGBoost"].predict_proba(X)[:, 1]
     else:
         xgb_prob = rf_prob
+    return {"Logistic Regression": lr_prob, "Random Forest": rf_prob, "XGBoost": xgb_prob}
 
-    final_prob = (
-        lr_prob * 0.20 +
-        rf_prob * 0.30 +
-        xgb_prob * 0.50
+
+def ensemble_proba(models, X):
+    """Production blended P(up) for every row of X."""
+    p = component_probabilities(models, X)
+    return (
+        p["Logistic Regression"] * ENSEMBLE_WEIGHTS["Logistic Regression"] +
+        p["Random Forest"] * ENSEMBLE_WEIGHTS["Random Forest"] +
+        p["XGBoost"] * ENSEMBLE_WEIGHTS["XGBoost"]
     )
+
+
+def ensemble_predict(models, latest_data):
+
+    final_prob = ensemble_proba(models, latest_data)[0]
 
     pred       = 1 if final_prob > 0.5 else 0
     confidence = round(max(final_prob, 1 - final_prob) * 100, 2)

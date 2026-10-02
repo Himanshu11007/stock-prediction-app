@@ -44,6 +44,9 @@ def prepare_data(data):
     X = data[feature_cols]
     y = data["Up"].astype(int)
 
+    # Callers only read y_train (single-class guard); X_train/X_test/y_test
+    # are unused but kept so the 7-tuple contract stays stable. Model
+    # evaluation lives in models.trainer, not here.
     split   = int(len(X) * 0.8)
     X_train, X_test = X[:split], X[split:]
     y_train, y_test = y[:split], y[split:]

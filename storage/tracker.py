@@ -251,6 +251,21 @@ def _ensure_validation_table(con: sqlite3.Connection) -> None:
             "existing duplicate (symbol, saved_date) rows present. "
             "Run storage.tracker.dedupe_existing_recommendations() once to clean up."
         )
+        # Legacy duplicates predate upsert_recommendation() and all have
+        # scan_id NULL; upsert always sets scan_id. A partial unique index
+        # therefore enforces one row per (symbol, saved_date) for every row
+        # written from now on without touching the historical rows.
+        try:
+            con.execute("""
+                CREATE UNIQUE INDEX IF NOT EXISTS idx_rv_unique_symbol_date_scanned
+                ON recommendation_validation (symbol, saved_date)
+                WHERE scan_id IS NOT NULL
+            """)
+        except sqlite3.IntegrityError:
+            logger.warning(
+                "Could not create partial unique index "
+                "idx_rv_unique_symbol_date_scanned — duplicate scanned rows present."
+            )
     con.commit()
 
 
@@ -418,6 +433,10 @@ def upsert_recommendation(
     con = _connect()
     _ensure_validation_table(con)
     try:
+        # Take the write lock before the existence check so the
+        # SELECT-then-INSERT below cannot interleave with a concurrent
+        # writer for the same (symbol, saved_date).
+        con.execute("BEGIN IMMEDIATE")
         existing = con.execute(
             "SELECT id FROM recommendation_validation WHERE symbol = ? AND saved_date = ? LIMIT 1",
             (symbol, row_date),

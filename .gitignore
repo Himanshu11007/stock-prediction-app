@@ -31,6 +31,10 @@ data/smallcap.csv.tmp.*
 data/loader.py.tmp.*
 features/engineer.py.tmp.*
 
+# Walk-forward benchmark: local price snapshot and dev-config scratch output
+scripts/audit/.price_snapshot/
+scripts/audit/output/walk_forward_benchmark/dev/
+
 # Streamlit
 .streamlit/secrets.toml
 
