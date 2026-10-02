@@ -62,3 +62,31 @@ DATABASE_URL = os.environ.get(
 LOG_DIR          = STORAGE_DIR / "logs"
 LOG_FILE         = LOG_DIR / "app.log"
 ENABLE_DEBUG_LOGS = False   # set True to write DEBUG-level pillar diagnostics
+
+# ── Phase 8 authentication: Google / Apple SSO ──────────────────────────────────
+# OAuth client id Google issued for this app - MUST match the `aud` claim of
+# every Google id_token this server accepts, or any Google user's token for
+# a completely different app would be accepted here. Required in production;
+# left unset, Google sign-in always fails closed (see
+# auth/external_identity.py:GoogleIdentityVerifier).
+GOOGLE_OAUTH_CLIENT_ID = os.environ.get("GOOGLE_OAUTH_CLIENT_ID")
+
+# The Sign in with Apple Services ID registered for this app - MUST match
+# the `aud` claim of every Apple identity token this server accepts. Same
+# fail-closed behavior as above when unset.
+APPLE_SERVICES_ID = os.environ.get("APPLE_SERVICES_ID")
+
+# ── Phase 8 authentication: OTP ──────────────────────────────────────────────────
+OTP_CODE_LENGTH               = int(os.environ.get("OTP_CODE_LENGTH", "6"))
+OTP_EXPIRE_SECONDS            = int(os.environ.get("OTP_EXPIRE_SECONDS", "300"))       # 5 minutes
+OTP_MAX_ATTEMPTS              = int(os.environ.get("OTP_MAX_ATTEMPTS", "5"))
+OTP_RESEND_COOLDOWN_SECONDS   = int(os.environ.get("OTP_RESEND_COOLDOWN_SECONDS", "30"))
+OTP_MAX_REQUESTS_PER_WINDOW   = int(os.environ.get("OTP_MAX_REQUESTS_PER_WINDOW", "5"))
+OTP_REQUEST_WINDOW_SECONDS    = int(os.environ.get("OTP_REQUEST_WINDOW_SECONDS", "1800"))  # 30 minutes
+
+# Logs each generated OTP code to the server log instead of actually
+# delivering it - lets local development exercise the full OTP flow without
+# a real SMS/email provider account. NEVER set this in production: it
+# exists purely so OTP_DEV_LOG_CODES=true can be a loud, explicit opt-in
+# rather than an accidental default (see auth/otp_delivery.py).
+OTP_DEV_LOG_CODES = os.environ.get("OTP_DEV_LOG_CODES", "false").lower() == "true"

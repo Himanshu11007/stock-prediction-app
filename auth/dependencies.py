@@ -33,11 +33,23 @@ def get_current_user(
     except jwt.InvalidTokenError:
         raise credentials_error
 
-    email = payload.get("sub")
-    if not email:
+    subject = payload.get("sub")
+    if not subject:
         raise credentials_error
 
-    user = get_user_by_email(session, email)
+    # New tokens (Phase 8+) carry the user's numeric id as `sub`, so the
+    # subject survives even for accounts with no email (phone-only OTP,
+    # Apple private-relay-only). Older still-outstanding tokens (and every
+    # existing test that constructs one directly) carry the email instead -
+    # both are accepted here rather than breaking either on deploy. Access
+    # tokens are short-lived (15 minutes), so any already-issued email-
+    # subject token simply ages out shortly after deploy and the client's
+    # normal 401-triggered refresh silently picks up a new id-subject token.
+    user = None
+    if subject.isdigit():
+        user = session.get(User, int(subject))
+    if user is None:
+        user = get_user_by_email(session, subject)
     if user is None or not user.is_active:
         raise credentials_error
     return user

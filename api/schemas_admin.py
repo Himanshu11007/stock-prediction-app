@@ -24,7 +24,7 @@ class AdminDashboardResponse(BaseModel):
 
 class AdminUserResponse(BaseModel):
     id: int
-    email: str
+    email: Optional[str] = None
     is_active: bool
     roles: list[str]
     created_at: datetime

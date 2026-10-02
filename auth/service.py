@@ -1,5 +1,10 @@
-"""User/role/authentication business logic - the only module that should
-touch the users/roles/user_roles/refresh_tokens tables directly."""
+"""User/role/password/refresh-token business logic - the core module for the
+users/roles/user_roles/refresh_tokens tables. Phase 8 added three more
+auth-related tables, each owned by its own sibling module instead of being
+piled into this file: external_identities -> auth/external_identity.py,
+otp_challenges -> auth/otp_service.py, trusted_devices -> auth/device_service.py.
+All four modules may still read/write `users` directly (e.g. to create a new
+user), since user creation is fundamentally shared."""
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 
@@ -123,7 +128,11 @@ def authenticate_user(session: Session, email: str, password: str) -> User:
     """Raises InvalidCredentialsError on wrong email/password, InactiveUserError
     if the account exists but is deactivated."""
     user = get_user_by_email(session, email)
-    if user is None or not verify_password(password, user.hashed_password):
+    # hashed_password is None for accounts that only ever authenticated via
+    # Google/Apple/OTP (see db/models/user.py:User) - such an account simply
+    # has no password to check, which must behave exactly like a wrong
+    # password rather than raising.
+    if user is None or user.hashed_password is None or not verify_password(password, user.hashed_password):
         raise InvalidCredentialsError("Invalid email or password")
     if not user.is_active:
         raise InactiveUserError("This account has been deactivated")
@@ -131,7 +140,11 @@ def authenticate_user(session: Session, email: str, password: str) -> User:
 
 
 def change_password(session: Session, user: User, current_password: str, new_password: str) -> None:
-    if not verify_password(current_password, user.hashed_password):
+    """Raises InvalidCredentialsError if current_password is wrong, or if the
+    account has no password set yet (sign-in-only via Google/Apple/OTP) -
+    "change" implies one already exists; setting an initial password is a
+    deliberately separate, not-yet-implemented flow."""
+    if user.hashed_password is None or not verify_password(current_password, user.hashed_password):
         raise InvalidCredentialsError("Current password is incorrect")
     user.hashed_password = hash_password(new_password)
     user.updated_at = datetime.now(timezone.utc)
@@ -139,11 +152,40 @@ def change_password(session: Session, user: User, current_password: str, new_pas
     session.commit()
 
 
-def issue_refresh_token(session: Session, user: User) -> str:
+def create_external_user(
+    session: Session, *, email: Optional[str] = None, phone: Optional[str] = None
+) -> User:
+    """Creates a new StockAI user with no password - used the first time an
+    external identity (Google/Apple/OTP) is seen with no existing account to
+    attach to. Assigns the default USER role same as create_user(). Does NOT
+    check for an existing user with this email/phone first - callers
+    (auth/external_identity.py, auth/otp_service.py) are responsible for that
+    lookup, since the right thing to do when one already exists is provider-
+    specific (link vs. reject), not a blind "reuse it" here.
+    """
+    user = User(
+        email=email.strip().lower() if email else None,
+        phone=phone,
+        hashed_password=None,
+    )
+    session.add(user)
+    session.commit()
+    session.refresh(user)
+
+    assign_role(session, user, USER_ROLE)
+    return user
+
+
+def issue_refresh_token(session: Session, user: User, *, device_id: Optional[str] = None) -> str:
     raw_token = generate_refresh_token()
     expires_at = datetime.now(timezone.utc) + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
     session.add(
-        RefreshToken(user_id=user.id, token_hash=hash_refresh_token(raw_token), expires_at=expires_at)
+        RefreshToken(
+            user_id=user.id,
+            token_hash=hash_refresh_token(raw_token),
+            expires_at=expires_at,
+            device_id=device_id,
+        )
     )
     session.commit()
     return raw_token
@@ -152,7 +194,9 @@ def issue_refresh_token(session: Session, user: User) -> str:
 def rotate_refresh_token(session: Session, raw_token: str) -> tuple[User, str]:
     """Validates + revokes the presented refresh token and issues a new one
     (rotation). Raises InvalidCredentialsError if the token is unknown,
-    expired, or already used/revoked."""
+    expired, or already used/revoked. The new token keeps the same
+    device_id as the one being rotated - rotation continues the same
+    device's session, it doesn't start a new one."""
     token_hash = hash_refresh_token(raw_token)
     row = session.exec(select(RefreshToken).where(RefreshToken.token_hash == token_hash)).first()
     now = datetime.now(timezone.utc)
@@ -167,7 +211,7 @@ def rotate_refresh_token(session: Session, raw_token: str) -> tuple[User, str]:
     if user is None or not user.is_active:
         raise InvalidCredentialsError("Invalid or expired refresh token")
 
-    new_raw_token = issue_refresh_token(session, user)
+    new_raw_token = issue_refresh_token(session, user, device_id=row.device_id)
     return user, new_raw_token
 
 
