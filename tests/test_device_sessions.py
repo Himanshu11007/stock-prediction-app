@@ -102,7 +102,7 @@ def test_revoke_all_except_current_keeps_only_the_calling_device(client):
         headers=_auth_header(tokens_a),
     )
     assert resp.status_code == 200
-    assert resp.json()["data"]["revoked_count"] == 2
+    assert resp.json()["revoked_count"] == 2
 
     assert client.post("/api/v1/auth/refresh", json={"refresh_token": tokens_a["refresh_token"]}).status_code == 200
     assert client.post("/api/v1/auth/refresh", json={"refresh_token": tokens_b["refresh_token"]}).status_code == 401
@@ -120,7 +120,7 @@ def test_sign_out_all_devices_revokes_every_session_including_current(client):
         "/api/v1/auth/sessions/revoke-all", json={}, headers=_auth_header(tokens_a)
     )
     assert resp.status_code == 200
-    assert resp.json()["data"]["revoked_count"] == 2
+    assert resp.json()["revoked_count"] == 2
 
     assert client.post("/api/v1/auth/refresh", json={"refresh_token": tokens_a["refresh_token"]}).status_code == 401
     assert client.post("/api/v1/auth/refresh", json={"refresh_token": tokens_b["refresh_token"]}).status_code == 401

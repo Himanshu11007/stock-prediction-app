@@ -125,6 +125,10 @@ class RevokeAllSessionsRequest(BaseModel):
     current_device_id: Optional[str] = Field(default=None, max_length=128)
 
 
+class RevokeAllSessionsResponse(BaseModel):
+    revoked_count: int
+
+
 class SetPinEnabledRequest(BaseModel):
     device_id: str = Field(..., max_length=128)
     enabled: bool

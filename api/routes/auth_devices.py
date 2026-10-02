@@ -16,6 +16,7 @@ from sqlmodel import Session
 
 from api.schemas_auth import (
     RevokeAllSessionsRequest,
+    RevokeAllSessionsResponse,
     RevokeSessionRequest,
     SessionResponse,
     SetPinEnabledRequest,
@@ -47,7 +48,7 @@ def revoke_one_session(
     revoke_session(session, current_user, payload.session_id)
 
 
-@router.post("/sessions/revoke-all", status_code=status.HTTP_200_OK)
+@router.post("/sessions/revoke-all", response_model=RevokeAllSessionsResponse)
 def revoke_all(
     payload: RevokeAllSessionsRequest,
     current_user: User = Depends(get_current_user),
@@ -58,7 +59,7 @@ def revoke_all(
     (except_current=True + current_device_id)."""
     except_device_id = payload.current_device_id if payload.except_current else None
     revoked_count = revoke_all_sessions(session, current_user, except_device_id=except_device_id)
-    return {"success": True, "data": {"revoked_count": revoked_count}}
+    return RevokeAllSessionsResponse(revoked_count=revoked_count)
 
 
 @router.post("/devices/pin-enabled", status_code=status.HTTP_204_NO_CONTENT)
