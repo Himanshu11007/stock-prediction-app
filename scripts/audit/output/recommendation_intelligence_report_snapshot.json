@@ -1,0 +1,314 @@
+{
+  "summary": {
+    "total": 1679,
+    "successful": 777,
+    "failed": 902,
+    "success_rate": 46.3,
+    "avg_return": -1.32,
+    "best_return": 33.84,
+    "worst_return": -28.2,
+    "median_return": -1.25,
+    "data_quality": "1679 validated records. Pillar data available for 8/8 pillars. Sector data: no."
+  },
+  "threshold_analysis": [
+    {
+      "threshold": 0.5,
+      "trades": 538,
+      "successful": 209,
+      "failed": 329,
+      "success_rate": 38.8,
+      "avg_return": -1.9955,
+      "median_return": -1.8954,
+      "win_loss_ratio": 0.64
+    },
+    {
+      "threshold": 0.55,
+      "trades": 331,
+      "successful": 124,
+      "failed": 207,
+      "success_rate": 37.5,
+      "avg_return": -2.0366,
+      "median_return": -1.8392,
+      "win_loss_ratio": 0.6
+    },
+    {
+      "threshold": 0.6,
+      "trades": 135,
+      "successful": 61,
+      "failed": 74,
+      "success_rate": 45.2,
+      "avg_return": -2.074,
+      "median_return": -0.9044,
+      "win_loss_ratio": 0.82
+    },
+    {
+      "threshold": 0.65,
+      "trades": 33,
+      "successful": 21,
+      "failed": 12,
+      "success_rate": 63.6,
+      "avg_return": -0.5857,
+      "median_return": 1.3716,
+      "win_loss_ratio": 1.75
+    },
+    {
+      "threshold": 0.7,
+      "trades": 0,
+      "successful": 0,
+      "failed": 0,
+      "success_rate": 0.0,
+      "avg_return": 0.0,
+      "median_return": 0.0
+    }
+  ],
+  "confidence_analysis": [
+    {
+      "confidence_band": "50-60",
+      "trades": 28,
+      "successful": 17,
+      "failed": 11,
+      "success_rate": 60.7,
+      "avg_return": -1.5346,
+      "median_return": -1.8779,
+      "win_loss_ratio": 1.55
+    },
+    {
+      "confidence_band": "60-70",
+      "trades": 322,
+      "successful": 151,
+      "failed": 171,
+      "success_rate": 46.9,
+      "avg_return": -1.4561,
+      "median_return": -1.338,
+      "win_loss_ratio": 0.88
+    },
+    {
+      "confidence_band": "70-80",
+      "trades": 825,
+      "successful": 374,
+      "failed": 451,
+      "success_rate": 45.3,
+      "avg_return": -1.2893,
+      "median_return": -1.1801,
+      "win_loss_ratio": 0.83
+    },
+    {
+      "confidence_band": "80-90",
+      "trades": 470,
+      "successful": 217,
+      "failed": 253,
+      "success_rate": 46.2,
+      "avg_return": -1.2697,
+      "median_return": -1.088,
+      "win_loss_ratio": 0.86
+    },
+    {
+      "confidence_band": "90-100",
+      "trades": 34,
+      "successful": 18,
+      "failed": 16,
+      "success_rate": 52.9,
+      "avg_return": -1.4784,
+      "median_return": -0.7842,
+      "win_loss_ratio": 1.12
+    }
+  ],
+  "pillar_analysis": [
+    {
+      "pillar": "Multi-Timeframe",
+      "avg_score": 0.0607,
+      "corr_with_success": -0.1888,
+      "corr_with_return": -0.0494,
+      "interpretation": "Multi-Timeframe has a weak negative relationship with success (correlation: -0.19)."
+    },
+    {
+      "pillar": "Technical Analysis",
+      "avg_score": 0.0658,
+      "corr_with_success": -0.1741,
+      "corr_with_return": -0.0224,
+      "interpretation": "Technical Analysis has a weak negative relationship with success (correlation: -0.17)."
+    },
+    {
+      "pillar": "Momentum",
+      "avg_score": 0.0779,
+      "corr_with_success": -0.1269,
+      "corr_with_return": -0.1225,
+      "interpretation": "Momentum has a weak negative relationship with success (correlation: -0.13)."
+    },
+    {
+      "pillar": "Market Regime",
+      "avg_score": 0.0219,
+      "corr_with_success": -0.0997,
+      "corr_with_return": -0.0453,
+      "interpretation": "Market Regime currently contributes very little to predicting success (correlation: -0.10)."
+    },
+    {
+      "pillar": "ML Confidence",
+      "avg_score": -0.362,
+      "corr_with_success": 0.0435,
+      "corr_with_return": -0.0055,
+      "interpretation": "ML Confidence currently contributes very little to predicting success (correlation: 0.04)."
+    },
+    {
+      "pillar": "Volume",
+      "avg_score": -0.0367,
+      "corr_with_success": -0.0144,
+      "corr_with_return": -0.0996,
+      "interpretation": "Volume currently contributes very little to predicting success (correlation: -0.01)."
+    },
+    {
+      "pillar": "News Sentiment",
+      "avg_score": 0.0575,
+      "corr_with_success": 0.0025,
+      "corr_with_return": 0.0052,
+      "interpretation": "News Sentiment currently contributes very little to predicting success (correlation: 0.00)."
+    },
+    {
+      "pillar": "ML Direction",
+      "avg_score": -0.7,
+      "corr_with_success": -0.0,
+      "corr_with_return": 0.0,
+      "interpretation": "ML Direction currently contributes very little to predicting success (correlation: -0.00)."
+    }
+  ],
+  "sector_analysis": [
+    {
+      "sector": "Unknown",
+      "trades": 1679,
+      "success_rate": 0.0,
+      "avg_return": 0.0,
+      "best_stock": null,
+      "worst_stock": null,
+      "note": "No sector data available yet. Add a 'Sector' column to data/nse_stocks.csv and sector analytics will populate automatically going forward."
+    }
+  ],
+  "regime_analysis": [
+    {
+      "regime": "Bearish",
+      "trades": 201,
+      "successful": 111,
+      "failed": 90,
+      "success_rate": 55.2,
+      "avg_return": -0.744,
+      "median_return": -0.569,
+      "win_loss_ratio": 1.23
+    },
+    {
+      "regime": "Unknown",
+      "trades": 206,
+      "successful": 105,
+      "failed": 101,
+      "success_rate": 51.0,
+      "avg_return": 1.8781,
+      "median_return": 1.3716,
+      "win_loss_ratio": 1.04
+    },
+    {
+      "regime": "Sideways",
+      "trades": 651,
+      "successful": 312,
+      "failed": 339,
+      "success_rate": 47.9,
+      "avg_return": -1.8061,
+      "median_return": -1.6029,
+      "win_loss_ratio": 0.92
+    },
+    {
+      "regime": "High Volatility",
+      "trades": 387,
+      "successful": 162,
+      "failed": 225,
+      "success_rate": 41.9,
+      "avg_return": -2.2342,
+      "median_return": -2.3968,
+      "win_loss_ratio": 0.72
+    },
+    {
+      "regime": "Bullish",
+      "trades": 234,
+      "successful": 87,
+      "failed": 147,
+      "success_rate": 37.2,
+      "avg_return": -1.7927,
+      "median_return": -2.3108,
+      "win_loss_ratio": 0.59
+    }
+  ],
+  "signal_analysis": [
+    {
+      "signal": "STRONG BUY",
+      "trades": 0,
+      "success_rate": 0.0,
+      "avg_return": 0.0,
+      "median_return": 0.0
+    },
+    {
+      "signal": "BUY",
+      "trades": 197,
+      "successful": 82,
+      "failed": 115,
+      "success_rate": 41.6,
+      "avg_return": -2.1332,
+      "median_return": -1.6538,
+      "win_loss_ratio": 0.71
+    },
+    {
+      "signal": "HOLD",
+      "trades": 914,
+      "successful": 367,
+      "failed": 547,
+      "success_rate": 40.2,
+      "avg_return": -1.3631,
+      "median_return": -1.617,
+      "win_loss_ratio": 0.67
+    },
+    {
+      "signal": "SELL",
+      "trades": 538,
+      "successful": 313,
+      "failed": 225,
+      "success_rate": 58.2,
+      "avg_return": -1.0804,
+      "median_return": -0.8105,
+      "win_loss_ratio": 1.39
+    },
+    {
+      "signal": "STRONG SELL",
+      "trades": 30,
+      "successful": 15,
+      "failed": 15,
+      "success_rate": 50.0,
+      "avg_return": 0.8281,
+      "median_return": -0.7271,
+      "win_loss_ratio": 1.0
+    }
+  ],
+  "recommendations": [
+    {
+      "title": "Confluence Threshold Observation",
+      "priority": "High",
+      "confidence": 95,
+      "recommendation": "Recommendations with confluence \u2265 0.65 achieve 63.6% success rate across 33 trades.",
+      "evidence": "Success rate improves from 38.8% (threshold 0.50) to 63.6% (threshold 0.65)."
+    },
+    {
+      "title": "Weak Pillar: News Sentiment",
+      "priority": "Medium",
+      "confidence": 70,
+      "recommendation": "News sentiment currently contributes very little to recommendation success.",
+      "evidence": "Correlation with success: 0.00 (below 0.10 threshold). Consider reviewing the news source or sentiment weighting."
+    },
+    {
+      "title": "Overall Engine Health",
+      "priority": "Low",
+      "confidence": 90,
+      "recommendation": "Engine has generated 1679 validated recommendations with 46.3% success rate and -1.32% avg return.",
+      "evidence": "Based on all validated records in the recommendation_validation table."
+    }
+  ],
+  "meta": {
+    "execution_time_ms": 53.6,
+    "records_analyzed": 1679,
+    "engine_version": "v1.0"
+  }
+}
