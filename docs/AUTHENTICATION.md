@@ -1,11 +1,13 @@
-# StockAI Pro Authentication — Phase 8
+# StockAI Pro Authentication — Phase 8 / 8.1
 
-This document covers the Phase 8 authentication expansion: Google/Apple
+This document covers the Phase 8 authentication expansion (Google/Apple
 sign-in, OTP login, device/session management, account linking, and the
-mobile PIN model. It assumes the Phase 1-6 foundation (users/roles, bcrypt
-passwords, JWT access tokens, opaque hashed refresh tokens with rotation)
-already described in the codebase itself (`auth/service.py`,
-`auth/security.py`).
+mobile PIN model) and Phase 8.1 (real native provider integration: Android
+Google Sign-In via Credential Manager, iOS Sign in with Apple, and a real
+SMTP OTP delivery adapter). It assumes the Phase 1-6 foundation
+(users/roles, bcrypt passwords, JWT access tokens, opaque hashed refresh
+tokens with rotation) already described in the codebase itself
+(`auth/service.py`, `auth/security.py`).
 
 **The backend is the sole authentication authority.** The mobile app never
 independently decides a user is authenticated — it only ever holds and
@@ -45,9 +47,15 @@ email-subject token keeps working until it naturally expires (15 minutes).
 
 ## 2. Google Sign-In
 
-- Mobile obtains a Google **id_token** via the platform's native Google
-  Sign-In SDK (not implemented here — see "Mobile" section below for what's
-  still required).
+- **Android** obtains a Google **id_token** via Android's current supported
+  mechanism, Credential Manager (`androidx.credentials` +
+  `com.google.android.libraries.identity.googleid`'s `GetGoogleIdOption`) -
+  see "Mobile" section below. This is deliberately NOT the older
+  `GoogleSignInClient`/`GoogleSignInOptions` API (Google is sunsetting it)
+  and NOT a browser-redirect OAuth flow (Google blocked custom-URI-scheme
+  redirects for Android apps in 2022 - both facts confirmed directly
+  against Google's current developer documentation before choosing this
+  approach; see citations in the Phase 8.1 commit/PR description).
 - Backend verifies it as a standard OIDC JWT against Google's own rotating
   public keys (`https://www.googleapis.com/oauth2/v3/certs`), checking
   signature, `aud` (must equal `GOOGLE_OAUTH_CLIENT_ID`), and `iss`.
@@ -56,21 +64,44 @@ email-subject token keeps working until it naturally expires (15 minutes).
 - See `auth/external_identity.py:GoogleIdentityVerifier` /
   `find_or_create_user_for_identity()`.
 
-**Setup required for production**: register an OAuth 2.0 client in Google
-Cloud Console for the mobile app (Android + iOS client IDs, or a single
-server/web client ID depending on the chosen native SDK flow), and set:
+**Setup required for production**:
+
+1. Register an OAuth 2.0 **Web application** client in Google Cloud
+   Console. Its client ID is the value used for BOTH:
+   - `GOOGLE_OAUTH_CLIENT_ID` (backend, server config) and
+   - `GoogleAuthConfiguration.ServerClientId` (mobile,
+     `StockAIPro.Mobile.Core/Services/Configuration/GoogleAuthConfiguration.cs`) -
+     this is `GetGoogleIdOption.SetServerClientId(...)`'s argument.
+   - This client ID is **public client-side configuration, not a secret**:
+     it identifies which backend a token was issued for (the token's
+     `aud`), the same way a Firebase `google-services.json` API key is
+     public - see the class's own doc comment for the full reasoning.
+2. ALSO register a separate OAuth **Android** client in Google Cloud
+   Console (package name `com.companyname.stockaipro.mobile` + the app's
+   release/debug signing-certificate SHA-1 fingerprint). This registration
+   authorizes the app build to use Credential Manager at all; it does not
+   produce a separate id/secret the app needs to embed anywhere.
+3. iOS Google Sign-In was **not implemented** in Phase 8.1 (Apple Sign-In
+   was implemented for iOS instead - see below); adding it later would need
+   its own iOS OAuth client registration plus a native binding/SDK, which
+   is a separate, not-yet-done piece of work.
 
 ```
-GOOGLE_OAUTH_CLIENT_ID=<your OAuth client id>
+GOOGLE_OAUTH_CLIENT_ID=<your OAuth Web-application client id>
 ```
 
-Without this set, `/auth/google` and `/auth/link/google` always fail closed
-(`401 Invalid Google identity token`) rather than silently accepting
-anything.
+Without this set (server) or `GoogleAuthConfiguration.ServerClientId` left
+empty (mobile), Google sign-in fails closed on both sides rather than
+silently accepting anything.
 
 ## 3. Apple Sign-In
 
-- Mobile obtains an Apple **identity_token** via Sign in with Apple.
+- **iOS** obtains an Apple **identity_token** via .NET MAUI's built-in
+  `Microsoft.Maui.Authentication.AppleSignInAuthenticator` (ships with the
+  MAUI SDK itself - no extra NuGet package), which wraps Apple's own
+  `AuthenticationServices`/`ASAuthorizationAppleIdProvider` framework - the
+  same native mechanism Apple's own documentation describes, not a browser
+  workaround.
 - Backend verifies it as a standard OIDC JWT against Apple's own rotating
   public keys (`https://appleid.apple.com/auth/keys`), checking signature,
   `aud` (must equal `APPLE_SERVICES_ID`), and `iss`.
@@ -79,11 +110,23 @@ anything.
   on every login and is the only one used as the identity key.
 - See `auth/external_identity.py:AppleIdentityVerifier`.
 
-**Setup required for production**: register a Services ID with Sign in
-with Apple enabled in the Apple Developer portal, and set:
+**Setup required for production**:
+
+1. An Apple Developer account with a registered App ID that has the
+   "Sign In with Apple" capability enabled.
+2. A Services ID (or the App ID itself, depending on your Apple Developer
+   configuration) whose identifier is set as `APPLE_SERVICES_ID` on the
+   backend (`aud` the backend validates every identity token against).
+3. The `com.apple.developer.applesignin` entitlement, already added to
+   `StockAIPro.Mobile/Platforms/iOS/Entitlements.plist` (value `Default`) -
+   this must match what's enabled for the App ID in the Developer portal,
+   or the native authorization request fails.
+4. A full Xcode/provisioning-profile build with that entitlement applied -
+   **not verified in this environment** (no Mac/Xcode available - see
+   "Mobile" section below for exactly what was and wasn't checked).
 
 ```
-APPLE_SERVICES_ID=<your Services ID>
+APPLE_SERVICES_ID=<your Services ID or App ID>
 ```
 
 Same fail-closed behavior as Google when unset.
@@ -113,13 +156,38 @@ Configuration (`config.py`, all overridable via environment variables):
 
 ### OTP provider setup
 
-**No real SMS/email provider is wired up.** `auth/otp_delivery.py` defines
-the `IOtpDeliveryService` abstraction; production needs a real
-implementation plugged into `get_otp_delivery_service()` (e.g. Twilio for
-SMS, any transactional email API for email) once an account/credentials
-exist. Required production secrets would be supplied via environment
-variables the same way `GOOGLE_OAUTH_CLIENT_ID`/`JWT_SECRET_KEY` are — never
-committed to source.
+**Email delivery is production-ready behind the abstraction; SMS is not.**
+`auth/otp_delivery.py:SmtpOtpDeliveryService` sends real email over SMTP -
+deliberately a *protocol*, not a vendor SDK, so it works with whichever
+transactional-email provider the deployment already has (SendGrid, Mailgun,
+Amazon SES, Postmark, a corporate relay, ...) without this codebase
+hard-coding assumptions about any single vendor's proprietary API. It is
+automatically selected by `get_otp_delivery_service()` once `OTP_SMTP_HOST`
+is set:
+
+```
+OTP_SMTP_HOST=<your provider's SMTP host, e.g. smtp.sendgrid.net>
+OTP_SMTP_PORT=587
+OTP_SMTP_USERNAME=<your SMTP username>
+OTP_SMTP_PASSWORD=<your SMTP password/API key>   # SECRET - env var only, never commit
+OTP_SMTP_FROM_ADDRESS=no-reply@yourdomain.com
+OTP_SMTP_USE_TLS=true
+```
+
+**No real SMS provider is wired up** - there is no SMTP-equivalent
+universal protocol for SMS, so a phone-destination OTP request with only
+`SmtpOtpDeliveryService` configured fails with
+`UnsupportedDestinationError` rather than silently doing nothing. Adding
+SMS support means picking a specific provider (e.g. Twilio) and writing a
+new `IOtpDeliveryService` implementation for it once that choice is
+actually made - this phase deliberately did not guess one.
+
+**Live delivery has not been tested** - `SmtpOtpDeliveryService` is unit
+tested against a mocked `smtplib.SMTP` connection (see
+`tests/test_otp_delivery.py`), confirming this codebase's own logic
+(message construction, destination validation, never logging the code) is
+correct, but no real SMTP server/account was available in this environment
+to send an actual email end-to-end.
 
 For local development only, set:
 
@@ -217,30 +285,63 @@ email collision alone is never treated as proof of ownership.
 
 ## 8. Mobile — what's implemented vs. what's still required
 
-Implemented: device identity generation, local PIN storage/verification
-with lockout, OTP request/verify UI, the `IGoogleSignInService` /
-`IAppleSignInService` client abstractions, AuthApiClient/AuthService
-extensions for every endpoint above, and device/session management calls.
+**Implemented and compiles for real (Phase 8.1):**
 
-**Not implemented (requires real provider setup this environment doesn't
-have)**: the native Google Sign-In SDK integration and Sign in with Apple
-entitlement/URL-scheme wiring that actually produce a real `id_token` /
-`identity_token` on-device. The mobile `IGoogleSignInService`/
-`IAppleSignInService` implementations throw a clear "not configured" error
-until a real OAuth client id (Google) and Services ID + Sign in with Apple
-capability (Apple Developer account) are supplied — see
-`StockAIPro.Mobile.Core/Services/Authentication/GoogleSignIn.cs` /
-`AppleSignIn.cs`. No live Google or Apple sign-in was tested end-to-end;
-only the backend verification logic and the client-side plumbing up to
-that boundary were.
+- **Android Google Sign-In**: `StockAIPro.Mobile/Platforms/Android/GoogleSignInService.cs`,
+  using `Xamarin.AndroidX.Credentials` 1.6.0.1 +
+  `Xamarin.AndroidX.Credentials.PlayServicesAuth` 1.6.0.2 +
+  `Xamarin.GoogleAndroid.Libraries.Identity.GoogleId` 1.1.0.13 (real,
+  actively-published .NET for Android bindings for Google's current
+  Credential Manager API - chosen after confirming Google's own
+  documentation that the older `GoogleSignInClient` API and custom-URI-
+  scheme OAuth redirects are both deprecated/blocked for Android). Verified
+  with `dotnet build -f net10.0-android` - **full success, including D8/R8
+  dexing** (not just a C# compile check).
+- **iOS Apple Sign-In**: `StockAIPro.Mobile/Platforms/iOS/AppleSignInService.cs`,
+  using the built-in `Microsoft.Maui.Authentication.AppleSignInAuthenticator`
+  (ships with the MAUI SDK, no extra package). Verified with
+  `dotnet build -f net10.0-ios` on this Windows machine - **the managed C#
+  compiles successfully**, including picking up the new
+  `Platforms/iOS/Entitlements.plist`. Full native app packaging/codesigning
+  and any actual on-device/simulator run were **not** possible (no Mac/
+  Xcode in this environment) - see Task 20/21 results in the final report.
+- Device identity generation, local PIN storage/verification with lockout,
+  OTP request/verify UI, `AuthApiClient`/`AuthService` extensions for every
+  endpoint, device/session management calls, and the `IGoogleSignInService`/
+  `IAppleSignInService` abstractions themselves (unchanged from Phase 8).
+
+**Not implemented / explicitly out of scope:**
+
+- Google Sign-In on iOS (Apple Sign-In was prioritized there instead, both
+  because it's the more idiomatic iOS mechanism and because Apple requires
+  offering Sign in with Apple if any other third-party sign-in is offered
+  on iOS). Adding it later needs its own iOS OAuth client + a native
+  Google SDK binding for iOS, not yet selected.
+- Apple Sign-In on Android/other platforms - not supported by Apple at all
+  outside iOS/macOS/web, out of scope by definition.
+- Live end-to-end verification of either provider - this requires a real
+  Google Cloud OAuth client, a real Apple Developer account/entitlement,
+  and (for Apple) a Mac - none of which exist in this environment. The
+  code paths that only run once those exist (the actual native picker UI,
+  the actual token returned) were **not exercised**; only compilation and
+  the deterministic Core-layer logic around them were verified. See the
+  final report's "Production readiness" section for the explicit
+  YES/NO status.
 
 ## 9. Production deployment checklist
 
 - [ ] `JWT_SECRET_KEY` — already required pre-Phase-8; unchanged
-- [ ] `GOOGLE_OAUTH_CLIENT_ID`
-- [ ] `APPLE_SERVICES_ID`
-- [ ] A real `IOtpDeliveryService` implementation wired into
-      `auth/otp_delivery.py:get_otp_delivery_service()`, with its own
-      provider credentials as environment variables (never committed)
+- [ ] `GOOGLE_OAUTH_CLIENT_ID` (backend) **and**
+      `GoogleAuthConfiguration.ServerClientId` (mobile) set to the same
+      Google Cloud OAuth Web-application client id
+- [ ] A Google Cloud OAuth **Android** client registered (package name +
+      signing-certificate SHA-1) so Credential Manager is authorized
+- [ ] `APPLE_SERVICES_ID` (backend) set to match the Apple Developer
+      Services ID/App ID
+- [ ] "Sign In with Apple" capability enabled for the App ID in the Apple
+      Developer portal, matching `Platforms/iOS/Entitlements.plist`
+- [ ] `OTP_SMTP_HOST`/`OTP_SMTP_PORT`/`OTP_SMTP_USERNAME`/`OTP_SMTP_PASSWORD`/
+      `OTP_SMTP_FROM_ADDRESS` for real email OTP delivery, OR a new
+      SMS-specific `IOtpDeliveryService` implementation if SMS is required
 - [ ] `OTP_DEV_LOG_CODES` unset/`false`
 - [ ] `alembic upgrade head` run against the production database

@@ -90,3 +90,16 @@ OTP_REQUEST_WINDOW_SECONDS    = int(os.environ.get("OTP_REQUEST_WINDOW_SECONDS",
 # exists purely so OTP_DEV_LOG_CODES=true can be a loud, explicit opt-in
 # rather than an accidental default (see auth/otp_delivery.py).
 OTP_DEV_LOG_CODES = os.environ.get("OTP_DEV_LOG_CODES", "false").lower() == "true"
+
+# Production email OTP delivery via SMTP (see auth/otp_delivery.py:
+# SmtpOtpDeliveryService) - works with any provider that exposes an SMTP
+# endpoint (SendGrid, Mailgun, Amazon SES, Postmark, a corporate relay,
+# ...). Leaving OTP_SMTP_HOST unset means no real provider is configured;
+# SMTP_PASSWORD must never be committed - set it via environment variable
+# or deployment secret storage only.
+OTP_SMTP_HOST          = os.environ.get("OTP_SMTP_HOST")  # e.g. "smtp.sendgrid.net" - unset = not configured
+OTP_SMTP_PORT          = int(os.environ.get("OTP_SMTP_PORT", "587"))
+OTP_SMTP_USERNAME      = os.environ.get("OTP_SMTP_USERNAME", "")
+OTP_SMTP_PASSWORD      = os.environ.get("OTP_SMTP_PASSWORD", "")  # SECRET - env var / deployment secret only, never commit
+OTP_SMTP_FROM_ADDRESS  = os.environ.get("OTP_SMTP_FROM_ADDRESS", "no-reply@stockaipro.app")
+OTP_SMTP_USE_TLS       = os.environ.get("OTP_SMTP_USE_TLS", "true").lower() == "true"
