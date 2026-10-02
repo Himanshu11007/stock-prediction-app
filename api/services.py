@@ -19,7 +19,7 @@ import threading
 from typing import Optional
 
 from data.loader import load_data, load_multi_timeframe_data
-from utils.helpers import prepare_data
+from utils.helpers import prepare_inference_data
 from models.trainer import train_model, ensemble_predict
 from news.api import fetch_news
 from news.sentiment import analyze_overall_sentiment
@@ -80,9 +80,17 @@ def analyze_stock(symbol: str) -> dict:
     company_name = get_company_names(symbol)
 
     try:
-        data, X, y, _, _, y_train, _ = prepare_data(data)
+        inf = prepare_inference_data(data)
     except Exception as e:
         raise RuntimeError(f"Feature engineering failed: {e}") from e
+
+    # Train on rows with known labels; predict the latest bar, which is never
+    # part of training (see docs/PRODUCTION_TEMPORAL_INTEGRITY.md).
+    data, X, y, y_train, X_pred = inf.data, inf.X, inf.y, inf.y_train, inf.X_pred
+    if X_pred is None:
+        raise ValueError(
+            f"Latest price bar for '{symbol}' has incomplete features — cannot predict"
+        )
 
     if len(set(y_train)) < 2:
         raise ValueError(
@@ -95,7 +103,7 @@ def analyze_stock(symbol: str) -> dict:
         raise RuntimeError(f"Model training failed: {e}") from e
 
     try:
-        pred, confidence, _ = ensemble_predict(models, X.tail(1))
+        pred, confidence, _ = ensemble_predict(models, X_pred)
     except Exception:
         pred, confidence = 0, 0.0
 

@@ -7,7 +7,7 @@ import traceback
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Callable
 
-from utils.helpers import prepare_data
+from utils.helpers import prepare_inference_data
 from models.trainer import train_model, ensemble_predict
 from news.api import fetch_news
 from news.sentiment import analyze_overall_sentiment
@@ -59,15 +59,20 @@ def _scan_one(symbol: str, company_map: dict, loader_fn) -> dict | None:
             logger.warning("%s: no data returned", symbol)
             return None
 
-        data, X, y, _, _, y_train, _ = prepare_data(data)
-        if len(set(y_train)) < 2:
+        # Train on rows with known labels; predict the latest bar, which is
+        # never part of training (see docs/PRODUCTION_TEMPORAL_INTEGRITY.md).
+        inf = prepare_inference_data(data)
+        if inf.X_pred is None:
+            logger.info("%s: latest bar has incomplete features — skipping", symbol)
+            return None
+        if len(set(inf.y_train)) < 2:
             logger.info("%s: single-class target — skipping", symbol)
             return None
+        data = inf.data
 
-        models, acc = train_model(X, y, fast=True)
+        models, acc = train_model(inf.X, inf.y, fast=True)
 
-        latest = X.iloc[-1:]
-        pred, confidence, _ = ensemble_predict(models, latest)
+        pred, confidence, _ = ensemble_predict(models, inf.X_pred)
 
         headlines = fetch_news(symbol)
         _, overall_score, _, _ = analyze_overall_sentiment(headlines)

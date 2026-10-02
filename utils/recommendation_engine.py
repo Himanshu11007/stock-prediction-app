@@ -1,6 +1,6 @@
 import streamlit as st
 from data.loader import (load_data,load_multi_timeframe_data)
-from utils.helpers import prepare_data
+from utils.helpers import prepare_inference_data
 from models.trainer import (train_model,ensemble_predict)
 from news.api import fetch_news
 from news.sentiment import analyze_overall_sentiment
@@ -38,8 +38,13 @@ def get_top_recommendations(stock_list, stocks_df, _progress_bar=None):
                 continue
             
             # Prepare ML data
-            data, X, y, _, _, y_train, _ = prepare_data(data)
-            
+            # Train on rows with known labels; predict the latest bar,
+            # which is never part of training.
+            inf = prepare_inference_data(data)
+            if inf.X_pred is None:
+                continue
+            data, X, y, y_train = inf.data, inf.X, inf.y, inf.y_train
+
             # Skip if target has only one class (can't train classifier)
             if len(set(y_train)) < 2:
                 continue
@@ -52,7 +57,7 @@ def get_top_recommendations(stock_list, stocks_df, _progress_bar=None):
                 continue
             
             # Latest prediction
-            latest_data = X.iloc[-1:]
+            latest_data = inf.X_pred
             
             # Confidence (handle models without predict_proba)
             try:

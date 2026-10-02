@@ -67,20 +67,20 @@
     "skip_reasons": {},
     "first_prediction": "2025-10-01 00:00:00",
     "last_prediction": "2026-09-30 00:00:00",
-    "n_production_recommendations": 552,
+    "n_production_recommendations": 696,
     "signal_counts_all": {
-      "BUY": 371,
-      "HOLD": 686,
-      "SELL": 232,
-      "STRONG BUY": 56,
-      "STRONG SELL": 5
+      "BUY": 396,
+      "HOLD": 637,
+      "SELL": 255,
+      "STRONG BUY": 58,
+      "STRONG SELL": 4
     },
     "signal_counts_filtered": {
-      "BUY": 121,
-      "HOLD": 327,
-      "SELL": 94,
-      "STRONG BUY": 8,
-      "STRONG SELL": 2
+      "BUY": 165,
+      "HOLD": 364,
+      "SELL": 150,
+      "STRONG BUY": 16,
+      "STRONG SELL": 1
     },
     "n_with_outcome": {
       "1d": 1350,
@@ -91,12 +91,12 @@
   },
   "temporal_integrity": {
     "all_rows_passed_assertions": true,
-    "prediction_row_in_training_set_pct": 0.0,
+    "prediction_row_in_training_set_pct": 100.0,
     "as_deployed_prediction_equals_realized_issue_move": {
       "n": 1350,
-      "rate_pct": 58.7,
-      "ci95_low_pct": 56.1,
-      "ci95_high_pct": 61.3
+      "rate_pct": 97.3,
+      "ci95_low_pct": 96.2,
+      "ci95_high_pct": 98.0
     }
   },
   "ensemble_walk_forward_cv": {
@@ -491,38 +491,38 @@
     "as_deployed_direction": [
       {
         "n": 1350,
-        "rate_pct": 50.7,
-        "ci95_low_pct": 48.1,
-        "ci95_high_pct": 53.4,
+        "rate_pct": 45.6,
+        "ci95_low_pct": 42.9,
+        "ci95_high_pct": 48.2,
         "horizon_days": 1,
-        "predicted_up_pct": 42.5,
+        "predicted_up_pct": 41.9,
         "actual_up_pct": 47.3
       },
       {
         "n": 1323,
-        "rate_pct": 49.6,
-        "ci95_low_pct": 46.9,
-        "ci95_high_pct": 52.3,
+        "rate_pct": 45.4,
+        "ci95_low_pct": 42.8,
+        "ci95_high_pct": 48.1,
         "horizon_days": 3,
-        "predicted_up_pct": 42.1,
+        "predicted_up_pct": 41.7,
         "actual_up_pct": 51.5
       },
       {
         "n": 1323,
-        "rate_pct": 51.8,
-        "ci95_low_pct": 49.1,
-        "ci95_high_pct": 54.5,
+        "rate_pct": 46.9,
+        "ci95_low_pct": 44.2,
+        "ci95_high_pct": 49.6,
         "horizon_days": 5,
-        "predicted_up_pct": 42.1,
+        "predicted_up_pct": 41.7,
         "actual_up_pct": 49.5
       },
       {
         "n": 1296,
-        "rate_pct": 51.5,
-        "ci95_low_pct": 48.7,
-        "ci95_high_pct": 54.2,
+        "rate_pct": 50.4,
+        "ci95_low_pct": 47.7,
+        "ci95_high_pct": 53.1,
         "horizon_days": 10,
-        "predicted_up_pct": 42.5,
+        "predicted_up_pct": 41.0,
         "actual_up_pct": 50.9
       }
     ],
@@ -643,66 +643,66 @@
     "confidence_buckets_as_deployed_1d": [
       {
         "bucket": "50-55",
-        "n": 286,
-        "rate_pct": 52.4,
-        "ci95_low_pct": 46.7,
-        "ci95_high_pct": 58.2
+        "n": 5,
+        "rate_pct": 0.0,
+        "ci95_low_pct": 0.0,
+        "ci95_high_pct": 43.4
       },
       {
         "bucket": "55-60",
-        "n": 300,
-        "rate_pct": 54.3,
-        "ci95_low_pct": 48.7,
-        "ci95_high_pct": 59.9
+        "n": 38,
+        "rate_pct": 52.6,
+        "ci95_low_pct": 37.3,
+        "ci95_high_pct": 67.5
       },
       {
         "bucket": "60-65",
-        "n": 254,
-        "rate_pct": 52.0,
-        "ci95_low_pct": 45.8,
-        "ci95_high_pct": 58.0
+        "n": 107,
+        "rate_pct": 45.8,
+        "ci95_low_pct": 36.7,
+        "ci95_high_pct": 55.2
       },
       {
         "bucket": "65-70",
-        "n": 216,
-        "rate_pct": 44.9,
-        "ci95_low_pct": 38.4,
-        "ci95_high_pct": 51.6
+        "n": 188,
+        "rate_pct": 45.7,
+        "ci95_low_pct": 38.8,
+        "ci95_high_pct": 52.9
       },
       {
         "bucket": "70-75",
-        "n": 167,
-        "rate_pct": 43.7,
-        "ci95_low_pct": 36.4,
-        "ci95_high_pct": 51.3
+        "n": 317,
+        "rate_pct": 48.3,
+        "ci95_low_pct": 42.8,
+        "ci95_high_pct": 53.8
       },
       {
         "bucket": "75-80",
-        "n": 74,
-        "rate_pct": 55.4,
-        "ci95_low_pct": 44.1,
-        "ci95_high_pct": 66.2
+        "n": 328,
+        "rate_pct": 44.2,
+        "ci95_low_pct": 38.9,
+        "ci95_high_pct": 49.6
       },
       {
         "bucket": "80-85",
-        "n": 42,
-        "rate_pct": 57.1,
-        "ci95_low_pct": 42.2,
-        "ci95_high_pct": 70.9
+        "n": 262,
+        "rate_pct": 42.7,
+        "ci95_low_pct": 36.9,
+        "ci95_high_pct": 48.8
       },
       {
         "bucket": "85-90",
-        "n": 9,
-        "rate_pct": 44.4,
-        "ci95_low_pct": 18.9,
-        "ci95_high_pct": 73.3
+        "n": 87,
+        "rate_pct": 46.0,
+        "ci95_low_pct": 35.9,
+        "ci95_high_pct": 56.4
       },
       {
         "bucket": "90-95",
-        "n": 2,
-        "rate_pct": 50.0,
-        "ci95_low_pct": 9.5,
-        "ci95_high_pct": 90.5
+        "n": 18,
+        "rate_pct": 55.6,
+        "ci95_low_pct": 33.7,
+        "ci95_high_pct": 75.4
       },
       {
         "bucket": "95-100",
@@ -715,66 +715,66 @@
     "confidence_buckets_as_deployed_5d": [
       {
         "bucket": "50-55",
-        "n": 281,
-        "rate_pct": 51.2,
-        "ci95_low_pct": 45.4,
-        "ci95_high_pct": 57.0
+        "n": 5,
+        "rate_pct": 40.0,
+        "ci95_low_pct": 11.8,
+        "ci95_high_pct": 76.9
       },
       {
         "bucket": "55-60",
-        "n": 293,
-        "rate_pct": 52.6,
-        "ci95_low_pct": 46.8,
-        "ci95_high_pct": 58.2
+        "n": 38,
+        "rate_pct": 34.2,
+        "ci95_low_pct": 21.2,
+        "ci95_high_pct": 50.1
       },
       {
         "bucket": "60-65",
-        "n": 253,
-        "rate_pct": 50.6,
-        "ci95_low_pct": 44.5,
-        "ci95_high_pct": 56.7
+        "n": 104,
+        "rate_pct": 47.1,
+        "ci95_low_pct": 37.8,
+        "ci95_high_pct": 56.6
       },
       {
         "bucket": "65-70",
-        "n": 211,
-        "rate_pct": 52.1,
-        "ci95_low_pct": 45.4,
-        "ci95_high_pct": 58.8
+        "n": 186,
+        "rate_pct": 43.5,
+        "ci95_low_pct": 36.6,
+        "ci95_high_pct": 50.7
       },
       {
         "bucket": "70-75",
-        "n": 161,
-        "rate_pct": 47.2,
-        "ci95_low_pct": 39.6,
-        "ci95_high_pct": 54.9
+        "n": 305,
+        "rate_pct": 48.9,
+        "ci95_low_pct": 43.3,
+        "ci95_high_pct": 54.4
       },
       {
         "bucket": "75-80",
-        "n": 71,
-        "rate_pct": 60.6,
-        "ci95_low_pct": 48.9,
-        "ci95_high_pct": 71.1
+        "n": 322,
+        "rate_pct": 49.4,
+        "ci95_low_pct": 44.0,
+        "ci95_high_pct": 54.8
       },
       {
         "bucket": "80-85",
-        "n": 42,
-        "rate_pct": 57.1,
-        "ci95_low_pct": 42.2,
-        "ci95_high_pct": 70.9
+        "n": 260,
+        "rate_pct": 46.2,
+        "ci95_low_pct": 40.2,
+        "ci95_high_pct": 52.2
       },
       {
         "bucket": "85-90",
-        "n": 9,
-        "rate_pct": 55.6,
-        "ci95_low_pct": 26.7,
-        "ci95_high_pct": 81.1
+        "n": 85,
+        "rate_pct": 43.5,
+        "ci95_low_pct": 33.5,
+        "ci95_high_pct": 54.1
       },
       {
         "bucket": "90-95",
-        "n": 2,
-        "rate_pct": 50.0,
-        "ci95_low_pct": 9.5,
-        "ci95_high_pct": 90.5
+        "n": 18,
+        "rate_pct": 55.6,
+        "ci95_low_pct": 33.7,
+        "ci95_high_pct": 75.4
       },
       {
         "bucket": "95-100",
@@ -860,332 +860,332 @@
       {
         "horizon_days": 1,
         "market_regime": "Bearish",
-        "n": 138,
-        "rate_pct": 52.9,
-        "ci95_low_pct": 44.6,
-        "ci95_high_pct": 61.0
+        "n": 137,
+        "rate_pct": 43.8,
+        "ci95_low_pct": 35.8,
+        "ci95_high_pct": 52.2
       },
       {
         "horizon_days": 1,
         "market_regime": "Bullish",
-        "n": 263,
-        "rate_pct": 49.4,
-        "ci95_low_pct": 43.4,
-        "ci95_high_pct": 55.4
+        "n": 265,
+        "rate_pct": 44.2,
+        "ci95_low_pct": 38.3,
+        "ci95_high_pct": 50.2
       },
       {
         "horizon_days": 1,
         "market_regime": "High Volatility",
-        "n": 439,
-        "rate_pct": 51.9,
-        "ci95_low_pct": 47.3,
-        "ci95_high_pct": 56.6
+        "n": 427,
+        "rate_pct": 47.5,
+        "ci95_low_pct": 42.8,
+        "ci95_high_pct": 52.3
       },
       {
         "horizon_days": 1,
         "market_regime": "Sideways",
-        "n": 510,
-        "rate_pct": 49.8,
-        "ci95_low_pct": 45.5,
-        "ci95_high_pct": 54.1
+        "n": 521,
+        "rate_pct": 45.1,
+        "ci95_low_pct": 40.9,
+        "ci95_high_pct": 49.4
       },
       {
         "horizon_days": 3,
         "market_regime": "Bearish",
-        "n": 123,
-        "rate_pct": 47.2,
-        "ci95_low_pct": 38.6,
-        "ci95_high_pct": 55.9
+        "n": 125,
+        "rate_pct": 42.4,
+        "ci95_low_pct": 34.1,
+        "ci95_high_pct": 51.2
       },
       {
         "horizon_days": 3,
         "market_regime": "Bullish",
-        "n": 263,
-        "rate_pct": 48.3,
-        "ci95_low_pct": 42.3,
-        "ci95_high_pct": 54.3
+        "n": 265,
+        "rate_pct": 46.0,
+        "ci95_low_pct": 40.1,
+        "ci95_high_pct": 52.1
       },
       {
         "horizon_days": 3,
         "market_regime": "High Volatility",
-        "n": 433,
-        "rate_pct": 50.3,
-        "ci95_low_pct": 45.7,
-        "ci95_high_pct": 55.0
+        "n": 419,
+        "rate_pct": 44.2,
+        "ci95_low_pct": 39.5,
+        "ci95_high_pct": 48.9
       },
       {
         "horizon_days": 3,
         "market_regime": "Sideways",
-        "n": 504,
-        "rate_pct": 50.2,
-        "ci95_low_pct": 45.8,
-        "ci95_high_pct": 54.5
+        "n": 514,
+        "rate_pct": 46.9,
+        "ci95_low_pct": 42.6,
+        "ci95_high_pct": 51.2
       },
       {
         "horizon_days": 5,
         "market_regime": "Bearish",
-        "n": 123,
-        "rate_pct": 52.0,
-        "ci95_low_pct": 43.3,
-        "ci95_high_pct": 60.7
+        "n": 125,
+        "rate_pct": 46.4,
+        "ci95_low_pct": 37.9,
+        "ci95_high_pct": 55.1
       },
       {
         "horizon_days": 5,
         "market_regime": "Bullish",
-        "n": 263,
-        "rate_pct": 49.4,
-        "ci95_low_pct": 43.4,
-        "ci95_high_pct": 55.4
+        "n": 265,
+        "rate_pct": 44.9,
+        "ci95_low_pct": 39.0,
+        "ci95_high_pct": 50.9
       },
       {
         "horizon_days": 5,
         "market_regime": "High Volatility",
-        "n": 433,
-        "rate_pct": 52.9,
-        "ci95_low_pct": 48.2,
-        "ci95_high_pct": 57.5
+        "n": 419,
+        "rate_pct": 44.9,
+        "ci95_low_pct": 40.2,
+        "ci95_high_pct": 49.7
       },
       {
         "horizon_days": 5,
         "market_regime": "Sideways",
-        "n": 504,
-        "rate_pct": 52.0,
-        "ci95_low_pct": 47.6,
-        "ci95_high_pct": 56.3
-      },
-      {
-        "horizon_days": 10,
-        "market_regime": "Bearish",
-        "n": 115,
-        "rate_pct": 57.4,
-        "ci95_low_pct": 48.3,
-        "ci95_high_pct": 66.0
-      },
-      {
-        "horizon_days": 10,
-        "market_regime": "Bullish",
-        "n": 260,
+        "n": 514,
         "rate_pct": 49.6,
-        "ci95_low_pct": 43.6,
-        "ci95_high_pct": 55.7
+        "ci95_low_pct": 45.3,
+        "ci95_high_pct": 53.9
+      },
+      {
+        "horizon_days": 10,
+        "market_regime": "Bearish",
+        "n": 114,
+        "rate_pct": 60.5,
+        "ci95_low_pct": 51.4,
+        "ci95_high_pct": 69.0
+      },
+      {
+        "horizon_days": 10,
+        "market_regime": "Bullish",
+        "n": 264,
+        "rate_pct": 46.2,
+        "ci95_low_pct": 40.3,
+        "ci95_high_pct": 52.2
       },
       {
         "horizon_days": 10,
         "market_regime": "High Volatility",
-        "n": 428,
-        "rate_pct": 52.3,
-        "ci95_low_pct": 47.6,
-        "ci95_high_pct": 57.0
+        "n": 414,
+        "rate_pct": 48.6,
+        "ci95_low_pct": 43.8,
+        "ci95_high_pct": 53.4
       },
       {
         "horizon_days": 10,
         "market_regime": "Sideways",
-        "n": 493,
-        "rate_pct": 50.3,
-        "ci95_low_pct": 45.9,
-        "ci95_high_pct": 54.7
+        "n": 504,
+        "rate_pct": 51.8,
+        "ci95_low_pct": 47.4,
+        "ci95_high_pct": 56.1
       }
     ],
     "signals_unfiltered": [
       {
         "horizon_days": 1,
         "signal": "BUY",
-        "n": 371,
-        "rate_pct": 47.7,
-        "ci95_low_pct": 42.7,
-        "ci95_high_pct": 52.8,
-        "mean_return_pct": -0.09,
-        "median_return_pct": -0.108
+        "n": 396,
+        "rate_pct": 47.5,
+        "ci95_low_pct": 42.6,
+        "ci95_high_pct": 52.4,
+        "mean_return_pct": -0.165,
+        "median_return_pct": -0.093
       },
       {
         "horizon_days": 1,
         "signal": "HOLD",
-        "n": 686,
-        "rate_pct": 87.9,
-        "ci95_low_pct": 85.2,
-        "ci95_high_pct": 90.1,
+        "n": 637,
+        "rate_pct": 88.2,
+        "ci95_low_pct": 85.5,
+        "ci95_high_pct": 90.5,
+        "mean_return_pct": -0.164,
+        "median_return_pct": -0.115
+      },
+      {
+        "horizon_days": 1,
+        "signal": "SELL",
+        "n": 255,
+        "rate_pct": 50.6,
+        "ci95_low_pct": 44.5,
+        "ci95_high_pct": 56.7,
+        "mean_return_pct": 0.169,
+        "median_return_pct": -0.03
+      },
+      {
+        "horizon_days": 1,
+        "signal": "STRONG BUY",
+        "n": 58,
+        "rate_pct": 43.1,
+        "ci95_low_pct": 31.2,
+        "ci95_high_pct": 55.9,
+        "mean_return_pct": -0.21,
+        "median_return_pct": -0.168
+      },
+      {
+        "horizon_days": 1,
+        "signal": "STRONG SELL",
+        "n": 4,
+        "rate_pct": 75.0,
+        "ci95_low_pct": 30.1,
+        "ci95_high_pct": 95.4,
+        "mean_return_pct": -0.223,
+        "median_return_pct": -0.271
+      },
+      {
+        "horizon_days": 3,
+        "signal": "BUY",
+        "n": 394,
+        "rate_pct": 49.7,
+        "ci95_low_pct": 44.8,
+        "ci95_high_pct": 54.7,
+        "mean_return_pct": 0.161,
+        "median_return_pct": -0.059
+      },
+      {
+        "horizon_days": 3,
+        "signal": "HOLD",
+        "n": 619,
+        "rate_pct": 70.9,
+        "ci95_low_pct": 67.2,
+        "ci95_high_pct": 74.4,
+        "mean_return_pct": 0.427,
+        "median_return_pct": 0.241
+      },
+      {
+        "horizon_days": 3,
+        "signal": "SELL",
+        "n": 248,
+        "rate_pct": 46.0,
+        "ci95_low_pct": 39.9,
+        "ci95_high_pct": 52.2,
+        "mean_return_pct": 0.683,
+        "median_return_pct": 0.295
+      },
+      {
+        "horizon_days": 3,
+        "signal": "STRONG BUY",
+        "n": 58,
+        "rate_pct": 32.8,
+        "ci95_low_pct": 22.1,
+        "ci95_high_pct": 45.6,
+        "mean_return_pct": -0.708,
+        "median_return_pct": -0.926
+      },
+      {
+        "horizon_days": 3,
+        "signal": "STRONG SELL",
+        "n": 4,
+        "rate_pct": 25.0,
+        "ci95_low_pct": 4.6,
+        "ci95_high_pct": 69.9,
         "mean_return_pct": -0.126,
-        "median_return_pct": -0.096
-      },
-      {
-        "horizon_days": 1,
-        "signal": "SELL",
-        "n": 232,
-        "rate_pct": 53.4,
-        "ci95_low_pct": 47.0,
-        "ci95_high_pct": 59.8,
-        "mean_return_pct": -0.088,
-        "median_return_pct": -0.138
-      },
-      {
-        "horizon_days": 1,
-        "signal": "STRONG BUY",
-        "n": 56,
-        "rate_pct": 51.8,
-        "ci95_low_pct": 39.0,
-        "ci95_high_pct": 64.3,
-        "mean_return_pct": 0.035,
-        "median_return_pct": 0.021
-      },
-      {
-        "horizon_days": 1,
-        "signal": "STRONG SELL",
-        "n": 5,
-        "rate_pct": 60.0,
-        "ci95_low_pct": 23.1,
-        "ci95_high_pct": 88.2,
-        "mean_return_pct": -0.308,
-        "median_return_pct": -1.283
-      },
-      {
-        "horizon_days": 3,
-        "signal": "BUY",
-        "n": 366,
-        "rate_pct": 51.9,
-        "ci95_low_pct": 46.8,
-        "ci95_high_pct": 57.0,
-        "mean_return_pct": 0.219,
-        "median_return_pct": 0.143
-      },
-      {
-        "horizon_days": 3,
-        "signal": "HOLD",
-        "n": 675,
-        "rate_pct": 72.7,
-        "ci95_low_pct": 69.3,
-        "ci95_high_pct": 76.0,
-        "mean_return_pct": 0.316,
-        "median_return_pct": 0.059
-      },
-      {
-        "horizon_days": 3,
-        "signal": "SELL",
-        "n": 221,
-        "rate_pct": 45.7,
-        "ci95_low_pct": 39.3,
-        "ci95_high_pct": 52.3,
-        "mean_return_pct": 0.58,
-        "median_return_pct": 0.204
-      },
-      {
-        "horizon_days": 3,
-        "signal": "STRONG BUY",
-        "n": 56,
-        "rate_pct": 46.4,
-        "ci95_low_pct": 34.0,
-        "ci95_high_pct": 59.3,
-        "mean_return_pct": 0.368,
-        "median_return_pct": -0.179
-      },
-      {
-        "horizon_days": 3,
-        "signal": "STRONG SELL",
-        "n": 5,
-        "rate_pct": 60.0,
-        "ci95_low_pct": 23.1,
-        "ci95_high_pct": 88.2,
-        "mean_return_pct": 2.647,
-        "median_return_pct": -0.783
+        "median_return_pct": 1.093
       },
       {
         "horizon_days": 5,
         "signal": "BUY",
-        "n": 366,
-        "rate_pct": 54.6,
-        "ci95_low_pct": 49.5,
-        "ci95_high_pct": 59.7,
-        "mean_return_pct": 0.303,
-        "median_return_pct": 0.448
-      },
-      {
-        "horizon_days": 5,
-        "signal": "HOLD",
-        "n": 675,
-        "rate_pct": 59.6,
-        "ci95_low_pct": 55.8,
-        "ci95_high_pct": 63.2,
+        "n": 394,
+        "rate_pct": 51.5,
+        "ci95_low_pct": 46.6,
+        "ci95_high_pct": 56.4,
         "mean_return_pct": 0.165,
-        "median_return_pct": -0.241
+        "median_return_pct": 0.217
+      },
+      {
+        "horizon_days": 5,
+        "signal": "HOLD",
+        "n": 619,
+        "rate_pct": 57.5,
+        "ci95_low_pct": 53.6,
+        "ci95_high_pct": 61.3,
+        "mean_return_pct": 0.191,
+        "median_return_pct": -0.117
       },
       {
         "horizon_days": 5,
         "signal": "SELL",
-        "n": 221,
-        "rate_pct": 52.0,
-        "ci95_low_pct": 45.5,
-        "ci95_high_pct": 58.5,
-        "mean_return_pct": 0.403,
-        "median_return_pct": -0.116
+        "n": 248,
+        "rate_pct": 50.4,
+        "ci95_low_pct": 44.2,
+        "ci95_high_pct": 56.6,
+        "mean_return_pct": 0.797,
+        "median_return_pct": -0.038
       },
       {
         "horizon_days": 5,
         "signal": "STRONG BUY",
-        "n": 56,
-        "rate_pct": 50.0,
-        "ci95_low_pct": 37.3,
-        "ci95_high_pct": 62.7,
-        "mean_return_pct": 0.534,
-        "median_return_pct": 0.02
+        "n": 58,
+        "rate_pct": 39.7,
+        "ci95_low_pct": 28.1,
+        "ci95_high_pct": 52.5,
+        "mean_return_pct": -0.459,
+        "median_return_pct": -0.729
       },
       {
         "horizon_days": 5,
         "signal": "STRONG SELL",
-        "n": 5,
-        "rate_pct": 60.0,
-        "ci95_low_pct": 23.1,
-        "ci95_high_pct": 88.2,
-        "mean_return_pct": 3.055,
-        "median_return_pct": -0.402
+        "n": 4,
+        "rate_pct": 50.0,
+        "ci95_low_pct": 15.0,
+        "ci95_high_pct": 85.0,
+        "mean_return_pct": 0.628,
+        "median_return_pct": 0.043
       },
       {
         "horizon_days": 10,
         "signal": "BUY",
-        "n": 362,
-        "rate_pct": 54.7,
-        "ci95_low_pct": 49.5,
-        "ci95_high_pct": 59.7,
-        "mean_return_pct": 0.365,
-        "median_return_pct": 0.387
+        "n": 386,
+        "rate_pct": 51.3,
+        "ci95_low_pct": 46.3,
+        "ci95_high_pct": 56.2,
+        "mean_return_pct": 0.321,
+        "median_return_pct": 0.121
       },
       {
         "horizon_days": 10,
         "signal": "HOLD",
-        "n": 665,
-        "rate_pct": 43.9,
-        "ci95_low_pct": 40.2,
-        "ci95_high_pct": 47.7,
-        "mean_return_pct": 0.387,
-        "median_return_pct": -0.194
+        "n": 606,
+        "rate_pct": 45.5,
+        "ci95_low_pct": 41.6,
+        "ci95_high_pct": 49.5,
+        "mean_return_pct": 0.497,
+        "median_return_pct": 0.206
       },
       {
         "horizon_days": 10,
         "signal": "SELL",
-        "n": 208,
-        "rate_pct": 49.5,
-        "ci95_low_pct": 42.8,
-        "ci95_high_pct": 56.3,
-        "mean_return_pct": 1.383,
-        "median_return_pct": 0.126
+        "n": 242,
+        "rate_pct": 50.4,
+        "ci95_low_pct": 44.2,
+        "ci95_high_pct": 56.7,
+        "mean_return_pct": 1.467,
+        "median_return_pct": -0.099
       },
       {
         "horizon_days": 10,
         "signal": "STRONG BUY",
-        "n": 56,
-        "rate_pct": 58.9,
-        "ci95_low_pct": 45.9,
-        "ci95_high_pct": 70.8,
-        "mean_return_pct": 1.537,
-        "median_return_pct": 1.052
+        "n": 58,
+        "rate_pct": 50.0,
+        "ci95_low_pct": 37.5,
+        "ci95_high_pct": 62.5,
+        "mean_return_pct": 0.292,
+        "median_return_pct": 0.139
       },
       {
         "horizon_days": 10,
         "signal": "STRONG SELL",
-        "n": 5,
-        "rate_pct": 60.0,
-        "ci95_low_pct": 23.1,
-        "ci95_high_pct": 88.2,
-        "mean_return_pct": 2.989,
-        "median_return_pct": -0.647
+        "n": 4,
+        "rate_pct": 75.0,
+        "ci95_low_pct": 30.1,
+        "ci95_high_pct": 95.4,
+        "mean_return_pct": -4.645,
+        "median_return_pct": -8.023
       }
     ],
     "unconditional_success_rule_rates": [
@@ -1293,410 +1293,418 @@
       {
         "horizon_days": 1,
         "signal": "BUY",
-        "n": 121,
-        "rate_pct": 51.2,
-        "ci95_low_pct": 42.4,
-        "ci95_high_pct": 60.0,
-        "mean_return_pct": -0.138,
-        "median_return_pct": 0.04
+        "n": 165,
+        "rate_pct": 51.5,
+        "ci95_low_pct": 43.9,
+        "ci95_high_pct": 59.0,
+        "mean_return_pct": -0.094,
+        "median_return_pct": 0.027
       },
       {
         "horizon_days": 1,
         "signal": "HOLD",
-        "n": 327,
-        "rate_pct": 88.7,
-        "ci95_low_pct": 84.8,
-        "ci95_high_pct": 91.7,
-        "mean_return_pct": 0.018,
-        "median_return_pct": 0.059
+        "n": 364,
+        "rate_pct": 88.2,
+        "ci95_low_pct": 84.5,
+        "ci95_high_pct": 91.1,
+        "mean_return_pct": -0.086,
+        "median_return_pct": -0.032
       },
       {
         "horizon_days": 1,
         "signal": "SELL",
-        "n": 94,
-        "rate_pct": 51.1,
-        "ci95_low_pct": 41.1,
-        "ci95_high_pct": 60.9,
-        "mean_return_pct": -0.103,
-        "median_return_pct": -0.031
+        "n": 150,
+        "rate_pct": 50.7,
+        "ci95_low_pct": 42.7,
+        "ci95_high_pct": 58.6,
+        "mean_return_pct": 0.068,
+        "median_return_pct": -0.055
       },
       {
         "horizon_days": 1,
         "signal": "STRONG BUY",
-        "n": 8,
-        "rate_pct": 50.0,
-        "ci95_low_pct": 21.5,
-        "ci95_high_pct": 78.5,
-        "mean_return_pct": -0.25,
-        "median_return_pct": -0.025
+        "n": 16,
+        "rate_pct": 31.2,
+        "ci95_low_pct": 14.2,
+        "ci95_high_pct": 55.6,
+        "mean_return_pct": -0.488,
+        "median_return_pct": -0.347
       },
       {
         "horizon_days": 1,
         "signal": "STRONG SELL",
-        "n": 2,
-        "rate_pct": 50.0,
-        "ci95_low_pct": 9.5,
-        "ci95_high_pct": 90.5,
-        "mean_return_pct": -0.833,
-        "median_return_pct": -0.833
+        "n": 1,
+        "rate_pct": 0.0,
+        "ci95_low_pct": 0.0,
+        "ci95_high_pct": 79.3,
+        "mean_return_pct": 0.931,
+        "median_return_pct": 0.931
       },
       {
         "horizon_days": 3,
         "signal": "BUY",
-        "n": 120,
-        "rate_pct": 50.0,
-        "ci95_low_pct": 41.2,
-        "ci95_high_pct": 58.8,
-        "mean_return_pct": -0.258,
-        "median_return_pct": -0.002
+        "n": 165,
+        "rate_pct": 50.9,
+        "ci95_low_pct": 43.3,
+        "ci95_high_pct": 58.4,
+        "mean_return_pct": 0.094,
+        "median_return_pct": 0.064
       },
       {
         "horizon_days": 3,
         "signal": "HOLD",
-        "n": 322,
-        "rate_pct": 70.8,
-        "ci95_low_pct": 65.6,
-        "ci95_high_pct": 75.5,
-        "mean_return_pct": 0.369,
-        "median_return_pct": 0.317
+        "n": 352,
+        "rate_pct": 70.5,
+        "ci95_low_pct": 65.5,
+        "ci95_high_pct": 75.0,
+        "mean_return_pct": 0.256,
+        "median_return_pct": 0.324
       },
       {
         "horizon_days": 3,
         "signal": "SELL",
-        "n": 88,
-        "rate_pct": 42.0,
-        "ci95_low_pct": 32.3,
-        "ci95_high_pct": 52.5,
-        "mean_return_pct": 0.515,
-        "median_return_pct": 0.716
+        "n": 145,
+        "rate_pct": 45.5,
+        "ci95_low_pct": 37.6,
+        "ci95_high_pct": 53.6,
+        "mean_return_pct": 0.566,
+        "median_return_pct": 0.402
       },
       {
         "horizon_days": 3,
         "signal": "STRONG BUY",
-        "n": 8,
+        "n": 16,
         "rate_pct": 37.5,
-        "ci95_low_pct": 13.7,
-        "ci95_high_pct": 69.4,
-        "mean_return_pct": 0.285,
-        "median_return_pct": -0.381
+        "ci95_low_pct": 18.5,
+        "ci95_high_pct": 61.4,
+        "mean_return_pct": -0.766,
+        "median_return_pct": -0.993
       },
       {
         "horizon_days": 3,
         "signal": "STRONG SELL",
-        "n": 2,
-        "rate_pct": 50.0,
-        "ci95_low_pct": 9.5,
-        "ci95_high_pct": 90.5,
-        "mean_return_pct": 0.166,
-        "median_return_pct": 0.166
+        "n": 1,
+        "rate_pct": 0.0,
+        "ci95_low_pct": 0.0,
+        "ci95_high_pct": 79.3,
+        "mean_return_pct": 2.482,
+        "median_return_pct": 2.482
       },
       {
         "horizon_days": 5,
         "signal": "BUY",
-        "n": 120,
-        "rate_pct": 52.5,
-        "ci95_low_pct": 43.6,
-        "ci95_high_pct": 61.2,
-        "mean_return_pct": 0.016,
-        "median_return_pct": 0.304
+        "n": 165,
+        "rate_pct": 52.1,
+        "ci95_low_pct": 44.5,
+        "ci95_high_pct": 59.6,
+        "mean_return_pct": 0.077,
+        "median_return_pct": 0.275
       },
       {
         "horizon_days": 5,
         "signal": "HOLD",
-        "n": 322,
-        "rate_pct": 59.3,
-        "ci95_low_pct": 53.9,
-        "ci95_high_pct": 64.5,
-        "mean_return_pct": 0.129,
-        "median_return_pct": -0.121
+        "n": 352,
+        "rate_pct": 58.0,
+        "ci95_low_pct": 52.7,
+        "ci95_high_pct": 63.0,
+        "mean_return_pct": -0.09,
+        "median_return_pct": -0.216
       },
       {
         "horizon_days": 5,
         "signal": "SELL",
-        "n": 88,
-        "rate_pct": 53.4,
-        "ci95_low_pct": 43.1,
-        "ci95_high_pct": 63.5,
-        "mean_return_pct": 0.553,
-        "median_return_pct": -0.182
+        "n": 145,
+        "rate_pct": 48.3,
+        "ci95_low_pct": 40.3,
+        "ci95_high_pct": 56.3,
+        "mean_return_pct": 0.835,
+        "median_return_pct": 0.161
       },
       {
         "horizon_days": 5,
         "signal": "STRONG BUY",
-        "n": 8,
-        "rate_pct": 37.5,
-        "ci95_low_pct": 13.7,
-        "ci95_high_pct": 69.4,
-        "mean_return_pct": -0.317,
-        "median_return_pct": -2.131
+        "n": 16,
+        "rate_pct": 31.2,
+        "ci95_low_pct": 14.2,
+        "ci95_high_pct": 55.6,
+        "mean_return_pct": -1.474,
+        "median_return_pct": -1.736
       },
       {
         "horizon_days": 5,
         "signal": "STRONG SELL",
-        "n": 2,
-        "rate_pct": 50.0,
-        "ci95_low_pct": 9.5,
-        "ci95_high_pct": 90.5,
-        "mean_return_pct": 1.367,
-        "median_return_pct": 1.367
+        "n": 1,
+        "rate_pct": 0.0,
+        "ci95_low_pct": 0.0,
+        "ci95_high_pct": 79.3,
+        "mean_return_pct": 9.364,
+        "median_return_pct": 9.364
       },
       {
         "horizon_days": 10,
         "signal": "BUY",
-        "n": 119,
-        "rate_pct": 50.4,
-        "ci95_low_pct": 41.6,
-        "ci95_high_pct": 59.2,
-        "mean_return_pct": 0.029,
-        "median_return_pct": 0.12
+        "n": 161,
+        "rate_pct": 47.2,
+        "ci95_low_pct": 39.6,
+        "ci95_high_pct": 54.9,
+        "mean_return_pct": 0.023,
+        "median_return_pct": -0.363
       },
       {
         "horizon_days": 10,
         "signal": "HOLD",
-        "n": 318,
-        "rate_pct": 43.4,
-        "ci95_low_pct": 38.1,
-        "ci95_high_pct": 48.9,
-        "mean_return_pct": -0.028,
-        "median_return_pct": -0.466
+        "n": 344,
+        "rate_pct": 42.4,
+        "ci95_low_pct": 37.3,
+        "ci95_high_pct": 47.7,
+        "mean_return_pct": 0.057,
+        "median_return_pct": -0.21
       },
       {
         "horizon_days": 10,
         "signal": "SELL",
-        "n": 80,
-        "rate_pct": 46.2,
-        "ci95_low_pct": 35.7,
-        "ci95_high_pct": 57.1,
-        "mean_return_pct": 1.971,
-        "median_return_pct": 0.571
+        "n": 140,
+        "rate_pct": 48.6,
+        "ci95_low_pct": 40.4,
+        "ci95_high_pct": 56.8,
+        "mean_return_pct": 1.258,
+        "median_return_pct": 0.315
       },
       {
         "horizon_days": 10,
         "signal": "STRONG BUY",
-        "n": 8,
+        "n": 16,
         "rate_pct": 37.5,
-        "ci95_low_pct": 13.7,
-        "ci95_high_pct": 69.4,
-        "mean_return_pct": 0.32,
-        "median_return_pct": -1.213
+        "ci95_low_pct": 18.5,
+        "ci95_high_pct": 61.4,
+        "mean_return_pct": -1.413,
+        "median_return_pct": -1.033
       },
       {
         "horizon_days": 10,
         "signal": "STRONG SELL",
-        "n": 2,
-        "rate_pct": 50.0,
-        "ci95_low_pct": 9.5,
-        "ci95_high_pct": 90.5,
-        "mean_return_pct": 3.212,
-        "median_return_pct": 3.212
+        "n": 1,
+        "rate_pct": 0.0,
+        "ci95_low_pct": 0.0,
+        "ci95_high_pct": 79.3,
+        "mean_return_pct": 12.14,
+        "median_return_pct": 12.14
       }
     ],
     "signals_existing_cmp_convention": [
       {
         "horizon_days": 1,
         "signal": "BUY",
-        "n": 121,
-        "rate_pct": 51.2,
-        "ci95_low_pct": 42.4,
-        "ci95_high_pct": 60.0,
-        "mean_return_pct": -0.138,
-        "median_return_pct": 0.04
+        "n": 165,
+        "rate_pct": 55.8,
+        "ci95_low_pct": 48.1,
+        "ci95_high_pct": 63.1,
+        "mean_return_pct": 0.31,
+        "median_return_pct": 0.243
       },
       {
         "horizon_days": 1,
         "signal": "HOLD",
-        "n": 327,
-        "rate_pct": 88.7,
-        "ci95_low_pct": 84.8,
-        "ci95_high_pct": 91.7,
-        "mean_return_pct": 0.018,
-        "median_return_pct": 0.059
+        "n": 364,
+        "rate_pct": 71.4,
+        "ci95_low_pct": 66.6,
+        "ci95_high_pct": 75.8,
+        "mean_return_pct": -0.401,
+        "median_return_pct": -0.527
       },
       {
         "horizon_days": 1,
         "signal": "SELL",
-        "n": 94,
-        "rate_pct": 51.1,
-        "ci95_low_pct": 41.1,
-        "ci95_high_pct": 60.9,
-        "mean_return_pct": -0.103,
-        "median_return_pct": -0.031
+        "n": 150,
+        "rate_pct": 78.7,
+        "ci95_low_pct": 71.4,
+        "ci95_high_pct": 84.5,
+        "mean_return_pct": -1.418,
+        "median_return_pct": -1.361
       },
       {
         "horizon_days": 1,
         "signal": "STRONG BUY",
-        "n": 8,
-        "rate_pct": 50.0,
-        "ci95_low_pct": 21.5,
-        "ci95_high_pct": 78.5,
-        "mean_return_pct": -0.251,
-        "median_return_pct": -0.025
+        "n": 16,
+        "rate_pct": 56.2,
+        "ci95_low_pct": 33.2,
+        "ci95_high_pct": 76.9,
+        "mean_return_pct": 0.468,
+        "median_return_pct": 0.225
       },
       {
         "horizon_days": 1,
         "signal": "STRONG SELL",
-        "n": 2,
-        "rate_pct": 50.0,
-        "ci95_low_pct": 9.5,
-        "ci95_high_pct": 90.5,
-        "mean_return_pct": -0.833,
-        "median_return_pct": -0.833
+        "n": 1,
+        "rate_pct": 100.0,
+        "ci95_low_pct": 20.7,
+        "ci95_high_pct": 100.0,
+        "mean_return_pct": -2.815,
+        "median_return_pct": -2.815
       },
       {
         "horizon_days": 3,
         "signal": "BUY",
-        "n": 120,
-        "rate_pct": 50.0,
-        "ci95_low_pct": 41.2,
-        "ci95_high_pct": 58.8,
-        "mean_return_pct": -0.258,
-        "median_return_pct": -0.003
+        "n": 165,
+        "rate_pct": 59.4,
+        "ci95_low_pct": 51.8,
+        "ci95_high_pct": 66.6,
+        "mean_return_pct": 0.499,
+        "median_return_pct": 0.523
       },
       {
         "horizon_days": 3,
         "signal": "HOLD",
-        "n": 322,
-        "rate_pct": 70.8,
-        "ci95_low_pct": 65.6,
-        "ci95_high_pct": 75.5,
-        "mean_return_pct": 0.369,
-        "median_return_pct": 0.318
+        "n": 352,
+        "rate_pct": 63.1,
+        "ci95_low_pct": 57.9,
+        "ci95_high_pct": 67.9,
+        "mean_return_pct": -0.07,
+        "median_return_pct": -0.32
       },
       {
         "horizon_days": 3,
         "signal": "SELL",
-        "n": 88,
-        "rate_pct": 42.0,
-        "ci95_low_pct": 32.3,
-        "ci95_high_pct": 52.5,
-        "mean_return_pct": 0.515,
-        "median_return_pct": 0.715
+        "n": 145,
+        "rate_pct": 62.1,
+        "ci95_low_pct": 54.0,
+        "ci95_high_pct": 69.6,
+        "mean_return_pct": -0.958,
+        "median_return_pct": -1.16
       },
       {
         "horizon_days": 3,
         "signal": "STRONG BUY",
-        "n": 8,
-        "rate_pct": 37.5,
-        "ci95_low_pct": 13.7,
-        "ci95_high_pct": 69.4,
-        "mean_return_pct": 0.285,
-        "median_return_pct": -0.381
+        "n": 16,
+        "rate_pct": 43.8,
+        "ci95_low_pct": 23.1,
+        "ci95_high_pct": 66.8,
+        "mean_return_pct": 0.187,
+        "median_return_pct": -0.668
       },
       {
         "horizon_days": 3,
         "signal": "STRONG SELL",
-        "n": 2,
-        "rate_pct": 50.0,
-        "ci95_low_pct": 9.5,
-        "ci95_high_pct": 90.5,
-        "mean_return_pct": 0.166,
-        "median_return_pct": 0.166
+        "n": 1,
+        "rate_pct": 100.0,
+        "ci95_low_pct": 20.7,
+        "ci95_high_pct": 100.0,
+        "mean_return_pct": -1.322,
+        "median_return_pct": -1.322
       },
       {
         "horizon_days": 5,
         "signal": "BUY",
-        "n": 120,
-        "rate_pct": 52.5,
-        "ci95_low_pct": 43.6,
-        "ci95_high_pct": 61.2,
-        "mean_return_pct": 0.015,
-        "median_return_pct": 0.304
+        "n": 165,
+        "rate_pct": 55.2,
+        "ci95_low_pct": 47.5,
+        "ci95_high_pct": 62.5,
+        "mean_return_pct": 0.479,
+        "median_return_pct": 0.393
       },
       {
         "horizon_days": 5,
         "signal": "HOLD",
-        "n": 322,
-        "rate_pct": 59.3,
-        "ci95_low_pct": 53.9,
-        "ci95_high_pct": 64.5,
-        "mean_return_pct": 0.129,
-        "median_return_pct": -0.12
+        "n": 352,
+        "rate_pct": 52.8,
+        "ci95_low_pct": 47.6,
+        "ci95_high_pct": 58.0,
+        "mean_return_pct": -0.414,
+        "median_return_pct": -0.894
       },
       {
         "horizon_days": 5,
         "signal": "SELL",
-        "n": 88,
-        "rate_pct": 53.4,
-        "ci95_low_pct": 43.1,
-        "ci95_high_pct": 63.5,
-        "mean_return_pct": 0.553,
-        "median_return_pct": -0.182
+        "n": 145,
+        "rate_pct": 61.4,
+        "ci95_low_pct": 53.3,
+        "ci95_high_pct": 68.9,
+        "mean_return_pct": -0.715,
+        "median_return_pct": -1.321
       },
       {
         "horizon_days": 5,
         "signal": "STRONG BUY",
-        "n": 8,
-        "rate_pct": 37.5,
-        "ci95_low_pct": 13.7,
-        "ci95_high_pct": 69.4,
-        "mean_return_pct": -0.317,
-        "median_return_pct": -2.132
+        "n": 16,
+        "rate_pct": 43.8,
+        "ci95_low_pct": 23.1,
+        "ci95_high_pct": 66.8,
+        "mean_return_pct": -0.532,
+        "median_return_pct": -0.385
       },
       {
         "horizon_days": 5,
         "signal": "STRONG SELL",
-        "n": 2,
-        "rate_pct": 50.0,
-        "ci95_low_pct": 9.5,
-        "ci95_high_pct": 90.5,
-        "mean_return_pct": 1.367,
-        "median_return_pct": 1.367
+        "n": 1,
+        "rate_pct": 0.0,
+        "ci95_low_pct": 0.0,
+        "ci95_high_pct": 79.3,
+        "mean_return_pct": 5.304,
+        "median_return_pct": 5.304
       },
       {
         "horizon_days": 10,
         "signal": "BUY",
-        "n": 119,
-        "rate_pct": 50.4,
-        "ci95_low_pct": 41.6,
-        "ci95_high_pct": 59.2,
-        "mean_return_pct": 0.029,
-        "median_return_pct": 0.121
+        "n": 161,
+        "rate_pct": 52.8,
+        "ci95_low_pct": 45.1,
+        "ci95_high_pct": 60.4,
+        "mean_return_pct": 0.416,
+        "median_return_pct": 0.257
       },
       {
         "horizon_days": 10,
         "signal": "HOLD",
-        "n": 318,
-        "rate_pct": 43.4,
-        "ci95_low_pct": 38.1,
-        "ci95_high_pct": 48.9,
-        "mean_return_pct": -0.028,
-        "median_return_pct": -0.466
+        "n": 344,
+        "rate_pct": 39.8,
+        "ci95_low_pct": 34.8,
+        "ci95_high_pct": 45.1,
+        "mean_return_pct": -0.292,
+        "median_return_pct": -0.607
       },
       {
         "horizon_days": 10,
         "signal": "SELL",
-        "n": 80,
-        "rate_pct": 46.2,
-        "ci95_low_pct": 35.7,
-        "ci95_high_pct": 57.1,
-        "mean_return_pct": 1.971,
-        "median_return_pct": 0.572
+        "n": 140,
+        "rate_pct": 57.1,
+        "ci95_low_pct": 48.9,
+        "ci95_high_pct": 65.0,
+        "mean_return_pct": -0.344,
+        "median_return_pct": -1.426
       },
       {
         "horizon_days": 10,
         "signal": "STRONG BUY",
-        "n": 8,
-        "rate_pct": 37.5,
-        "ci95_low_pct": 13.7,
-        "ci95_high_pct": 69.4,
-        "mean_return_pct": 0.319,
-        "median_return_pct": -1.213
+        "n": 16,
+        "rate_pct": 50.0,
+        "ci95_low_pct": 28.0,
+        "ci95_high_pct": 72.0,
+        "mean_return_pct": -0.467,
+        "median_return_pct": 0.163
       },
       {
         "horizon_days": 10,
         "signal": "STRONG SELL",
-        "n": 2,
-        "rate_pct": 50.0,
-        "ci95_low_pct": 9.5,
-        "ci95_high_pct": 90.5,
-        "mean_return_pct": 3.212,
-        "median_return_pct": 3.212
+        "n": 1,
+        "rate_pct": 0.0,
+        "ci95_low_pct": 0.0,
+        "ci95_high_pct": 79.3,
+        "mean_return_pct": 7.978,
+        "median_return_pct": 7.978
       }
     ],
     "confluence_buckets_5d": [
       {
+        "confluence_bucket": "0.20-0.25",
+        "n": 1,
+        "rate_pct": null,
+        "ci95_low_pct": null,
+        "ci95_high_pct": null,
+        "note": "n < 30: rate not reported"
+      },
+      {
         "confluence_bucket": "0.25-0.30",
-        "n": 3,
+        "n": 6,
         "rate_pct": null,
         "ci95_low_pct": null,
         "ci95_high_pct": null,
@@ -1704,63 +1712,63 @@
       },
       {
         "confluence_bucket": "0.30-0.35",
-        "n": 30,
-        "rate_pct": 50.0,
-        "ci95_low_pct": 33.2,
-        "ci95_high_pct": 66.8
+        "n": 49,
+        "rate_pct": 44.9,
+        "ci95_low_pct": 31.9,
+        "ci95_high_pct": 58.7
       },
       {
         "confluence_bucket": "0.35-0.40",
-        "n": 38,
-        "rate_pct": 57.9,
-        "ci95_low_pct": 42.2,
-        "ci95_high_pct": 72.1
+        "n": 54,
+        "rate_pct": 51.9,
+        "ci95_low_pct": 38.9,
+        "ci95_high_pct": 64.6
       },
       {
         "confluence_bucket": "0.40-0.45",
-        "n": 69,
-        "rate_pct": 55.1,
-        "ci95_low_pct": 43.4,
-        "ci95_high_pct": 66.2
-      },
-      {
-        "confluence_bucket": "0.45-0.50",
-        "n": 101,
-        "rate_pct": 58.4,
-        "ci95_low_pct": 48.7,
-        "ci95_high_pct": 67.5
-      },
-      {
-        "confluence_bucket": "0.50-0.55",
-        "n": 99,
-        "rate_pct": 60.6,
-        "ci95_low_pct": 50.8,
-        "ci95_high_pct": 69.7
-      },
-      {
-        "confluence_bucket": "0.55-0.60",
-        "n": 96,
-        "rate_pct": 61.5,
-        "ci95_low_pct": 51.5,
-        "ci95_high_pct": 70.6
-      },
-      {
-        "confluence_bucket": "0.60-0.65",
-        "n": 56,
-        "rate_pct": 46.4,
-        "ci95_low_pct": 34.0,
-        "ci95_high_pct": 59.3
-      },
-      {
-        "confluence_bucket": "0.65-0.70",
-        "n": 34,
-        "rate_pct": 52.9,
-        "ci95_low_pct": 36.7,
+        "n": 90,
+        "rate_pct": 58.9,
+        "ci95_low_pct": 48.6,
         "ci95_high_pct": 68.5
       },
       {
+        "confluence_bucket": "0.45-0.50",
+        "n": 134,
+        "rate_pct": 50.7,
+        "ci95_low_pct": 42.4,
+        "ci95_high_pct": 59.1
+      },
+      {
+        "confluence_bucket": "0.50-0.55",
+        "n": 90,
+        "rate_pct": 58.9,
+        "ci95_low_pct": 48.6,
+        "ci95_high_pct": 68.5
+      },
+      {
+        "confluence_bucket": "0.55-0.60",
+        "n": 116,
+        "rate_pct": 61.2,
+        "ci95_low_pct": 52.1,
+        "ci95_high_pct": 69.6
+      },
+      {
+        "confluence_bucket": "0.60-0.65",
+        "n": 73,
+        "rate_pct": 52.1,
+        "ci95_low_pct": 40.8,
+        "ci95_high_pct": 63.1
+      },
+      {
+        "confluence_bucket": "0.65-0.70",
+        "n": 38,
+        "rate_pct": 50.0,
+        "ci95_low_pct": 34.8,
+        "ci95_high_pct": 65.2
+      },
+      {
         "confluence_bucket": "0.70-0.75",
-        "n": 10,
+        "n": 19,
         "rate_pct": null,
         "ci95_low_pct": null,
         "ci95_high_pct": null,
@@ -1768,7 +1776,15 @@
       },
       {
         "confluence_bucket": "0.75-0.80",
-        "n": 4,
+        "n": 8,
+        "rate_pct": null,
+        "ci95_low_pct": null,
+        "ci95_high_pct": null,
+        "note": "n < 30: rate not reported"
+      },
+      {
+        "confluence_bucket": "0.80-0.85",
+        "n": 1,
         "rate_pct": null,
         "ci95_low_pct": null,
         "ci95_high_pct": null,
@@ -1777,8 +1793,16 @@
     ],
     "confluence_buckets_unfiltered_5d": [
       {
+        "confluence_bucket": "0.20-0.25",
+        "n": 1,
+        "rate_pct": null,
+        "ci95_low_pct": null,
+        "ci95_high_pct": null,
+        "note": "n < 30: rate not reported"
+      },
+      {
         "confluence_bucket": "0.25-0.30",
-        "n": 15,
+        "n": 17,
         "rate_pct": null,
         "ci95_low_pct": null,
         "ci95_high_pct": null,
@@ -1786,70 +1810,78 @@
       },
       {
         "confluence_bucket": "0.30-0.35",
-        "n": 66,
-        "rate_pct": 48.5,
-        "ci95_low_pct": 36.8,
-        "ci95_high_pct": 60.3
+        "n": 86,
+        "rate_pct": 46.5,
+        "ci95_low_pct": 36.3,
+        "ci95_high_pct": 57.0
       },
       {
         "confluence_bucket": "0.35-0.40",
-        "n": 101,
-        "rate_pct": 53.5,
-        "ci95_low_pct": 43.8,
-        "ci95_high_pct": 62.9
+        "n": 95,
+        "rate_pct": 52.6,
+        "ci95_low_pct": 42.7,
+        "ci95_high_pct": 62.4
       },
       {
         "confluence_bucket": "0.40-0.45",
-        "n": 149,
-        "rate_pct": 57.7,
-        "ci95_low_pct": 49.7,
-        "ci95_high_pct": 65.4
+        "n": 157,
+        "rate_pct": 56.7,
+        "ci95_low_pct": 48.9,
+        "ci95_high_pct": 64.2
       },
       {
         "confluence_bucket": "0.45-0.50",
-        "n": 218,
-        "rate_pct": 59.6,
-        "ci95_low_pct": 53.0,
-        "ci95_high_pct": 65.9
+        "n": 213,
+        "rate_pct": 55.4,
+        "ci95_low_pct": 48.7,
+        "ci95_high_pct": 61.9
       },
       {
         "confluence_bucket": "0.50-0.55",
-        "n": 213,
-        "rate_pct": 62.4,
-        "ci95_low_pct": 55.8,
-        "ci95_high_pct": 68.7
+        "n": 174,
+        "rate_pct": 57.5,
+        "ci95_low_pct": 50.0,
+        "ci95_high_pct": 64.6
       },
       {
         "confluence_bucket": "0.55-0.60",
-        "n": 216,
-        "rate_pct": 55.1,
-        "ci95_low_pct": 48.4,
-        "ci95_high_pct": 61.6
+        "n": 212,
+        "rate_pct": 58.0,
+        "ci95_low_pct": 51.3,
+        "ci95_high_pct": 64.5
       },
       {
         "confluence_bucket": "0.60-0.65",
-        "n": 171,
-        "rate_pct": 52.0,
-        "ci95_low_pct": 44.6,
-        "ci95_high_pct": 59.4
+        "n": 187,
+        "rate_pct": 50.8,
+        "ci95_low_pct": 43.7,
+        "ci95_high_pct": 57.9
       },
       {
         "confluence_bucket": "0.65-0.70",
         "n": 94,
-        "rate_pct": 58.5,
-        "ci95_low_pct": 48.4,
-        "ci95_high_pct": 67.9
+        "rate_pct": 51.1,
+        "ci95_low_pct": 41.1,
+        "ci95_high_pct": 60.9
       },
       {
         "confluence_bucket": "0.70-0.75",
-        "n": 54,
-        "rate_pct": 55.6,
-        "ci95_low_pct": 42.4,
-        "ci95_high_pct": 68.0
+        "n": 59,
+        "rate_pct": 42.4,
+        "ci95_low_pct": 30.6,
+        "ci95_high_pct": 55.1
       },
       {
         "confluence_bucket": "0.75-0.80",
-        "n": 26,
+        "n": 27,
+        "rate_pct": null,
+        "ci95_low_pct": null,
+        "ci95_high_pct": null,
+        "note": "n < 30: rate not reported"
+      },
+      {
+        "confluence_bucket": "0.80-0.85",
+        "n": 1,
         "rate_pct": null,
         "ci95_low_pct": null,
         "ci95_high_pct": null,
@@ -1857,137 +1889,137 @@
       }
     ],
     "confluence_observed_range": {
-      "min": 0.2652,
-      "max": 0.7975
+      "min": 0.248,
+      "max": 0.8014
     },
     "by_regime": [
       {
         "horizon_days": 1,
         "market_regime": "Bearish",
-        "n": 68,
-        "rate_pct": 69.1,
-        "ci95_low_pct": 57.4,
-        "ci95_high_pct": 78.8
-      },
-      {
-        "horizon_days": 1,
-        "market_regime": "Bullish",
-        "n": 103,
-        "rate_pct": 68.9,
-        "ci95_low_pct": 59.4,
-        "ci95_high_pct": 77.1
-      },
-      {
-        "horizon_days": 1,
-        "market_regime": "High Volatility",
-        "n": 171,
-        "rate_pct": 71.9,
-        "ci95_low_pct": 64.8,
-        "ci95_high_pct": 78.1
-      },
-      {
-        "horizon_days": 1,
-        "market_regime": "Sideways",
-        "n": 210,
-        "rate_pct": 78.1,
-        "ci95_low_pct": 72.0,
-        "ci95_high_pct": 83.2
-      },
-      {
-        "horizon_days": 3,
-        "market_regime": "Bearish",
-        "n": 58,
-        "rate_pct": 56.9,
-        "ci95_low_pct": 44.1,
-        "ci95_high_pct": 68.8
-      },
-      {
-        "horizon_days": 3,
-        "market_regime": "Bullish",
-        "n": 103,
-        "rate_pct": 60.2,
+        "n": 85,
+        "rate_pct": 61.2,
         "ci95_low_pct": 50.5,
-        "ci95_high_pct": 69.1
+        "ci95_high_pct": 70.8
+      },
+      {
+        "horizon_days": 1,
+        "market_regime": "Bullish",
+        "n": 134,
+        "rate_pct": 65.7,
+        "ci95_low_pct": 57.3,
+        "ci95_high_pct": 73.2
+      },
+      {
+        "horizon_days": 1,
+        "market_regime": "High Volatility",
+        "n": 199,
+        "rate_pct": 67.3,
+        "ci95_low_pct": 60.5,
+        "ci95_high_pct": 73.5
+      },
+      {
+        "horizon_days": 1,
+        "market_regime": "Sideways",
+        "n": 278,
+        "rate_pct": 76.6,
+        "ci95_low_pct": 71.3,
+        "ci95_high_pct": 81.2
       },
       {
         "horizon_days": 3,
-        "market_regime": "High Volatility",
-        "n": 171,
-        "rate_pct": 56.1,
-        "ci95_low_pct": 48.6,
-        "ci95_high_pct": 63.4
-      },
-      {
-        "horizon_days": 3,
-        "market_regime": "Sideways",
-        "n": 208,
-        "rate_pct": 66.3,
-        "ci95_low_pct": 59.7,
-        "ci95_high_pct": 72.4
-      },
-      {
-        "horizon_days": 5,
         "market_regime": "Bearish",
-        "n": 58,
-        "rate_pct": 62.1,
-        "ci95_low_pct": 49.2,
-        "ci95_high_pct": 73.4
-      },
-      {
-        "horizon_days": 5,
-        "market_regime": "Bullish",
-        "n": 103,
-        "rate_pct": 56.3,
-        "ci95_low_pct": 46.7,
-        "ci95_high_pct": 65.5
-      },
-      {
-        "horizon_days": 5,
-        "market_regime": "High Volatility",
-        "n": 171,
-        "rate_pct": 53.2,
-        "ci95_low_pct": 45.7,
-        "ci95_high_pct": 60.5
-      },
-      {
-        "horizon_days": 5,
-        "market_regime": "Sideways",
-        "n": 208,
-        "rate_pct": 57.7,
-        "ci95_low_pct": 50.9,
-        "ci95_high_pct": 64.2
-      },
-      {
-        "horizon_days": 10,
-        "market_regime": "Bearish",
-        "n": 53,
-        "rate_pct": 50.9,
-        "ci95_low_pct": 37.9,
-        "ci95_high_pct": 63.9
-      },
-      {
-        "horizon_days": 10,
-        "market_regime": "Bullish",
-        "n": 102,
-        "rate_pct": 52.0,
-        "ci95_low_pct": 42.4,
-        "ci95_high_pct": 61.4
-      },
-      {
-        "horizon_days": 10,
-        "market_regime": "High Volatility",
-        "n": 171,
-        "rate_pct": 39.8,
-        "ci95_low_pct": 32.7,
-        "ci95_high_pct": 47.2
-      },
-      {
-        "horizon_days": 10,
-        "market_regime": "Sideways",
-        "n": 201,
-        "rate_pct": 45.3,
+        "n": 77,
+        "rate_pct": 49.4,
         "ci95_low_pct": 38.5,
-        "ci95_high_pct": 52.2
+        "ci95_high_pct": 60.3
+      },
+      {
+        "horizon_days": 3,
+        "market_regime": "Bullish",
+        "n": 134,
+        "rate_pct": 58.2,
+        "ci95_low_pct": 49.7,
+        "ci95_high_pct": 66.2
+      },
+      {
+        "horizon_days": 3,
+        "market_regime": "High Volatility",
+        "n": 194,
+        "rate_pct": 52.6,
+        "ci95_low_pct": 45.6,
+        "ci95_high_pct": 59.5
+      },
+      {
+        "horizon_days": 3,
+        "market_regime": "Sideways",
+        "n": 274,
+        "rate_pct": 67.9,
+        "ci95_low_pct": 62.1,
+        "ci95_high_pct": 73.1
+      },
+      {
+        "horizon_days": 5,
+        "market_regime": "Bearish",
+        "n": 77,
+        "rate_pct": 45.5,
+        "ci95_low_pct": 34.8,
+        "ci95_high_pct": 56.5
+      },
+      {
+        "horizon_days": 5,
+        "market_regime": "Bullish",
+        "n": 134,
+        "rate_pct": 58.2,
+        "ci95_low_pct": 49.7,
+        "ci95_high_pct": 66.2
+      },
+      {
+        "horizon_days": 5,
+        "market_regime": "High Volatility",
+        "n": 194,
+        "rate_pct": 47.9,
+        "ci95_low_pct": 41.0,
+        "ci95_high_pct": 54.9
+      },
+      {
+        "horizon_days": 5,
+        "market_regime": "Sideways",
+        "n": 274,
+        "rate_pct": 58.0,
+        "ci95_low_pct": 52.1,
+        "ci95_high_pct": 63.7
+      },
+      {
+        "horizon_days": 10,
+        "market_regime": "Bearish",
+        "n": 69,
+        "rate_pct": 50.7,
+        "ci95_low_pct": 39.2,
+        "ci95_high_pct": 62.2
+      },
+      {
+        "horizon_days": 10,
+        "market_regime": "Bullish",
+        "n": 133,
+        "rate_pct": 49.6,
+        "ci95_low_pct": 41.3,
+        "ci95_high_pct": 58.0
+      },
+      {
+        "horizon_days": 10,
+        "market_regime": "High Volatility",
+        "n": 192,
+        "rate_pct": 35.9,
+        "ci95_low_pct": 29.5,
+        "ci95_high_pct": 42.9
+      },
+      {
+        "horizon_days": 10,
+        "market_regime": "Sideways",
+        "n": 268,
+        "rate_pct": 47.0,
+        "ci95_low_pct": 41.1,
+        "ci95_high_pct": 53.0
       }
     ]
   }

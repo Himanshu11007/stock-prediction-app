@@ -3,6 +3,20 @@ import pandas as pd
 
 
 def create_features(data):
+    """
+    Labelled feature rows only: every row whose next-day label is known.
+    The latest bar (label unknown) is dropped. Use compute_features() for
+    the feature row of the latest bar.
+    """
+    return compute_features(data).dropna()
+
+
+def compute_features(data):
+    """
+    All features plus the `Up` label, WITHOUT dropping incomplete rows.
+    `Up` is NaN on the latest bar because its next close is unknown; that
+    bar's feature values are still valid (every feature is backward-looking).
+    """
     data = data.copy()   # avoid SettingWithCopyWarning on slice inputs
 
     # ── Target ────────────────────────────────────────────────────────────────
@@ -110,8 +124,7 @@ def create_features(data):
         (data["Volume_Ratio"] > 1.5) & (data["Price_Change"] > 0), 1.0, 0.0
     )
 
-    data = data.replace([np.inf, -np.inf], np.nan)
-    return data.dropna()
+    return data.replace([np.inf, -np.inf], np.nan)
 
 
 def get_trend_signal(data):
@@ -124,7 +137,9 @@ def get_trend_signal(data):
                 "score": 0
             }
 
-        df = create_features(data.copy())
+        # Latest complete feature row — the current bar, not the last
+        # labelled one; this signal needs no label.
+        df = compute_features(data.copy()).drop(columns="Up").dropna()
 
         latest = df.iloc[-1]
 

@@ -5,7 +5,15 @@ scoring, Top Picks, mobile or authentication behaviour was changed to produce
 anything in this document. This document gives no overall score, no
 good/bad verdict and no "best model".
 
-Companion to [RECOMMENDATION_QUALITY_AUDIT.md](RECOMMENDATION_QUALITY_AUDIT.md) (Phase 9).
+Companion to [RECOMMENDATION_QUALITY_AUDIT.md](RECOMMENDATION_QUALITY_AUDIT.md) (Phase 9)
+and [PRODUCTION_TEMPORAL_INTEGRITY.md](PRODUCTION_TEMPORAL_INTEGRITY.md) (Phase 11A).
+
+> **Phase 11A update (post-fix).** The section 2 defect was fixed in Phase
+> 11A: production now trains on labelled rows ≤ D-1 and predicts bar D. The
+> benchmark was re-run with the fixed production path. Sections 2–18 describe
+> Phase 10 as it was, and section 13's numbers are the **pre-fix** run
+> (artifacts moved to `walk_forward_benchmark/phase10_prefix_full/`).
+> **Section 19** has the post-fix results and the pre-/post-fix comparison.
 
 ---
 
@@ -313,7 +321,8 @@ python scripts/audit/walk_forward_benchmark.py --config full   # ~22 min
 
 ## 13. Results — `full` config
 
-Full tables: `scripts/audit/output/walk_forward_benchmark/full/summary.md`
+Pre-fix (Phase 10) run. Full tables:
+`scripts/audit/output/walk_forward_benchmark/phase10_prefix_full/summary.md`
 (human) and `summary.json` (machine). All rates have Wilson 95% intervals.
 Each rate is descriptive for this population and period only.
 
@@ -468,10 +477,10 @@ reporting added), `storage/tracker.py` (duplicate prevention),
 
 ## 17. Open evaluation-integrity concerns (documented, not fixed)
 
-1. **Production predicts its own last training row** (section 2). Highest
-   priority for the next modelling phase.
-2. Stored `cmp` is `Close[D-1]`, so existing validated returns include an
-   already-known day.
+1. ~~Production predicts its own last training row~~ (section 2). **Fixed in
+   Phase 11A** (section 19).
+2. ~~Stored `cmp` is `Close[D-1]`~~. **Fixed in Phase 11A**: `cmp = Close[D]`.
+   Rows saved before the fix keep `Close[D-1]`.
 3. News has no point-in-time record: no timestamps, no persisted headlines.
 4. The existing validator's horizon is still "whenever an admin triggered it"
    (preserved by design; the benchmark measures fixed horizons separately).
@@ -490,9 +499,110 @@ reporting added), `storage/tracker.py` (duplicate prevention),
   price at T, future-poisoning invariance, record timestamps, issue-row
   features independent of the next bar, three assertion-failure cases, news
   flagged, previous-direction baseline uses only ≤ T, **exact parity with
-  `scanner/engine.py:_scan_one`**, success rules unchanged, as-deployed row in
-  training set, confidence bucket boundaries, Wilson interval, missing
+  `scanner/engine.py:_scan_one`**, success rules unchanged, as-deployed row is
+  bar T and not in training (inverted in Phase 11A), assertion fails if the
+  prediction row is in training, confidence bucket boundaries, Wilson interval, missing
   outcomes ignored.
 - `tests/test_tracker_dedup.py`: idempotent upsert, 8-thread race → one row,
   unique index on fresh DB, legacy duplicates untouched and new duplicates
   blocked, upsert on a legacy key updates.
+
+## 19. Phase 11A: post-fix benchmark and pre-/post-fix comparison
+
+The same benchmark (`--config full`, same snapshot, same symbols, issue
+dates, horizons, baselines, news treatment and summary code) was re-run
+after the production fix. The only methodology change is what the
+production path does: the replay calls `prepare_inference_data()` exactly as
+`scanner/engine.py` now does, and `assert_temporal_integrity()` additionally
+fails a row whose prediction row is in its training set.
+
+Artifacts: `scripts/audit/output/walk_forward_benchmark/full/` (post-fix),
+`phase10_prefix_full/` (pre-fix), and `full/phase10_vs_phase11a.{md,json}`
+from `python scripts/audit/compare_benchmarks.py`. Two consecutive post-fix
+runs produced byte-identical outputs (section 19.5).
+
+### 19.1 Integrity
+
+| | Phase 10 (pre-fix) | Phase 11A (post-fix) |
+|---|---|---|
+| Prediction row inside its own training set | 100% | **0%** |
+| Prediction == already-realised D-1→D move | 97.3% (96.2–98.0) | **58.7% (56.1–61.3)** |
+| Temporal-assertion violations | 0 | 0 |
+| Stored entry price | Close[D-1] | Close[D] |
+
+The memorisation behaviour is gone. The remaining 58.7% is legitimate, not
+leakage. Bar D's features include `Price_Change` (the D-1→D return itself)
+and momentum terms, so a model can learn continuation from information that
+is known at T. Prediction and realised move were independent at their base
+rates (predicted up 42.5%, realised up ≈ 47%), agreement would be ≈ 50.5%.
+
+### 19.2 Raw model direction accuracy (1,350 predictions, 27 symbols)
+
+| Horizon | Phase 10 model | Phase 11A model | Majority-class baseline | Previous-direction baseline |
+|---|---|---|---|---|
+| 1D | 45.6% (42.9–48.2) | **50.7% (48.1–53.4)** | 49.9% (47.2–52.5) | 46.8% (44.2–49.5) |
+| 3D | 45.4% (42.8–48.1) | **49.6% (46.9–52.3)** | 49.3% (46.6–52.0) | 47.2% (44.5–49.9) |
+| 5D | 46.9% (44.2–49.6) | **51.8% (49.1–54.5)** | 48.9% (46.2–51.6) | 48.6% (45.9–51.3) |
+| 10D | 50.4% (47.7–53.1) | **51.5% (48.7–54.2)** | 48.5% (45.7–51.2) | 50.3% (47.6–53.0) |
+
+- Baselines are identical before and after (same rows, no model involved).
+- The post-fix numbers equal Phase 10's forward-row diagnostic exactly. That
+  is expected (the same fitted models applied to the same bar-D row) and
+  independently confirms the fix.
+- Every post-fix interval contains 50%. With this population and period, the
+  fixed ensemble's direction accuracy is not distinguishable from a coin flip
+  or from the baselines. It is no longer systematically below 50%, but there
+  is no evidence of skill either.
+- Ensemble walk-forward CV is unchanged (51.7% ensemble / 51.4% legacy),
+  because the training set is unchanged.
+
+Confidence buckets (1D, post-fix): 50–55 52.4% (n=286), 55–60 54.3% (300),
+60–65 52.0% (254), 65–70 44.9% (216), 70–75 43.7% (167), 75–80 55.4% (74),
+80–85 57.1% (42). Confidence is lower than before (mean ≈ 63 vs 75), because
+it no longer reflects in-sample memorisation. It is still not monotonic
+with accuracy.
+
+### 19.3 Production recommendations (filter survivors)
+
+The population changed because the ML inputs to the unchanged filters
+changed: survivors went from **696 to 552**, mainly because lower confidence
+fails `MIN_CONFIDENCE`. All signals before filtering: BUY 371, HOLD 686,
+SELL 232, STRONG BUY 56, STRONG SELL 5. After filtering: BUY 121, HOLD 327,
+SELL 94, STRONG BUY 8, STRONG SELL 2.
+
+| Signal | 1D (10 → 11A) | 3D | 5D | 10D |
+|---|---|---|---|---|
+| BUY | 51.5% → 51.2% (n=121) | 50.9% → 50.0% | 52.1% → 52.5% | 47.2% → 50.4% |
+| HOLD | 88.2% → 88.7% (n=327) | 70.5% → 70.8% | 58.0% → 59.3% | 42.4% → 43.4% |
+| SELL | 50.7% → 51.1% (n=94) | 45.5% → 42.0% | 48.3% → 53.4% | 48.6% → 46.2% |
+| STRONG BUY | 31.2% → 50.0% (n=8) | 37.5% → 37.5% | 31.2% → 37.5% | 37.5% → 37.5% |
+| STRONG SELL | n=1 → n=2 | too small | too small | too small |
+
+All BUY/SELL intervals overlap 50% and the unconditional rule rates (5D: up
+49.5%, down 50.2%, HOLD band 56.3%). STRONG signals have n ≤ 8. With the
+stored price now Close[D], the "production stored cmp" view equals the clean
+view (e.g. 1D SELL 51.1% in both; pre-fix it was inflated to 78.7%).
+
+Confluence (5D, survivors, n ≥ 30): 0.30–0.35 50.0%, 0.35–0.40 57.9%,
+0.40–0.45 55.1%, 0.45–0.50 58.4%, 0.50–0.55 60.6%, 0.55–0.60 61.5%,
+0.60–0.65 46.4%, 0.65–0.70 52.9%. Observed range 0.265–0.798. No monotonic
+pattern. Regime (5D, survivors): Bearish 62.1% (n=58), Bullish 56.3% (103),
+High Volatility 53.2% (171), Sideways 57.7% (208), mixing signal types.
+
+### 19.4 Reading these numbers
+
+The fix made the reported performance *honest*, not better. Pre-fix, the ML
+pillar replayed yesterday's move with ~75% "confidence", and the stored price
+counted a known day into every return. Post-fix, the deployed ensemble is
+genuinely out-of-sample, and on this benchmark it shows ~50% direction accuracy
+across 1–10 days. Improving that is a modelling question for a later phase.
+None was attempted here.
+
+### 19.5 Reproducibility
+
+Two consecutive post-fix `full` runs against the same price snapshot
+produced byte-identical `raw_model_predictions.csv`,
+`production_recommendations.csv`, `price_manifest.json`, `summary.json` and
+`summary.md`: sha256 `99b074de…` (raw), `79ce5d5c…` (filtered),
+`2c6daad6…` (summary.json). The price manifest (`ede607e5…`) is identical
+to the Phase 10 run's, so pre- and post-fix used the same inputs.

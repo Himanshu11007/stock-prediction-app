@@ -281,11 +281,17 @@ class TestProductionParity:
             assert record[f"signal_success_{h}d"] == calculate_success(
                 record["signal"], record[f"return_{h}d"])
 
-    def test_as_deployed_prediction_row_is_inside_its_training_set(self, record):
-        """Documents current production behaviour (see WALK_FORWARD_BENCHMARK.md):
-        X.iloc[-1:] is the last TRAINING row, not the unseen bar at T."""
-        assert record["prediction_row_in_training_set"] is True
-        assert record["feature_row_timestamp"] == record["training_end_timestamp"]
+    def test_as_deployed_prediction_row_is_bar_T_and_not_in_training(self, record):
+        """Phase 11A: production predicts the unseen bar at T, not its last
+        training row (the Phase 10 finding)."""
+        assert record["prediction_row_in_training_set"] is False
+        assert record["feature_row_timestamp"] == record["prediction_timestamp"]
+        assert record["training_end_timestamp"] < record["feature_row_timestamp"]
+
+    def test_assertion_fails_if_prediction_row_is_in_training(self, record):
+        bad = dict(record, prediction_row_in_training_set=True)
+        with pytest.raises(wf.TemporalIntegrityError):
+            wf.assert_temporal_integrity(bad)
 
 
 # ══════════════════════════════════════════════════════════════════════════════

@@ -1,0 +1,190 @@
+{
+  "before": "scripts/audit/output/walk_forward_benchmark/phase10_prefix_full/summary.json",
+  "after": "scripts/audit/output/walk_forward_benchmark/full/summary.json",
+  "population": {
+    "phase10": {
+      "n_predictions": 1350,
+      "n_skipped": 0,
+      "skip_reasons": {},
+      "n_production_recommendations": 696
+    },
+    "phase11a": {
+      "n_predictions": 1350,
+      "n_skipped": 0,
+      "skip_reasons": {},
+      "n_production_recommendations": 552
+    }
+  },
+  "prediction_row_in_training_set_pct": {
+    "phase10": 100.0,
+    "phase11a": 0.0
+  },
+  "prediction_equals_realized_last_move": {
+    "phase10": "97.3% (96.2\u201398.0, n=1350)",
+    "phase11a": "58.7% (56.1\u201361.3, n=1350)"
+  },
+  "ensemble_walk_forward_cv_mean": {
+    "phase10": 0.5169,
+    "phase11a": 0.5169
+  },
+  "direction_accuracy": [
+    {
+      "horizon_days": 1,
+      "phase10_model": "45.6% (42.9\u201348.2, n=1350)",
+      "phase11a_model": "50.7% (48.1\u201353.4, n=1350)",
+      "phase10_majority_baseline": "49.9% (47.2\u201352.5, n=1350)",
+      "phase11a_majority_baseline": "49.9% (47.2\u201352.5, n=1350)",
+      "phase10_prev_direction_baseline": "46.8% (44.2\u201349.5, n=1350)",
+      "phase11a_prev_direction_baseline": "46.8% (44.2\u201349.5, n=1350)"
+    },
+    {
+      "horizon_days": 3,
+      "phase10_model": "45.4% (42.8\u201348.1, n=1323)",
+      "phase11a_model": "49.6% (46.9\u201352.3, n=1323)",
+      "phase10_majority_baseline": "49.3% (46.6\u201352.0, n=1323)",
+      "phase11a_majority_baseline": "49.3% (46.6\u201352.0, n=1323)",
+      "phase10_prev_direction_baseline": "47.2% (44.5\u201349.9, n=1323)",
+      "phase11a_prev_direction_baseline": "47.2% (44.5\u201349.9, n=1323)"
+    },
+    {
+      "horizon_days": 5,
+      "phase10_model": "46.9% (44.2\u201349.6, n=1323)",
+      "phase11a_model": "51.8% (49.1\u201354.5, n=1323)",
+      "phase10_majority_baseline": "48.9% (46.2\u201351.6, n=1323)",
+      "phase11a_majority_baseline": "48.9% (46.2\u201351.6, n=1323)",
+      "phase10_prev_direction_baseline": "48.6% (45.9\u201351.3, n=1323)",
+      "phase11a_prev_direction_baseline": "48.6% (45.9\u201351.3, n=1323)"
+    },
+    {
+      "horizon_days": 10,
+      "phase10_model": "50.4% (47.7\u201353.1, n=1296)",
+      "phase11a_model": "51.5% (48.7\u201354.2, n=1296)",
+      "phase10_majority_baseline": "48.5% (45.7\u201351.2, n=1296)",
+      "phase11a_majority_baseline": "48.5% (45.7\u201351.2, n=1296)",
+      "phase10_prev_direction_baseline": "50.3% (47.6\u201353.0, n=1296)",
+      "phase11a_prev_direction_baseline": "50.3% (47.6\u201353.0, n=1296)"
+    }
+  ],
+  "filtered_signal_success": [
+    {
+      "horizon_days": 1,
+      "signal": "BUY",
+      "phase10": "51.5% (43.9\u201359.0, n=165)",
+      "phase11a": "51.2% (42.4\u201360.0, n=121)"
+    },
+    {
+      "horizon_days": 1,
+      "signal": "HOLD",
+      "phase10": "88.2% (84.5\u201391.1, n=364)",
+      "phase11a": "88.7% (84.8\u201391.7, n=327)"
+    },
+    {
+      "horizon_days": 1,
+      "signal": "SELL",
+      "phase10": "50.7% (42.7\u201358.6, n=150)",
+      "phase11a": "51.1% (41.1\u201360.9, n=94)"
+    },
+    {
+      "horizon_days": 1,
+      "signal": "STRONG BUY",
+      "phase10": "31.2% (14.2\u201355.6, n=16)",
+      "phase11a": "50.0% (21.5\u201378.5, n=8)"
+    },
+    {
+      "horizon_days": 1,
+      "signal": "STRONG SELL",
+      "phase10": "0.0% (0.0\u201379.3, n=1)",
+      "phase11a": "50.0% (9.5\u201390.5, n=2)"
+    },
+    {
+      "horizon_days": 3,
+      "signal": "BUY",
+      "phase10": "50.9% (43.3\u201358.4, n=165)",
+      "phase11a": "50.0% (41.2\u201358.8, n=120)"
+    },
+    {
+      "horizon_days": 3,
+      "signal": "HOLD",
+      "phase10": "70.5% (65.5\u201375.0, n=352)",
+      "phase11a": "70.8% (65.6\u201375.5, n=322)"
+    },
+    {
+      "horizon_days": 3,
+      "signal": "SELL",
+      "phase10": "45.5% (37.6\u201353.6, n=145)",
+      "phase11a": "42.0% (32.3\u201352.5, n=88)"
+    },
+    {
+      "horizon_days": 3,
+      "signal": "STRONG BUY",
+      "phase10": "37.5% (18.5\u201361.4, n=16)",
+      "phase11a": "37.5% (13.7\u201369.4, n=8)"
+    },
+    {
+      "horizon_days": 3,
+      "signal": "STRONG SELL",
+      "phase10": "0.0% (0.0\u201379.3, n=1)",
+      "phase11a": "50.0% (9.5\u201390.5, n=2)"
+    },
+    {
+      "horizon_days": 5,
+      "signal": "BUY",
+      "phase10": "52.1% (44.5\u201359.6, n=165)",
+      "phase11a": "52.5% (43.6\u201361.2, n=120)"
+    },
+    {
+      "horizon_days": 5,
+      "signal": "HOLD",
+      "phase10": "58.0% (52.7\u201363.0, n=352)",
+      "phase11a": "59.3% (53.9\u201364.5, n=322)"
+    },
+    {
+      "horizon_days": 5,
+      "signal": "SELL",
+      "phase10": "48.3% (40.3\u201356.3, n=145)",
+      "phase11a": "53.4% (43.1\u201363.5, n=88)"
+    },
+    {
+      "horizon_days": 5,
+      "signal": "STRONG BUY",
+      "phase10": "31.2% (14.2\u201355.6, n=16)",
+      "phase11a": "37.5% (13.7\u201369.4, n=8)"
+    },
+    {
+      "horizon_days": 5,
+      "signal": "STRONG SELL",
+      "phase10": "0.0% (0.0\u201379.3, n=1)",
+      "phase11a": "50.0% (9.5\u201390.5, n=2)"
+    },
+    {
+      "horizon_days": 10,
+      "signal": "BUY",
+      "phase10": "47.2% (39.6\u201354.9, n=161)",
+      "phase11a": "50.4% (41.6\u201359.2, n=119)"
+    },
+    {
+      "horizon_days": 10,
+      "signal": "HOLD",
+      "phase10": "42.4% (37.3\u201347.7, n=344)",
+      "phase11a": "43.4% (38.1\u201348.9, n=318)"
+    },
+    {
+      "horizon_days": 10,
+      "signal": "SELL",
+      "phase10": "48.6% (40.4\u201356.8, n=140)",
+      "phase11a": "46.2% (35.7\u201357.1, n=80)"
+    },
+    {
+      "horizon_days": 10,
+      "signal": "STRONG BUY",
+      "phase10": "37.5% (18.5\u201361.4, n=16)",
+      "phase11a": "37.5% (13.7\u201369.4, n=8)"
+    },
+    {
+      "horizon_days": 10,
+      "signal": "STRONG SELL",
+      "phase10": "0.0% (0.0\u201379.3, n=1)",
+      "phase11a": "50.0% (9.5\u201390.5, n=2)"
+    }
+  ]
+}

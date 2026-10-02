@@ -10,8 +10,9 @@ Evaluation contract (full text: docs/WALK_FORWARD_BENCHMARK.md)
                             prediction() slices the history to <= D before
                             any production code sees it.
   Production prediction     The unmodified scanner path (scanner/engine.py
-                            _scan_one): prepare_data -> train_model(fast=True)
-                            -> ensemble_predict(X.iloc[-1:]) -> detect_regime
+                            _scan_one): prepare_inference_data ->
+                            train_model(fast=True) on labelled rows <= D-1 ->
+                            ensemble_predict(X_pred = bar D) -> detect_regime
                             -> get_trend_signal (daily + weekly) ->
                             generate_signal -> passes_quality_filters.
                             News is the documented exception: no point-in-time
@@ -45,7 +46,7 @@ from scanner.filters import passes_quality_filters
 from storage.recommendation_validation import calculate_return, calculate_success
 from utils.decision_engine import generate_signal
 from utils.explainability import compute_pillar_scores, compute_weighted_score
-from utils.helpers import prepare_data
+from utils.helpers import prepare_inference_data
 from utils.regime import detect_regime
 from utils.risk import calculate_risk
 
@@ -139,13 +140,16 @@ def replay_production_prediction(full: pd.DataFrame, issue_date) -> dict:
     if daily.empty or daily.index[-1] != issue_date:
         return {"skipped": "issue_date_not_a_trading_day"}
 
-    data, X, y, _, _, y_train, _ = prepare_data(daily.copy())
-    if len(X) < 2 or len(set(y_train)) < 2:
+    inf = prepare_inference_data(daily.copy())
+    if inf.X_pred is None:
+        return {"skipped": "incomplete_feature_row_at_issue_date"}
+    if len(inf.X) < 2 or len(set(inf.y_train)) < 2:
         return {"skipped": "single_class_or_insufficient_rows"}
+    data, X, y = inf.data, inf.X, inf.y
 
     # ── ML: exactly scanner/engine.py:_scan_one ──────────────────────────────
     models, acc = train_model(X, y, fast=True)
-    latest = X.iloc[-1:]
+    latest = inf.X_pred
     pred, confidence, prob = ensemble_predict(models, latest)
     comps = component_probabilities(models, latest)
 
@@ -317,8 +321,9 @@ def build_prediction_record(symbol: str, full: pd.DataFrame, issue_date,
             if rec["realized_issue_move"] is not None else None
         )
         rec[f"signal_success_{h}d"] = calculate_success(rec["signal"], ret)
-        # Existing-system convention: entry = stored cmp (Close of bar D-1),
-        # so this return includes bar D's move, already known at T.
+        # Entry = the price production stores as cmp. Before Phase 11A that
+        # was Close[D-1] (including bar D's already-known move); since the
+        # fix it is Close[D], so these columns equal return_hd/signal_success_hd.
         legacy_ret = calculate_return(rec["production_cmp"], rec[f"actual_price_{h}d"])
         rec[f"legacy_cmp_return_{h}d"] = legacy_ret
         rec[f"legacy_cmp_signal_success_{h}d"] = calculate_success(rec["signal"], legacy_ret)
@@ -341,6 +346,8 @@ def assert_temporal_integrity(rec: dict, horizons=HORIZONS) -> None:
         problems.append("weekly input window extends past prediction_timestamp")
     if not pd.Timestamp(rec["feature_row_timestamp"]) <= t:
         problems.append("feature row after prediction_timestamp")
+    if rec["prediction_row_in_training_set"]:
+        problems.append("prediction row is part of the training set")
     for h in horizons:
         d = rec.get(f"outcome_date_{h}d")
         if d is not None and not pd.Timestamp(d) > t:

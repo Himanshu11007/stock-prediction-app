@@ -1,6 +1,9 @@
+from typing import NamedTuple
+
+import pandas as pd
 import streamlit as st
 import plotly.graph_objects as go
-from features.engineer import create_features
+from features.engineer import compute_features, create_features
 
 
 def show_candlestick_chart(data):
@@ -23,23 +26,62 @@ def show_candlestick_chart(data):
     st.plotly_chart(fig, width="stretch")
 
 
+FEATURE_COLS = [
+    "Close", "Volume", "Price_Change",
+    "MA_5", "MA_10", "MA_Diff",
+    "EMA_20", "EMA_50", "EMA_Cross", "Price_vs_EMA20",
+    "RSI", "Momentum", "Volatility",
+    "Volume_Change", "Volume_MA", "Volume_Ratio",
+    "MACD", "MACD_Hist", "MACD_Cross",
+    "BB_Width", "BB_Position",
+    "ATR", "ATR_Pct",
+    "ADX", "Plus_DI", "Minus_DI",
+    "Vol_Breakout",
+]
+
+
+class InferenceData(NamedTuple):
+    """Point-in-time split of a price history ending at bar D."""
+    data:       pd.DataFrame          # features through D (last row = D); decision-engine input
+    train_data: pd.DataFrame          # labelled rows only (== create_features output)
+    X:          pd.DataFrame          # training features, rows <= D-1 (labels known at D)
+    y:          pd.Series             # training labels
+    y_train:    pd.Series             # first 80% of y — single-class guard, as prepare_data
+    X_pred:     pd.DataFrame | None   # feature row of bar D; never part of X
+
+
+def prepare_inference_data(raw) -> InferenceData:
+    """
+    Production inference split. Training uses only rows whose label
+    (Close[t+1] > Close[t]) is known; the prediction row is the latest bar D,
+    whose label is unknown and which is therefore never trained on.
+
+    X_pred is None when bar D has an incomplete feature row (e.g. the first
+    session after a zero-volume holiday bar makes Volume_Change infinite);
+    callers must then skip the prediction rather than fall back to an older row.
+    """
+    feats = compute_features(raw)
+    train_data = feats.dropna()
+    feature_cols = [c for c in FEATURE_COLS if c in feats.columns]
+
+    X = train_data[feature_cols]
+    y = train_data["Up"].astype(int)
+    y_train = y[:int(len(X) * 0.8)]
+
+    data = feats[feats.drop(columns="Up").notna().all(axis=1)]
+    latest = raw.index[-1]
+    X_pred = data.loc[[latest], feature_cols] if latest in data.index else None
+    if X_pred is not None and latest in X.index:
+        raise AssertionError("prediction row is part of the training set")
+
+    return InferenceData(data, train_data, X, y, y_train, X_pred)
+
+
 def prepare_data(data):
     data = create_features(data)
 
-    feature_cols = [
-        "Close", "Volume", "Price_Change",
-        "MA_5", "MA_10", "MA_Diff",
-        "EMA_20", "EMA_50", "EMA_Cross", "Price_vs_EMA20",
-        "RSI", "Momentum", "Volatility",
-        "Volume_Change", "Volume_MA", "Volume_Ratio",
-        "MACD", "MACD_Hist", "MACD_Cross",
-        "BB_Width", "BB_Position",
-        "ATR", "ATR_Pct",
-        "ADX", "Plus_DI", "Minus_DI",
-        "Vol_Breakout",
-    ]
     # Only keep columns that exist after feature engineering
-    feature_cols = [c for c in feature_cols if c in data.columns]
+    feature_cols = [c for c in FEATURE_COLS if c in data.columns]
 
     X = data[feature_cols]
     y = data["Up"].astype(int)

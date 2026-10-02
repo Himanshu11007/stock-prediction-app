@@ -8,7 +8,7 @@ from news.api import fetch_news
 from news.sentiment import analyze_overall_sentiment
 from storage import watchlist
 from utils.helpers import (
-    prepare_data, run_backtest,
+    prepare_inference_data, run_backtest,
     show_chart, show_metrics, show_prediction, show_candlestick_chart,
 )
 from utils.stock_search import load_stock_data
@@ -426,9 +426,19 @@ with tab_analyse:
             st.stop()
 
         try:
-            data, X, y, _, _, y_train, _ = prepare_data(data)
+            # Train on rows with known labels; predict the latest bar, which is
+            # never part of training. `data` stays the labelled frame for the
+            # backtest/charts; `signal_data` (features through the latest bar)
+            # feeds the decision engine, regime, risk and stored price.
+            inf = prepare_inference_data(data)
+            data, X, y, y_train = inf.train_data, inf.X, inf.y, inf.y_train
+            signal_data = inf.data
         except Exception as e:
             st.error(f"Feature engineering failed: {e}")
+            st.stop()
+
+        if inf.X_pred is None:
+            st.error("❌ Latest price bar has incomplete features — cannot predict.")
             st.stop()
 
         _model_key = f"_model_{stock_symbol}"
@@ -446,7 +456,7 @@ with tab_analyse:
         model_name = "Ensemble"
 
         try:
-            pred, confidence, prob = ensemble_predict(models, X.tail(1))
+            pred, confidence, prob = ensemble_predict(models, inf.X_pred)
         except AttributeError as e:
             st.warning(f"Ensemble prediction failed, falling back to neutral: {e}")
             pred, confidence, prob = [0], 0.0, None
@@ -468,7 +478,7 @@ with tab_analyse:
             sentiment_counts = {"positive": 0, "neutral": 0, "negative": 0}
 
         try:
-            regime_info = detect_regime(data)
+            regime_info = detect_regime(signal_data)
         except Exception:
             regime_info = None
 
@@ -489,7 +499,7 @@ with tab_analyse:
                 confidence=confidence,
                 news_score=overall_score,
                 timeframe_score=timeframe_score,
-                data=data,
+                data=signal_data,
                 regime_info=regime_info,
             )
         except Exception as e:
@@ -497,11 +507,11 @@ with tab_analyse:
             final_signal, final_score, reason, factors = "HOLD", 0.0, "Error", []
 
         try:
-            risk = calculate_risk(data, final_signal)
+            risk = calculate_risk(signal_data, final_signal)
         except Exception:
             risk = None
 
-        close_price = float(data["Close"].iloc[-1])
+        close_price = float(signal_data["Close"].iloc[-1])
 
         # ── Build the explanation panel (purely additive — never breaks the page) ──
         try:
@@ -518,7 +528,7 @@ with tab_analyse:
                 regime_info=regime_info,
                 factors=factors,
                 risk=risk,
-                data=data,
+                data=signal_data,
             )
         except Exception as e:
             st.warning(f"Explanation unavailable: {e}")
@@ -535,7 +545,7 @@ with tab_analyse:
             _pillar_scores = compute_pillar_scores(
                 prediction=_pred_int, confidence=confidence,
                 news_score=overall_score, timeframe_score=timeframe_score,
-                data=data, regime_info=regime_info,
+                data=signal_data, regime_info=regime_info,
             )
             _weighted_score = compute_weighted_score(_pillar_scores)
             _sector = None

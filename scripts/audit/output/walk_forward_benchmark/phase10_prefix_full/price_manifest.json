@@ -1,0 +1,191 @@
+{
+  "ADANIENT.NS": {
+    "file": "ADANIENT_NS.csv",
+    "sha256": "925e5872a30a42a5107a2e337ddaad2399b7e232b295d90df041397b17fec6e7",
+    "rows": 829,
+    "first_date": "2023-06-01 00:00:00",
+    "last_date": "2026-10-01 00:00:00"
+  },
+  "ADANIPORTS.NS": {
+    "file": "ADANIPORTS_NS.csv",
+    "sha256": "4d830ea3268402241faa5334b6b3b84ede3fea8707e84415adbd5a13d934eeee",
+    "rows": 829,
+    "first_date": "2023-06-01 00:00:00",
+    "last_date": "2026-10-01 00:00:00"
+  },
+  "APOLLOHOSP.NS": {
+    "file": "APOLLOHOSP_NS.csv",
+    "sha256": "79ae28c059a0ad9457dce23a10e8587cd8acbb49dbcce0b3f1a35837f2cac199",
+    "rows": 829,
+    "first_date": "2023-06-01 00:00:00",
+    "last_date": "2026-10-01 00:00:00"
+  },
+  "ASIANPAINT.NS": {
+    "file": "ASIANPAINT_NS.csv",
+    "sha256": "ef23c02558073094011a2e1f322185642167e17413cc2d6753193e7a955e0eb0",
+    "rows": 829,
+    "first_date": "2023-06-01 00:00:00",
+    "last_date": "2026-10-01 00:00:00"
+  },
+  "AXISBANK.NS": {
+    "file": "AXISBANK_NS.csv",
+    "sha256": "7da9f86de4f0909292637b1d42ee4c1a5762891e5cca3a0d17b0b39d5c5eb077",
+    "rows": 829,
+    "first_date": "2023-06-01 00:00:00",
+    "last_date": "2026-10-01 00:00:00"
+  },
+  "BAJAJ-AUTO.NS": {
+    "file": "BAJAJ-AUTO_NS.csv",
+    "sha256": "26769967be26d135029ec612590bc005c1c023650a641e7fb68b7d28cb3c11e5",
+    "rows": 829,
+    "first_date": "2023-06-01 00:00:00",
+    "last_date": "2026-10-01 00:00:00"
+  },
+  "BAJFINANCE.NS": {
+    "file": "BAJFINANCE_NS.csv",
+    "sha256": "e703a2c168ce8e4937916179ad49215b75d71dfeea239a70bce4a6aa26099fff",
+    "rows": 829,
+    "first_date": "2023-06-01 00:00:00",
+    "last_date": "2026-10-01 00:00:00"
+  },
+  "BAJAJFINSV.NS": {
+    "file": "BAJAJFINSV_NS.csv",
+    "sha256": "0e0f40ea1f98ec0c6174404f47e92f2d2403960a2e10fd501ae50eee15dda1a1",
+    "rows": 829,
+    "first_date": "2023-06-01 00:00:00",
+    "last_date": "2026-10-01 00:00:00"
+  },
+  "BEL.NS": {
+    "file": "BEL_NS.csv",
+    "sha256": "2fe9ef2b86f5eb85130811b933ca53629a6bd267d210fd92114f75d34f0467e0",
+    "rows": 829,
+    "first_date": "2023-06-01 00:00:00",
+    "last_date": "2026-10-01 00:00:00"
+  },
+  "BPCL.NS": {
+    "file": "BPCL_NS.csv",
+    "sha256": "99b519fd35783105082e562e6ff39a729fce89efd9eacb35ed654508ec891470",
+    "rows": 829,
+    "first_date": "2023-06-01 00:00:00",
+    "last_date": "2026-10-01 00:00:00"
+  },
+  "ABCAPITAL.NS": {
+    "file": "ABCAPITAL_NS.csv",
+    "sha256": "3bd616cc1da04c3210d2fdd5ee1ee92e5e6cfa8b08b033c49bd8de7377b5e715",
+    "rows": 829,
+    "first_date": "2023-06-01 00:00:00",
+    "last_date": "2026-10-01 00:00:00"
+  },
+  "ABFRL.NS": {
+    "file": "ABFRL_NS.csv",
+    "sha256": "08863dc2c286089b93fe08394621d91334e41505dad144e4692e0ef3944e564b",
+    "rows": 829,
+    "first_date": "2023-06-01 00:00:00",
+    "last_date": "2026-10-01 00:00:00"
+  },
+  "ACC.NS": {
+    "file": "ACC_NS.csv",
+    "sha256": "e2b5e8f0558dcd9496f51cd30dd7501ba0725791ab50cb364941bef0c2b41444",
+    "rows": 829,
+    "first_date": "2023-06-01 00:00:00",
+    "last_date": "2026-10-01 00:00:00"
+  },
+  "AIAENG.NS": {
+    "file": "AIAENG_NS.csv",
+    "sha256": "ecb392942d119adcefb9a91d30e0df89f406f0b140fcac45e3636f41a65f25c0",
+    "rows": 826,
+    "first_date": "2023-06-01 00:00:00",
+    "last_date": "2026-10-01 00:00:00"
+  },
+  "AJANTPHARM.NS": {
+    "file": "AJANTPHARM_NS.csv",
+    "sha256": "65b08462a8c6ee542c1fc1ba610400e64292db7f0efea1109e93e7e9ed05c78b",
+    "rows": 828,
+    "first_date": "2023-06-01 00:00:00",
+    "last_date": "2026-10-01 00:00:00"
+  },
+  "ALKEM.NS": {
+    "file": "ALKEM_NS.csv",
+    "sha256": "bf41b748c659ab05b46b6773164da2d7ab9517bb7bbb2aedaec173903226957d",
+    "rows": 828,
+    "first_date": "2023-06-01 00:00:00",
+    "last_date": "2026-10-01 00:00:00"
+  },
+  "APOLLOTYRE.NS": {
+    "file": "APOLLOTYRE_NS.csv",
+    "sha256": "16befe7bdfac377b75aa824a20954e9dfc68485559f37b500c1d9f45dc8fdb5d",
+    "rows": 829,
+    "first_date": "2023-06-01 00:00:00",
+    "last_date": "2026-10-01 00:00:00"
+  },
+  "ASHOKLEY.NS": {
+    "file": "ASHOKLEY_NS.csv",
+    "sha256": "ac026e3caa12f1be3745263dedae9e9889dd89991b2eb71563bcec17aece4318",
+    "rows": 829,
+    "first_date": "2023-06-01 00:00:00",
+    "last_date": "2026-10-01 00:00:00"
+  },
+  "ASTRAL.NS": {
+    "file": "ASTRAL_NS.csv",
+    "sha256": "05fc6244c2df71cb4d3c7af7f564d86cb535c5ca94bbcbbcf3823485ddc6b966",
+    "rows": 829,
+    "first_date": "2023-06-01 00:00:00",
+    "last_date": "2026-10-01 00:00:00"
+  },
+  "AUBANK.NS": {
+    "file": "AUBANK_NS.csv",
+    "sha256": "b65cca6c9eef06ac4f56d4f63b8e80b45d259e57677ae02934b10d3def823a04",
+    "rows": 829,
+    "first_date": "2023-06-01 00:00:00",
+    "last_date": "2026-10-01 00:00:00"
+  },
+  "AARTIIND.NS": {
+    "file": "AARTIIND_NS.csv",
+    "sha256": "d729b0ef32854045564b675b0837bbdb40b4df18160f2d59694dc67adb105d9f",
+    "rows": 829,
+    "first_date": "2023-06-01 00:00:00",
+    "last_date": "2026-10-01 00:00:00"
+  },
+  "AAVAS.NS": {
+    "file": "AAVAS_NS.csv",
+    "sha256": "454e403ac5f78685073835cfde7846bf034ff0113d46e1d1d06b3f9a261a052b",
+    "rows": 829,
+    "first_date": "2023-06-01 00:00:00",
+    "last_date": "2026-10-01 00:00:00"
+  },
+  "AETHER.NS": {
+    "file": "AETHER_NS.csv",
+    "sha256": "352af58f446643333ddf5221f9387e8ac8837908c7f97ddf11995bc8ed963df1",
+    "rows": 829,
+    "first_date": "2023-06-01 00:00:00",
+    "last_date": "2026-10-01 00:00:00"
+  },
+  "ALEMBICLTD.NS": {
+    "file": "ALEMBICLTD_NS.csv",
+    "sha256": "d8237e357873b9aaaecb396a375b016266895bc9d0164ab54786561153300850",
+    "rows": 829,
+    "first_date": "2023-06-01 00:00:00",
+    "last_date": "2026-10-01 00:00:00"
+  },
+  "AMBER.NS": {
+    "file": "AMBER_NS.csv",
+    "sha256": "ca24546f57f1b3ce3452229ae8c3058d2de26c2f5c01b9cd2dc45946049a87c6",
+    "rows": 829,
+    "first_date": "2023-06-01 00:00:00",
+    "last_date": "2026-10-01 00:00:00"
+  },
+  "ANGELONE.NS": {
+    "file": "ANGELONE_NS.csv",
+    "sha256": "6893d395eee4986e4a13ec428f22973b6b9f6f539fcaaec05c1de9755f20fff9",
+    "rows": 829,
+    "first_date": "2023-06-01 00:00:00",
+    "last_date": "2026-10-01 00:00:00"
+  },
+  "APARINDS.NS": {
+    "file": "APARINDS_NS.csv",
+    "sha256": "7a53bc7f7e2d6fb07360e6f2227289153064e2634b946ab5d1fd742e1deb15cf",
+    "rows": 829,
+    "first_date": "2023-06-01 00:00:00",
+    "last_date": "2026-10-01 00:00:00"
+  }
+}
