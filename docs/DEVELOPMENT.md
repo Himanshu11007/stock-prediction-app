@@ -25,6 +25,8 @@ per process (tokens invalid after restart; a warning is logged).
 | `MARKET_DATA_STALE_DAYS` | 4 | stale market data threshold |
 | `FUNDAMENTALS_STALE_DAYS` | 7 | stale fundamentals threshold (data health, peer medians) |
 | `ENGINE_RUN_MAX_WORKERS` | 8 | provider / compute threads per run |
+| `FCM_PROJECT_ID`, `FCM_SERVICE_ACCOUNT_FILE` | — | Android push (docs/NOTIFICATIONS.md) |
+| `APNS_KEY_FILE`, `APNS_KEY_ID`, `APNS_TEAM_ID`, `APNS_BUNDLE_ID`, `APNS_USE_SANDBOX` | — | iOS push |
 | Google / Apple / OTP settings | — | see docs/AUTHENTICATION.md |
 
 With `APP_ENV=production` the API **refuses to start** unless
@@ -49,7 +51,11 @@ Use a copy of the database for manual E2E so real users are not affected:
 `copy storage\app.db storage\e2e_app.db` and run the server with
 `DATABASE_URL=sqlite:///storage/e2e_app.db`.
 
-Key test files: `test_fqvf.py` (18 checks, NOT_AVAILABLE ≠ FAIL, provider
+Mobile contract fixtures: `python scripts/export_mobile_contract_fixtures.py` regenerates the
+real API responses the mobile tests deserialize.
+
+Key test files: `test_notifications.py` (detection, dedup, rate limits, quiet hours, devices,
+providers, preferences, reports, scheduler calendar), `test_fqvf.py` (18 checks, NOT_AVAILABLE ≠ FAIL, provider
 normalisation), `test_ranking.py` (score, eligibility, engine runs, failure
 isolation, concurrency), `test_product_api.py` (Top Picks, analysis,
 authorization of every admin route, config validation, no error leakage,

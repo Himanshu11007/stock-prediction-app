@@ -11,12 +11,25 @@ Requires an authenticated user (any role).
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends
+from sqlmodel import Session
+
+from analytics.intelligence_overview import overview
+from db.session import get_session
 
 from api import services
 from api.schemas import success_envelope
 from auth.dependencies import get_current_user
 
 router = APIRouter(dependencies=[Depends(get_current_user)])
+
+
+@router.get("/intelligence/overview")
+def intelligence_overview(session: Session = Depends(get_session)):
+    """What each kind of intelligence is and how much weight it carries:
+    market regime, technical, fundamental (FQVF), ML signal (informational,
+    no demonstrated skill), news (not point-in-time, not scored), legacy
+    analytics (retired engine)."""
+    return success_envelope(overview(session), message="Intelligence overview")
 
 
 @router.get("/intelligence/report")

@@ -138,9 +138,24 @@ def start_run_in_background(engine, *, triggered_by: Optional[int], symbols: Opt
             execute_run(engine, run_id)
         finally:
             _lock.release()
+        notify_after_run(engine, run_id)
 
     threading.Thread(target=_target, name=f"engine-run-{run_id}", daemon=True).start()
     return run
+
+
+def notify_after_run(engine, run_id: str) -> None:
+    """Pipeline stage after a ranking run: the notification engine
+    (notifications/service.py) compares it with the previous run and notifies
+    users. Separate from ranking; a failure here never affects the run."""
+    try:
+        from notifications.service import process_ranking_run
+        with Session(engine) as session:
+            nrun = process_ranking_run(session, run_id)
+            logger.info("NOTIFICATION_RUN | %s | %s | created=%d sent=%d", run_id, nrun.status,
+                        nrun.notifications_created, nrun.pushes_sent)
+    except Exception:
+        logger.exception("NOTIFICATION_STAGE_FAILED | %s", run_id)
 
 
 # ── Per-stock stages ─────────────────────────────────────────────────────────

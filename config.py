@@ -91,6 +91,23 @@ RANKING_ENGINE_VERSION = "ranking-v1.0"
 # docs/RANKING_VALIDATION_V1.md: weights, rules and components must not change
 # without a new version and a new validation (tests/test_ranking_validation.py).
 RANKING_ENGINE_STATUS  = "FROZEN"
+
+# ── Notifications (docs/NOTIFICATIONS.md) ────────────────────────────────────
+NOTIFICATION_ENGINE_VERSION = "notify-v1.0"
+# Push credentials come only from the environment (never committed):
+#   FCM (Android):  FCM_PROJECT_ID + FCM_SERVICE_ACCOUNT_FILE (path to the
+#                   Firebase service-account JSON)
+#   APNs (iOS):     APNS_KEY_FILE (.p8 auth key path), APNS_KEY_ID, APNS_TEAM_ID,
+#                   APNS_BUNDLE_ID, APNS_USE_SANDBOX (true for development builds)
+# Without them the push stage records PROVIDER_NOT_CONFIGURED and the in-app
+# Notification Center still receives every notification.
+FCM_PROJECT_ID = os.environ.get("FCM_PROJECT_ID")
+FCM_SERVICE_ACCOUNT_FILE = os.environ.get("FCM_SERVICE_ACCOUNT_FILE")
+APNS_KEY_FILE = os.environ.get("APNS_KEY_FILE")
+APNS_KEY_ID = os.environ.get("APNS_KEY_ID")
+APNS_TEAM_ID = os.environ.get("APNS_TEAM_ID")
+APNS_BUNDLE_ID = os.environ.get("APNS_BUNDLE_ID")
+APNS_USE_SANDBOX = os.environ.get("APNS_USE_SANDBOX", "false").lower() == "true"
 # Fundamentals older than this are re-fetched by an engine run.
 FUNDAMENTALS_TTL_HOURS = int(os.environ.get("FUNDAMENTALS_TTL_HOURS", "24"))
 # A market-data snapshot whose last bar is older than this many calendar days

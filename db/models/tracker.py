@@ -134,8 +134,8 @@ class WatchlistItem(SQLModel, table=True):
     user_id: int = Field(foreign_key="users.id", index=True)
     symbol: str = Field(index=True)
     stock_name: str
-    buy_price: float
-    buy_date: str
+    buy_price: Optional[float] = Field(default=None)
+    buy_date: Optional[str] = Field(default=None)
     quantity: float = Field(default=1)
 
     created_at: datetime = Field(default_factory=utcnow)

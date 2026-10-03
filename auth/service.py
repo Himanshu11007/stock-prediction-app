@@ -215,6 +215,11 @@ def rotate_refresh_token(session: Session, raw_token: str) -> tuple[User, str]:
     return user, new_raw_token
 
 
+def find_refresh_token(session: Session, raw_token: str) -> Optional[RefreshToken]:
+    return session.exec(select(RefreshToken).where(
+        RefreshToken.token_hash == hash_refresh_token(raw_token))).first()
+
+
 def revoke_refresh_token(session: Session, raw_token: str) -> None:
     """Used for logout. Silently no-ops if the token is already unknown/revoked."""
     token_hash = hash_refresh_token(raw_token)

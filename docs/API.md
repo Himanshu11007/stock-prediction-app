@@ -33,6 +33,17 @@ Response shapes: business routes return `{"success": true, "data": …,
 | GET | `/performance/*`, `/intelligence/report` | user | historical analytics of the legacy recommendation engine |
 | POST | `/analyze-stock`, `/top-picks/start`, `GET /top-picks/status/{id}`, `/top-picks/result/{id}` | user | legacy ML/confluence signal engine (kept for compatibility) |
 
+## Notifications, devices, reports (authenticated user)
+
+`GET /notifications` (`unread_only`, `limit`, `offset`), `GET /notifications/unread-count`,
+`POST /notifications/{id}/read`, `POST /notifications/read-all`,
+`GET|PUT /notifications/preferences`, `GET|POST /devices`, `DELETE /devices/{device_id}`,
+`GET|POST /feedback`, `POST /account/deletion-request`,
+`GET /watchlist/overview`, `PUT /watchlist/{item_id}/alerts`,
+`GET /market/status`, `GET /performance/overview`, `GET /intelligence/overview`.
+Notification payloads carry `route` (in-app deep link, e.g. `/stock/TCS.NS`,
+`/top-picks`). See docs/NOTIFICATIONS.md.
+
 ## Admin endpoints (ADMIN role)
 
 `/admin/dashboard`, `/admin/users*`, `/admin/roles`, `/admin/stocks*`
@@ -46,6 +57,8 @@ Response shapes: business routes return `{"success": true, "data": …,
 `/admin/ranking-tracking/snapshots`, `/admin/ranking-tracking/summary`,
 `POST /admin/ranking-tracking/outcomes` (prospective tracking, docs/RANKING_VALIDATION_V1.md),
 `/admin/recommendations`, `/admin/watchlist`, `/admin/audit-logs`,
+`/admin/notifications/stats|runs|recent` (GET), `/admin/notifications/process-run|daily-summary|dispatch|test` (POST),
+`/admin/feedback` (GET), `/admin/feedback/{id}` (PATCH),
 `/logs/latest`, `DELETE /logs/clear`, `POST /tracker/save`, `POST /tracker/validate-old`.
 
 Authorization is covered by `tests/test_product_api.py`,

@@ -17,6 +17,7 @@ from auth.dependencies import get_current_user
 from data_health.service import engine_versions
 from db.session import get_session
 from ranking import presenter
+from utils.market_session import market_status as nse_market_status
 
 public_router = APIRouter()
 router = APIRouter(dependencies=[Depends(get_current_user)])
@@ -31,6 +32,8 @@ def app_config(session: Session = Depends(get_session)):
         "disclaimer": masters.get_config(session, "app.disclaimer"),
         "announcement": masters.get_config(session, "app.announcement"),
         "top_picks_limit": masters.get_config(session, "top_picks.limit"),
+        "onboarding": masters.get_config(session, "app.onboarding"),
+        "legal": masters.get_config(session, "app.legal"),
         "versions": engine_versions(),
     }, message="Configuration retrieved")
 
@@ -40,6 +43,14 @@ def market_regime(session: Session = Depends(get_session)):
     """Latest NIFTY 50 market regime computed by the analysis engine."""
     regime = presenter.regime_payload(runs.latest_market_regime(session))
     return success_envelope(regime, message="Market regime retrieved" if regime else "No market regime computed yet")
+
+
+@router.get("/market/status")
+def market_status(session: Session = Depends(get_session)):
+    """NSE session status now (IST): open / pre-open / post-close / closed /
+    weekend / holiday. Holidays come from the administrator-maintained list."""
+    return success_envelope(nse_market_status(holidays=masters.get_config(session, "market.holidays")),
+                            message="Market status")
 
 
 @router.get("/fqvf/reference")

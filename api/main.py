@@ -36,7 +36,7 @@ from fastapi.responses import JSONResponse
 
 from api.routes import (
     analysis, top_picks, tracker, performance, logs, intelligence, auth, auth_sso, auth_otp,
-    auth_devices, admin, admin_masters, watchlist, stocks, product,
+    auth_devices, admin, admin_masters, admin_notifications, notifications, watchlist, stocks, product,
 )
 from api.schemas import HealthResponse
 
@@ -176,6 +176,8 @@ app.include_router(tracker.router,     prefix=API_PREFIX, tags=["Tracker"])
 app.include_router(performance.router, prefix=API_PREFIX, tags=["Performance"])
 app.include_router(logs.router,         prefix=API_PREFIX, tags=["Logs"])
 app.include_router(intelligence.router, prefix=API_PREFIX, tags=["Intelligence"])
+app.include_router(notifications.router, prefix=API_PREFIX, tags=["Notifications"])
+app.include_router(admin_notifications.router, prefix=API_PREFIX, tags=["Admin"])
 
 
 @app.get(f"{API_PREFIX}/health", response_model=HealthResponse, tags=["Health"])

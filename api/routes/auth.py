@@ -83,7 +83,12 @@ def refresh(payload: RefreshRequest, session: Session = Depends(get_session)):
 
 @router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
 def logout(payload: LogoutRequest, session: Session = Depends(get_session)):
+    row = auth_service.find_refresh_token(session, payload.refresh_token)
     auth_service.revoke_refresh_token(session, payload.refresh_token)
+    # A signed-out device must stop receiving this user's push notifications.
+    if row is not None and row.device_id:
+        from notifications.service import unregister_device
+        unregister_device(session, row.user_id, row.device_id)
 
 
 @router.get("/me", response_model=UserProfileResponse)

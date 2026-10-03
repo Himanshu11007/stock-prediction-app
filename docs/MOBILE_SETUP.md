@@ -54,6 +54,24 @@ Production checklist: set a real `ApplicationId` (currently
 `com.companyname.stockaipro.mobile`), signing keystore/certificates, the
 HTTPS API URL, and the Google/Apple client configuration.
 
+## Push notifications
+
+Android uses Firebase Cloud Messaging. Supply the Firebase config per environment, never committed:
+
+- `Platforms/Android/google-services.json` (gitignored), **or**
+- build properties `-p:FirebaseApplicationId=… -p:FirebaseApiKey=… -p:FirebaseProjectId=… -p:FirebaseSenderId=…`.
+
+Without either, the app reports "Push delivery is not configured in this app build" and the
+Notification Center still works.
+
+iOS uses APNs directly. It needs the Push Notifications capability and a provisioning profile on
+a Mac; `aps-environment` is already in Entitlements.plist.
+
+Notification permission is requested only when the user turns push on in Notification
+settings. Deep links: `stockaipro://stock/{SYMBOL}`, `stockaipro://top-picks`,
+`stockaipro://notifications`, `stockaipro://settings/notifications`. A destination
+tapped while signed out opens after sign-in. See the backend's docs/NOTIFICATIONS.md.
+
 ## Screens
 
 Home (market regime, announcement, disclaimer), Analyse (Stock Master

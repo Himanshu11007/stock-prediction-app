@@ -17,6 +17,7 @@ from auth.dependencies import get_current_user
 from db.models.market import StockAnalysisResult
 from db.models.stock import Company
 from db.session import get_session
+from notifications.detector import latest_full_run
 from ranking import presenter
 
 router = APIRouter(dependencies=[Depends(get_current_user)])
@@ -37,7 +38,9 @@ def top_investment_candidates(
     """
     cap = masters.get_config(session, "top_picks.limit")
     limit = min(limit or cap, cap)
-    run = runs.latest_completed_run(session)
+    # Prefer the latest full-universe run: an administrator's partial run
+    # (explicit symbols or a limit) must not shrink the users' list.
+    run = latest_full_run(session) or runs.latest_completed_run(session)
     data = {
         "items": [], "total_eligible": 0, "limit": limit, "run": None,
         "market_regime": presenter.regime_payload(runs.latest_market_regime(session)),
@@ -52,7 +55,7 @@ def top_investment_candidates(
                Company.active == True)  # noqa: E712
         .order_by(StockAnalysisResult.rank)).all()
     data["total_eligible"] = len(rows)
-    data["items"] = [presenter.candidate_payload(r, c) for r, c in rows[:limit]]
+    data["items"] = [presenter.candidate_payload(r, c, cap) for r, c in rows[:limit]]
     data["run"] = {"run_id": run.run_id, "status": run.status, "finished_at": presenter._iso(run.finished_at),
                    "stocks_analysed": run.processed, "engine_version": run.engine_version,
                    "fqvf_version": run.fqvf_version}

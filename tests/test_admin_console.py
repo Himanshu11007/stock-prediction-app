@@ -81,7 +81,7 @@ def test_every_admin_page_renders_for_admin(backend):
     at = _login("admin@example.com", "AdminPass1!")
     assert not at.exception and "me" in at.session_state
     radio = at.sidebar.radio[0]
-    assert len(radio.options) == 23
+    assert len(radio.options) == 25   # + Notifications, User Reports
     for page in radio.options:
         at.sidebar.radio[0].set_value(page).run()
         assert not at.exception, page

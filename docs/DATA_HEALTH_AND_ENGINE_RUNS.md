@@ -31,9 +31,11 @@ A `RUNNING` row older than 3 hours is marked `FAILED` (abandoned).
 Fundamentals younger than `FUNDAMENTALS_TTL_HOURS` (24) are reused unless
 `refresh_fundamentals` is set.
 
-Scheduling: runs are started explicitly. For a daily schedule, call
-`POST /api/v1/admin/engine-runs` from cron / Task Scheduler with an admin token
-after the market closes (16:00 IST or later).
+Scheduling: production runs are started by `scripts/scheduled_jobs.py ranking`
+from the operating-system scheduler (calendar- and data-aware, idempotent);
+see docs/SCHEDULING.md. Administrators can still start a run manually.
+After every background ranking run the notification engine compares it with
+the previous full run (docs/NOTIFICATIONS.md).
 
 Prospective tracking: every completed RANKING run also writes an append-only
 `ranking_snapshots` row per stock (score, rank, FQVF summary, components,

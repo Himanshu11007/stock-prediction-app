@@ -7,12 +7,24 @@ Performance screen, not an admin-only view.
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends
+from sqlmodel import Session
+
+from analytics.performance_overview import overview
+from db.session import get_session
 
 from api import services
 from api.schemas import success_envelope
 from auth.dependencies import get_current_user
 
 router = APIRouter(dependencies=[Depends(get_current_user)])
+
+
+@router.get("/performance/overview")
+def performance_overview(session: Session = Depends(get_session)):
+    """Performance by methodology, never pooled: live Ranking Engine v1.0
+    tracking, its historical validation, and the legacy signal engine before
+    and after the temporal-integrity fix."""
+    return success_envelope(overview(session), message="Performance overview")
 
 
 @router.get("/performance/summary")

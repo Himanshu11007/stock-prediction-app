@@ -15,6 +15,7 @@ from admin.audit import log_action
 from db.models.market import SECTOR_OUTLOOKS, AppConfig, Industry, Sector
 from db.models.stock import Company
 from db.models.user import User
+from notifications.settings import DEFAULT_SETTINGS, DEFAULT_TEMPLATES, validate_settings, validate_templates
 from ranking.service import DEFAULT_RULES, DEFAULT_WEIGHTS, validate_rules, validate_weights
 
 
@@ -30,13 +31,51 @@ CONFIG_KEYS: dict[str, tuple[Any, str]] = {
     "ranking.rules": (DEFAULT_RULES, "Top Picks eligibility rules"),
     "top_picks.limit": (20, "Maximum number of Top Investment Candidates returned to clients"),
     "app.features": ({"top_picks": True, "stock_analysis": True, "watchlist": True,
-                      "performance": True, "intelligence": True, "ml_signal_display": True},
+                      "performance": True, "intelligence": True, "ml_signal_display": True,
+                      "notifications": True, "feedback": True},
                      "Feature availability flags read by the mobile app"),
     "app.disclaimer": ("StockAI Pro provides research and analysis, not investment advice. "
                        "Scores rank stocks on available data; they are not predictions or "
                        "guarantees of returns. Past performance does not indicate future results.",
                        "Disclaimer shown by clients"),
     "app.announcement": (None, "Optional message shown on the mobile home screen (null = none)"),
+    "app.onboarding": ([
+        {"title": "Welcome to StockAI Pro",
+         "body": "StockAI Pro analyses NSE stocks with a transparent, rules-based method so you can see "
+                 "exactly why each stock is rated the way it is."},
+        {"title": "StockAI Score",
+         "body": "A 0-100 score that ranks stocks against each other on quality, valuation, financial "
+                 "health, trend, momentum, risk and market regime. It is a relative ranking, not a price "
+                 "target or a return forecast."},
+        {"title": "FQVF",
+         "body": "The Fundamental Quality & Value Framework runs 18 fixed checks on earnings, returns, "
+                 "valuation and balance sheet. 'Not available' means data is missing, never a failure."},
+        {"title": "Top Investment Candidates",
+         "body": "The highest-ranked stocks that pass data-quality, liquidity and freshness rules in the "
+                 "latest analysis run. Each one shows its key reasons, key risks and analysis date."},
+        {"title": "Notifications",
+         "body": "Optional alerts when candidates change, when your watchlist stocks change materially, "
+                 "or a daily summary. You choose which ones, and quiet hours are respected."},
+        {"title": "Data and limitations",
+         "body": "Market data can be delayed and fundamentals are updated periodically; every screen "
+                 "shows when its data was last updated. StockAI Pro provides analysis, not investment "
+                 "advice, and no analysis guarantees returns."},
+    ], "First-use onboarding screens shown by the mobile app (list of {title, body})"),
+    "app.legal": ({"privacy_url": None, "terms_url": None, "support_email": None,
+                   "privacy_summary": (
+                       "StockAI Pro stores your account details (email or phone, sign-in methods), your "
+                       "watchlist, notification preferences, registered devices with their push tokens, "
+                       "your in-app notifications and any reports you submit. Push tokens are used only to "
+                       "deliver notifications you enabled and are removed when you sign out of a device. "
+                       "Push messages are delivered through Google Firebase Cloud Messaging (Android) or "
+                       "Apple Push Notification service (iOS). No analytics or advertising SDK is included "
+                       "in the app.")},
+                  "Privacy/terms links, support contact and the in-app privacy summary"),
+    "market.holidays": ([], "NSE trading holidays (list of YYYY-MM-DD) maintained by an administrator; "
+                            "used for market status and scheduled runs"),
+    "notifications.settings": (DEFAULT_SETTINGS, "Notification engine controls: global switch, event types, "
+                                                 "thresholds, rate limits, quiet-hour defaults (docs/NOTIFICATIONS.md)"),
+    "notifications.templates": (DEFAULT_TEMPLATES, "Notification title/body templates per event type"),
 }
 
 
@@ -60,6 +99,32 @@ def _validate_config(key: str, value: Any) -> Any:
                 not all(isinstance(v, bool) for v in value.values()):
             raise ValueError(f"app.features must map known features {sorted(default)} to booleans")
         return {**default, **value}
+    if key == "notifications.settings":
+        return validate_settings(value)
+    if key == "notifications.templates":
+        return validate_templates(value)
+    if key == "market.holidays":
+        if not isinstance(value, list) or not all(isinstance(d, str) for d in value):
+            raise ValueError("market.holidays must be a list of YYYY-MM-DD dates")
+        try:
+            return sorted({datetime.strptime(d, "%Y-%m-%d").date().isoformat() for d in value})
+        except ValueError:
+            raise ValueError("market.holidays must be a list of YYYY-MM-DD dates")
+    if key == "app.onboarding":
+        if not isinstance(value, list) or not 1 <= len(value) <= 10 or not all(
+                isinstance(p, dict) and set(p) == {"title", "body"} and all(
+                    isinstance(v, str) and 0 < len(v) <= 600 for v in p.values()) for p in value):
+            raise ValueError("app.onboarding must be 1-10 objects with non-empty 'title' and 'body' strings")
+        return value
+    if key == "app.legal":
+        default = CONFIG_KEYS[key][0]
+        if not isinstance(value, dict) or set(value) - set(default) or not all(
+                v is None or (isinstance(v, str) and len(v) <= 2000) for v in value.values()):
+            raise ValueError(f"app.legal must map {sorted(default)} to strings or null")
+        for k in ("privacy_url", "terms_url"):
+            if value.get(k) and not str(value[k]).startswith("https://"):
+                raise ValueError(f"{k} must be an https:// URL")
+        return {**default, **value}
     if key in ("app.disclaimer", "app.announcement"):
         if value is not None and (not isinstance(value, str) or len(value) > 2000):
             raise ValueError(f"{key} must be a string of at most 2000 characters or null")
@@ -70,7 +135,13 @@ def get_config(session: Session, key: str) -> Any:
     if key not in CONFIG_KEYS:
         raise KeyError(key)
     row = session.get(AppConfig, key)
-    return row.value if row is not None else CONFIG_KEYS[key][0]
+    if row is None:
+        return CONFIG_KEYS[key][0]
+    # Stored dict values are merged over the defaults so settings added in
+    # later versions get their default instead of disappearing.
+    if key in ("notifications.settings", "notifications.templates"):
+        return _validate_config(key, row.value)
+    return row.value
 
 
 def list_config(session: Session) -> list[dict]:

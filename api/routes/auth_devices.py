@@ -45,7 +45,12 @@ def revoke_one_session(
     current_user: User = Depends(get_current_user),
     session: Session = Depends(get_session),
 ):
+    from db.models.user import RefreshToken
+    from notifications.service import unregister_device
+    row = session.get(RefreshToken, payload.session_id)
     revoke_session(session, current_user, payload.session_id)
+    if row is not None and row.user_id == current_user.id and row.device_id:
+        unregister_device(session, current_user.id, row.device_id)
 
 
 @router.post("/sessions/revoke-all", response_model=RevokeAllSessionsResponse)
@@ -59,6 +64,11 @@ def revoke_all(
     (except_current=True + current_device_id)."""
     except_device_id = payload.current_device_id if payload.except_current else None
     revoked_count = revoke_all_sessions(session, current_user, except_device_id=except_device_id)
+    # Signed-out devices stop receiving push notifications.
+    from notifications.service import list_devices, unregister_device
+    for d in list_devices(session, current_user):
+        if d.active and d.device_id != except_device_id:
+            unregister_device(session, current_user.id, d.device_id)
     return RevokeAllSessionsResponse(revoked_count=revoked_count)
 
 

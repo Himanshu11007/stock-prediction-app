@@ -54,6 +54,8 @@ uvicorn api.main:app --host 0.0.0.0 --port 8000        # API: http://127.0.0.1:8
 | Fundamental Quality & Value Framework (18 checks, thresholds, formulas) | [docs/FQVF.md](docs/FQVF.md) |
 | StockAI Score / Top Investment Candidates methodology | [docs/RANKING_METHODOLOGY.md](docs/RANKING_METHODOLOGY.md) |
 | Ranking v1.0 out-of-sample validation, freeze and prospective tracking | [docs/RANKING_VALIDATION_V1.md](docs/RANKING_VALIDATION_V1.md) |
+| Notifications, push devices, preferences, reports | [docs/NOTIFICATIONS.md](docs/NOTIFICATIONS.md) |
+| Scheduled jobs (daily ranking, summaries, outcomes) | [docs/SCHEDULING.md](docs/SCHEDULING.md) |
 | Admin / master controls | [docs/ADMIN_CONSOLE.md](docs/ADMIN_CONSOLE.md) |
 | API reference (mobile + admin endpoints) | [docs/API.md](docs/API.md) |
 | Data health and engine runs | [docs/DATA_HEALTH_AND_ENGINE_RUNS.md](docs/DATA_HEALTH_AND_ENGINE_RUNS.md) |

@@ -29,7 +29,7 @@ PAGES = [
     "Market Data", "Valuation Data", "Technical / Market Signals", "Market Regime", "FQVF Reference",
     "Ranking Configuration", "Top Picks", "Users", "Roles", "Watchlist Administration",
     "Recommendation History", "Data Validation", "Data Health", "API Health", "Engine Runs",
-    "Audit Logs", "Engine Versions", "Application Configuration",
+    "Audit Logs", "Engine Versions", "Application Configuration", "Notifications", "User Reports",
 ]
 
 
@@ -364,6 +364,74 @@ def page_config(c):
                     st.success("Saved (audited)")
 
 
+def page_notifications(c):
+    stats = call(c.get, "/admin/notifications/stats")
+    if stats:
+        st.subheader("Status")
+        settings = stats.pop("settings", {})
+        st.json(stats)
+        st.subheader("Settings (audited)")
+        st.caption("Global switch, event types, thresholds, rate limits and quiet-hour defaults. "
+                   "Templates: key notifications.templates on the Application Configuration page.")
+        with st.form("notification_settings"):
+            enabled = st.checkbox("Notifications enabled (global emergency switch)", value=settings.get("enabled", True))
+            push_enabled = st.checkbox("Push delivery enabled", value=settings.get("push_enabled", True))
+            types = {t: st.checkbox(f"Event type {t}", value=v) for t, v in settings.get("event_types", {}).items()}
+            score = st.number_input("Score change threshold (points)", 1.0, 100.0,
+                                    float(settings.get("score_change_threshold", 10)))
+            rank = st.number_input("Rank change threshold (places)", 1, 500, int(settings.get("rank_change_threshold", 15)))
+            fqvf = st.number_input("FQVF change (checks passed)", 1, 18, int(settings.get("fqvf_change_min_checks", 2)))
+            per_run = st.number_input("Max pushes per user per run", 0, 50, int(settings.get("max_push_per_user_per_run", 5)))
+            per_day = st.number_input("Max pushes per user per day", 0, 100, int(settings.get("max_push_per_user_per_day", 10)))
+            cooldown = st.number_input("Per-stock cooldown (hours)", 0, 336, int(settings.get("stock_cooldown_hours", 20)))
+            if st.form_submit_button("Save settings"):
+                body = {"enabled": enabled, "push_enabled": push_enabled, "event_types": types,
+                        "score_change_threshold": score, "rank_change_threshold": int(rank),
+                        "fqvf_change_min_checks": int(fqvf), "max_push_per_user_per_run": int(per_run),
+                        "max_push_per_user_per_day": int(per_day), "stock_cooldown_hours": int(cooldown)}
+                if call(c.put, "/admin/config/notifications.settings", {"value": {**settings, **body}}):
+                    st.success("Saved (audited)")
+    st.subheader("Actions (audited)")
+    cols = st.columns(4)
+    if cols[0].button("Process latest ranking run"):
+        r = call(c.post, "/admin/notifications/process-run", {})
+        if r:
+            st.success(f"{r['status']}: {r['notifications_created']} notification(s), {r['pushes_sent']} pushed")
+    if cols[1].button("Send daily summaries now"):
+        r = call(c.post, "/admin/notifications/daily-summary")
+        if r is not None:
+            st.success(str(r))
+    if cols[2].button("Dispatch queued pushes"):
+        r = call(c.post, "/admin/notifications/dispatch")
+        if r is not None:
+            st.success(str(r))
+    if cols[3].button("Send test to my devices"):
+        r = call(c.post, "/admin/notifications/test")
+        if r:
+            st.info(f"Push status: {r['push_status']}")
+    st.subheader("Notification runs")
+    table(call(c.get, "/admin/notifications/runs"), ["id", "kind", "source_key", "previous_run_id", "status",
+                                                      "events_detected", "notifications_created", "pushes_sent",
+                                                      "pushes_suppressed", "started_at", "engine_version"])
+    st.subheader("Recent notifications")
+    table(call(c.get, "/admin/notifications/recent", limit=200),
+          ["id", "user_id", "type", "title", "symbol", "push_status", "read", "created_at"])
+
+
+def page_reports(c):
+    status = st.selectbox("Status", ["", "NEW", "IN_REVIEW", "RESOLVED", "REJECTED"])
+    rows = call(c.get, "/admin/feedback", **({"status": status} if status else {})) or []
+    table(rows, ["id", "created_at", "user_id", "category", "symbol", "message", "status", "admin_note",
+                 "platform", "app_version"], empty="No reports.")
+    with st.form("report_update"):
+        rid = st.number_input("Report id", min_value=0, step=1)
+        new_status = st.selectbox("New status", ["IN_REVIEW", "RESOLVED", "REJECTED", "NEW"])
+        note = st.text_area("Admin note")
+        if st.form_submit_button("Update (audited)") and rid:
+            if call(c.patch, f"/admin/feedback/{int(rid)}", {"status": new_status, "admin_note": note or None}):
+                st.success("Updated")
+
+
 HANDLERS = {
     "Admin Dashboard": page_dashboard, "Stock Master": page_stock_master, "Sector Master": page_sectors,
     "Industry Master": page_industries, "Fundamental Data": page_fundamentals, "Market Data": page_market,
@@ -373,6 +441,7 @@ HANDLERS = {
     "Recommendation History": page_recommendations, "Data Validation": page_validation,
     "Data Health": page_health, "API Health": page_api_health, "Engine Runs": page_runs,
     "Audit Logs": page_audit, "Engine Versions": page_versions, "Application Configuration": page_config,
+    "Notifications": page_notifications, "User Reports": page_reports,
 }
 assert list(HANDLERS) == PAGES
 

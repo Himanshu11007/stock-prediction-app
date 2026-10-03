@@ -108,6 +108,43 @@ def main() -> int:
     if item:
         check("watchlist remove", s.delete(f"{api}/watchlist/{item['id']}", headers=H, timeout=10).status_code == 204)
 
+    # 10b. end-user journey: market status, explanation, watchlist without a
+    # purchase price, notifications, preferences, devices, reports
+    r = s.get(f"{api}/market/status", headers=H, timeout=10)
+    check("market status", r.status_code == 200 and r.json()["data"]["timezone"].startswith("Asia/Kolkata"),
+          r.json()["data"].get("label", "") if r.status_code == 200 else str(r.status_code))
+    a = s.get(f"{api}/stocks/{args.symbol}/analysis", headers=H, timeout=30).json().get("data", {})
+    check("analysis explains its rank", bool((a.get("explanation") or {}).get("summary")))
+    check("analysis has freshness status", (a.get("freshness_status") or {}).get("status") in ("OK", "STALE", "UNAVAILABLE"))
+    r = s.post(f"{api}/watchlist", headers=H, json={"symbol": args.symbol}, timeout=10)
+    check("watchlist add without purchase price", r.status_code in (201, 409), f"status {r.status_code}")
+    ov = s.get(f"{api}/watchlist/overview", headers=H, timeout=30)
+    wi = next((i for i in ov.json()["data"]["items"] if i["symbol"] == args.symbol), None) if ov.status_code == 200 else None
+    check("watchlist overview with score and alerts", wi is not None and "alerts" in wi and "stockai_score" in wi)
+    if wi:
+        r = s.put(f"{api}/watchlist/{wi['id']}/alerts", headers=H, json={"rank_changes": False}, timeout=10)
+        check("watchlist per-stock alert switch", r.status_code == 200 and r.json()["data"]["rank_changes"] is False)
+        s.delete(f"{api}/watchlist/{wi['id']}", headers=H, timeout=10)
+    r = s.get(f"{api}/notifications/preferences", headers=H, timeout=10)
+    check("notification preferences", r.status_code == 200 and r.json()["data"]["timezone"] == "Asia/Kolkata")
+    r = s.put(f"{api}/notifications/preferences", headers=H, json={"quiet_hours_start": "99:00"}, timeout=10)
+    check("invalid preference rejected", r.status_code == 400)
+    r = s.post(f"{api}/devices", headers=H, json={"device_id": "e2e-device", "platform": "android",
+                                                 "push_token": "e2e-token-not-real", "permission": "granted"}, timeout=10)
+    check("device registration (token masked)", r.status_code == 200 and r.json()["data"]["token"] == "...t-real")
+    r = s.get(f"{api}/notifications", headers=H, timeout=10)
+    check("notification center", r.status_code == 200 and "unread" in r.json()["data"])
+    check("mark all read", s.post(f"{api}/notifications/read-all", headers=H, timeout=10).status_code == 200)
+    check("device removal", s.delete(f"{api}/devices/e2e-device", headers=H, timeout=10).status_code == 204)
+    perf = s.get(f"{api}/performance/overview", headers=H, timeout=30)
+    check("performance by methodology", perf.status_code == 200 and "ranking_v1_prospective" in perf.json()["data"]["sections"])
+    intel = s.get(f"{api}/intelligence/overview", headers=H, timeout=30)
+    check("intelligence overview (ML informational)", intel.status_code == 200 and any(
+        x["key"] == "ml_signal" and x["status"].startswith("Informational") for x in intel.json()["data"]["sections"]))
+    r = s.post(f"{api}/feedback", headers=H, json={"category": "APP_BUG", "message": "E2E test report - please ignore"},
+               timeout=10)
+    check("report recorded for admin review", r.status_code == 201 and "recorded" in r.json()["message"])
+
     # 11. admin
     check("normal user cannot use admin APIs", s.get(f"{api}/admin/data-health", headers=H, timeout=10).status_code == 403)
     check("normal user cannot clear logs", s.delete(f"{api}/logs/clear", headers=H, timeout=10).status_code == 403)
@@ -121,6 +158,15 @@ def main() -> int:
             check(f"admin GET {path}", rr.status_code == 200, f"status {rr.status_code}")
         bad = s.put(f"{api}/admin/config/ranking.weights", headers=A, json={"value": {"quality": -1}}, timeout=10)
         check("admin config validation", bad.status_code == 400)
+        for path in ("/admin/notifications/stats", "/admin/notifications/runs", "/admin/feedback"):
+            rr = s.get(api + path, headers=A, timeout=60)
+            check(f"admin GET {path}", rr.status_code == 200, f"status {rr.status_code}")
+        rr = s.post(f"{api}/admin/notifications/process-run", headers=A, json={}, timeout=120)
+        check("admin notification run (idempotent)", rr.status_code in (200, 404),
+              f"{rr.json().get('status')} created={rr.json().get('notifications_created')}" if rr.status_code == 200 else "")
+        bad = s.put(f"{api}/admin/config/notifications.settings", headers=A,
+                    json={"value": {"score_change_threshold": 0}}, timeout=10)
+        check("notification settings validation", bad.status_code == 400)
 
     # 12. OpenAPI
     spec = s.get(args.base.rstrip("/") + "/openapi.json", timeout=10)

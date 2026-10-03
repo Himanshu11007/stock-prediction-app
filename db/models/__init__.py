@@ -21,3 +21,12 @@ from db.models.market import (  # noqa: F401
     Sector,
     StockAnalysisResult,
 )
+from db.models.notifications import (  # noqa: F401
+    Notification,
+    NotificationDelivery,
+    NotificationPreference,
+    NotificationRun,
+    PushDevice,
+    UserFeedback,
+    WatchlistAlertSetting,
+)

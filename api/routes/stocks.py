@@ -15,6 +15,7 @@ from sqlmodel import Session
 import stocks.service as stocks_service
 from api.schemas_stocks import StockSearchResultResponse
 import engine_runs.service as runs
+import masters.service as masters
 from api.schemas import success_envelope
 from auth.dependencies import get_current_user
 from db.models.user import User
@@ -70,7 +71,7 @@ def get_stock_analysis(symbol: str, session: Session = Depends(get_session)):
     data freshness, from the latest completed engine run."""
     company = _active_company_or_404(session, symbol)
     result = _result_or_404(session, company.symbol)
-    return success_envelope(presenter.analysis_payload(session, result, company), message="Analysis retrieved")
+    return success_envelope(presenter.analysis_payload(session, result, company, masters.get_config(session, 'top_picks.limit')), message="Analysis retrieved")
 
 
 @router.get("/{symbol}/fqvf")
@@ -103,7 +104,7 @@ def refresh_stock_analysis(
     if computed is not None and computed.tzinfo is None:
         computed = computed.replace(tzinfo=timezone.utc)
     if computed is not None and datetime.now(timezone.utc) - computed < ANALYSIS_REFRESH_MIN_AGE:
-        return success_envelope(presenter.analysis_payload(session, existing, company),
+        return success_envelope(presenter.analysis_payload(session, existing, company, masters.get_config(session, 'top_picks.limit')),
                                 message="Analysis is less than 60 minutes old; returning the existing result")
     try:
         runs.run_single_stock(engine, company.symbol, triggered_by=current_user.id)
@@ -111,4 +112,4 @@ def refresh_stock_analysis(
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
     session.expire_all()
     result = _result_or_404(session, company.symbol)
-    return success_envelope(presenter.analysis_payload(session, result, company), message="Analysis refreshed")
+    return success_envelope(presenter.analysis_payload(session, result, company, masters.get_config(session, 'top_picks.limit')), message="Analysis refreshed")
