@@ -1,0 +1,7265 @@
+{
+  "experiment": "E12",
+  "base_config_key": "26d2fd12a2e9",
+  "methods": [
+    "none",
+    "platt",
+    "isotonic",
+    "constant_base_rate"
+  ],
+  "selection_rule": "lowest DEV Brier among none/platt/isotonic, per horizon",
+  "by_horizon": {
+    "1d": {
+      "dev": {
+        "fit_rows": 5022,
+        "fit_first": "2024-07-01",
+        "fit_last": "2025-03-27",
+        "fit_last_outcome": "2025-03-28",
+        "eval_rows": 3375,
+        "eval_first": "2025-04-01",
+        "eval_last": "2025-09-30",
+        "methods": {
+          "none": {
+            "n": 3375,
+            "accuracy": 0.4999,
+            "accuracy_ci95": [
+              48.3,
+              51.7
+            ],
+            "balanced_accuracy": 0.4998,
+            "precision": 0.4993,
+            "recall": 0.4466,
+            "f1": 0.4715,
+            "auc": 0.5011,
+            "brier": 0.27612,
+            "log_loss": 0.75429,
+            "ece": 0.1342,
+            "pred_up_pct": 44.7,
+            "actual_up_pct": 50.0,
+            "mean_p": 0.4784,
+            "reliability": [
+              {
+                "bin": "0.0-0.1",
+                "n": 1,
+                "mean_predicted": 0.0856,
+                "observed_up_rate": 1.0,
+                "observed_ci95": [
+                  20.7,
+                  100.0
+                ]
+              },
+              {
+                "bin": "0.1-0.2",
+                "n": 110,
+                "mean_predicted": 0.1635,
+                "observed_up_rate": 0.4909,
+                "observed_ci95": [
+                  39.9,
+                  58.3
+                ]
+              },
+              {
+                "bin": "0.2-0.3",
+                "n": 389,
+                "mean_predicted": 0.2581,
+                "observed_up_rate": 0.5347,
+                "observed_ci95": [
+                  48.5,
+                  58.4
+                ]
+              },
+              {
+                "bin": "0.3-0.4",
+                "n": 640,
+                "mean_predicted": 0.3509,
+                "observed_up_rate": 0.4813,
+                "observed_ci95": [
+                  44.3,
+                  52.0
+                ]
+              },
+              {
+                "bin": "0.4-0.5",
+                "n": 727,
+                "mean_predicted": 0.4508,
+                "observed_up_rate": 0.4979,
+                "observed_ci95": [
+                  46.2,
+                  53.4
+                ]
+              },
+              {
+                "bin": "0.5-0.6",
+                "n": 684,
+                "mean_predicted": 0.5483,
+                "observed_up_rate": 0.481,
+                "observed_ci95": [
+                  44.4,
+                  51.8
+                ]
+              },
+              {
+                "bin": "0.6-0.7",
+                "n": 497,
+                "mean_predicted": 0.6462,
+                "observed_up_rate": 0.5151,
+                "observed_ci95": [
+                  47.1,
+                  55.9
+                ]
+              },
+              {
+                "bin": "0.7-0.8",
+                "n": 273,
+                "mean_predicted": 0.7425,
+                "observed_up_rate": 0.5348,
+                "observed_ci95": [
+                  47.6,
+                  59.3
+                ]
+              },
+              {
+                "bin": "0.8-0.9",
+                "n": 53,
+                "mean_predicted": 0.8286,
+                "observed_up_rate": 0.4151,
+                "observed_ci95": [
+                  29.3,
+                  54.9
+                ]
+              },
+              {
+                "bin": "0.9-1.0",
+                "n": 1,
+                "mean_predicted": 0.9076,
+                "observed_up_rate": 0.0,
+                "observed_ci95": [
+                  0.0,
+                  79.3
+                ]
+              }
+            ],
+            "confidence_buckets": [
+              {
+                "bucket": "50-55",
+                "n": 748,
+                "success_rate": 0.4826,
+                "ci95": [
+                  44.7,
+                  51.8
+                ]
+              },
+              {
+                "bucket": "55-60",
+                "n": 663,
+                "success_rate": 0.5023,
+                "ci95": [
+                  46.4,
+                  54.0
+                ]
+              },
+              {
+                "bucket": "60-65",
+                "n": 621,
+                "success_rate": 0.5233,
+                "ci95": [
+                  48.4,
+                  56.2
+                ]
+              },
+              {
+                "bucket": "65-70",
+                "n": 516,
+                "success_rate": 0.5097,
+                "ci95": [
+                  46.7,
+                  55.3
+                ]
+              },
+              {
+                "bucket": "70-75",
+                "n": 413,
+                "success_rate": 0.5061,
+                "ci95": [
+                  45.8,
+                  55.4
+                ]
+              },
+              {
+                "bucket": "75-80",
+                "n": 249,
+                "success_rate": 0.4739,
+                "ci95": [
+                  41.3,
+                  53.6
+                ]
+              },
+              {
+                "bucket": "80-85",
+                "n": 122,
+                "success_rate": 0.4672,
+                "ci95": [
+                  38.1,
+                  55.5
+                ]
+              },
+              {
+                "bucket": "85-90",
+                "n": 41,
+                "success_rate": 0.5122,
+                "ci95": [
+                  36.5,
+                  65.7
+                ]
+              },
+              {
+                "bucket": "90-95",
+                "n": 2,
+                "success_rate": 0.0,
+                "ci95": [
+                  0.0,
+                  65.8
+                ]
+              },
+              {
+                "bucket": "95-100",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              }
+            ]
+          },
+          "platt": {
+            "n": 3375,
+            "accuracy": 0.5043,
+            "accuracy_ci95": [
+              48.7,
+              52.1
+            ],
+            "balanced_accuracy": 0.504,
+            "precision": 0.5145,
+            "recall": 0.1364,
+            "f1": 0.2157,
+            "auc": 0.4989,
+            "brier": 0.25051,
+            "log_loss": 0.69416,
+            "ece": 0.017,
+            "pred_up_pct": 13.2,
+            "actual_up_pct": 50.0,
+            "mean_p": 0.4825,
+            "reliability": [
+              {
+                "bin": "0.0-0.1",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.1-0.2",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.2-0.3",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.3-0.4",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.4-0.5",
+                "n": 2928,
+                "mean_predicted": 0.4787,
+                "observed_up_rate": 0.4973,
+                "observed_ci95": [
+                  47.9,
+                  51.5
+                ]
+              },
+              {
+                "bin": "0.5-0.6",
+                "n": 447,
+                "mean_predicted": 0.5073,
+                "observed_up_rate": 0.5145,
+                "observed_ci95": [
+                  46.8,
+                  56.1
+                ]
+              },
+              {
+                "bin": "0.6-0.7",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.7-0.8",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.8-0.9",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.9-1.0",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              }
+            ],
+            "confidence_buckets": [
+              {
+                "bucket": "50-55",
+                "n": 3323,
+                "success_rate": 0.5029,
+                "ci95": [
+                  48.6,
+                  52.0
+                ]
+              },
+              {
+                "bucket": "55-60",
+                "n": 52,
+                "success_rate": 0.5962,
+                "ci95": [
+                  46.1,
+                  71.8
+                ]
+              },
+              {
+                "bucket": "60-65",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "65-70",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "70-75",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "75-80",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "80-85",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "85-90",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "90-95",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "95-100",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              }
+            ],
+            "vs_none": {
+              "n": 3375,
+              "n_dates": 125,
+              "accuracy_diff": 0.0044,
+              "accuracy_diff_ci95": [
+                -0.0317,
+                0.0382
+              ],
+              "brier_diff": -0.02561,
+              "brier_diff_ci95": [
+                -0.03153,
+                -0.0195
+              ]
+            }
+          },
+          "isotonic": {
+            "n": 3375,
+            "accuracy": 0.4999,
+            "accuracy_ci95": [
+              48.3,
+              51.7
+            ],
+            "balanced_accuracy": 0.4994,
+            "precision": 0.0,
+            "recall": 0.0,
+            "f1": 0.0,
+            "auc": 0.4991,
+            "brier": 0.25114,
+            "log_loss": 0.70908,
+            "ece": 0.0209,
+            "pred_up_pct": 0.1,
+            "actual_up_pct": 50.0,
+            "mean_p": 0.4795,
+            "reliability": [
+              {
+                "bin": "0.0-0.1",
+                "n": 6,
+                "mean_predicted": 0.0,
+                "observed_up_rate": 0.6667,
+                "observed_ci95": [
+                  30.0,
+                  90.3
+                ]
+              },
+              {
+                "bin": "0.1-0.2",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.2-0.3",
+                "n": 1,
+                "mean_predicted": 0.2373,
+                "observed_up_rate": 0.0,
+                "observed_ci95": [
+                  0.0,
+                  79.3
+                ]
+              },
+              {
+                "bin": "0.3-0.4",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.4-0.5",
+                "n": 3366,
+                "mean_predicted": 0.4804,
+                "observed_up_rate": 0.4997,
+                "observed_ci95": [
+                  48.3,
+                  51.7
+                ]
+              },
+              {
+                "bin": "0.5-0.6",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.6-0.7",
+                "n": 2,
+                "mean_predicted": 0.625,
+                "observed_up_rate": 0.0,
+                "observed_ci95": [
+                  0.0,
+                  65.8
+                ]
+              },
+              {
+                "bin": "0.7-0.8",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.8-0.9",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.9-1.0",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              }
+            ],
+            "confidence_buckets": [
+              {
+                "bucket": "50-55",
+                "n": 3366,
+                "success_rate": 0.5003,
+                "ci95": [
+                  48.3,
+                  51.7
+                ]
+              },
+              {
+                "bucket": "55-60",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "60-65",
+                "n": 2,
+                "success_rate": 0.0,
+                "ci95": [
+                  0.0,
+                  65.8
+                ]
+              },
+              {
+                "bucket": "65-70",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "70-75",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "75-80",
+                "n": 1,
+                "success_rate": 1.0,
+                "ci95": [
+                  20.7,
+                  100.0
+                ]
+              },
+              {
+                "bucket": "80-85",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "85-90",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "90-95",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "95-100",
+                "n": 6,
+                "success_rate": 0.3333,
+                "ci95": [
+                  9.7,
+                  70.0
+                ]
+              }
+            ],
+            "vs_none": {
+              "n": 3375,
+              "n_dates": 125,
+              "accuracy_diff": 0.0,
+              "accuracy_diff_ci95": [
+                -0.0406,
+                0.0391
+              ],
+              "brier_diff": -0.02498,
+              "brier_diff_ci95": [
+                -0.03044,
+                -0.01925
+              ]
+            }
+          },
+          "constant_base_rate": {
+            "n": 3375,
+            "accuracy": 0.5004,
+            "accuracy_ci95": [
+              48.4,
+              51.7
+            ],
+            "balanced_accuracy": 0.5,
+            "precision": null,
+            "recall": 0.0,
+            "f1": null,
+            "auc": 0.5,
+            "brier": 0.25038,
+            "log_loss": 0.69391,
+            "ece": 0.0195,
+            "pred_up_pct": 0.0,
+            "actual_up_pct": 50.0,
+            "mean_p": 0.4801,
+            "reliability": [
+              {
+                "bin": "0.0-0.1",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.1-0.2",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.2-0.3",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.3-0.4",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.4-0.5",
+                "n": 3375,
+                "mean_predicted": 0.4801,
+                "observed_up_rate": 0.4996,
+                "observed_ci95": [
+                  48.3,
+                  51.6
+                ]
+              },
+              {
+                "bin": "0.5-0.6",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.6-0.7",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.7-0.8",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.8-0.9",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.9-1.0",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              }
+            ],
+            "confidence_buckets": [
+              {
+                "bucket": "50-55",
+                "n": 3375,
+                "success_rate": 0.5004,
+                "ci95": [
+                  48.4,
+                  51.7
+                ]
+              },
+              {
+                "bucket": "55-60",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "60-65",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "65-70",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "70-75",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "75-80",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "80-85",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "85-90",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "90-95",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "95-100",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              }
+            ],
+            "vs_none": {
+              "n": 3375,
+              "n_dates": 125,
+              "accuracy_diff": 0.0006,
+              "accuracy_diff_ci95": [
+                -0.04,
+                0.0397
+              ],
+              "brier_diff": -0.02574,
+              "brier_diff_ci95": [
+                -0.03111,
+                -0.02014
+              ]
+            }
+          }
+        }
+      },
+      "final": {
+        "fit_rows": 8397,
+        "fit_first": "2024-07-01",
+        "fit_last": "2025-09-29",
+        "fit_last_outcome": "2025-09-30",
+        "eval_rows": 6642,
+        "eval_first": "2025-10-01",
+        "eval_last": "2026-09-30",
+        "methods": {
+          "none": {
+            "n": 6642,
+            "accuracy": 0.5026,
+            "accuracy_ci95": [
+              49.1,
+              51.5
+            ],
+            "balanced_accuracy": 0.5009,
+            "precision": 0.4854,
+            "recall": 0.4486,
+            "f1": 0.4662,
+            "auc": 0.4995,
+            "brier": 0.2766,
+            "log_loss": 0.75493,
+            "ece": 0.1355,
+            "pred_up_pct": 44.8,
+            "actual_up_pct": 48.4,
+            "mean_p": 0.4814,
+            "reliability": [
+              {
+                "bin": "0.0-0.1",
+                "n": 6,
+                "mean_predicted": 0.0839,
+                "observed_up_rate": 0.3333,
+                "observed_ci95": [
+                  9.7,
+                  70.0
+                ]
+              },
+              {
+                "bin": "0.1-0.2",
+                "n": 187,
+                "mean_predicted": 0.1666,
+                "observed_up_rate": 0.4599,
+                "observed_ci95": [
+                  39.0,
+                  53.1
+                ]
+              },
+              {
+                "bin": "0.2-0.3",
+                "n": 817,
+                "mean_predicted": 0.2565,
+                "observed_up_rate": 0.4884,
+                "observed_ci95": [
+                  45.4,
+                  52.3
+                ]
+              },
+              {
+                "bin": "0.3-0.4",
+                "n": 1267,
+                "mean_predicted": 0.3525,
+                "observed_up_rate": 0.5004,
+                "observed_ci95": [
+                  47.3,
+                  52.8
+                ]
+              },
+              {
+                "bin": "0.4-0.5",
+                "n": 1392,
+                "mean_predicted": 0.4499,
+                "observed_up_rate": 0.4691,
+                "observed_ci95": [
+                  44.3,
+                  49.5
+                ]
+              },
+              {
+                "bin": "0.5-0.6",
+                "n": 1262,
+                "mean_predicted": 0.5496,
+                "observed_up_rate": 0.4897,
+                "observed_ci95": [
+                  46.2,
+                  51.7
+                ]
+              },
+              {
+                "bin": "0.6-0.7",
+                "n": 1018,
+                "mean_predicted": 0.6473,
+                "observed_up_rate": 0.4784,
+                "observed_ci95": [
+                  44.8,
+                  50.9
+                ]
+              },
+              {
+                "bin": "0.7-0.8",
+                "n": 533,
+                "mean_predicted": 0.7443,
+                "observed_up_rate": 0.4784,
+                "observed_ci95": [
+                  43.6,
+                  52.1
+                ]
+              },
+              {
+                "bin": "0.8-0.9",
+                "n": 155,
+                "mean_predicted": 0.8357,
+                "observed_up_rate": 0.5226,
+                "observed_ci95": [
+                  44.4,
+                  60.0
+                ]
+              },
+              {
+                "bin": "0.9-1.0",
+                "n": 5,
+                "mean_predicted": 0.9115,
+                "observed_up_rate": 0.4,
+                "observed_ci95": [
+                  11.8,
+                  76.9
+                ]
+              }
+            ],
+            "confidence_buckets": [
+              {
+                "bucket": "50-55",
+                "n": 1315,
+                "success_rate": 0.5049,
+                "ci95": [
+                  47.8,
+                  53.2
+                ]
+              },
+              {
+                "bucket": "55-60",
+                "n": 1339,
+                "success_rate": 0.5176,
+                "ci95": [
+                  49.1,
+                  54.4
+                ]
+              },
+              {
+                "bucket": "60-65",
+                "n": 1225,
+                "success_rate": 0.4784,
+                "ci95": [
+                  45.1,
+                  50.6
+                ]
+              },
+              {
+                "bucket": "65-70",
+                "n": 1060,
+                "success_rate": 0.5038,
+                "ci95": [
+                  47.4,
+                  53.4
+                ]
+              },
+              {
+                "bucket": "70-75",
+                "n": 800,
+                "success_rate": 0.4988,
+                "ci95": [
+                  46.4,
+                  53.3
+                ]
+              },
+              {
+                "bucket": "75-80",
+                "n": 550,
+                "success_rate": 0.4982,
+                "ci95": [
+                  45.7,
+                  54.0
+                ]
+              },
+              {
+                "bucket": "80-85",
+                "n": 249,
+                "success_rate": 0.5141,
+                "ci95": [
+                  45.2,
+                  57.5
+                ]
+              },
+              {
+                "bucket": "85-90",
+                "n": 93,
+                "success_rate": 0.5806,
+                "ci95": [
+                  47.9,
+                  67.6
+                ]
+              },
+              {
+                "bucket": "90-95",
+                "n": 11,
+                "success_rate": 0.5455,
+                "ci95": [
+                  28.0,
+                  78.7
+                ]
+              },
+              {
+                "bucket": "95-100",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              }
+            ]
+          },
+          "platt": {
+            "n": 6642,
+            "accuracy": 0.5129,
+            "accuracy_ci95": [
+              50.1,
+              52.5
+            ],
+            "balanced_accuracy": 0.5014,
+            "precision": 0.4898,
+            "recall": 0.1343,
+            "f1": 0.2108,
+            "auc": 0.5005,
+            "brier": 0.24991,
+            "log_loss": 0.69297,
+            "ece": 0.0034,
+            "pred_up_pct": 13.3,
+            "actual_up_pct": 48.4,
+            "mean_p": 0.4877,
+            "reliability": [
+              {
+                "bin": "0.0-0.1",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.1-0.2",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.2-0.3",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.3-0.4",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.4-0.5",
+                "n": 5760,
+                "mean_predicted": 0.4851,
+                "observed_up_rate": 0.4835,
+                "observed_ci95": [
+                  47.1,
+                  49.6
+                ]
+              },
+              {
+                "bin": "0.5-0.6",
+                "n": 882,
+                "mean_predicted": 0.5048,
+                "observed_up_rate": 0.4898,
+                "observed_ci95": [
+                  45.7,
+                  52.3
+                ]
+              },
+              {
+                "bin": "0.6-0.7",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.7-0.8",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.8-0.9",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.9-1.0",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              }
+            ],
+            "confidence_buckets": [
+              {
+                "bucket": "50-55",
+                "n": 6641,
+                "success_rate": 0.5129,
+                "ci95": [
+                  50.1,
+                  52.5
+                ]
+              },
+              {
+                "bucket": "55-60",
+                "n": 1,
+                "success_rate": 1.0,
+                "ci95": [
+                  20.7,
+                  100.0
+                ]
+              },
+              {
+                "bucket": "60-65",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "65-70",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "70-75",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "75-80",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "80-85",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "85-90",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "90-95",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "95-100",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              }
+            ],
+            "vs_none": {
+              "n": 6642,
+              "n_dates": 246,
+              "accuracy_diff": 0.0104,
+              "accuracy_diff_ci95": [
+                -0.02,
+                0.0395
+              ],
+              "brier_diff": -0.02669,
+              "brier_diff_ci95": [
+                -0.03202,
+                -0.02136
+              ]
+            }
+          },
+          "isotonic": {
+            "n": 6642,
+            "accuracy": 0.5164,
+            "accuracy_ci95": [
+              50.4,
+              52.8
+            ],
+            "balanced_accuracy": 0.5008,
+            "precision": 0.6923,
+            "recall": 0.0028,
+            "f1": 0.0056,
+            "auc": 0.502,
+            "brier": 0.24978,
+            "log_loss": 0.69275,
+            "ece": 0.0039,
+            "pred_up_pct": 0.2,
+            "actual_up_pct": 48.4,
+            "mean_p": 0.4869,
+            "reliability": [
+              {
+                "bin": "0.0-0.1",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.1-0.2",
+                "n": 6,
+                "mean_predicted": 0.1429,
+                "observed_up_rate": 0.3333,
+                "observed_ci95": [
+                  9.7,
+                  70.0
+                ]
+              },
+              {
+                "bin": "0.2-0.3",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.3-0.4",
+                "n": 15,
+                "mean_predicted": 0.3528,
+                "observed_up_rate": 0.4667,
+                "observed_ci95": [
+                  24.8,
+                  69.9
+                ]
+              },
+              {
+                "bin": "0.4-0.5",
+                "n": 6608,
+                "mean_predicted": 0.4874,
+                "observed_up_rate": 0.4841,
+                "observed_ci95": [
+                  47.2,
+                  49.6
+                ]
+              },
+              {
+                "bin": "0.5-0.6",
+                "n": 13,
+                "mean_predicted": 0.5515,
+                "observed_up_rate": 0.6923,
+                "observed_ci95": [
+                  42.4,
+                  87.3
+                ]
+              },
+              {
+                "bin": "0.6-0.7",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.7-0.8",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.8-0.9",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.9-1.0",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              }
+            ],
+            "confidence_buckets": [
+              {
+                "bucket": "50-55",
+                "n": 6602,
+                "success_rate": 0.5161,
+                "ci95": [
+                  50.4,
+                  52.8
+                ]
+              },
+              {
+                "bucket": "55-60",
+                "n": 19,
+                "success_rate": 0.5789,
+                "ci95": [
+                  36.3,
+                  76.9
+                ]
+              },
+              {
+                "bucket": "60-65",
+                "n": 9,
+                "success_rate": 0.6667,
+                "ci95": [
+                  35.4,
+                  87.9
+                ]
+              },
+              {
+                "bucket": "65-70",
+                "n": 6,
+                "success_rate": 0.3333,
+                "ci95": [
+                  9.7,
+                  70.0
+                ]
+              },
+              {
+                "bucket": "70-75",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "75-80",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "80-85",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "85-90",
+                "n": 6,
+                "success_rate": 0.6667,
+                "ci95": [
+                  30.0,
+                  90.3
+                ]
+              },
+              {
+                "bucket": "90-95",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "95-100",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              }
+            ],
+            "vs_none": {
+              "n": 6642,
+              "n_dates": 246,
+              "accuracy_diff": 0.0139,
+              "accuracy_diff_ci95": [
+                -0.0176,
+                0.0444
+              ],
+              "brier_diff": -0.02682,
+              "brier_diff_ci95": [
+                -0.03183,
+                -0.02188
+              ]
+            }
+          },
+          "constant_base_rate": {
+            "n": 6642,
+            "accuracy": 0.5157,
+            "accuracy_ci95": [
+              50.4,
+              52.8
+            ],
+            "balanced_accuracy": 0.5,
+            "precision": null,
+            "recall": 0.0,
+            "f1": null,
+            "auc": 0.5,
+            "brier": 0.24976,
+            "log_loss": 0.69267,
+            "ece": 0.0026,
+            "pred_up_pct": 0.0,
+            "actual_up_pct": 48.4,
+            "mean_p": 0.487,
+            "reliability": [
+              {
+                "bin": "0.0-0.1",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.1-0.2",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.2-0.3",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.3-0.4",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.4-0.5",
+                "n": 6642,
+                "mean_predicted": 0.487,
+                "observed_up_rate": 0.4843,
+                "observed_ci95": [
+                  47.2,
+                  49.6
+                ]
+              },
+              {
+                "bin": "0.5-0.6",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.6-0.7",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.7-0.8",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.8-0.9",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.9-1.0",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              }
+            ],
+            "confidence_buckets": [
+              {
+                "bucket": "50-55",
+                "n": 6642,
+                "success_rate": 0.5157,
+                "ci95": [
+                  50.4,
+                  52.8
+                ]
+              },
+              {
+                "bucket": "55-60",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "60-65",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "65-70",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "70-75",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "75-80",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "80-85",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "85-90",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "90-95",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "95-100",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              }
+            ],
+            "vs_none": {
+              "n": 6642,
+              "n_dates": 246,
+              "accuracy_diff": 0.0131,
+              "accuracy_diff_ci95": [
+                -0.0191,
+                0.0438
+              ],
+              "brier_diff": -0.02684,
+              "brier_diff_ci95": [
+                -0.03182,
+                -0.02183
+              ]
+            }
+          }
+        }
+      },
+      "selected_on_dev": "platt"
+    },
+    "3d": {
+      "dev": {
+        "fit_rows": 4968,
+        "fit_first": "2024-07-01",
+        "fit_last": "2025-03-25",
+        "fit_last_outcome": "2025-03-28",
+        "eval_rows": 3375,
+        "eval_first": "2025-04-01",
+        "eval_last": "2025-09-30",
+        "methods": {
+          "none": {
+            "n": 3375,
+            "accuracy": 0.5013,
+            "accuracy_ci95": [
+              48.4,
+              51.8
+            ],
+            "balanced_accuracy": 0.503,
+            "precision": 0.5186,
+            "recall": 0.4497,
+            "f1": 0.4817,
+            "auc": 0.4985,
+            "brier": 0.2774,
+            "log_loss": 0.75687,
+            "ece": 0.1328,
+            "pred_up_pct": 44.7,
+            "actual_up_pct": 51.5,
+            "mean_p": 0.4784,
+            "reliability": [
+              {
+                "bin": "0.0-0.1",
+                "n": 1,
+                "mean_predicted": 0.0856,
+                "observed_up_rate": 1.0,
+                "observed_ci95": [
+                  20.7,
+                  100.0
+                ]
+              },
+              {
+                "bin": "0.1-0.2",
+                "n": 110,
+                "mean_predicted": 0.1635,
+                "observed_up_rate": 0.5182,
+                "observed_ci95": [
+                  42.6,
+                  60.9
+                ]
+              },
+              {
+                "bin": "0.2-0.3",
+                "n": 389,
+                "mean_predicted": 0.2581,
+                "observed_up_rate": 0.5373,
+                "observed_ci95": [
+                  48.8,
+                  58.6
+                ]
+              },
+              {
+                "bin": "0.3-0.4",
+                "n": 640,
+                "mean_predicted": 0.3509,
+                "observed_up_rate": 0.5172,
+                "observed_ci95": [
+                  47.8,
+                  55.6
+                ]
+              },
+              {
+                "bin": "0.4-0.5",
+                "n": 727,
+                "mean_predicted": 0.4508,
+                "observed_up_rate": 0.4938,
+                "observed_ci95": [
+                  45.8,
+                  53.0
+                ]
+              },
+              {
+                "bin": "0.5-0.6",
+                "n": 684,
+                "mean_predicted": 0.5483,
+                "observed_up_rate": 0.5088,
+                "observed_ci95": [
+                  47.1,
+                  54.6
+                ]
+              },
+              {
+                "bin": "0.6-0.7",
+                "n": 497,
+                "mean_predicted": 0.6462,
+                "observed_up_rate": 0.5312,
+                "observed_ci95": [
+                  48.7,
+                  57.5
+                ]
+              },
+              {
+                "bin": "0.7-0.8",
+                "n": 273,
+                "mean_predicted": 0.7425,
+                "observed_up_rate": 0.5348,
+                "observed_ci95": [
+                  47.6,
+                  59.3
+                ]
+              },
+              {
+                "bin": "0.8-0.9",
+                "n": 53,
+                "mean_predicted": 0.8286,
+                "observed_up_rate": 0.434,
+                "observed_ci95": [
+                  31.0,
+                  56.7
+                ]
+              },
+              {
+                "bin": "0.9-1.0",
+                "n": 1,
+                "mean_predicted": 0.9076,
+                "observed_up_rate": 1.0,
+                "observed_ci95": [
+                  20.7,
+                  100.0
+                ]
+              }
+            ],
+            "confidence_buckets": [
+              {
+                "bucket": "50-55",
+                "n": 748,
+                "success_rate": 0.4893,
+                "ci95": [
+                  45.4,
+                  52.5
+                ]
+              },
+              {
+                "bucket": "55-60",
+                "n": 663,
+                "success_rate": 0.5279,
+                "ci95": [
+                  49.0,
+                  56.6
+                ]
+              },
+              {
+                "bucket": "60-65",
+                "n": 621,
+                "success_rate": 0.5137,
+                "ci95": [
+                  47.4,
+                  55.3
+                ]
+              },
+              {
+                "bucket": "65-70",
+                "n": 516,
+                "success_rate": 0.4922,
+                "ci95": [
+                  44.9,
+                  53.5
+                ]
+              },
+              {
+                "bucket": "70-75",
+                "n": 413,
+                "success_rate": 0.5036,
+                "ci95": [
+                  45.6,
+                  55.2
+                ]
+              },
+              {
+                "bucket": "75-80",
+                "n": 249,
+                "success_rate": 0.4739,
+                "ci95": [
+                  41.3,
+                  53.6
+                ]
+              },
+              {
+                "bucket": "80-85",
+                "n": 122,
+                "success_rate": 0.4344,
+                "ci95": [
+                  35.0,
+                  52.3
+                ]
+              },
+              {
+                "bucket": "85-90",
+                "n": 41,
+                "success_rate": 0.561,
+                "ci95": [
+                  41.0,
+                  70.1
+                ]
+              },
+              {
+                "bucket": "90-95",
+                "n": 2,
+                "success_rate": 0.5,
+                "ci95": [
+                  9.5,
+                  90.5
+                ]
+              },
+              {
+                "bucket": "95-100",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              }
+            ]
+          },
+          "platt": {
+            "n": 3375,
+            "accuracy": 0.4927,
+            "accuracy_ci95": [
+              47.6,
+              51.0
+            ],
+            "balanced_accuracy": 0.504,
+            "precision": 0.5302,
+            "recall": 0.1363,
+            "f1": 0.2168,
+            "auc": 0.5015,
+            "brier": 0.25132,
+            "log_loss": 0.6958,
+            "ece": 0.036,
+            "pred_up_pct": 13.2,
+            "actual_up_pct": 51.5,
+            "mean_p": 0.4792,
+            "reliability": [
+              {
+                "bin": "0.0-0.1",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.1-0.2",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.2-0.3",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.3-0.4",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.4-0.5",
+                "n": 2928,
+                "mean_predicted": 0.4747,
+                "observed_up_rate": 0.513,
+                "observed_ci95": [
+                  49.5,
+                  53.1
+                ]
+              },
+              {
+                "bin": "0.5-0.6",
+                "n": 447,
+                "mean_predicted": 0.5087,
+                "observed_up_rate": 0.5302,
+                "observed_ci95": [
+                  48.4,
+                  57.6
+                ]
+              },
+              {
+                "bin": "0.6-0.7",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.7-0.8",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.8-0.9",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.9-1.0",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              }
+            ],
+            "confidence_buckets": [
+              {
+                "bucket": "50-55",
+                "n": 3176,
+                "success_rate": 0.4912,
+                "ci95": [
+                  47.4,
+                  50.9
+                ]
+              },
+              {
+                "bucket": "55-60",
+                "n": 199,
+                "success_rate": 0.5176,
+                "ci95": [
+                  44.8,
+                  58.6
+                ]
+              },
+              {
+                "bucket": "60-65",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "65-70",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "70-75",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "75-80",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "80-85",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "85-90",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "90-95",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "95-100",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              }
+            ],
+            "vs_none": {
+              "n": 3375,
+              "n_dates": 125,
+              "accuracy_diff": -0.0086,
+              "accuracy_diff_ci95": [
+                -0.0459,
+                0.0276
+              ],
+              "brier_diff": -0.02608,
+              "brier_diff_ci95": [
+                -0.0334,
+                -0.0189
+              ]
+            }
+          },
+          "isotonic": {
+            "n": 3375,
+            "accuracy": 0.4853,
+            "accuracy_ci95": [
+              46.8,
+              50.2
+            ],
+            "balanced_accuracy": 0.5003,
+            "precision": 0.5312,
+            "recall": 0.0098,
+            "f1": 0.0192,
+            "auc": 0.5009,
+            "brier": 0.2516,
+            "log_loss": 0.69641,
+            "ece": 0.0416,
+            "pred_up_pct": 0.9,
+            "actual_up_pct": 51.5,
+            "mean_p": 0.4741,
+            "reliability": [
+              {
+                "bin": "0.0-0.1",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.1-0.2",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.2-0.3",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.3-0.4",
+                "n": 5,
+                "mean_predicted": 0.375,
+                "observed_up_rate": 0.8,
+                "observed_ci95": [
+                  37.6,
+                  96.4
+                ]
+              },
+              {
+                "bin": "0.4-0.5",
+                "n": 3336,
+                "mean_predicted": 0.4735,
+                "observed_up_rate": 0.5144,
+                "observed_ci95": [
+                  49.7,
+                  53.1
+                ]
+              },
+              {
+                "bin": "0.5-0.6",
+                "n": 32,
+                "mean_predicted": 0.5267,
+                "observed_up_rate": 0.5625,
+                "observed_ci95": [
+                  39.3,
+                  71.8
+                ]
+              },
+              {
+                "bin": "0.6-0.7",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.7-0.8",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.8-0.9",
+                "n": 2,
+                "mean_predicted": 0.861,
+                "observed_up_rate": 0.5,
+                "observed_ci95": [
+                  9.5,
+                  90.5
+                ]
+              },
+              {
+                "bin": "0.9-1.0",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              }
+            ],
+            "confidence_buckets": [
+              {
+                "bucket": "50-55",
+                "n": 3333,
+                "success_rate": 0.4851,
+                "ci95": [
+                  46.8,
+                  50.2
+                ]
+              },
+              {
+                "bucket": "55-60",
+                "n": 35,
+                "success_rate": 0.5429,
+                "ci95": [
+                  38.2,
+                  69.5
+                ]
+              },
+              {
+                "bucket": "60-65",
+                "n": 5,
+                "success_rate": 0.2,
+                "ci95": [
+                  3.6,
+                  62.4
+                ]
+              },
+              {
+                "bucket": "65-70",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "70-75",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "75-80",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "80-85",
+                "n": 1,
+                "success_rate": 0.0,
+                "ci95": [
+                  0.0,
+                  79.3
+                ]
+              },
+              {
+                "bucket": "85-90",
+                "n": 1,
+                "success_rate": 1.0,
+                "ci95": [
+                  20.7,
+                  100.0
+                ]
+              },
+              {
+                "bucket": "90-95",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "95-100",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              }
+            ],
+            "vs_none": {
+              "n": 3375,
+              "n_dates": 125,
+              "accuracy_diff": -0.016,
+              "accuracy_diff_ci95": [
+                -0.0584,
+                0.0255
+              ],
+              "brier_diff": -0.0258,
+              "brier_diff_ci95": [
+                -0.03232,
+                -0.01934
+              ]
+            }
+          },
+          "constant_base_rate": {
+            "n": 3375,
+            "accuracy": 0.4847,
+            "accuracy_ci95": [
+              46.8,
+              50.2
+            ],
+            "balanced_accuracy": 0.5,
+            "precision": null,
+            "recall": 0.0,
+            "f1": null,
+            "auc": 0.5,
+            "brier": 0.25129,
+            "log_loss": 0.69573,
+            "ece": 0.039,
+            "pred_up_pct": 0.0,
+            "actual_up_pct": 51.5,
+            "mean_p": 0.4762,
+            "reliability": [
+              {
+                "bin": "0.0-0.1",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.1-0.2",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.2-0.3",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.3-0.4",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.4-0.5",
+                "n": 3375,
+                "mean_predicted": 0.4762,
+                "observed_up_rate": 0.5153,
+                "observed_ci95": [
+                  49.8,
+                  53.2
+                ]
+              },
+              {
+                "bin": "0.5-0.6",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.6-0.7",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.7-0.8",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.8-0.9",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.9-1.0",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              }
+            ],
+            "confidence_buckets": [
+              {
+                "bucket": "50-55",
+                "n": 3375,
+                "success_rate": 0.4847,
+                "ci95": [
+                  46.8,
+                  50.2
+                ]
+              },
+              {
+                "bucket": "55-60",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "60-65",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "65-70",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "70-75",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "75-80",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "80-85",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "85-90",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "90-95",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "95-100",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              }
+            ],
+            "vs_none": {
+              "n": 3375,
+              "n_dates": 125,
+              "accuracy_diff": -0.0166,
+              "accuracy_diff_ci95": [
+                -0.0596,
+                0.0261
+              ],
+              "brier_diff": -0.02612,
+              "brier_diff_ci95": [
+                -0.03273,
+                -0.01963
+              ]
+            }
+          }
+        }
+      },
+      "final": {
+        "fit_rows": 8343,
+        "fit_first": "2024-07-01",
+        "fit_last": "2025-09-25",
+        "fit_last_outcome": "2025-09-30",
+        "eval_rows": 6588,
+        "eval_first": "2025-10-01",
+        "eval_last": "2026-09-28",
+        "methods": {
+          "none": {
+            "n": 6588,
+            "accuracy": 0.4956,
+            "accuracy_ci95": [
+              48.4,
+              50.8
+            ],
+            "balanced_accuracy": 0.4942,
+            "precision": 0.4803,
+            "recall": 0.4409,
+            "f1": 0.4598,
+            "auc": 0.4923,
+            "brier": 0.279,
+            "log_loss": 0.76036,
+            "ece": 0.1425,
+            "pred_up_pct": 44.7,
+            "actual_up_pct": 48.7,
+            "mean_p": 0.4813,
+            "reliability": [
+              {
+                "bin": "0.0-0.1",
+                "n": 6,
+                "mean_predicted": 0.0839,
+                "observed_up_rate": 0.1667,
+                "observed_ci95": [
+                  3.0,
+                  56.4
+                ]
+              },
+              {
+                "bin": "0.1-0.2",
+                "n": 186,
+                "mean_predicted": 0.1665,
+                "observed_up_rate": 0.4892,
+                "observed_ci95": [
+                  41.8,
+                  56.1
+                ]
+              },
+              {
+                "bin": "0.2-0.3",
+                "n": 811,
+                "mean_predicted": 0.2566,
+                "observed_up_rate": 0.4932,
+                "observed_ci95": [
+                  45.9,
+                  52.8
+                ]
+              },
+              {
+                "bin": "0.3-0.4",
+                "n": 1259,
+                "mean_predicted": 0.3525,
+                "observed_up_rate": 0.4948,
+                "observed_ci95": [
+                  46.7,
+                  52.2
+                ]
+              },
+              {
+                "bin": "0.4-0.5",
+                "n": 1382,
+                "mean_predicted": 0.45,
+                "observed_up_rate": 0.4906,
+                "observed_ci95": [
+                  46.4,
+                  51.7
+                ]
+              },
+              {
+                "bin": "0.5-0.6",
+                "n": 1250,
+                "mean_predicted": 0.5495,
+                "observed_up_rate": 0.4824,
+                "observed_ci95": [
+                  45.5,
+                  51.0
+                ]
+              },
+              {
+                "bin": "0.6-0.7",
+                "n": 1006,
+                "mean_predicted": 0.6474,
+                "observed_up_rate": 0.494,
+                "observed_ci95": [
+                  46.3,
+                  52.5
+                ]
+              },
+              {
+                "bin": "0.7-0.8",
+                "n": 528,
+                "mean_predicted": 0.7443,
+                "observed_up_rate": 0.4489,
+                "observed_ci95": [
+                  40.7,
+                  49.2
+                ]
+              },
+              {
+                "bin": "0.8-0.9",
+                "n": 155,
+                "mean_predicted": 0.8357,
+                "observed_up_rate": 0.4903,
+                "observed_ci95": [
+                  41.3,
+                  56.8
+                ]
+              },
+              {
+                "bin": "0.9-1.0",
+                "n": 5,
+                "mean_predicted": 0.9115,
+                "observed_up_rate": 0.2,
+                "observed_ci95": [
+                  3.6,
+                  62.4
+                ]
+              }
+            ],
+            "confidence_buckets": [
+              {
+                "bucket": "50-55",
+                "n": 1307,
+                "success_rate": 0.4958,
+                "ci95": [
+                  46.9,
+                  52.3
+                ]
+              },
+              {
+                "bucket": "55-60",
+                "n": 1325,
+                "success_rate": 0.4974,
+                "ci95": [
+                  47.0,
+                  52.4
+                ]
+              },
+              {
+                "bucket": "60-65",
+                "n": 1216,
+                "success_rate": 0.5058,
+                "ci95": [
+                  47.8,
+                  53.4
+                ]
+              },
+              {
+                "bucket": "65-70",
+                "n": 1049,
+                "success_rate": 0.4938,
+                "ci95": [
+                  46.4,
+                  52.4
+                ]
+              },
+              {
+                "bucket": "70-75",
+                "n": 794,
+                "success_rate": 0.4798,
+                "ci95": [
+                  44.5,
+                  51.5
+                ]
+              },
+              {
+                "bucket": "75-80",
+                "n": 545,
+                "success_rate": 0.4899,
+                "ci95": [
+                  44.8,
+                  53.2
+                ]
+              },
+              {
+                "bucket": "80-85",
+                "n": 248,
+                "success_rate": 0.4758,
+                "ci95": [
+                  41.4,
+                  53.8
+                ]
+              },
+              {
+                "bucket": "85-90",
+                "n": 93,
+                "success_rate": 0.5699,
+                "ci95": [
+                  46.8,
+                  66.6
+                ]
+              },
+              {
+                "bucket": "90-95",
+                "n": 11,
+                "success_rate": 0.5455,
+                "ci95": [
+                  28.0,
+                  78.7
+                ]
+              },
+              {
+                "bucket": "95-100",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              }
+            ]
+          },
+          "platt": {
+            "n": 6588,
+            "accuracy": 0.5124,
+            "accuracy_ci95": [
+              50.0,
+              52.5
+            ],
+            "balanced_accuracy": 0.5056,
+            "precision": 0.4984,
+            "recall": 0.2451,
+            "f1": 0.3286,
+            "auc": 0.5077,
+            "brier": 0.24986,
+            "log_loss": 0.69287,
+            "ece": 0.0032,
+            "pred_up_pct": 23.9,
+            "actual_up_pct": 48.7,
+            "mean_p": 0.49,
+            "reliability": [
+              {
+                "bin": "0.0-0.1",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.1-0.2",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.2-0.3",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.3-0.4",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.4-0.5",
+                "n": 5011,
+                "mean_predicted": 0.4846,
+                "observed_up_rate": 0.4831,
+                "observed_ci95": [
+                  46.9,
+                  49.7
+                ]
+              },
+              {
+                "bin": "0.5-0.6",
+                "n": 1577,
+                "mean_predicted": 0.5073,
+                "observed_up_rate": 0.4984,
+                "observed_ci95": [
+                  47.4,
+                  52.3
+                ]
+              },
+              {
+                "bin": "0.6-0.7",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.7-0.8",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.8-0.9",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.9-1.0",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              }
+            ],
+            "confidence_buckets": [
+              {
+                "bucket": "50-55",
+                "n": 6576,
+                "success_rate": 0.5125,
+                "ci95": [
+                  50.0,
+                  52.5
+                ]
+              },
+              {
+                "bucket": "55-60",
+                "n": 12,
+                "success_rate": 0.5,
+                "ci95": [
+                  25.4,
+                  74.6
+                ]
+              },
+              {
+                "bucket": "60-65",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "65-70",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "70-75",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "75-80",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "80-85",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "85-90",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "90-95",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "95-100",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              }
+            ],
+            "vs_none": {
+              "n": 6588,
+              "n_dates": 244,
+              "accuracy_diff": 0.0168,
+              "accuracy_diff_ci95": [
+                -0.0094,
+                0.0427
+              ],
+              "brier_diff": -0.02914,
+              "brier_diff_ci95": [
+                -0.03426,
+                -0.02373
+              ]
+            }
+          },
+          "isotonic": {
+            "n": 6588,
+            "accuracy": 0.5132,
+            "accuracy_ci95": [
+              50.1,
+              52.5
+            ],
+            "balanced_accuracy": 0.5004,
+            "precision": 0.5,
+            "recall": 0.0175,
+            "f1": 0.0337,
+            "auc": 0.5028,
+            "brier": 0.25011,
+            "log_loss": 0.69533,
+            "ece": 0.0022,
+            "pred_up_pct": 1.7,
+            "actual_up_pct": 48.7,
+            "mean_p": 0.4888,
+            "reliability": [
+              {
+                "bin": "0.0-0.1",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.1-0.2",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.2-0.3",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.3-0.4",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.4-0.5",
+                "n": 6473,
+                "mean_predicted": 0.4874,
+                "observed_up_rate": 0.4865,
+                "observed_ci95": [
+                  47.4,
+                  49.9
+                ]
+              },
+              {
+                "bin": "0.5-0.6",
+                "n": 102,
+                "mean_predicted": 0.5392,
+                "observed_up_rate": 0.5,
+                "observed_ci95": [
+                  40.5,
+                  59.5
+                ]
+              },
+              {
+                "bin": "0.6-0.7",
+                "n": 1,
+                "mean_predicted": 0.6046,
+                "observed_up_rate": 1.0,
+                "observed_ci95": [
+                  20.7,
+                  100.0
+                ]
+              },
+              {
+                "bin": "0.7-0.8",
+                "n": 3,
+                "mean_predicted": 0.7143,
+                "observed_up_rate": 0.6667,
+                "observed_ci95": [
+                  20.8,
+                  93.9
+                ]
+              },
+              {
+                "bin": "0.8-0.9",
+                "n": 8,
+                "mean_predicted": 0.8797,
+                "observed_up_rate": 0.5,
+                "observed_ci95": [
+                  21.5,
+                  78.5
+                ]
+              },
+              {
+                "bin": "0.9-1.0",
+                "n": 1,
+                "mean_predicted": 1.0,
+                "observed_up_rate": 0.0,
+                "observed_ci95": [
+                  0.0,
+                  79.3
+                ]
+              }
+            ],
+            "confidence_buckets": [
+              {
+                "bucket": "50-55",
+                "n": 6473,
+                "success_rate": 0.5126,
+                "ci95": [
+                  50.0,
+                  52.5
+                ]
+              },
+              {
+                "bucket": "55-60",
+                "n": 98,
+                "success_rate": 0.551,
+                "ci95": [
+                  45.2,
+                  64.6
+                ]
+              },
+              {
+                "bucket": "60-65",
+                "n": 5,
+                "success_rate": 0.6,
+                "ci95": [
+                  23.1,
+                  88.2
+                ]
+              },
+              {
+                "bucket": "65-70",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "70-75",
+                "n": 3,
+                "success_rate": 0.6667,
+                "ci95": [
+                  20.8,
+                  93.9
+                ]
+              },
+              {
+                "bucket": "75-80",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "80-85",
+                "n": 1,
+                "success_rate": 1.0,
+                "ci95": [
+                  20.7,
+                  100.0
+                ]
+              },
+              {
+                "bucket": "85-90",
+                "n": 7,
+                "success_rate": 0.4286,
+                "ci95": [
+                  15.8,
+                  75.0
+                ]
+              },
+              {
+                "bucket": "90-95",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "95-100",
+                "n": 1,
+                "success_rate": 0.0,
+                "ci95": [
+                  0.0,
+                  79.3
+                ]
+              }
+            ],
+            "vs_none": {
+              "n": 6588,
+              "n_dates": 244,
+              "accuracy_diff": 0.0176,
+              "accuracy_diff_ci95": [
+                -0.0134,
+                0.0499
+              ],
+              "brier_diff": -0.0289,
+              "brier_diff_ci95": [
+                -0.03348,
+                -0.02429
+              ]
+            }
+          },
+          "constant_base_rate": {
+            "n": 6588,
+            "accuracy": 0.5132,
+            "accuracy_ci95": [
+              50.1,
+              52.5
+            ],
+            "balanced_accuracy": 0.5,
+            "precision": null,
+            "recall": 0.0,
+            "f1": null,
+            "auc": 0.5,
+            "brier": 0.24983,
+            "log_loss": 0.69281,
+            "ece": 0.0022,
+            "pred_up_pct": 0.0,
+            "actual_up_pct": 48.7,
+            "mean_p": 0.489,
+            "reliability": [
+              {
+                "bin": "0.0-0.1",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.1-0.2",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.2-0.3",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.3-0.4",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.4-0.5",
+                "n": 6588,
+                "mean_predicted": 0.489,
+                "observed_up_rate": 0.4868,
+                "observed_ci95": [
+                  47.5,
+                  49.9
+                ]
+              },
+              {
+                "bin": "0.5-0.6",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.6-0.7",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.7-0.8",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.8-0.9",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.9-1.0",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              }
+            ],
+            "confidence_buckets": [
+              {
+                "bucket": "50-55",
+                "n": 6588,
+                "success_rate": 0.5132,
+                "ci95": [
+                  50.1,
+                  52.5
+                ]
+              },
+              {
+                "bucket": "55-60",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "60-65",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "65-70",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "70-75",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "75-80",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "80-85",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "85-90",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "90-95",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "95-100",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              }
+            ],
+            "vs_none": {
+              "n": 6588,
+              "n_dates": 244,
+              "accuracy_diff": 0.0176,
+              "accuracy_diff_ci95": [
+                -0.0141,
+                0.0506
+              ],
+              "brier_diff": -0.02917,
+              "brier_diff_ci95": [
+                -0.03392,
+                -0.02417
+              ]
+            }
+          }
+        }
+      },
+      "selected_on_dev": "platt"
+    },
+    "5d": {
+      "dev": {
+        "fit_rows": 4914,
+        "fit_first": "2024-07-01",
+        "fit_last": "2025-03-21",
+        "fit_last_outcome": "2025-03-28",
+        "eval_rows": 3375,
+        "eval_first": "2025-04-01",
+        "eval_last": "2025-09-30",
+        "methods": {
+          "none": {
+            "n": 3375,
+            "accuracy": 0.504,
+            "accuracy_ci95": [
+              48.7,
+              52.1
+            ],
+            "balanced_accuracy": 0.5071,
+            "precision": 0.5371,
+            "recall": 0.4535,
+            "f1": 0.4918,
+            "auc": 0.5065,
+            "brier": 0.27582,
+            "log_loss": 0.7532,
+            "ece": 0.1302,
+            "pred_up_pct": 44.7,
+            "actual_up_pct": 52.9,
+            "mean_p": 0.4784,
+            "reliability": [
+              {
+                "bin": "0.0-0.1",
+                "n": 1,
+                "mean_predicted": 0.0856,
+                "observed_up_rate": 0.0,
+                "observed_ci95": [
+                  0.0,
+                  79.3
+                ]
+              },
+              {
+                "bin": "0.1-0.2",
+                "n": 110,
+                "mean_predicted": 0.1635,
+                "observed_up_rate": 0.5,
+                "observed_ci95": [
+                  40.8,
+                  59.2
+                ]
+              },
+              {
+                "bin": "0.2-0.3",
+                "n": 389,
+                "mean_predicted": 0.2581,
+                "observed_up_rate": 0.5527,
+                "observed_ci95": [
+                  50.3,
+                  60.1
+                ]
+              },
+              {
+                "bin": "0.3-0.4",
+                "n": 640,
+                "mean_predicted": 0.3509,
+                "observed_up_rate": 0.5188,
+                "observed_ci95": [
+                  48.0,
+                  55.7
+                ]
+              },
+              {
+                "bin": "0.4-0.5",
+                "n": 727,
+                "mean_predicted": 0.4508,
+                "observed_up_rate": 0.5144,
+                "observed_ci95": [
+                  47.8,
+                  55.1
+                ]
+              },
+              {
+                "bin": "0.5-0.6",
+                "n": 684,
+                "mean_predicted": 0.5483,
+                "observed_up_rate": 0.5409,
+                "observed_ci95": [
+                  50.3,
+                  57.8
+                ]
+              },
+              {
+                "bin": "0.6-0.7",
+                "n": 497,
+                "mean_predicted": 0.6462,
+                "observed_up_rate": 0.5412,
+                "observed_ci95": [
+                  49.7,
+                  58.5
+                ]
+              },
+              {
+                "bin": "0.7-0.8",
+                "n": 273,
+                "mean_predicted": 0.7425,
+                "observed_up_rate": 0.5311,
+                "observed_ci95": [
+                  47.2,
+                  58.9
+                ]
+              },
+              {
+                "bin": "0.8-0.9",
+                "n": 53,
+                "mean_predicted": 0.8286,
+                "observed_up_rate": 0.4717,
+                "observed_ci95": [
+                  34.4,
+                  60.3
+                ]
+              },
+              {
+                "bin": "0.9-1.0",
+                "n": 1,
+                "mean_predicted": 0.9076,
+                "observed_up_rate": 1.0,
+                "observed_ci95": [
+                  20.7,
+                  100.0
+                ]
+              }
+            ],
+            "confidence_buckets": [
+              {
+                "bucket": "50-55",
+                "n": 748,
+                "success_rate": 0.4866,
+                "ci95": [
+                  45.1,
+                  52.2
+                ]
+              },
+              {
+                "bucket": "55-60",
+                "n": 663,
+                "success_rate": 0.5415,
+                "ci95": [
+                  50.3,
+                  57.9
+                ]
+              },
+              {
+                "bucket": "60-65",
+                "n": 621,
+                "success_rate": 0.4847,
+                "ci95": [
+                  44.6,
+                  52.4
+                ]
+              },
+              {
+                "bucket": "65-70",
+                "n": 516,
+                "success_rate": 0.5349,
+                "ci95": [
+                  49.2,
+                  57.8
+                ]
+              },
+              {
+                "bucket": "70-75",
+                "n": 413,
+                "success_rate": 0.5061,
+                "ci95": [
+                  45.8,
+                  55.4
+                ]
+              },
+              {
+                "bucket": "75-80",
+                "n": 249,
+                "success_rate": 0.4418,
+                "ci95": [
+                  38.1,
+                  50.4
+                ]
+              },
+              {
+                "bucket": "80-85",
+                "n": 122,
+                "success_rate": 0.4918,
+                "ci95": [
+                  40.5,
+                  57.9
+                ]
+              },
+              {
+                "bucket": "85-90",
+                "n": 41,
+                "success_rate": 0.4878,
+                "ci95": [
+                  34.3,
+                  63.5
+                ]
+              },
+              {
+                "bucket": "90-95",
+                "n": 2,
+                "success_rate": 1.0,
+                "ci95": [
+                  34.2,
+                  100.0
+                ]
+              },
+              {
+                "bucket": "95-100",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              }
+            ]
+          },
+          "platt": {
+            "n": 3375,
+            "accuracy": 0.4708,
+            "accuracy_ci95": [
+              45.4,
+              48.8
+            ],
+            "balanced_accuracy": 0.5,
+            "precision": null,
+            "recall": 0.0,
+            "f1": null,
+            "auc": 0.4935,
+            "brier": 0.25246,
+            "log_loss": 0.69807,
+            "ece": 0.0566,
+            "pred_up_pct": 0.0,
+            "actual_up_pct": 52.9,
+            "mean_p": 0.4726,
+            "reliability": [
+              {
+                "bin": "0.0-0.1",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.1-0.2",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.2-0.3",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.3-0.4",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.4-0.5",
+                "n": 3375,
+                "mean_predicted": 0.4726,
+                "observed_up_rate": 0.5292,
+                "observed_ci95": [
+                  51.2,
+                  54.6
+                ]
+              },
+              {
+                "bin": "0.5-0.6",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.6-0.7",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.7-0.8",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.8-0.9",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.9-1.0",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              }
+            ],
+            "confidence_buckets": [
+              {
+                "bucket": "50-55",
+                "n": 3375,
+                "success_rate": 0.4708,
+                "ci95": [
+                  45.4,
+                  48.8
+                ]
+              },
+              {
+                "bucket": "55-60",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "60-65",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "65-70",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "70-75",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "75-80",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "80-85",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "85-90",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "90-95",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "95-100",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              }
+            ],
+            "vs_none": {
+              "n": 3375,
+              "n_dates": 125,
+              "accuracy_diff": -0.0332,
+              "accuracy_diff_ci95": [
+                -0.0767,
+                0.0098
+              ],
+              "brier_diff": -0.02336,
+              "brier_diff_ci95": [
+                -0.03096,
+                -0.01572
+              ]
+            }
+          },
+          "isotonic": {
+            "n": 3375,
+            "accuracy": 0.4723,
+            "accuracy_ci95": [
+              45.5,
+              48.9
+            ],
+            "balanced_accuracy": 0.501,
+            "precision": 0.5926,
+            "recall": 0.009,
+            "f1": 0.0177,
+            "auc": 0.5009,
+            "brier": 0.25314,
+            "log_loss": 0.70285,
+            "ece": 0.0622,
+            "pred_up_pct": 0.8,
+            "actual_up_pct": 52.9,
+            "mean_p": 0.4681,
+            "reliability": [
+              {
+                "bin": "0.0-0.1",
+                "n": 1,
+                "mean_predicted": 0.0,
+                "observed_up_rate": 0.0,
+                "observed_ci95": [
+                  0.0,
+                  79.3
+                ]
+              },
+              {
+                "bin": "0.1-0.2",
+                "n": 4,
+                "mean_predicted": 0.1667,
+                "observed_up_rate": 0.5,
+                "observed_ci95": [
+                  15.0,
+                  85.0
+                ]
+              },
+              {
+                "bin": "0.2-0.3",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.3-0.4",
+                "n": 1,
+                "mean_predicted": 0.3267,
+                "observed_up_rate": 1.0,
+                "observed_ci95": [
+                  20.7,
+                  100.0
+                ]
+              },
+              {
+                "bin": "0.4-0.5",
+                "n": 3337,
+                "mean_predicted": 0.4672,
+                "observed_up_rate": 0.5289,
+                "observed_ci95": [
+                  51.2,
+                  54.6
+                ]
+              },
+              {
+                "bin": "0.5-0.6",
+                "n": 5,
+                "mean_predicted": 0.5,
+                "observed_up_rate": 0.4,
+                "observed_ci95": [
+                  11.8,
+                  76.9
+                ]
+              },
+              {
+                "bin": "0.6-0.7",
+                "n": 25,
+                "mean_predicted": 0.6178,
+                "observed_up_rate": 0.6,
+                "observed_ci95": [
+                  40.7,
+                  76.6
+                ]
+              },
+              {
+                "bin": "0.7-0.8",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.8-0.9",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.9-1.0",
+                "n": 2,
+                "mean_predicted": 1.0,
+                "observed_up_rate": 0.5,
+                "observed_ci95": [
+                  9.5,
+                  90.5
+                ]
+              }
+            ],
+            "confidence_buckets": [
+              {
+                "bucket": "50-55",
+                "n": 3342,
+                "success_rate": 0.4713,
+                "ci95": [
+                  45.4,
+                  48.8
+                ]
+              },
+              {
+                "bucket": "55-60",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "60-65",
+                "n": 25,
+                "success_rate": 0.6,
+                "ci95": [
+                  40.7,
+                  76.6
+                ]
+              },
+              {
+                "bucket": "65-70",
+                "n": 1,
+                "success_rate": 0.0,
+                "ci95": [
+                  0.0,
+                  79.3
+                ]
+              },
+              {
+                "bucket": "70-75",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "75-80",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "80-85",
+                "n": 4,
+                "success_rate": 0.5,
+                "ci95": [
+                  15.0,
+                  85.0
+                ]
+              },
+              {
+                "bucket": "85-90",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "90-95",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "95-100",
+                "n": 3,
+                "success_rate": 0.6667,
+                "ci95": [
+                  20.8,
+                  93.9
+                ]
+              }
+            ],
+            "vs_none": {
+              "n": 3375,
+              "n_dates": 125,
+              "accuracy_diff": -0.0317,
+              "accuracy_diff_ci95": [
+                -0.0735,
+                0.0107
+              ],
+              "brier_diff": -0.02268,
+              "brier_diff_ci95": [
+                -0.02963,
+                -0.01547
+              ]
+            }
+          },
+          "constant_base_rate": {
+            "n": 3375,
+            "accuracy": 0.4708,
+            "accuracy_ci95": [
+              45.4,
+              48.8
+            ],
+            "balanced_accuracy": 0.5,
+            "precision": null,
+            "recall": 0.0,
+            "f1": null,
+            "auc": 0.5,
+            "brier": 0.25247,
+            "log_loss": 0.6981,
+            "ece": 0.0577,
+            "pred_up_pct": 0.0,
+            "actual_up_pct": 52.9,
+            "mean_p": 0.4715,
+            "reliability": [
+              {
+                "bin": "0.0-0.1",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.1-0.2",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.2-0.3",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.3-0.4",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.4-0.5",
+                "n": 3375,
+                "mean_predicted": 0.4715,
+                "observed_up_rate": 0.5292,
+                "observed_ci95": [
+                  51.2,
+                  54.6
+                ]
+              },
+              {
+                "bin": "0.5-0.6",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.6-0.7",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.7-0.8",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.8-0.9",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.9-1.0",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              }
+            ],
+            "confidence_buckets": [
+              {
+                "bucket": "50-55",
+                "n": 3375,
+                "success_rate": 0.4708,
+                "ci95": [
+                  45.4,
+                  48.8
+                ]
+              },
+              {
+                "bucket": "55-60",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "60-65",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "65-70",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "70-75",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "75-80",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "80-85",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "85-90",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "90-95",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "95-100",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              }
+            ],
+            "vs_none": {
+              "n": 3375,
+              "n_dates": 125,
+              "accuracy_diff": -0.0332,
+              "accuracy_diff_ci95": [
+                -0.0767,
+                0.0098
+              ],
+              "brier_diff": -0.02334,
+              "brier_diff_ci95": [
+                -0.03061,
+                -0.01609
+              ]
+            }
+          }
+        }
+      },
+      "final": {
+        "fit_rows": 8289,
+        "fit_first": "2024-07-01",
+        "fit_last": "2025-09-23",
+        "fit_last_outcome": "2025-09-30",
+        "eval_rows": 6534,
+        "eval_first": "2025-10-01",
+        "eval_last": "2026-09-24",
+        "methods": {
+          "none": {
+            "n": 6534,
+            "accuracy": 0.5015,
+            "accuracy_ci95": [
+              48.9,
+              51.4
+            ],
+            "balanced_accuracy": 0.5003,
+            "precision": 0.4889,
+            "recall": 0.4467,
+            "f1": 0.4669,
+            "auc": 0.5021,
+            "brier": 0.27674,
+            "log_loss": 0.75604,
+            "ece": 0.1366,
+            "pred_up_pct": 44.6,
+            "actual_up_pct": 48.9,
+            "mean_p": 0.4811,
+            "reliability": [
+              {
+                "bin": "0.0-0.1",
+                "n": 6,
+                "mean_predicted": 0.0839,
+                "observed_up_rate": 0.1667,
+                "observed_ci95": [
+                  3.0,
+                  56.4
+                ]
+              },
+              {
+                "bin": "0.1-0.2",
+                "n": 185,
+                "mean_predicted": 0.1663,
+                "observed_up_rate": 0.5297,
+                "observed_ci95": [
+                  45.8,
+                  60.0
+                ]
+              },
+              {
+                "bin": "0.2-0.3",
+                "n": 806,
+                "mean_predicted": 0.2567,
+                "observed_up_rate": 0.4628,
+                "observed_ci95": [
+                  42.9,
+                  49.7
+                ]
+              },
+              {
+                "bin": "0.3-0.4",
+                "n": 1249,
+                "mean_predicted": 0.3525,
+                "observed_up_rate": 0.4836,
+                "observed_ci95": [
+                  45.6,
+                  51.1
+                ]
+              },
+              {
+                "bin": "0.4-0.5",
+                "n": 1371,
+                "mean_predicted": 0.4499,
+                "observed_up_rate": 0.5033,
+                "observed_ci95": [
+                  47.7,
+                  53.0
+                ]
+              },
+              {
+                "bin": "0.5-0.6",
+                "n": 1239,
+                "mean_predicted": 0.5495,
+                "observed_up_rate": 0.4826,
+                "observed_ci95": [
+                  45.5,
+                  51.0
+                ]
+              },
+              {
+                "bin": "0.6-0.7",
+                "n": 996,
+                "mean_predicted": 0.6473,
+                "observed_up_rate": 0.508,
+                "observed_ci95": [
+                  47.7,
+                  53.9
+                ]
+              },
+              {
+                "bin": "0.7-0.8",
+                "n": 523,
+                "mean_predicted": 0.7443,
+                "observed_up_rate": 0.4704,
+                "observed_ci95": [
+                  42.8,
+                  51.3
+                ]
+              },
+              {
+                "bin": "0.8-0.9",
+                "n": 154,
+                "mean_predicted": 0.8354,
+                "observed_up_rate": 0.4935,
+                "observed_ci95": [
+                  41.6,
+                  57.2
+                ]
+              },
+              {
+                "bin": "0.9-1.0",
+                "n": 5,
+                "mean_predicted": 0.9115,
+                "observed_up_rate": 0.0,
+                "observed_ci95": [
+                  0.0,
+                  43.4
+                ]
+              }
+            ],
+            "confidence_buckets": [
+              {
+                "bucket": "50-55",
+                "n": 1298,
+                "success_rate": 0.5031,
+                "ci95": [
+                  47.6,
+                  53.0
+                ]
+              },
+              {
+                "bucket": "55-60",
+                "n": 1312,
+                "success_rate": 0.4771,
+                "ci95": [
+                  45.0,
+                  50.4
+                ]
+              },
+              {
+                "bucket": "60-65",
+                "n": 1207,
+                "success_rate": 0.5062,
+                "ci95": [
+                  47.8,
+                  53.4
+                ]
+              },
+              {
+                "bucket": "65-70",
+                "n": 1038,
+                "success_rate": 0.5202,
+                "ci95": [
+                  49.0,
+                  55.0
+                ]
+              },
+              {
+                "bucket": "70-75",
+                "n": 789,
+                "success_rate": 0.5285,
+                "ci95": [
+                  49.4,
+                  56.3
+                ]
+              },
+              {
+                "bucket": "75-80",
+                "n": 540,
+                "success_rate": 0.4852,
+                "ci95": [
+                  44.3,
+                  52.7
+                ]
+              },
+              {
+                "bucket": "80-85",
+                "n": 247,
+                "success_rate": 0.4818,
+                "ci95": [
+                  42.0,
+                  54.4
+                ]
+              },
+              {
+                "bucket": "85-90",
+                "n": 92,
+                "success_rate": 0.4783,
+                "ci95": [
+                  37.9,
+                  57.9
+                ]
+              },
+              {
+                "bucket": "90-95",
+                "n": 11,
+                "success_rate": 0.4545,
+                "ci95": [
+                  21.3,
+                  72.0
+                ]
+              },
+              {
+                "bucket": "95-100",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              }
+            ]
+          },
+          "platt": {
+            "n": 6534,
+            "accuracy": 0.511,
+            "accuracy_ci95": [
+              49.9,
+              52.3
+            ],
+            "balanced_accuracy": 0.4996,
+            "precision": 0.4483,
+            "recall": 0.0041,
+            "f1": 0.0081,
+            "auc": 0.4979,
+            "brier": 0.24989,
+            "log_loss": 0.69293,
+            "ece": 0.0009,
+            "pred_up_pct": 0.4,
+            "actual_up_pct": 48.9,
+            "mean_p": 0.4894,
+            "reliability": [
+              {
+                "bin": "0.0-0.1",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.1-0.2",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.2-0.3",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.3-0.4",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.4-0.5",
+                "n": 6505,
+                "mean_predicted": 0.4894,
+                "observed_up_rate": 0.4887,
+                "observed_ci95": [
+                  47.7,
+                  50.1
+                ]
+              },
+              {
+                "bin": "0.5-0.6",
+                "n": 29,
+                "mean_predicted": 0.5012,
+                "observed_up_rate": 0.4483,
+                "observed_ci95": [
+                  28.4,
+                  62.5
+                ]
+              },
+              {
+                "bin": "0.6-0.7",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.7-0.8",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.8-0.9",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.9-1.0",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              }
+            ],
+            "confidence_buckets": [
+              {
+                "bucket": "50-55",
+                "n": 6534,
+                "success_rate": 0.511,
+                "ci95": [
+                  49.9,
+                  52.3
+                ]
+              },
+              {
+                "bucket": "55-60",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "60-65",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "65-70",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "70-75",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "75-80",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "80-85",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "85-90",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "90-95",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "95-100",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              }
+            ],
+            "vs_none": {
+              "n": 6534,
+              "n_dates": 242,
+              "accuracy_diff": 0.0095,
+              "accuracy_diff_ci95": [
+                -0.0202,
+                0.04
+              ],
+              "brier_diff": -0.02685,
+              "brier_diff_ci95": [
+                -0.03157,
+                -0.02175
+              ]
+            }
+          },
+          "isotonic": {
+            "n": 6534,
+            "accuracy": 0.5106,
+            "accuracy_ci95": [
+              49.8,
+              52.3
+            ],
+            "balanced_accuracy": 0.4994,
+            "precision": 0.4681,
+            "recall": 0.0138,
+            "f1": 0.0268,
+            "auc": 0.4986,
+            "brier": 0.25069,
+            "log_loss": 0.70702,
+            "ece": 0.0054,
+            "pred_up_pct": 1.4,
+            "actual_up_pct": 48.9,
+            "mean_p": 0.4887,
+            "reliability": [
+              {
+                "bin": "0.0-0.1",
+                "n": 3,
+                "mean_predicted": 0.0,
+                "observed_up_rate": 0.3333,
+                "observed_ci95": [
+                  6.1,
+                  79.2
+                ]
+              },
+              {
+                "bin": "0.1-0.2",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.2-0.3",
+                "n": 3,
+                "mean_predicted": 0.25,
+                "observed_up_rate": 0.0,
+                "observed_ci95": [
+                  0.0,
+                  56.2
+                ]
+              },
+              {
+                "bin": "0.3-0.4",
+                "n": 4,
+                "mean_predicted": 0.35,
+                "observed_up_rate": 0.25,
+                "observed_ci95": [
+                  4.6,
+                  69.9
+                ]
+              },
+              {
+                "bin": "0.4-0.5",
+                "n": 6426,
+                "mean_predicted": 0.4868,
+                "observed_up_rate": 0.4893,
+                "observed_ci95": [
+                  47.7,
+                  50.1
+                ]
+              },
+              {
+                "bin": "0.5-0.6",
+                "n": 15,
+                "mean_predicted": 0.5647,
+                "observed_up_rate": 0.4667,
+                "observed_ci95": [
+                  24.8,
+                  69.9
+                ]
+              },
+              {
+                "bin": "0.6-0.7",
+                "n": 71,
+                "mean_predicted": 0.6064,
+                "observed_up_rate": 0.493,
+                "observed_ci95": [
+                  38.0,
+                  60.7
+                ]
+              },
+              {
+                "bin": "0.7-0.8",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.8-0.9",
+                "n": 3,
+                "mean_predicted": 0.8333,
+                "observed_up_rate": 0.6667,
+                "observed_ci95": [
+                  20.8,
+                  93.9
+                ]
+              },
+              {
+                "bin": "0.9-1.0",
+                "n": 9,
+                "mean_predicted": 0.9922,
+                "observed_up_rate": 0.2222,
+                "observed_ci95": [
+                  6.3,
+                  54.7
+                ]
+              }
+            ],
+            "confidence_buckets": [
+              {
+                "bucket": "50-55",
+                "n": 6427,
+                "success_rate": 0.5107,
+                "ci95": [
+                  49.8,
+                  52.3
+                ]
+              },
+              {
+                "bucket": "55-60",
+                "n": 12,
+                "success_rate": 0.5,
+                "ci95": [
+                  25.4,
+                  74.6
+                ]
+              },
+              {
+                "bucket": "60-65",
+                "n": 74,
+                "success_rate": 0.5,
+                "ci95": [
+                  38.9,
+                  61.1
+                ]
+              },
+              {
+                "bucket": "65-70",
+                "n": 3,
+                "success_rate": 0.6667,
+                "ci95": [
+                  20.8,
+                  93.9
+                ]
+              },
+              {
+                "bucket": "70-75",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "75-80",
+                "n": 3,
+                "success_rate": 1.0,
+                "ci95": [
+                  43.8,
+                  100.0
+                ]
+              },
+              {
+                "bucket": "80-85",
+                "n": 3,
+                "success_rate": 0.6667,
+                "ci95": [
+                  20.8,
+                  93.9
+                ]
+              },
+              {
+                "bucket": "85-90",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "90-95",
+                "n": 1,
+                "success_rate": 0.0,
+                "ci95": [
+                  0.0,
+                  79.3
+                ]
+              },
+              {
+                "bucket": "95-100",
+                "n": 11,
+                "success_rate": 0.3636,
+                "ci95": [
+                  15.2,
+                  64.6
+                ]
+              }
+            ],
+            "vs_none": {
+              "n": 6534,
+              "n_dates": 242,
+              "accuracy_diff": 0.009,
+              "accuracy_diff_ci95": [
+                -0.0187,
+                0.0387
+              ],
+              "brier_diff": -0.02605,
+              "brier_diff_ci95": [
+                -0.03046,
+                -0.02135
+              ]
+            }
+          },
+          "constant_base_rate": {
+            "n": 6534,
+            "accuracy": 0.5115,
+            "accuracy_ci95": [
+              49.9,
+              52.4
+            ],
+            "balanced_accuracy": 0.5,
+            "precision": null,
+            "recall": 0.0,
+            "f1": null,
+            "auc": 0.5,
+            "brier": 0.24987,
+            "log_loss": 0.69288,
+            "ece": 0.0006,
+            "pred_up_pct": 0.0,
+            "actual_up_pct": 48.9,
+            "mean_p": 0.4891,
+            "reliability": [
+              {
+                "bin": "0.0-0.1",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.1-0.2",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.2-0.3",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.3-0.4",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.4-0.5",
+                "n": 6534,
+                "mean_predicted": 0.4891,
+                "observed_up_rate": 0.4885,
+                "observed_ci95": [
+                  47.6,
+                  50.1
+                ]
+              },
+              {
+                "bin": "0.5-0.6",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.6-0.7",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.7-0.8",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.8-0.9",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.9-1.0",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              }
+            ],
+            "confidence_buckets": [
+              {
+                "bucket": "50-55",
+                "n": 6534,
+                "success_rate": 0.5115,
+                "ci95": [
+                  49.9,
+                  52.4
+                ]
+              },
+              {
+                "bucket": "55-60",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "60-65",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "65-70",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "70-75",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "75-80",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "80-85",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "85-90",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "90-95",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "95-100",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              }
+            ],
+            "vs_none": {
+              "n": 6534,
+              "n_dates": 242,
+              "accuracy_diff": 0.0099,
+              "accuracy_diff_ci95": [
+                -0.0197,
+                0.041
+              ],
+              "brier_diff": -0.02687,
+              "brier_diff_ci95": [
+                -0.03148,
+                -0.02191
+              ]
+            }
+          }
+        }
+      },
+      "selected_on_dev": "platt"
+    },
+    "10d": {
+      "dev": {
+        "fit_rows": 4779,
+        "fit_first": "2024-07-01",
+        "fit_last": "2025-03-12",
+        "fit_last_outcome": "2025-03-28",
+        "eval_rows": 3375,
+        "eval_first": "2025-04-01",
+        "eval_last": "2025-09-30",
+        "methods": {
+          "none": {
+            "n": 3375,
+            "accuracy": 0.48,
+            "accuracy_ci95": [
+              46.3,
+              49.7
+            ],
+            "balanced_accuracy": 0.485,
+            "precision": 0.5318,
+            "recall": 0.4333,
+            "f1": 0.4775,
+            "auc": 0.4776,
+            "brier": 0.28413,
+            "log_loss": 0.77096,
+            "ece": 0.1547,
+            "pred_up_pct": 44.7,
+            "actual_up_pct": 54.8,
+            "mean_p": 0.4784,
+            "reliability": [
+              {
+                "bin": "0.0-0.1",
+                "n": 1,
+                "mean_predicted": 0.0856,
+                "observed_up_rate": 0.0,
+                "observed_ci95": [
+                  0.0,
+                  79.3
+                ]
+              },
+              {
+                "bin": "0.1-0.2",
+                "n": 110,
+                "mean_predicted": 0.1635,
+                "observed_up_rate": 0.5091,
+                "observed_ci95": [
+                  41.7,
+                  60.1
+                ]
+              },
+              {
+                "bin": "0.2-0.3",
+                "n": 389,
+                "mean_predicted": 0.2581,
+                "observed_up_rate": 0.6298,
+                "observed_ci95": [
+                  58.1,
+                  67.6
+                ]
+              },
+              {
+                "bin": "0.3-0.4",
+                "n": 640,
+                "mean_predicted": 0.3509,
+                "observed_up_rate": 0.5469,
+                "observed_ci95": [
+                  50.8,
+                  58.5
+                ]
+              },
+              {
+                "bin": "0.4-0.5",
+                "n": 727,
+                "mean_predicted": 0.4508,
+                "observed_up_rate": 0.5475,
+                "observed_ci95": [
+                  51.1,
+                  58.3
+                ]
+              },
+              {
+                "bin": "0.5-0.6",
+                "n": 684,
+                "mean_predicted": 0.5483,
+                "observed_up_rate": 0.5497,
+                "observed_ci95": [
+                  51.2,
+                  58.7
+                ]
+              },
+              {
+                "bin": "0.6-0.7",
+                "n": 497,
+                "mean_predicted": 0.6462,
+                "observed_up_rate": 0.5091,
+                "observed_ci95": [
+                  46.5,
+                  55.3
+                ]
+              },
+              {
+                "bin": "0.7-0.8",
+                "n": 273,
+                "mean_predicted": 0.7425,
+                "observed_up_rate": 0.5421,
+                "observed_ci95": [
+                  48.3,
+                  60.0
+                ]
+              },
+              {
+                "bin": "0.8-0.9",
+                "n": 53,
+                "mean_predicted": 0.8286,
+                "observed_up_rate": 0.4717,
+                "observed_ci95": [
+                  34.4,
+                  60.3
+                ]
+              },
+              {
+                "bin": "0.9-1.0",
+                "n": 1,
+                "mean_predicted": 0.9076,
+                "observed_up_rate": 0.0,
+                "observed_ci95": [
+                  0.0,
+                  79.3
+                ]
+              }
+            ],
+            "confidence_buckets": [
+              {
+                "bucket": "50-55",
+                "n": 748,
+                "success_rate": 0.4906,
+                "ci95": [
+                  45.5,
+                  52.6
+                ]
+              },
+              {
+                "bucket": "55-60",
+                "n": 663,
+                "success_rate": 0.5098,
+                "ci95": [
+                  47.2,
+                  54.8
+                ]
+              },
+              {
+                "bucket": "60-65",
+                "n": 621,
+                "success_rate": 0.4686,
+                "ci95": [
+                  43.0,
+                  50.8
+                ]
+              },
+              {
+                "bucket": "65-70",
+                "n": 516,
+                "success_rate": 0.4884,
+                "ci95": [
+                  44.5,
+                  53.1
+                ]
+              },
+              {
+                "bucket": "70-75",
+                "n": 413,
+                "success_rate": 0.4479,
+                "ci95": [
+                  40.1,
+                  49.6
+                ]
+              },
+              {
+                "bucket": "75-80",
+                "n": 249,
+                "success_rate": 0.4297,
+                "ci95": [
+                  37.0,
+                  49.2
+                ]
+              },
+              {
+                "bucket": "80-85",
+                "n": 122,
+                "success_rate": 0.4672,
+                "ci95": [
+                  38.1,
+                  55.5
+                ]
+              },
+              {
+                "bucket": "85-90",
+                "n": 41,
+                "success_rate": 0.5366,
+                "ci95": [
+                  38.7,
+                  67.9
+                ]
+              },
+              {
+                "bucket": "90-95",
+                "n": 2,
+                "success_rate": 0.5,
+                "ci95": [
+                  9.5,
+                  90.5
+                ]
+              },
+              {
+                "bucket": "95-100",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              }
+            ]
+          },
+          "platt": {
+            "n": 3375,
+            "accuracy": 0.4516,
+            "accuracy_ci95": [
+              43.5,
+              46.8
+            ],
+            "balanced_accuracy": 0.5,
+            "precision": null,
+            "recall": 0.0,
+            "f1": null,
+            "auc": 0.5224,
+            "brier": 0.26002,
+            "log_loss": 0.71332,
+            "ece": 0.1121,
+            "pred_up_pct": 0.0,
+            "actual_up_pct": 54.8,
+            "mean_p": 0.4363,
+            "reliability": [
+              {
+                "bin": "0.0-0.1",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.1-0.2",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.2-0.3",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.3-0.4",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.4-0.5",
+                "n": 3375,
+                "mean_predicted": 0.4363,
+                "observed_up_rate": 0.5484,
+                "observed_ci95": [
+                  53.2,
+                  56.5
+                ]
+              },
+              {
+                "bin": "0.5-0.6",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.6-0.7",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.7-0.8",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.8-0.9",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.9-1.0",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              }
+            ],
+            "confidence_buckets": [
+              {
+                "bucket": "50-55",
+                "n": 112,
+                "success_rate": 0.4911,
+                "ci95": [
+                  40.0,
+                  58.2
+                ]
+              },
+              {
+                "bucket": "55-60",
+                "n": 3263,
+                "success_rate": 0.4502,
+                "ci95": [
+                  43.3,
+                  46.7
+                ]
+              },
+              {
+                "bucket": "60-65",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "65-70",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "70-75",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "75-80",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "80-85",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "85-90",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "90-95",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "95-100",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              }
+            ],
+            "vs_none": {
+              "n": 3375,
+              "n_dates": 125,
+              "accuracy_diff": -0.0284,
+              "accuracy_diff_ci95": [
+                -0.0729,
+                0.0151
+              ],
+              "brier_diff": -0.02411,
+              "brier_diff_ci95": [
+                -0.03166,
+                -0.0163
+              ]
+            }
+          },
+          "isotonic": {
+            "n": 3375,
+            "accuracy": 0.4524,
+            "accuracy_ci95": [
+              43.6,
+              46.9
+            ],
+            "balanced_accuracy": 0.5001,
+            "precision": 0.5517,
+            "recall": 0.0086,
+            "f1": 0.017,
+            "auc": 0.5001,
+            "brier": 0.26171,
+            "log_loss": 0.71689,
+            "ece": 0.1177,
+            "pred_up_pct": 0.9,
+            "actual_up_pct": 54.8,
+            "mean_p": 0.4318,
+            "reliability": [
+              {
+                "bin": "0.0-0.1",
+                "n": 1,
+                "mean_predicted": 0.0,
+                "observed_up_rate": 0.0,
+                "observed_ci95": [
+                  0.0,
+                  79.3
+                ]
+              },
+              {
+                "bin": "0.1-0.2",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.2-0.3",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.3-0.4",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.4-0.5",
+                "n": 3343,
+                "mean_predicted": 0.4307,
+                "observed_up_rate": 0.5486,
+                "observed_ci95": [
+                  53.2,
+                  56.5
+                ]
+              },
+              {
+                "bin": "0.5-0.6",
+                "n": 29,
+                "mean_predicted": 0.549,
+                "observed_up_rate": 0.5862,
+                "observed_ci95": [
+                  40.7,
+                  74.5
+                ]
+              },
+              {
+                "bin": "0.6-0.7",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.7-0.8",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.8-0.9",
+                "n": 2,
+                "mean_predicted": 0.875,
+                "observed_up_rate": 0.0,
+                "observed_ci95": [
+                  0.0,
+                  65.8
+                ]
+              },
+              {
+                "bin": "0.9-1.0",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              }
+            ],
+            "confidence_buckets": [
+              {
+                "bucket": "50-55",
+                "n": 15,
+                "success_rate": 0.7333,
+                "ci95": [
+                  48.0,
+                  89.1
+                ]
+              },
+              {
+                "bucket": "55-60",
+                "n": 3353,
+                "success_rate": 0.4512,
+                "ci95": [
+                  43.4,
+                  46.8
+                ]
+              },
+              {
+                "bucket": "60-65",
+                "n": 4,
+                "success_rate": 0.5,
+                "ci95": [
+                  15.0,
+                  85.0
+                ]
+              },
+              {
+                "bucket": "65-70",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "70-75",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "75-80",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "80-85",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "85-90",
+                "n": 2,
+                "success_rate": 0.0,
+                "ci95": [
+                  0.0,
+                  65.8
+                ]
+              },
+              {
+                "bucket": "90-95",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "95-100",
+                "n": 1,
+                "success_rate": 1.0,
+                "ci95": [
+                  20.7,
+                  100.0
+                ]
+              }
+            ],
+            "vs_none": {
+              "n": 3375,
+              "n_dates": 125,
+              "accuracy_diff": -0.0276,
+              "accuracy_diff_ci95": [
+                -0.0711,
+                0.0148
+              ],
+              "brier_diff": -0.02243,
+              "brier_diff_ci95": [
+                -0.02967,
+                -0.01489
+              ]
+            }
+          },
+          "constant_base_rate": {
+            "n": 3375,
+            "accuracy": 0.4516,
+            "accuracy_ci95": [
+              43.5,
+              46.8
+            ],
+            "balanced_accuracy": 0.5,
+            "precision": null,
+            "recall": 0.0,
+            "f1": null,
+            "auc": 0.5,
+            "brier": 0.26052,
+            "log_loss": 0.71432,
+            "ece": 0.1134,
+            "pred_up_pct": 0.0,
+            "actual_up_pct": 54.8,
+            "mean_p": 0.435,
+            "reliability": [
+              {
+                "bin": "0.0-0.1",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.1-0.2",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.2-0.3",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.3-0.4",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.4-0.5",
+                "n": 3375,
+                "mean_predicted": 0.435,
+                "observed_up_rate": 0.5484,
+                "observed_ci95": [
+                  53.2,
+                  56.5
+                ]
+              },
+              {
+                "bin": "0.5-0.6",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.6-0.7",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.7-0.8",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.8-0.9",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.9-1.0",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              }
+            ],
+            "confidence_buckets": [
+              {
+                "bucket": "50-55",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "55-60",
+                "n": 3375,
+                "success_rate": 0.4516,
+                "ci95": [
+                  43.5,
+                  46.8
+                ]
+              },
+              {
+                "bucket": "60-65",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "65-70",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "70-75",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "75-80",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "80-85",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "85-90",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "90-95",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "95-100",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              }
+            ],
+            "vs_none": {
+              "n": 3375,
+              "n_dates": 125,
+              "accuracy_diff": -0.0284,
+              "accuracy_diff_ci95": [
+                -0.0729,
+                0.0151
+              ],
+              "brier_diff": -0.02362,
+              "brier_diff_ci95": [
+                -0.03074,
+                -0.01607
+              ]
+            }
+          }
+        }
+      },
+      "final": {
+        "fit_rows": 8154,
+        "fit_first": "2024-07-01",
+        "fit_last": "2025-09-16",
+        "fit_last_outcome": "2025-09-30",
+        "eval_rows": 6399,
+        "eval_first": "2025-10-01",
+        "eval_last": "2026-09-17",
+        "methods": {
+          "none": {
+            "n": 6399,
+            "accuracy": 0.5076,
+            "accuracy_ci95": [
+              49.5,
+              52.0
+            ],
+            "balanced_accuracy": 0.5079,
+            "precision": 0.5117,
+            "recall": 0.4565,
+            "f1": 0.4825,
+            "auc": 0.514,
+            "brier": 0.27374,
+            "log_loss": 0.74952,
+            "ece": 0.1304,
+            "pred_up_pct": 44.9,
+            "actual_up_pct": 50.3,
+            "mean_p": 0.482,
+            "reliability": [
+              {
+                "bin": "0.0-0.1",
+                "n": 5,
+                "mean_predicted": 0.0812,
+                "observed_up_rate": 0.6,
+                "observed_ci95": [
+                  23.1,
+                  88.2
+                ]
+              },
+              {
+                "bin": "0.1-0.2",
+                "n": 179,
+                "mean_predicted": 0.1657,
+                "observed_up_rate": 0.5307,
+                "observed_ci95": [
+                  45.8,
+                  60.2
+                ]
+              },
+              {
+                "bin": "0.2-0.3",
+                "n": 780,
+                "mean_predicted": 0.2568,
+                "observed_up_rate": 0.4628,
+                "observed_ci95": [
+                  42.8,
+                  49.8
+                ]
+              },
+              {
+                "bin": "0.3-0.4",
+                "n": 1218,
+                "mean_predicted": 0.3524,
+                "observed_up_rate": 0.4967,
+                "observed_ci95": [
+                  46.9,
+                  52.5
+                ]
+              },
+              {
+                "bin": "0.4-0.5",
+                "n": 1346,
+                "mean_predicted": 0.4497,
+                "observed_up_rate": 0.5089,
+                "observed_ci95": [
+                  48.2,
+                  53.6
+                ]
+              },
+              {
+                "bin": "0.5-0.6",
+                "n": 1215,
+                "mean_predicted": 0.5497,
+                "observed_up_rate": 0.4864,
+                "observed_ci95": [
+                  45.8,
+                  51.5
+                ]
+              },
+              {
+                "bin": "0.6-0.7",
+                "n": 985,
+                "mean_predicted": 0.6473,
+                "observed_up_rate": 0.5391,
+                "observed_ci95": [
+                  50.8,
+                  57.0
+                ]
+              },
+              {
+                "bin": "0.7-0.8",
+                "n": 516,
+                "mean_predicted": 0.7444,
+                "observed_up_rate": 0.5155,
+                "observed_ci95": [
+                  47.2,
+                  55.8
+                ]
+              },
+              {
+                "bin": "0.8-0.9",
+                "n": 150,
+                "mean_predicted": 0.8355,
+                "observed_up_rate": 0.5333,
+                "observed_ci95": [
+                  45.4,
+                  61.1
+                ]
+              },
+              {
+                "bin": "0.9-1.0",
+                "n": 5,
+                "mean_predicted": 0.9115,
+                "observed_up_rate": 0.2,
+                "observed_ci95": [
+                  3.6,
+                  62.4
+                ]
+              }
+            ],
+            "confidence_buckets": [
+              {
+                "bucket": "50-55",
+                "n": 1268,
+                "success_rate": 0.4937,
+                "ci95": [
+                  46.6,
+                  52.1
+                ]
+              },
+              {
+                "bucket": "55-60",
+                "n": 1293,
+                "success_rate": 0.4841,
+                "ci95": [
+                  45.7,
+                  51.1
+                ]
+              },
+              {
+                "bucket": "60-65",
+                "n": 1183,
+                "success_rate": 0.5292,
+                "ci95": [
+                  50.1,
+                  55.7
+                ]
+              },
+              {
+                "bucket": "65-70",
+                "n": 1020,
+                "success_rate": 0.5078,
+                "ci95": [
+                  47.7,
+                  53.8
+                ]
+              },
+              {
+                "bucket": "70-75",
+                "n": 770,
+                "success_rate": 0.561,
+                "ci95": [
+                  52.6,
+                  59.6
+                ]
+              },
+              {
+                "bucket": "75-80",
+                "n": 526,
+                "success_rate": 0.481,
+                "ci95": [
+                  43.9,
+                  52.4
+                ]
+              },
+              {
+                "bucket": "80-85",
+                "n": 238,
+                "success_rate": 0.4748,
+                "ci95": [
+                  41.2,
+                  53.8
+                ]
+              },
+              {
+                "bucket": "85-90",
+                "n": 91,
+                "success_rate": 0.5604,
+                "ci95": [
+                  45.8,
+                  65.8
+                ]
+              },
+              {
+                "bucket": "90-95",
+                "n": 10,
+                "success_rate": 0.3,
+                "ci95": [
+                  10.8,
+                  60.3
+                ]
+              },
+              {
+                "bucket": "95-100",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              }
+            ]
+          },
+          "platt": {
+            "n": 6399,
+            "accuracy": 0.4918,
+            "accuracy_ci95": [
+              48.0,
+              50.4
+            ],
+            "balanced_accuracy": 0.4935,
+            "precision": 0.4869,
+            "recall": 0.1958,
+            "f1": 0.2793,
+            "auc": 0.486,
+            "brier": 0.25094,
+            "log_loss": 0.69502,
+            "ece": 0.0262,
+            "pred_up_pct": 20.2,
+            "actual_up_pct": 50.3,
+            "mean_p": 0.4855,
+            "reliability": [
+              {
+                "bin": "0.0-0.1",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.1-0.2",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.2-0.3",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.3-0.4",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.4-0.5",
+                "n": 5105,
+                "mean_predicted": 0.4797,
+                "observed_up_rate": 0.507,
+                "observed_ci95": [
+                  49.3,
+                  52.1
+                ]
+              },
+              {
+                "bin": "0.5-0.6",
+                "n": 1294,
+                "mean_predicted": 0.5086,
+                "observed_up_rate": 0.4869,
+                "observed_ci95": [
+                  46.0,
+                  51.4
+                ]
+              },
+              {
+                "bin": "0.6-0.7",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.7-0.8",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.8-0.9",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.9-1.0",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              }
+            ],
+            "confidence_buckets": [
+              {
+                "bucket": "50-55",
+                "n": 6280,
+                "success_rate": 0.4927,
+                "ci95": [
+                  48.0,
+                  50.5
+                ]
+              },
+              {
+                "bucket": "55-60",
+                "n": 119,
+                "success_rate": 0.4454,
+                "ci95": [
+                  35.9,
+                  53.5
+                ]
+              },
+              {
+                "bucket": "60-65",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "65-70",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "70-75",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "75-80",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "80-85",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "85-90",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "90-95",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "95-100",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              }
+            ],
+            "vs_none": {
+              "n": 6399,
+              "n_dates": 237,
+              "accuracy_diff": -0.0158,
+              "accuracy_diff_ci95": [
+                -0.0475,
+                0.015
+              ],
+              "brier_diff": -0.02281,
+              "brier_diff_ci95": [
+                -0.02939,
+                -0.01632
+              ]
+            }
+          },
+          "isotonic": {
+            "n": 6399,
+            "accuracy": 0.4991,
+            "accuracy_ci95": [
+              48.7,
+              51.1
+            ],
+            "balanced_accuracy": 0.5019,
+            "precision": 0.5644,
+            "recall": 0.0177,
+            "f1": 0.0343,
+            "auc": 0.5013,
+            "brier": 0.25085,
+            "log_loss": 0.70032,
+            "ece": 0.0205,
+            "pred_up_pct": 1.6,
+            "actual_up_pct": 50.3,
+            "mean_p": 0.4838,
+            "reliability": [
+              {
+                "bin": "0.0-0.1",
+                "n": 3,
+                "mean_predicted": 0.0,
+                "observed_up_rate": 0.6667,
+                "observed_ci95": [
+                  20.8,
+                  93.9
+                ]
+              },
+              {
+                "bin": "0.1-0.2",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.2-0.3",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.3-0.4",
+                "n": 16,
+                "mean_predicted": 0.381,
+                "observed_up_rate": 0.625,
+                "observed_ci95": [
+                  38.6,
+                  81.5
+                ]
+              },
+              {
+                "bin": "0.4-0.5",
+                "n": 6279,
+                "mean_predicted": 0.4827,
+                "observed_up_rate": 0.5015,
+                "observed_ci95": [
+                  48.9,
+                  51.4
+                ]
+              },
+              {
+                "bin": "0.5-0.6",
+                "n": 89,
+                "mean_predicted": 0.5522,
+                "observed_up_rate": 0.5843,
+                "observed_ci95": [
+                  48.0,
+                  68.1
+                ]
+              },
+              {
+                "bin": "0.6-0.7",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.7-0.8",
+                "n": 11,
+                "mean_predicted": 0.7778,
+                "observed_up_rate": 0.4545,
+                "observed_ci95": [
+                  21.3,
+                  72.0
+                ]
+              },
+              {
+                "bin": "0.8-0.9",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.9-1.0",
+                "n": 1,
+                "mean_predicted": 1.0,
+                "observed_up_rate": 0.0,
+                "observed_ci95": [
+                  0.0,
+                  79.3
+                ]
+              }
+            ],
+            "confidence_buckets": [
+              {
+                "bucket": "50-55",
+                "n": 6278,
+                "success_rate": 0.4984,
+                "ci95": [
+                  48.6,
+                  51.1
+                ]
+              },
+              {
+                "bucket": "55-60",
+                "n": 90,
+                "success_rate": 0.5889,
+                "ci95": [
+                  48.6,
+                  68.5
+                ]
+              },
+              {
+                "bucket": "60-65",
+                "n": 16,
+                "success_rate": 0.375,
+                "ci95": [
+                  18.5,
+                  61.4
+                ]
+              },
+              {
+                "bucket": "65-70",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "70-75",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "75-80",
+                "n": 11,
+                "success_rate": 0.4545,
+                "ci95": [
+                  21.3,
+                  72.0
+                ]
+              },
+              {
+                "bucket": "80-85",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "85-90",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "90-95",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "95-100",
+                "n": 4,
+                "success_rate": 0.25,
+                "ci95": [
+                  4.6,
+                  69.9
+                ]
+              }
+            ],
+            "vs_none": {
+              "n": 6399,
+              "n_dates": 237,
+              "accuracy_diff": -0.0084,
+              "accuracy_diff_ci95": [
+                -0.0381,
+                0.023
+              ],
+              "brier_diff": -0.0229,
+              "brier_diff_ci95": [
+                -0.02866,
+                -0.01716
+              ]
+            }
+          },
+          "constant_base_rate": {
+            "n": 6399,
+            "accuracy": 0.4971,
+            "accuracy_ci95": [
+              48.5,
+              50.9
+            ],
+            "balanced_accuracy": 0.5,
+            "precision": null,
+            "recall": 0.0,
+            "f1": null,
+            "auc": 0.5,
+            "brier": 0.25034,
+            "log_loss": 0.69382,
+            "ece": 0.0186,
+            "pred_up_pct": 0.0,
+            "actual_up_pct": 50.3,
+            "mean_p": 0.4843,
+            "reliability": [
+              {
+                "bin": "0.0-0.1",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.1-0.2",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.2-0.3",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.3-0.4",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.4-0.5",
+                "n": 6399,
+                "mean_predicted": 0.4843,
+                "observed_up_rate": 0.5029,
+                "observed_ci95": [
+                  49.1,
+                  51.5
+                ]
+              },
+              {
+                "bin": "0.5-0.6",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.6-0.7",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.7-0.8",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.8-0.9",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bin": "0.9-1.0",
+                "n": 0,
+                "mean_predicted": null,
+                "observed_up_rate": null,
+                "observed_ci95": [
+                  null,
+                  null
+                ]
+              }
+            ],
+            "confidence_buckets": [
+              {
+                "bucket": "50-55",
+                "n": 6399,
+                "success_rate": 0.4971,
+                "ci95": [
+                  48.5,
+                  50.9
+                ]
+              },
+              {
+                "bucket": "55-60",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "60-65",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "65-70",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "70-75",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "75-80",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "80-85",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "85-90",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "90-95",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              },
+              {
+                "bucket": "95-100",
+                "n": 0,
+                "success_rate": null,
+                "ci95": [
+                  null,
+                  null
+                ]
+              }
+            ],
+            "vs_none": {
+              "n": 6399,
+              "n_dates": 237,
+              "accuracy_diff": -0.0105,
+              "accuracy_diff_ci95": [
+                -0.0414,
+                0.0225
+              ],
+              "brier_diff": -0.02341,
+              "brier_diff_ci95": [
+                -0.02939,
+                -0.01753
+              ]
+            }
+          }
+        }
+      },
+      "selected_on_dev": "platt"
+    }
+  }
+}
