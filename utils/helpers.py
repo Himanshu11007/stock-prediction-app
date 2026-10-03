@@ -48,6 +48,7 @@ class InferenceData(NamedTuple):
     y:          pd.Series             # training labels
     y_train:    pd.Series             # first 80% of y — single-class guard, as prepare_data
     X_pred:     pd.DataFrame | None   # feature row of bar D; never part of X
+    X_pred_invalid: tuple = ()        # bar-D features that are NaN/inf when X_pred is None
 
 
 def prepare_inference_data(raw) -> InferenceData:
@@ -56,9 +57,10 @@ def prepare_inference_data(raw) -> InferenceData:
     (Close[t+1] > Close[t]) is known; the prediction row is the latest bar D,
     whose label is unknown and which is therefore never trained on.
 
-    X_pred is None when bar D has an incomplete feature row (e.g. the first
-    session after a zero-volume holiday bar makes Volume_Change infinite);
-    callers must then skip the prediction rather than fall back to an older row.
+    X_pred is None when bar D has an incomplete feature row (too little
+    history, or a NaN/inf feature); X_pred_invalid then names the offending
+    columns. Callers must skip the prediction rather than fall back to an
+    older row.
     """
     feats = compute_features(raw)
     train_data = feats.dropna()
@@ -74,7 +76,12 @@ def prepare_inference_data(raw) -> InferenceData:
     if X_pred is not None and latest in X.index:
         raise AssertionError("prediction row is part of the training set")
 
-    return InferenceData(data, train_data, X, y, y_train, X_pred)
+    invalid = ()
+    if X_pred is None and latest in feats.index:
+        row = feats.drop(columns="Up").loc[latest]
+        invalid = tuple(row.index[row.isna()])
+
+    return InferenceData(data, train_data, X, y, y_train, X_pred, invalid)
 
 
 def prepare_data(data):

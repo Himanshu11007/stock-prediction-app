@@ -190,8 +190,8 @@ plus a new assertion-failure case.
 
 ## 10. Remaining concerns and future work (not done here)
 
-- **Post-holiday gap:** the first session after a zero-volume holiday bar
-  yields no prediction (section 5). Options for a future phase: drop Yahoo
+- ~~**Post-holiday gap:** the first session after a zero-volume holiday bar
+  yields no prediction (section 5).~~ **Fixed in Phase 11B** (section 11.1). Options for a future phase: drop Yahoo
   holiday placeholder bars at load time, or guard `Volume_Change` against a
   zero denominator. Both change model inputs, so both are out of scope here.
 - Historical DB rows before Phase 11A carry the leaked ML direction and the
@@ -202,3 +202,92 @@ plus a new assertion-failure case.
 - News has no point-in-time record.
 - Model quality itself (the benchmark's post-fix numbers) is a separate
   question for the next phase. No tuning was done here.
+
+## 11. Phase 11B: remaining integrity gaps closed
+
+### 11.1 Zero-volume holiday bars (`Volume_Change = inf`)
+
+**Path:** Yahoo emits flat, zero-volume placeholder bars on NSE holidays.
+`compute_features()` computed `Volume_Change = Volume.pct_change()`, so on
+the next session the formula was `x / 0 − 1 = +inf`, which was then
+replaced with NaN. As a result:
+
+- that row was dropped from training, and
+- when it was the latest bar, `X_pred` was `None`: the scanner skipped the
+  symbol and `/analyze-stock` returned 400 for that whole day, for every
+  stock.
+
+**Fix:** `Volume_Change` is now the change versus the **previous bar that
+actually traded**:
+`Volume / Volume.where(Volume > 0).ffill().shift(1) − 1`.
+
+- It is bit-identical to `pct_change()` wherever the previous bar traded
+  (verified on the snapshot and in tests).
+- No volume is fabricated, and nothing after bar D is used.
+- The holiday bar itself still reads −100%.
+- In the snapshot this removed 6 infinities per symbol.
+
+**Explicit invalid-feature handling:** `prepare_inference_data()` now
+returns `X_pred_invalid`, the names of bar D's NaN/inf features. The scanner
+logs them and `/analyze-stock` includes them in its 400 message. There is
+still no fallback to an older row.
+
+Side effect (documented, intended): the training rows that follow holiday
+bars, previously dropped, are now kept (≈5 rows per symbol-year). The
+production prediction therefore changes slightly on windows that contain a
+holiday. The core benchmark was re-run (section 11.5).
+
+### 11.2 Engine version tagging
+
+`recommendation_validation.engine_version` already existed. Every row in the
+local DB (2026-06-13 → 2026-09-29) predates the Phase 11A fix: 206 rows are
+`NULL` and 1,952 are `"v1.0"`.
+
+- `config.RECOMMENDATION_ENGINE_VERSION = "v1.1"` is now stamped by the
+  scanner, `/analyze-stock` and Streamlit, and is the default in
+  `upsert_recommendation()`. Previously `save_recommendation()` wrote NULL.
+- `config.PRE_TEMPORAL_FIX_ENGINE_VERSIONS = (None, "v1.0")` and
+  `storage.tracker.is_pre_temporal_fix()` classify rows.
+- No historical row is rewritten or deleted. A legacy row is relabelled only
+  when the new engine **replaces its entire content** via the existing
+  same-day UPDATE path.
+- The analytics modules still read all rows. Any model evaluation from the DB
+  must filter on `engine_version` (do not pool `v1.0` with `v1.1`).
+
+### 11.3 Partial (intraday) bars
+
+Decision: **intraday-aware, explicitly recorded**, rather than end-of-day
+only. Dropping the live bar during market hours would change the price and
+prediction users see. Instead:
+
+- `utils/market_session.is_daily_bar_complete(bar_date, now)` treats bar D
+  as a finished session if it is from an earlier IST date, or if it is
+  today's and it is ≥ 16:00 IST (close 15:30 plus a settling margin). IST
+  is a fixed +05:30 offset; the function rejects naive datetimes.
+- Two nullable columns were added migration-safely to
+  `recommendation_validation`: `prediction_bar_date` (bar D's date;
+  `saved_date` remains the wall-clock date) and `bar_complete` (0/1). All
+  three persistence paths populate them. Existing rows are NULL.
+- Evaluation can now exclude `bar_complete = 0` rows, which are intraday
+  predictions on a partial bar whose volume features are out of
+  distribution.
+
+### 11.4 Historical news
+
+Unchanged and still conservative: no point-in-time publication timestamps
+exist, so historical benchmarks and research use neutral news and flag it.
+No timestamps are fabricated.
+
+### 11.5 Tests and benchmark
+
+- `tests/test_phase11b_integrity.py` (24 tests) covers: a zero-volume
+  previous bar, a normal next bar, no infinite feature, identity with
+  `pct_change` on normal bars, a prediction on the first post-holiday
+  session, kept training rows, invalid features named and skipped, later
+  volume not affecting D, scanner and `/analyze-stock` behaviour, version
+  defaults and legacy rows untouched, session completeness (open, just
+  after close, 16:00, UTC conversion, naive clock rejected), and
+  persistence and update of the bar metadata.
+- The Phase 11A artifacts moved to `walk_forward_benchmark/phase11a_full/`.
+  `full/` is now the Phase 11B clean baseline; see
+  [WALK_FORWARD_BENCHMARK.md §20](WALK_FORWARD_BENCHMARK.md).

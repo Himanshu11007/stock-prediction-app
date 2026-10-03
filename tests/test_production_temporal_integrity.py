@@ -91,8 +91,10 @@ class TestTrainingVsPredictionRow:
 
     def test_incomplete_latest_bar_yields_no_prediction_row(self, history):
         broken = history.copy()
-        broken.iloc[-2, broken.columns.get_loc("Volume")] = 0.0  # Volume_Change -> inf at D
-        assert prepare_inference_data(broken).X_pred is None
+        broken.iloc[-1, broken.columns.get_loc("Volume")] = np.nan  # invalid input at D
+        inf = prepare_inference_data(broken)
+        assert inf.X_pred is None
+        assert "Volume_Change" in inf.X_pred_invalid
 
 
 # ══════════════════════════════════════════════════════════════════════════════

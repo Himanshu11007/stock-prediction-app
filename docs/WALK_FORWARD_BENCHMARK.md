@@ -606,3 +606,38 @@ produced byte-identical `raw_model_predictions.csv`,
 `summary.md`: sha256 `99b074de…` (raw), `79ce5d5c…` (filtered),
 `2c6daad6…` (summary.json). The price manifest (`ede607e5…`) is identical
 to the Phase 10 run's, so pre- and post-fix used the same inputs.
+
+## 20. Phase 11B: clean baseline after the zero-volume fix
+
+Phase 11B changed `Volume_Change` so that the session after a Yahoo holiday
+placeholder bar is no longer infinite
+([PRODUCTION_TEMPORAL_INTEGRITY.md §11](PRODUCTION_TEMPORAL_INTEGRITY.md)).
+The benchmark was re-run with the same snapshot, symbols, dates and
+methodology. `full/` is now the Phase 11B baseline; the Phase 11A run is
+preserved in `phase11a_full/`.
+
+| | Phase 11A | **Phase 11B (current clean baseline)** |
+|---|---|---|
+| Predictions / skipped / temporal violations | 1,350 / 0 / 0 | 1,350 / 0 / 0 |
+| 1D direction accuracy | 50.7% | **49.9% (47.3–52.6)** |
+| 3D | 49.6% | **49.1% (46.4–51.7)** |
+| 5D | 51.8% | **51.4% (48.7–54.1)** |
+| 10D | 51.5% | **51.2% (48.5–53.9)** |
+| Majority-class baseline 1D/3D/5D/10D | 49.9 / 49.3 / 48.9 / 48.5 | 50.6 / 49.2 / 49.6 / 48.8 |
+| Previous-direction baseline | 46.8 / 47.2 / 48.6 / 50.3 | unchanged |
+| Prediction == realised D-1→D move | 58.7% | 61.0% (58.4–63.6) |
+| Ensemble walk-forward CV | 51.7% | 51.2% |
+| Filter survivors | 552 | 540 |
+
+The majority baseline moved because restoring the post-holiday training
+rows changes each window's majority class.
+
+**Instability finding:** restoring about 5 training rows per symbol-year (the
+post-holiday sessions) changed 1,317 of 1,350 ensemble probabilities and
+flipped the predicted direction on 163 (12%). A model whose calls flip this
+often under a negligible change in training data is not extracting stable
+signal. This is consistent with the Phase 12–14 research (AUC ≈ 0.50).
+
+Every 11A → 11B change is inside the confidence intervals. Two consecutive
+11B runs are byte-identical (hashes in the Phase 11B commit message). The
+price manifest is unchanged.

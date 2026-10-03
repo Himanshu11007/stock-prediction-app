@@ -40,6 +40,15 @@ HOLD_MIN        = 42
 SELL_MIN        = 28
 # below SELL_MIN → STRONG SELL
 
+# ── Recommendation engine version ────────────────────────────────────────────
+# Stamped on every persisted recommendation (recommendation_validation.
+# engine_version). NULL / "v1.0" rows were produced before the Phase 11A
+# temporal-integrity fix (ML prediction made on a training row, cmp =
+# Close[D-1]) and must never be pooled with "v1.1"+ rows for model evaluation.
+# See docs/PRODUCTION_TEMPORAL_INTEGRITY.md.
+RECOMMENDATION_ENGINE_VERSION    = "v1.1"
+PRE_TEMPORAL_FIX_ENGINE_VERSIONS = (None, "v1.0")
+
 # ── Confluence pillar weights (must sum to 1.0) ────────────────────────────────
 W_ML_DIR    = 0.15
 W_ML_CONF   = 0.05

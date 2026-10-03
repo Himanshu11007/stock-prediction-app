@@ -1,6 +1,6 @@
 import sqlite3
 import datetime
-from config import TRACKER_DB
+from config import TRACKER_DB, RECOMMENDATION_ENGINE_VERSION, PRE_TEMPORAL_FIX_ENGINE_VERSIONS
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -193,7 +193,9 @@ def _ensure_validation_table(con: sqlite3.Connection) -> None:
             weighted_score    REAL,
             sector            TEXT,
             market_regime     TEXT,
-            engine_version    TEXT
+            engine_version    TEXT,
+            prediction_bar_date TEXT,
+            bar_complete      INTEGER
         )
     """)
 
@@ -217,6 +219,8 @@ def _ensure_validation_table(con: sqlite3.Connection) -> None:
         "sector":           "TEXT",
         "market_regime":    "TEXT",
         "engine_version":   "TEXT",
+        "prediction_bar_date": "TEXT",
+        "bar_complete":     "INTEGER",
     }
     for col_name, col_type in _new_columns.items():
         if col_name not in existing_cols:
@@ -325,6 +329,16 @@ def generate_scan_id(prefix: str = "MANUAL") -> str:
     return f"{prefix}-{datetime.datetime.now().strftime('%Y%m%d-%H%M%S')}"
 
 
+def is_pre_temporal_fix(engine_version: str | None) -> bool:
+    """
+    True for rows produced before the Phase 11A temporal-integrity fix
+    (engine_version NULL or "v1.0"). Their ML direction was predicted from a
+    training row and their cmp is Close[D-1]; exclude them from any model
+    evaluation that also uses later rows.
+    """
+    return engine_version in PRE_TEMPORAL_FIX_ENGINE_VERSIONS
+
+
 def recommendation_exists(symbol: str, saved_date: str | None = None) -> bool:
     """
     Check whether a recommendation already exists for this symbol on this date.
@@ -372,6 +386,8 @@ def upsert_recommendation(
     sector:           str | None = None,
     market_regime:    str | None = None,
     engine_version:   str | None = None,
+    prediction_bar_date: str | None = None,
+    bar_complete:     bool | None = None,
 ) -> int:
     """
     Insert a new recommendation, or update the existing row for the same
@@ -412,12 +428,21 @@ def upsert_recommendation(
         engine_version: Free-text tag for which recommendation engine
                  version produced this row (e.g. "v1.0"). Useful for
                  intelligence analysis if the scoring logic changes later.
+                 Defaults to config.RECOMMENDATION_ENGINE_VERSION, so every
+                 new write is tagged with the engine that produced it.
+        prediction_bar_date: Date of the price bar the prediction was made
+                 from (bar D). Differs from saved_date (wall-clock) on
+                 non-trading days.
+        bar_complete: False when bar D was the exchange's still-open session
+                 (intraday run on a partial bar); see utils/market_session.py.
 
     Returns:
         int: rowid of the inserted or updated row
     """
     row_date = saved_date or datetime.date.today().isoformat()
     scan_id  = scan_id or generate_scan_id()
+    engine_version = engine_version or RECOMMENDATION_ENGINE_VERSION
+    bar_flag = None if bar_complete is None else int(bool(bar_complete))
 
     # ── Unpack pillar scores (all nullable — None if not provided) ───────────
     p = pillar_scores or {}
@@ -451,8 +476,9 @@ def upsert_recommendation(
                     target, stop_loss, scan_id,
                     pillar_ml_dir, pillar_ml_conf, pillar_tech, pillar_news,
                     pillar_volume, pillar_regime, pillar_timeframe, pillar_momentum,
-                    weighted_score, sector, market_regime, engine_version
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    weighted_score, sector, market_regime, engine_version,
+                    prediction_bar_date, bar_complete
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     row_date, symbol, stock, signal,
@@ -476,6 +502,8 @@ def upsert_recommendation(
                     sector,
                     market_regime,
                     engine_version,
+                    prediction_bar_date,
+                    bar_flag,
                 ),
             )
             con.commit()
@@ -496,6 +524,7 @@ def upsert_recommendation(
                 pillar_ml_dir = ?, pillar_ml_conf = ?, pillar_tech = ?, pillar_news = ?,
                 pillar_volume = ?, pillar_regime = ?, pillar_timeframe = ?, pillar_momentum = ?,
                 weighted_score = ?, sector = ?, market_regime = ?, engine_version = ?,
+                prediction_bar_date = ?, bar_complete = ?,
                 is_validated = 0, validation_date = NULL,
                 validation_price = NULL, return_pct = NULL, success = NULL
             WHERE id = ?
@@ -522,6 +551,8 @@ def upsert_recommendation(
                 sector,
                 market_regime,
                 engine_version,
+                prediction_bar_date,
+                bar_flag,
                 row_id,
             ),
         )

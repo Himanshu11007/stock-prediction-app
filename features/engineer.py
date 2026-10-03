@@ -44,7 +44,12 @@ def compute_features(data):
     data["Volatility"] = data["Close"].rolling(10).std()
 
     # ── Volume ────────────────────────────────────────────────────────────────
-    data["Volume_Change"] = data["Volume"].pct_change()
+    # Change vs the previous bar that actually traded. Yahoo inserts flat
+    # zero-volume placeholder bars on exchange holidays; pct_change() divided
+    # by that 0 and produced +inf on the next session, which made the row
+    # unusable. Where the previous bar traded this equals pct_change().
+    prev_traded_volume    = data["Volume"].where(data["Volume"] > 0).ffill().shift(1)
+    data["Volume_Change"] = data["Volume"] / prev_traded_volume - 1
     data["Volume_MA"]     = data["Volume"].rolling(20).mean()
     data["Volume_Ratio"]  = data["Volume"] / data["Volume_MA"].replace(0, np.nan)
 

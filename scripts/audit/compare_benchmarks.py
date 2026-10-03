@@ -15,8 +15,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent / "output" / "walk_forward_benchmark"
 BEFORE = ROOT / "phase10_prefix_full" / "summary.json"
-AFTER = ROOT / "full" / "summary.json"
-OUT = ROOT / "full"
+AFTER = ROOT / "phase11a_full" / "summary.json"
+OUT = ROOT / "phase11a_full"
 
 
 def _by_h(rows: list[dict]) -> dict[int, dict]:

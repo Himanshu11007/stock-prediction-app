@@ -15,7 +15,8 @@ from utils.decision_engine import generate_signal
 from utils.regime import detect_regime
 from utils.risk import calculate_risk
 from scanner.filters import passes_quality_filters
-from config import SCAN_MAX_STOCKS, SCAN_MAX_WORKERS
+from config import SCAN_MAX_STOCKS, SCAN_MAX_WORKERS, RECOMMENDATION_ENGINE_VERSION
+from utils.market_session import is_daily_bar_complete
 from data.loader import load_multi_timeframe_data
 from features.engineer import get_trend_signal
 from utils.logger import get_logger, log_stock_diagnostics, log_exception
@@ -63,7 +64,8 @@ def _scan_one(symbol: str, company_map: dict, loader_fn) -> dict | None:
         # never part of training (see docs/PRODUCTION_TEMPORAL_INTEGRITY.md).
         inf = prepare_inference_data(data)
         if inf.X_pred is None:
-            logger.info("%s: latest bar has incomplete features — skipping", symbol)
+            logger.info("%s: latest bar has incomplete features %s — skipping",
+                        symbol, list(inf.X_pred_invalid))
             return None
         if len(set(inf.y_train)) < 2:
             logger.info("%s: single-class target — skipping", symbol)
@@ -162,7 +164,9 @@ def _scan_one(symbol: str, company_map: dict, loader_fn) -> dict | None:
             "pillar_scores":   pillar_scores,
             "weighted_score":  weighted_score,
             "sector":          sector,
-            "engine_version":  "v1.0",
+            "engine_version":  RECOMMENDATION_ENGINE_VERSION,
+            "prediction_bar_date": data.index[-1].date().isoformat(),
+            "bar_complete":    is_daily_bar_complete(data.index[-1]),
         }
 
     except Exception as e:
@@ -210,6 +214,8 @@ def _persist_recommendation(result: dict, scan_id: str) -> None:
             sector           = result.get("sector"),
             market_regime    = result.get("regime"),
             engine_version   = result.get("engine_version"),
+            prediction_bar_date = result.get("prediction_bar_date"),
+            bar_complete     = result.get("bar_complete"),
         )
     except Exception as e:
         log_exception(logger, f"Failed to persist recommendation for {result.get('symbol')}", e)

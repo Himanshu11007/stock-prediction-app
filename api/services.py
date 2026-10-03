@@ -20,6 +20,8 @@ from typing import Optional
 
 from data.loader import load_data, load_multi_timeframe_data
 from utils.helpers import prepare_inference_data
+from utils.market_session import is_daily_bar_complete
+from config import RECOMMENDATION_ENGINE_VERSION
 from models.trainer import train_model, ensemble_predict
 from news.api import fetch_news
 from news.sentiment import analyze_overall_sentiment
@@ -89,7 +91,8 @@ def analyze_stock(symbol: str) -> dict:
     data, X, y, y_train, X_pred = inf.data, inf.X, inf.y, inf.y_train, inf.X_pred
     if X_pred is None:
         raise ValueError(
-            f"Latest price bar for '{symbol}' has incomplete features — cannot predict"
+            f"Latest price bar for '{symbol}' has incomplete features "
+            f"{list(inf.X_pred_invalid)} — cannot predict"
         )
 
     if len(set(y_train)) < 2:
@@ -187,7 +190,9 @@ def analyze_stock(symbol: str) -> dict:
             weighted_score   = _weighted_score,
             sector           = _sector,
             market_regime    = (regime_info or {}).get("regime"),
-            engine_version   = "v1.0",
+            engine_version   = RECOMMENDATION_ENGINE_VERSION,
+            prediction_bar_date = data.index[-1].date().isoformat(),
+            bar_complete     = is_daily_bar_complete(data.index[-1]),
         )
     except Exception as e:
         log_exception(logger, f"save_recommendation failed for {symbol}", e)

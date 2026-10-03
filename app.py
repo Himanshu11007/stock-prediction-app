@@ -34,7 +34,8 @@ from utils.logger import (
     get_logger, configure_logging,
     read_last_log_lines, clear_log_file, log_file_size_kb,
 )
-from config import ENABLE_DEBUG_LOGS
+from config import ENABLE_DEBUG_LOGS, RECOMMENDATION_ENGINE_VERSION
+from utils.market_session import is_daily_bar_complete
 
 # Initialise logging once — safe to call on every Streamlit rerun
 configure_logging(debug=ENABLE_DEBUG_LOGS)
@@ -568,7 +569,9 @@ with tab_analyse:
                 weighted_score   = _weighted_score,
                 sector           = _sector,
                 market_regime    = (regime_info or {}).get("regime"),
-                engine_version   = "v1.0",
+                engine_version   = RECOMMENDATION_ENGINE_VERSION,
+                prediction_bar_date = signal_data.index[-1].date().isoformat(),
+                bar_complete     = is_daily_bar_complete(signal_data.index[-1]),
             )
         except Exception:
             pass
