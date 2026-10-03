@@ -1,0 +1,3058 @@
+{
+  "experiment": "E14",
+  "config_key": "708da822e690",
+  "n_predictions": 15066,
+  "fingerprint": "952009426a3378e8b277cdaca8ae7ae227bd402b3dde6ba2fa76a34d572dc39d",
+  "models": [
+    "lr",
+    "rf",
+    "xgb",
+    "hgb",
+    "et",
+    "gb"
+  ],
+  "candidate_rule": "lowest DEV Platt-calibrated 1D Brier among candidates with DEV 1D AUC > production blend",
+  "eligible_on_dev": [
+    "hgb",
+    "et",
+    "gb",
+    "ens_equal"
+  ],
+  "selected_on_dev": "gb",
+  "final_confirmation": {
+    "1d": {
+      "auc": 0.4913,
+      "prod_auc": 0.4995,
+      "paired": {
+        "n": 6642,
+        "n_dates": 246,
+        "accuracy_diff": -0.0083,
+        "accuracy_diff_ci95": [
+          -0.02,
+          0.0021
+        ],
+        "brier_diff": 0.04862,
+        "brier_diff_ci95": [
+          0.04396,
+          0.05309
+        ]
+      }
+    },
+    "3d": {
+      "auc": 0.4858,
+      "prod_auc": 0.4923,
+      "paired": {
+        "n": 6588,
+        "n_dates": 244,
+        "accuracy_diff": -0.0033,
+        "accuracy_diff_ci95": [
+          -0.0138,
+          0.0068
+        ],
+        "brier_diff": 0.04919,
+        "brier_diff_ci95": [
+          0.04497,
+          0.05332
+        ]
+      }
+    },
+    "5d": {
+      "auc": 0.4931,
+      "prod_auc": 0.5021,
+      "paired": {
+        "n": 6534,
+        "n_dates": 242,
+        "accuracy_diff": -0.0054,
+        "accuracy_diff_ci95": [
+          -0.0153,
+          0.0052
+        ],
+        "brier_diff": 0.04811,
+        "brier_diff_ci95": [
+          0.04398,
+          0.05234
+        ]
+      }
+    },
+    "10d": {
+      "auc": 0.5046,
+      "prod_auc": 0.514,
+      "paired": {
+        "n": 6399,
+        "n_dates": 237,
+        "accuracy_diff": -0.0058,
+        "accuracy_diff_ci95": [
+          -0.0163,
+          0.0047
+        ],
+        "brier_diff": 0.04634,
+        "brier_diff_ci95": [
+          0.04241,
+          0.05062
+        ]
+      }
+    }
+  },
+  "results": {
+    "lr": {
+      "DEV": {
+        "1d": {
+          "n": 3375,
+          "accuracy": 0.5111,
+          "balanced_accuracy": 0.5111,
+          "precision": 0.5109,
+          "recall": 0.5012,
+          "f1": 0.506,
+          "auc": 0.5134,
+          "brier": 0.2796,
+          "log_loss": 0.78325,
+          "ece": 0.138,
+          "pred_up_pct": 49.0,
+          "actual_up_pct": 50.0,
+          "mean_p": 0.4918,
+          "accuracy_ci95_date_clustered": [
+            0.4936,
+            0.5274
+          ],
+          "platt_calibrated": {
+            "brier": 0.25036,
+            "log_loss": 0.69386,
+            "ece": 0.0196,
+            "auc": 0.5134
+          },
+          "paired_vs_production_blend": {
+            "n": 3375,
+            "n_dates": 125,
+            "accuracy_diff": 0.0113,
+            "accuracy_diff_ci95": [
+              -0.0074,
+              0.0314
+            ],
+            "brier_diff": 0.00348,
+            "brier_diff_ci95": [
+              -0.00242,
+              0.00951
+            ]
+          },
+          "returns": {
+            "horizon_days": 1,
+            "n_up_calls": 1654,
+            "n_down_calls": 1721,
+            "mean_ret_up_calls": 0.103,
+            "median_ret_up_calls": 0.042,
+            "mean_ret_down_calls": 0.0585,
+            "median_ret_down_calls": -0.023,
+            "spread_up_minus_down": 0.0445,
+            "hit_rate_up_calls": 0.5109,
+            "downside_rate_up_calls": 0.4861,
+            "mean_ret_all": 0.0803,
+            "long_only_days": 125,
+            "long_only_mean_daily_pct": 0.0651,
+            "long_only_total_pct": 7.54,
+            "long_only_max_drawdown_pct": -8.56,
+            "equal_weight_all_total_pct": 9.75,
+            "equal_weight_all_max_drawdown_pct": -7.07,
+            "turnover_per_day": 0.198
+          }
+        },
+        "3d": {
+          "n": 3375,
+          "accuracy": 0.5037,
+          "balanced_accuracy": 0.504,
+          "precision": 0.5193,
+          "recall": 0.494,
+          "f1": 0.5063,
+          "auc": 0.5068,
+          "brier": 0.28102,
+          "log_loss": 0.78343,
+          "ece": 0.1454,
+          "pred_up_pct": 49.0,
+          "actual_up_pct": 51.5,
+          "mean_p": 0.4918,
+          "accuracy_ci95_date_clustered": [
+            0.4862,
+            0.5221
+          ],
+          "platt_calibrated": {
+            "brier": 0.25126,
+            "log_loss": 0.69568,
+            "ece": 0.0392,
+            "auc": 0.5068
+          },
+          "paired_vs_production_blend": {
+            "n": 3375,
+            "n_dates": 125,
+            "accuracy_diff": 0.0024,
+            "accuracy_diff_ci95": [
+              -0.0196,
+              0.0258
+            ],
+            "brier_diff": 0.00362,
+            "brier_diff_ci95": [
+              -0.00216,
+              0.00979
+            ]
+          }
+        },
+        "5d": {
+          "n": 3375,
+          "accuracy": 0.5111,
+          "balanced_accuracy": 0.5117,
+          "precision": 0.5411,
+          "recall": 0.5011,
+          "f1": 0.5203,
+          "auc": 0.5224,
+          "brier": 0.277,
+          "log_loss": 0.7783,
+          "ece": 0.138,
+          "pred_up_pct": 49.0,
+          "actual_up_pct": 52.9,
+          "mean_p": 0.4918,
+          "accuracy_ci95_date_clustered": [
+            0.4945,
+            0.5286
+          ],
+          "platt_calibrated": {
+            "brier": 0.25239,
+            "log_loss": 0.69794,
+            "ece": 0.0605,
+            "auc": 0.5224
+          },
+          "paired_vs_production_blend": {
+            "n": 3375,
+            "n_dates": 125,
+            "accuracy_diff": 0.0071,
+            "accuracy_diff_ci95": [
+              -0.0142,
+              0.0293
+            ],
+            "brier_diff": 0.00118,
+            "brier_diff_ci95": [
+              -0.00452,
+              0.00716
+            ]
+          },
+          "returns": {
+            "horizon_days": 5,
+            "n_up_calls": 1654,
+            "n_down_calls": 1721,
+            "mean_ret_up_calls": 0.5839,
+            "median_ret_up_calls": 0.3457,
+            "mean_ret_down_calls": 0.3482,
+            "median_ret_down_calls": 0.1953,
+            "spread_up_minus_down": 0.2357,
+            "hit_rate_up_calls": 0.5411,
+            "downside_rate_up_calls": 0.4589,
+            "mean_ret_all": 0.4637
+          }
+        },
+        "10d": {
+          "n": 3375,
+          "accuracy": 0.5031,
+          "balanced_accuracy": 0.5041,
+          "precision": 0.5526,
+          "recall": 0.4938,
+          "f1": 0.5215,
+          "auc": 0.5192,
+          "brier": 0.27733,
+          "log_loss": 0.77414,
+          "ece": 0.146,
+          "pred_up_pct": 49.0,
+          "actual_up_pct": 54.8,
+          "mean_p": 0.4918,
+          "accuracy_ci95_date_clustered": [
+            0.4844,
+            0.523
+          ],
+          "platt_calibrated": {
+            "brier": 0.26039,
+            "log_loss": 0.71406,
+            "ece": 0.1173,
+            "auc": 0.5192
+          },
+          "paired_vs_production_blend": {
+            "n": 3375,
+            "n_dates": 125,
+            "accuracy_diff": 0.0231,
+            "accuracy_diff_ci95": [
+              0.0039,
+              0.0424
+            ],
+            "brier_diff": -0.0068,
+            "brier_diff_ci95": [
+              -0.01215,
+              -0.00155
+            ]
+          }
+        }
+      },
+      "FINAL": {
+        "1d": {
+          "n": 6642,
+          "accuracy": 0.509,
+          "balanced_accuracy": 0.5073,
+          "precision": 0.4925,
+          "recall": 0.4507,
+          "f1": 0.4707,
+          "auc": 0.5047,
+          "brier": 0.28288,
+          "log_loss": 0.78565,
+          "ece": 0.1434,
+          "pred_up_pct": 44.3,
+          "actual_up_pct": 48.4,
+          "mean_p": 0.4818,
+          "accuracy_ci95_date_clustered": [
+            0.4961,
+            0.5209
+          ],
+          "platt_calibrated": {
+            "brier": 0.24972,
+            "log_loss": 0.69259,
+            "ece": 0.0024,
+            "auc": 0.5047
+          },
+          "paired_vs_production_blend": {
+            "n": 6642,
+            "n_dates": 246,
+            "accuracy_diff": 0.0065,
+            "accuracy_diff_ci95": [
+              -0.0062,
+              0.0188
+            ],
+            "brier_diff": 0.00628,
+            "brier_diff_ci95": [
+              0.00257,
+              0.0103
+            ]
+          },
+          "returns": {
+            "horizon_days": 1,
+            "n_up_calls": 2944,
+            "n_down_calls": 3698,
+            "mean_ret_up_calls": 0.0717,
+            "median_ret_up_calls": -0.0122,
+            "mean_ret_down_calls": 0.0259,
+            "median_ret_down_calls": -0.0717,
+            "spread_up_minus_down": 0.0459,
+            "hit_rate_up_calls": 0.4925,
+            "downside_rate_up_calls": 0.5037,
+            "mean_ret_all": 0.0462,
+            "long_only_days": 246,
+            "long_only_mean_daily_pct": 0.0771,
+            "long_only_total_pct": 18.74,
+            "long_only_max_drawdown_pct": -15.13,
+            "equal_weight_all_total_pct": 10.26,
+            "equal_weight_all_max_drawdown_pct": -14.15,
+            "turnover_per_day": 0.2172
+          }
+        },
+        "3d": {
+          "n": 6588,
+          "accuracy": 0.4977,
+          "balanced_accuracy": 0.4962,
+          "precision": 0.4825,
+          "recall": 0.4387,
+          "f1": 0.4596,
+          "auc": 0.4945,
+          "brier": 0.28679,
+          "log_loss": 0.79813,
+          "ece": 0.1547,
+          "pred_up_pct": 44.3,
+          "actual_up_pct": 48.7,
+          "mean_p": 0.4817,
+          "accuracy_ci95_date_clustered": [
+            0.4842,
+            0.5105
+          ],
+          "platt_calibrated": {
+            "brier": 0.24992,
+            "log_loss": 0.69298,
+            "ece": 0.0019,
+            "auc": 0.4945
+          },
+          "paired_vs_production_blend": {
+            "n": 6588,
+            "n_dates": 244,
+            "accuracy_diff": 0.0021,
+            "accuracy_diff_ci95": [
+              -0.0102,
+              0.0152
+            ],
+            "brier_diff": 0.00778,
+            "brier_diff_ci95": [
+              0.00355,
+              0.01231
+            ]
+          }
+        },
+        "5d": {
+          "n": 6534,
+          "accuracy": 0.5061,
+          "balanced_accuracy": 0.5048,
+          "precision": 0.4939,
+          "recall": 0.4464,
+          "f1": 0.469,
+          "auc": 0.502,
+          "brier": 0.28467,
+          "log_loss": 0.79361,
+          "ece": 0.1466,
+          "pred_up_pct": 44.2,
+          "actual_up_pct": 48.9,
+          "mean_p": 0.4814,
+          "accuracy_ci95_date_clustered": [
+            0.4942,
+            0.5194
+          ],
+          "platt_calibrated": {
+            "brier": 0.25002,
+            "log_loss": 0.6932,
+            "ece": 0.0098,
+            "auc": 0.502
+          },
+          "paired_vs_production_blend": {
+            "n": 6534,
+            "n_dates": 242,
+            "accuracy_diff": 0.0046,
+            "accuracy_diff_ci95": [
+              -0.0073,
+              0.0165
+            ],
+            "brier_diff": 0.00793,
+            "brier_diff_ci95": [
+              0.00383,
+              0.01199
+            ]
+          },
+          "returns": {
+            "horizon_days": 5,
+            "n_up_calls": 2885,
+            "n_down_calls": 3649,
+            "mean_ret_up_calls": 0.2795,
+            "median_ret_up_calls": -0.0578,
+            "mean_ret_down_calls": 0.237,
+            "median_ret_down_calls": -0.1199,
+            "spread_up_minus_down": 0.0426,
+            "hit_rate_up_calls": 0.4939,
+            "downside_rate_up_calls": 0.5054,
+            "mean_ret_all": 0.2558
+          }
+        },
+        "10d": {
+          "n": 6399,
+          "accuracy": 0.5095,
+          "balanced_accuracy": 0.5098,
+          "precision": 0.514,
+          "recall": 0.4518,
+          "f1": 0.4809,
+          "auc": 0.5133,
+          "brier": 0.28106,
+          "log_loss": 0.78422,
+          "ece": 0.1434,
+          "pred_up_pct": 44.2,
+          "actual_up_pct": 50.3,
+          "mean_p": 0.4817,
+          "accuracy_ci95_date_clustered": [
+            0.4966,
+            0.522
+          ],
+          "platt_calibrated": {
+            "brier": 0.25025,
+            "log_loss": 0.69366,
+            "ece": 0.0199,
+            "auc": 0.5133
+          },
+          "paired_vs_production_blend": {
+            "n": 6399,
+            "n_dates": 237,
+            "accuracy_diff": 0.0019,
+            "accuracy_diff_ci95": [
+              -0.0106,
+              0.0153
+            ],
+            "brier_diff": 0.00731,
+            "brier_diff_ci95": [
+              0.00349,
+              0.01101
+            ]
+          }
+        }
+      }
+    },
+    "rf": {
+      "DEV": {
+        "1d": {
+          "n": 3375,
+          "accuracy": 0.5001,
+          "balanced_accuracy": 0.5001,
+          "precision": 0.4996,
+          "recall": 0.4205,
+          "f1": 0.4567,
+          "auc": 0.5048,
+          "brier": 0.27174,
+          "log_loss": 0.74389,
+          "ece": 0.1138,
+          "pred_up_pct": 42.0,
+          "actual_up_pct": 50.0,
+          "mean_p": 0.4811,
+          "accuracy_ci95_date_clustered": [
+            0.4824,
+            0.5159
+          ],
+          "platt_calibrated": {
+            "brier": 0.25067,
+            "log_loss": 0.6945,
+            "ece": 0.0197,
+            "auc": 0.4952
+          },
+          "paired_vs_production_blend": {
+            "n": 3375,
+            "n_dates": 125,
+            "accuracy_diff": 0.0003,
+            "accuracy_diff_ci95": [
+              -0.0148,
+              0.0139
+            ],
+            "brier_diff": -0.00438,
+            "brier_diff_ci95": [
+              -0.00764,
+              -0.00115
+            ]
+          },
+          "returns": {
+            "horizon_days": 1,
+            "n_up_calls": 1419,
+            "n_down_calls": 1956,
+            "mean_ret_up_calls": 0.0449,
+            "median_ret_up_calls": 0.0,
+            "mean_ret_down_calls": 0.1059,
+            "median_ret_down_calls": 0.0,
+            "spread_up_minus_down": -0.061,
+            "hit_rate_up_calls": 0.4996,
+            "downside_rate_up_calls": 0.4975,
+            "mean_ret_all": 0.0803,
+            "long_only_days": 125,
+            "long_only_mean_daily_pct": 0.0479,
+            "long_only_total_pct": 5.41,
+            "long_only_max_drawdown_pct": -8.82,
+            "equal_weight_all_total_pct": 9.75,
+            "equal_weight_all_max_drawdown_pct": -7.07,
+            "turnover_per_day": 0.2858
+          }
+        },
+        "3d": {
+          "n": 3375,
+          "accuracy": 0.4963,
+          "balanced_accuracy": 0.4987,
+          "precision": 0.5137,
+          "recall": 0.4192,
+          "f1": 0.4617,
+          "auc": 0.5003,
+          "brier": 0.27312,
+          "log_loss": 0.7467,
+          "ece": 0.1224,
+          "pred_up_pct": 42.0,
+          "actual_up_pct": 51.5,
+          "mean_p": 0.4811,
+          "accuracy_ci95_date_clustered": [
+            0.4767,
+            0.5153
+          ],
+          "platt_calibrated": {
+            "brier": 0.25142,
+            "log_loss": 0.696,
+            "ece": 0.0372,
+            "auc": 0.4997
+          },
+          "paired_vs_production_blend": {
+            "n": 3375,
+            "n_dates": 125,
+            "accuracy_diff": -0.005,
+            "accuracy_diff_ci95": [
+              -0.0216,
+              0.0113
+            ],
+            "brier_diff": -0.00428,
+            "brier_diff_ci95": [
+              -0.00704,
+              -0.00101
+            ]
+          }
+        },
+        "5d": {
+          "n": 3375,
+          "accuracy": 0.5114,
+          "balanced_accuracy": 0.5161,
+          "precision": 0.5483,
+          "recall": 0.4356,
+          "f1": 0.4855,
+          "auc": 0.5135,
+          "brier": 0.27054,
+          "log_loss": 0.74175,
+          "ece": 0.1102,
+          "pred_up_pct": 42.0,
+          "actual_up_pct": 52.9,
+          "mean_p": 0.4811,
+          "accuracy_ci95_date_clustered": [
+            0.4904,
+            0.5316
+          ],
+          "platt_calibrated": {
+            "brier": 0.25258,
+            "log_loss": 0.69831,
+            "ece": 0.0567,
+            "auc": 0.4865
+          },
+          "paired_vs_production_blend": {
+            "n": 3375,
+            "n_dates": 125,
+            "accuracy_diff": 0.0074,
+            "accuracy_diff_ci95": [
+              -0.0098,
+              0.0225
+            ],
+            "brier_diff": -0.00528,
+            "brier_diff_ci95": [
+              -0.0081,
+              -0.00191
+            ]
+          },
+          "returns": {
+            "horizon_days": 5,
+            "n_up_calls": 1419,
+            "n_down_calls": 1956,
+            "mean_ret_up_calls": 0.491,
+            "median_ret_up_calls": 0.3177,
+            "mean_ret_down_calls": 0.4439,
+            "median_ret_down_calls": 0.206,
+            "spread_up_minus_down": 0.0471,
+            "hit_rate_up_calls": 0.5483,
+            "downside_rate_up_calls": 0.4517,
+            "mean_ret_all": 0.4637
+          }
+        },
+        "10d": {
+          "n": 3375,
+          "accuracy": 0.4744,
+          "balanced_accuracy": 0.4819,
+          "precision": 0.5271,
+          "recall": 0.4041,
+          "f1": 0.4575,
+          "auc": 0.483,
+          "brier": 0.27872,
+          "log_loss": 0.75902,
+          "ece": 0.1444,
+          "pred_up_pct": 42.0,
+          "actual_up_pct": 54.8,
+          "mean_p": 0.4811,
+          "accuracy_ci95_date_clustered": [
+            0.4551,
+            0.4927
+          ],
+          "platt_calibrated": {
+            "brier": 0.26,
+            "log_loss": 0.7133,
+            "ece": 0.1119,
+            "auc": 0.517
+          },
+          "paired_vs_production_blend": {
+            "n": 3375,
+            "n_dates": 125,
+            "accuracy_diff": -0.0056,
+            "accuracy_diff_ci95": [
+              -0.0196,
+              0.0086
+            ],
+            "brier_diff": -0.00541,
+            "brier_diff_ci95": [
+              -0.0082,
+              -0.00258
+            ]
+          }
+        }
+      },
+      "FINAL": {
+        "1d": {
+          "n": 6642,
+          "accuracy": 0.5098,
+          "balanced_accuracy": 0.5079,
+          "precision": 0.4933,
+          "recall": 0.4482,
+          "f1": 0.4697,
+          "auc": 0.5018,
+          "brier": 0.27234,
+          "log_loss": 0.74523,
+          "ece": 0.121,
+          "pred_up_pct": 44.0,
+          "actual_up_pct": 48.4,
+          "mean_p": 0.4877,
+          "accuracy_ci95_date_clustered": [
+            0.4955,
+            0.5235
+          ],
+          "platt_calibrated": {
+            "brier": 0.24988,
+            "log_loss": 0.69291,
+            "ece": 0.0032,
+            "auc": 0.4982
+          },
+          "paired_vs_production_blend": {
+            "n": 6642,
+            "n_dates": 246,
+            "accuracy_diff": 0.0072,
+            "accuracy_diff_ci95": [
+              -0.0036,
+              0.0179
+            ],
+            "brier_diff": -0.00426,
+            "brier_diff_ci95": [
+              -0.00715,
+              -0.00199
+            ]
+          },
+          "returns": {
+            "horizon_days": 1,
+            "n_up_calls": 2923,
+            "n_down_calls": 3719,
+            "mean_ret_up_calls": 0.0832,
+            "median_ret_up_calls": -0.0161,
+            "mean_ret_down_calls": 0.0171,
+            "median_ret_down_calls": -0.07,
+            "spread_up_minus_down": 0.066,
+            "hit_rate_up_calls": 0.4933,
+            "downside_rate_up_calls": 0.5036,
+            "mean_ret_all": 0.0462,
+            "long_only_days": 246,
+            "long_only_mean_daily_pct": 0.0811,
+            "long_only_total_pct": 19.82,
+            "long_only_max_drawdown_pct": -13.51,
+            "equal_weight_all_total_pct": 10.26,
+            "equal_weight_all_max_drawdown_pct": -14.15,
+            "turnover_per_day": 0.2933
+          }
+        },
+        "3d": {
+          "n": 6588,
+          "accuracy": 0.4965,
+          "balanced_accuracy": 0.4949,
+          "precision": 0.481,
+          "recall": 0.4344,
+          "f1": 0.4565,
+          "auc": 0.4996,
+          "brier": 0.27263,
+          "log_loss": 0.74532,
+          "ece": 0.1282,
+          "pred_up_pct": 44.0,
+          "actual_up_pct": 48.7,
+          "mean_p": 0.4875,
+          "accuracy_ci95_date_clustered": [
+            0.4832,
+            0.5105
+          ],
+          "platt_calibrated": {
+            "brier": 0.24997,
+            "log_loss": 0.69308,
+            "ece": 0.0105,
+            "auc": 0.5004
+          },
+          "paired_vs_production_blend": {
+            "n": 6588,
+            "n_dates": 244,
+            "accuracy_diff": 0.0009,
+            "accuracy_diff_ci95": [
+              -0.0088,
+              0.0117
+            ],
+            "brier_diff": -0.00638,
+            "brier_diff_ci95": [
+              -0.00885,
+              -0.00395
+            ]
+          }
+        },
+        "5d": {
+          "n": 6534,
+          "accuracy": 0.5009,
+          "balanced_accuracy": 0.4995,
+          "precision": 0.488,
+          "recall": 0.4386,
+          "f1": 0.462,
+          "auc": 0.5053,
+          "brier": 0.27196,
+          "log_loss": 0.74495,
+          "ece": 0.1215,
+          "pred_up_pct": 43.9,
+          "actual_up_pct": 48.9,
+          "mean_p": 0.4872,
+          "accuracy_ci95_date_clustered": [
+            0.4861,
+            0.5153
+          ],
+          "platt_calibrated": {
+            "brier": 0.24988,
+            "log_loss": 0.69292,
+            "ece": 0.0006,
+            "auc": 0.4947
+          },
+          "paired_vs_production_blend": {
+            "n": 6534,
+            "n_dates": 242,
+            "accuracy_diff": -0.0006,
+            "accuracy_diff_ci95": [
+              -0.0113,
+              0.0106
+            ],
+            "brier_diff": -0.00478,
+            "brier_diff_ci95": [
+              -0.00736,
+              -0.00235
+            ]
+          },
+          "returns": {
+            "horizon_days": 5,
+            "n_up_calls": 2869,
+            "n_down_calls": 3665,
+            "mean_ret_up_calls": 0.3478,
+            "median_ret_up_calls": -0.1094,
+            "mean_ret_down_calls": 0.1837,
+            "median_ret_down_calls": -0.0902,
+            "spread_up_minus_down": 0.1641,
+            "hit_rate_up_calls": 0.488,
+            "downside_rate_up_calls": 0.5117,
+            "mean_ret_all": 0.2558
+          }
+        },
+        "10d": {
+          "n": 6399,
+          "accuracy": 0.5193,
+          "balanced_accuracy": 0.5196,
+          "precision": 0.5251,
+          "recall": 0.4618,
+          "f1": 0.4914,
+          "auc": 0.5224,
+          "brier": 0.26781,
+          "log_loss": 0.73585,
+          "ece": 0.1036,
+          "pred_up_pct": 44.2,
+          "actual_up_pct": 50.3,
+          "mean_p": 0.4883,
+          "accuracy_ci95_date_clustered": [
+            0.5032,
+            0.5346
+          ],
+          "platt_calibrated": {
+            "brier": 0.25112,
+            "log_loss": 0.6954,
+            "ece": 0.0303,
+            "auc": 0.4776
+          },
+          "paired_vs_production_blend": {
+            "n": 6399,
+            "n_dates": 237,
+            "accuracy_diff": 0.0117,
+            "accuracy_diff_ci95": [
+              0.002,
+              0.0211
+            ],
+            "brier_diff": -0.00593,
+            "brier_diff_ci95": [
+              -0.00825,
+              -0.00374
+            ]
+          }
+        }
+      }
+    },
+    "xgb": {
+      "DEV": {
+        "1d": {
+          "n": 3375,
+          "accuracy": 0.4957,
+          "balanced_accuracy": 0.4957,
+          "precision": 0.4947,
+          "recall": 0.4407,
+          "f1": 0.4661,
+          "auc": 0.4943,
+          "brier": 0.298,
+          "log_loss": 0.81907,
+          "ece": 0.1848,
+          "pred_up_pct": 44.5,
+          "actual_up_pct": 50.0,
+          "mean_p": 0.4713,
+          "accuracy_ci95_date_clustered": [
+            0.4779,
+            0.5126
+          ],
+          "platt_calibrated": {
+            "brier": 0.25035,
+            "log_loss": 0.69385,
+            "ece": 0.0164,
+            "auc": 0.5057
+          },
+          "paired_vs_production_blend": {
+            "n": 3375,
+            "n_dates": 125,
+            "accuracy_diff": -0.0041,
+            "accuracy_diff_ci95": [
+              -0.0133,
+              0.0053
+            ],
+            "brier_diff": 0.02188,
+            "brier_diff_ci95": [
+              0.01903,
+              0.02469
+            ]
+          },
+          "returns": {
+            "horizon_days": 1,
+            "n_up_calls": 1502,
+            "n_down_calls": 1873,
+            "mean_ret_up_calls": 0.0543,
+            "median_ret_up_calls": -0.0148,
+            "mean_ret_down_calls": 0.1011,
+            "median_ret_down_calls": 0.0135,
+            "spread_up_minus_down": -0.0468,
+            "hit_rate_up_calls": 0.4947,
+            "downside_rate_up_calls": 0.5033,
+            "mean_ret_all": 0.0803,
+            "long_only_days": 125,
+            "long_only_mean_daily_pct": 0.0325,
+            "long_only_total_pct": 3.37,
+            "long_only_max_drawdown_pct": -11.79,
+            "equal_weight_all_total_pct": 9.75,
+            "equal_weight_all_max_drawdown_pct": -7.07,
+            "turnover_per_day": 0.3271
+          }
+        },
+        "3d": {
+          "n": 3375,
+          "accuracy": 0.493,
+          "balanced_accuracy": 0.4947,
+          "precision": 0.5093,
+          "recall": 0.4399,
+          "f1": 0.4721,
+          "auc": 0.4934,
+          "brier": 0.29917,
+          "log_loss": 0.82102,
+          "ece": 0.1875,
+          "pred_up_pct": 44.5,
+          "actual_up_pct": 51.5,
+          "mean_p": 0.4713,
+          "accuracy_ci95_date_clustered": [
+            0.4723,
+            0.5141
+          ],
+          "platt_calibrated": {
+            "brier": 0.25121,
+            "log_loss": 0.69559,
+            "ece": 0.0353,
+            "auc": 0.5066
+          },
+          "paired_vs_production_blend": {
+            "n": 3375,
+            "n_dates": 125,
+            "accuracy_diff": -0.0083,
+            "accuracy_diff_ci95": [
+              -0.0181,
+              0.0015
+            ],
+            "brier_diff": 0.02176,
+            "brier_diff_ci95": [
+              0.01859,
+              0.0247
+            ]
+          }
+        },
+        "5d": {
+          "n": 3375,
+          "accuracy": 0.4993,
+          "balanced_accuracy": 0.5025,
+          "precision": 0.532,
+          "recall": 0.4474,
+          "f1": 0.486,
+          "auc": 0.4965,
+          "brier": 0.29915,
+          "log_loss": 0.82073,
+          "ece": 0.1876,
+          "pred_up_pct": 44.5,
+          "actual_up_pct": 52.9,
+          "mean_p": 0.4713,
+          "accuracy_ci95_date_clustered": [
+            0.4779,
+            0.52
+          ],
+          "platt_calibrated": {
+            "brier": 0.2523,
+            "log_loss": 0.69776,
+            "ece": 0.0559,
+            "auc": 0.5035
+          },
+          "paired_vs_production_blend": {
+            "n": 3375,
+            "n_dates": 125,
+            "accuracy_diff": -0.0047,
+            "accuracy_diff_ci95": [
+              -0.0142,
+              0.0047
+            ],
+            "brier_diff": 0.02334,
+            "brier_diff_ci95": [
+              0.02027,
+              0.02604
+            ]
+          },
+          "returns": {
+            "horizon_days": 5,
+            "n_up_calls": 1502,
+            "n_down_calls": 1873,
+            "mean_ret_up_calls": 0.3759,
+            "median_ret_up_calls": 0.2583,
+            "mean_ret_down_calls": 0.5341,
+            "median_ret_down_calls": 0.2794,
+            "spread_up_minus_down": -0.1582,
+            "hit_rate_up_calls": 0.532,
+            "downside_rate_up_calls": 0.4674,
+            "mean_ret_all": 0.4637
+          }
+        },
+        "10d": {
+          "n": 3375,
+          "accuracy": 0.4735,
+          "balanced_accuracy": 0.4786,
+          "precision": 0.5246,
+          "recall": 0.4257,
+          "f1": 0.47,
+          "auc": 0.4678,
+          "brier": 0.31074,
+          "log_loss": 0.84891,
+          "ece": 0.211,
+          "pred_up_pct": 44.5,
+          "actual_up_pct": 54.8,
+          "mean_p": 0.4713,
+          "accuracy_ci95_date_clustered": [
+            0.4542,
+            0.4922
+          ],
+          "platt_calibrated": {
+            "brier": 0.25953,
+            "log_loss": 0.71232,
+            "ece": 0.1113,
+            "auc": 0.5322
+          },
+          "paired_vs_production_blend": {
+            "n": 3375,
+            "n_dates": 125,
+            "accuracy_diff": -0.0065,
+            "accuracy_diff_ci95": [
+              -0.0166,
+              0.0041
+            ],
+            "brier_diff": 0.02661,
+            "brier_diff_ci95": [
+              0.02393,
+              0.02938
+            ]
+          }
+        }
+      },
+      "FINAL": {
+        "1d": {
+          "n": 6642,
+          "accuracy": 0.4958,
+          "balanced_accuracy": 0.4944,
+          "precision": 0.4781,
+          "recall": 0.4486,
+          "f1": 0.4629,
+          "auc": 0.4976,
+          "brier": 0.29757,
+          "log_loss": 0.81857,
+          "ece": 0.1887,
+          "pred_up_pct": 45.4,
+          "actual_up_pct": 48.4,
+          "mean_p": 0.4775,
+          "accuracy_ci95_date_clustered": [
+            0.4813,
+            0.5087
+          ],
+          "platt_calibrated": {
+            "brier": 0.24992,
+            "log_loss": 0.69299,
+            "ece": 0.0035,
+            "auc": 0.5024
+          },
+          "paired_vs_production_blend": {
+            "n": 6642,
+            "n_dates": 246,
+            "accuracy_diff": -0.0068,
+            "accuracy_diff_ci95": [
+              -0.0132,
+              -0.0003
+            ],
+            "brier_diff": 0.02097,
+            "brier_diff_ci95": [
+              0.01897,
+              0.02306
+            ]
+          },
+          "returns": {
+            "horizon_days": 1,
+            "n_up_calls": 3018,
+            "n_down_calls": 3624,
+            "mean_ret_up_calls": 0.0585,
+            "median_ret_up_calls": -0.0728,
+            "mean_ret_down_calls": 0.0359,
+            "median_ret_down_calls": -0.0214,
+            "spread_up_minus_down": 0.0226,
+            "hit_rate_up_calls": 0.4781,
+            "downside_rate_up_calls": 0.5195,
+            "mean_ret_all": 0.0462,
+            "long_only_days": 246,
+            "long_only_mean_daily_pct": 0.0311,
+            "long_only_total_pct": 6.13,
+            "long_only_max_drawdown_pct": -14.98,
+            "equal_weight_all_total_pct": 10.26,
+            "equal_weight_all_max_drawdown_pct": -14.15,
+            "turnover_per_day": 0.3185
+          }
+        },
+        "3d": {
+          "n": 6588,
+          "accuracy": 0.4926,
+          "balanced_accuracy": 0.4913,
+          "precision": 0.4773,
+          "recall": 0.445,
+          "f1": 0.4605,
+          "auc": 0.4903,
+          "brier": 0.3006,
+          "log_loss": 0.82591,
+          "ece": 0.192,
+          "pred_up_pct": 45.4,
+          "actual_up_pct": 48.7,
+          "mean_p": 0.4773,
+          "accuracy_ci95_date_clustered": [
+            0.4798,
+            0.507
+          ],
+          "platt_calibrated": {
+            "brier": 0.24984,
+            "log_loss": 0.69284,
+            "ece": 0.0036,
+            "auc": 0.5097
+          },
+          "paired_vs_production_blend": {
+            "n": 6588,
+            "n_dates": 244,
+            "accuracy_diff": -0.003,
+            "accuracy_diff_ci95": [
+              -0.0106,
+              0.0041
+            ],
+            "brier_diff": 0.02159,
+            "brier_diff_ci95": [
+              0.01943,
+              0.02369
+            ]
+          }
+        },
+        "5d": {
+          "n": 6534,
+          "accuracy": 0.498,
+          "balanced_accuracy": 0.497,
+          "precision": 0.4852,
+          "recall": 0.4508,
+          "f1": 0.4674,
+          "auc": 0.4994,
+          "brier": 0.29733,
+          "log_loss": 0.81868,
+          "ece": 0.1865,
+          "pred_up_pct": 45.4,
+          "actual_up_pct": 48.9,
+          "mean_p": 0.4773,
+          "accuracy_ci95_date_clustered": [
+            0.4848,
+            0.511
+          ],
+          "platt_calibrated": {
+            "brier": 0.24995,
+            "log_loss": 0.69305,
+            "ece": 0.0038,
+            "auc": 0.5006
+          },
+          "paired_vs_production_blend": {
+            "n": 6534,
+            "n_dates": 242,
+            "accuracy_diff": -0.0035,
+            "accuracy_diff_ci95": [
+              -0.0099,
+              0.0035
+            ],
+            "brier_diff": 0.02059,
+            "brier_diff_ci95": [
+              0.01844,
+              0.02273
+            ]
+          },
+          "returns": {
+            "horizon_days": 5,
+            "n_up_calls": 2966,
+            "n_down_calls": 3568,
+            "mean_ret_up_calls": 0.3044,
+            "median_ret_up_calls": -0.132,
+            "mean_ret_down_calls": 0.2153,
+            "median_ret_down_calls": -0.0721,
+            "spread_up_minus_down": 0.0891,
+            "hit_rate_up_calls": 0.4852,
+            "downside_rate_up_calls": 0.5142,
+            "mean_ret_all": 0.2558
+          }
+        },
+        "10d": {
+          "n": 6399,
+          "accuracy": 0.5009,
+          "balanced_accuracy": 0.5011,
+          "precision": 0.5041,
+          "recall": 0.4574,
+          "f1": 0.4796,
+          "auc": 0.5061,
+          "brier": 0.29534,
+          "log_loss": 0.81476,
+          "ece": 0.1834,
+          "pred_up_pct": 45.6,
+          "actual_up_pct": 50.3,
+          "mean_p": 0.4784,
+          "accuracy_ci95_date_clustered": [
+            0.4854,
+            0.5157
+          ],
+          "platt_calibrated": {
+            "brier": 0.25106,
+            "log_loss": 0.69527,
+            "ece": 0.0267,
+            "auc": 0.4939
+          },
+          "paired_vs_production_blend": {
+            "n": 6399,
+            "n_dates": 237,
+            "accuracy_diff": -0.0067,
+            "accuracy_diff_ci95": [
+              -0.0136,
+              0.0002
+            ],
+            "brier_diff": 0.0216,
+            "brier_diff_ci95": [
+              0.01964,
+              0.02379
+            ]
+          }
+        }
+      }
+    },
+    "hgb": {
+      "DEV": {
+        "1d": {
+          "n": 3375,
+          "accuracy": 0.5052,
+          "balanced_accuracy": 0.5051,
+          "precision": 0.5052,
+          "recall": 0.4609,
+          "f1": 0.482,
+          "auc": 0.5058,
+          "brier": 0.32924,
+          "log_loss": 0.95847,
+          "ece": 0.2443,
+          "pred_up_pct": 45.6,
+          "actual_up_pct": 50.0,
+          "mean_p": 0.4689,
+          "accuracy_ci95_date_clustered": [
+            0.4892,
+            0.5218
+          ],
+          "platt_calibrated": {
+            "brier": 0.2506,
+            "log_loss": 0.69434,
+            "ece": 0.0187,
+            "auc": 0.4942
+          },
+          "paired_vs_production_blend": {
+            "n": 3375,
+            "n_dates": 125,
+            "accuracy_diff": 0.0053,
+            "accuracy_diff_ci95": [
+              -0.0086,
+              0.0202
+            ],
+            "brier_diff": 0.05312,
+            "brier_diff_ci95": [
+              0.04641,
+              0.05966
+            ]
+          },
+          "returns": {
+            "horizon_days": 1,
+            "n_up_calls": 1538,
+            "n_down_calls": 1837,
+            "mean_ret_up_calls": 0.0863,
+            "median_ret_up_calls": 0.0187,
+            "mean_ret_down_calls": 0.0752,
+            "median_ret_down_calls": 0.0,
+            "spread_up_minus_down": 0.0111,
+            "hit_rate_up_calls": 0.5052,
+            "downside_rate_up_calls": 0.4928,
+            "mean_ret_all": 0.0803,
+            "long_only_days": 125,
+            "long_only_mean_daily_pct": 0.0959,
+            "long_only_total_pct": 11.85,
+            "long_only_max_drawdown_pct": -9.18,
+            "equal_weight_all_total_pct": 9.75,
+            "equal_weight_all_max_drawdown_pct": -7.07,
+            "turnover_per_day": 0.3396
+          }
+        },
+        "3d": {
+          "n": 3375,
+          "accuracy": 0.5019,
+          "balanced_accuracy": 0.5033,
+          "precision": 0.5189,
+          "recall": 0.4589,
+          "f1": 0.487,
+          "auc": 0.5044,
+          "brier": 0.33077,
+          "log_loss": 0.96444,
+          "ece": 0.2475,
+          "pred_up_pct": 45.6,
+          "actual_up_pct": 51.5,
+          "mean_p": 0.4689,
+          "accuracy_ci95_date_clustered": [
+            0.4833,
+            0.5212
+          ],
+          "platt_calibrated": {
+            "brier": 0.25155,
+            "log_loss": 0.69626,
+            "ece": 0.0365,
+            "auc": 0.4956
+          },
+          "paired_vs_production_blend": {
+            "n": 3375,
+            "n_dates": 125,
+            "accuracy_diff": 0.0006,
+            "accuracy_diff_ci95": [
+              -0.0151,
+              0.0166
+            ],
+            "brier_diff": 0.05336,
+            "brier_diff_ci95": [
+              0.04608,
+              0.0608
+            ]
+          }
+        },
+        "5d": {
+          "n": 3375,
+          "accuracy": 0.5052,
+          "balanced_accuracy": 0.5078,
+          "precision": 0.5377,
+          "recall": 0.463,
+          "f1": 0.4976,
+          "auc": 0.5072,
+          "brier": 0.33029,
+          "log_loss": 0.96351,
+          "ece": 0.2443,
+          "pred_up_pct": 45.6,
+          "actual_up_pct": 52.9,
+          "mean_p": 0.4689,
+          "accuracy_ci95_date_clustered": [
+            0.483,
+            0.5259
+          ],
+          "platt_calibrated": {
+            "brier": 0.25251,
+            "log_loss": 0.69817,
+            "ece": 0.057,
+            "auc": 0.4928
+          },
+          "paired_vs_production_blend": {
+            "n": 3375,
+            "n_dates": 125,
+            "accuracy_diff": 0.0012,
+            "accuracy_diff_ci95": [
+              -0.0157,
+              0.0169
+            ],
+            "brier_diff": 0.05447,
+            "brier_diff_ci95": [
+              0.0472,
+              0.06241
+            ]
+          },
+          "returns": {
+            "horizon_days": 5,
+            "n_up_calls": 1538,
+            "n_down_calls": 1837,
+            "mean_ret_up_calls": 0.5226,
+            "median_ret_up_calls": 0.2926,
+            "mean_ret_down_calls": 0.4144,
+            "median_ret_down_calls": 0.2522,
+            "spread_up_minus_down": 0.1082,
+            "hit_rate_up_calls": 0.5377,
+            "downside_rate_up_calls": 0.4616,
+            "mean_ret_all": 0.4637
+          }
+        },
+        "10d": {
+          "n": 3375,
+          "accuracy": 0.4806,
+          "balanced_accuracy": 0.4847,
+          "precision": 0.5319,
+          "recall": 0.4419,
+          "f1": 0.4827,
+          "auc": 0.4807,
+          "brier": 0.34448,
+          "log_loss": 0.9989,
+          "ece": 0.2689,
+          "pred_up_pct": 45.6,
+          "actual_up_pct": 54.8,
+          "mean_p": 0.4689,
+          "accuracy_ci95_date_clustered": [
+            0.4616,
+            0.4987
+          ],
+          "platt_calibrated": {
+            "brier": 0.25973,
+            "log_loss": 0.71276,
+            "ece": 0.1109,
+            "auc": 0.5193
+          },
+          "paired_vs_production_blend": {
+            "n": 3375,
+            "n_dates": 125,
+            "accuracy_diff": 0.0006,
+            "accuracy_diff_ci95": [
+              -0.0163,
+              0.0169
+            ],
+            "brier_diff": 0.06035,
+            "brier_diff_ci95": [
+              0.05327,
+              0.06739
+            ]
+          }
+        }
+      },
+      "FINAL": {
+        "1d": {
+          "n": 6642,
+          "accuracy": 0.495,
+          "balanced_accuracy": 0.4938,
+          "precision": 0.4777,
+          "recall": 0.4557,
+          "f1": 0.4664,
+          "auc": 0.4917,
+          "brier": 0.33684,
+          "log_loss": 0.98156,
+          "ece": 0.258,
+          "pred_up_pct": 46.2,
+          "actual_up_pct": 48.4,
+          "mean_p": 0.4751,
+          "accuracy_ci95_date_clustered": [
+            0.4824,
+            0.5069
+          ],
+          "platt_calibrated": {
+            "brier": 0.24972,
+            "log_loss": 0.69258,
+            "ece": 0.003,
+            "auc": 0.5083
+          },
+          "paired_vs_production_blend": {
+            "n": 6642,
+            "n_dates": 246,
+            "accuracy_diff": -0.0075,
+            "accuracy_diff_ci95": [
+              -0.0185,
+              0.0021
+            ],
+            "brier_diff": 0.06024,
+            "brier_diff_ci95": [
+              0.05555,
+              0.06495
+            ]
+          },
+          "returns": {
+            "horizon_days": 1,
+            "n_up_calls": 3069,
+            "n_down_calls": 3573,
+            "mean_ret_up_calls": 0.049,
+            "median_ret_up_calls": -0.0674,
+            "mean_ret_down_calls": 0.0438,
+            "median_ret_down_calls": -0.0265,
+            "spread_up_minus_down": 0.0051,
+            "hit_rate_up_calls": 0.4777,
+            "downside_rate_up_calls": 0.5191,
+            "mean_ret_all": 0.0462,
+            "long_only_days": 246,
+            "long_only_mean_daily_pct": 0.0205,
+            "long_only_total_pct": 3.39,
+            "long_only_max_drawdown_pct": -16.49,
+            "equal_weight_all_total_pct": 10.26,
+            "equal_weight_all_max_drawdown_pct": -14.15,
+            "turnover_per_day": 0.34
+          }
+        },
+        "3d": {
+          "n": 6588,
+          "accuracy": 0.488,
+          "balanced_accuracy": 0.487,
+          "precision": 0.4728,
+          "recall": 0.4493,
+          "f1": 0.4608,
+          "auc": 0.4853,
+          "brier": 0.34027,
+          "log_loss": 0.98781,
+          "ece": 0.265,
+          "pred_up_pct": 46.3,
+          "actual_up_pct": 48.7,
+          "mean_p": 0.4752,
+          "accuracy_ci95_date_clustered": [
+            0.4753,
+            0.5006
+          ],
+          "platt_calibrated": {
+            "brier": 0.24973,
+            "log_loss": 0.69261,
+            "ece": 0.0029,
+            "auc": 0.5147
+          },
+          "paired_vs_production_blend": {
+            "n": 6588,
+            "n_dates": 244,
+            "accuracy_diff": -0.0076,
+            "accuracy_diff_ci95": [
+              -0.0187,
+              0.0032
+            ],
+            "brier_diff": 0.06127,
+            "brier_diff_ci95": [
+              0.0569,
+              0.066
+            ]
+          }
+        },
+        "5d": {
+          "n": 6534,
+          "accuracy": 0.4946,
+          "balanced_accuracy": 0.4938,
+          "precision": 0.4818,
+          "recall": 0.4561,
+          "f1": 0.4686,
+          "auc": 0.4949,
+          "brier": 0.33574,
+          "log_loss": 0.97585,
+          "ece": 0.2586,
+          "pred_up_pct": 46.3,
+          "actual_up_pct": 48.9,
+          "mean_p": 0.4749,
+          "accuracy_ci95_date_clustered": [
+            0.4816,
+            0.5067
+          ],
+          "platt_calibrated": {
+            "brier": 0.24987,
+            "log_loss": 0.69288,
+            "ece": 0.0009,
+            "auc": 0.5051
+          },
+          "paired_vs_production_blend": {
+            "n": 6534,
+            "n_dates": 242,
+            "accuracy_diff": -0.0069,
+            "accuracy_diff_ci95": [
+              -0.0179,
+              0.0044
+            ],
+            "brier_diff": 0.059,
+            "brier_diff_ci95": [
+              0.05421,
+              0.06401
+            ]
+          },
+          "returns": {
+            "horizon_days": 5,
+            "n_up_calls": 3022,
+            "n_down_calls": 3512,
+            "mean_ret_up_calls": 0.2731,
+            "median_ret_up_calls": -0.1438,
+            "mean_ret_down_calls": 0.2409,
+            "median_ret_down_calls": -0.0587,
+            "spread_up_minus_down": 0.0322,
+            "hit_rate_up_calls": 0.4818,
+            "downside_rate_up_calls": 0.5179,
+            "mean_ret_all": 0.2558
+          }
+        },
+        "10d": {
+          "n": 6399,
+          "accuracy": 0.5043,
+          "balanced_accuracy": 0.5045,
+          "precision": 0.5077,
+          "recall": 0.4683,
+          "f1": 0.4872,
+          "auc": 0.511,
+          "brier": 0.32824,
+          "log_loss": 0.95893,
+          "ece": 0.249,
+          "pred_up_pct": 46.4,
+          "actual_up_pct": 50.3,
+          "mean_p": 0.4757,
+          "accuracy_ci95_date_clustered": [
+            0.4898,
+            0.5193
+          ],
+          "platt_calibrated": {
+            "brier": 0.25115,
+            "log_loss": 0.69545,
+            "ece": 0.029,
+            "auc": 0.489
+          },
+          "paired_vs_production_blend": {
+            "n": 6399,
+            "n_dates": 237,
+            "accuracy_diff": -0.0033,
+            "accuracy_diff_ci95": [
+              -0.0145,
+              0.0092
+            ],
+            "brier_diff": 0.0545,
+            "brier_diff_ci95": [
+              0.04932,
+              0.05943
+            ]
+          }
+        }
+      }
+    },
+    "et": {
+      "DEV": {
+        "1d": {
+          "n": 3375,
+          "accuracy": 0.509,
+          "balanced_accuracy": 0.509,
+          "precision": 0.5098,
+          "recall": 0.4454,
+          "f1": 0.4755,
+          "auc": 0.5112,
+          "brier": 0.27495,
+          "log_loss": 0.7537,
+          "ece": 0.1317,
+          "pred_up_pct": 43.6,
+          "actual_up_pct": 50.0,
+          "mean_p": 0.481,
+          "accuracy_ci95_date_clustered": [
+            0.4924,
+            0.5244
+          ],
+          "platt_calibrated": {
+            "brier": 0.25058,
+            "log_loss": 0.6943,
+            "ece": 0.0219,
+            "auc": 0.4888
+          },
+          "paired_vs_production_blend": {
+            "n": 3375,
+            "n_dates": 125,
+            "accuracy_diff": 0.0092,
+            "accuracy_diff_ci95": [
+              -0.0077,
+              0.0249
+            ],
+            "brier_diff": -0.00117,
+            "brier_diff_ci95": [
+              -0.00534,
+              0.00336
+            ]
+          },
+          "returns": {
+            "horizon_days": 1,
+            "n_up_calls": 1473,
+            "n_down_calls": 1902,
+            "mean_ret_up_calls": 0.0701,
+            "median_ret_up_calls": 0.0257,
+            "mean_ret_down_calls": 0.0882,
+            "median_ret_down_calls": -0.0198,
+            "spread_up_minus_down": -0.0181,
+            "hit_rate_up_calls": 0.5098,
+            "downside_rate_up_calls": 0.4861,
+            "mean_ret_all": 0.0803,
+            "long_only_days": 125,
+            "long_only_mean_daily_pct": 0.0684,
+            "long_only_total_pct": 8.03,
+            "long_only_max_drawdown_pct": -10.06,
+            "equal_weight_all_total_pct": 9.75,
+            "equal_weight_all_max_drawdown_pct": -7.07,
+            "turnover_per_day": 0.2739
+          }
+        },
+        "3d": {
+          "n": 3375,
+          "accuracy": 0.4957,
+          "balanced_accuracy": 0.4976,
+          "precision": 0.5126,
+          "recall": 0.4342,
+          "f1": 0.4701,
+          "auc": 0.4959,
+          "brier": 0.28019,
+          "log_loss": 0.76527,
+          "ece": 0.1438,
+          "pred_up_pct": 43.6,
+          "actual_up_pct": 51.5,
+          "mean_p": 0.481,
+          "accuracy_ci95_date_clustered": [
+            0.4756,
+            0.5164
+          ],
+          "platt_calibrated": {
+            "brier": 0.25124,
+            "log_loss": 0.69563,
+            "ece": 0.0389,
+            "auc": 0.5041
+          },
+          "paired_vs_production_blend": {
+            "n": 3375,
+            "n_dates": 125,
+            "accuracy_diff": -0.0056,
+            "accuracy_diff_ci95": [
+              -0.0243,
+              0.013
+            ],
+            "brier_diff": 0.00278,
+            "brier_diff_ci95": [
+              -0.00156,
+              0.00733
+            ]
+          }
+        },
+        "5d": {
+          "n": 3375,
+          "accuracy": 0.509,
+          "balanced_accuracy": 0.5128,
+          "precision": 0.5438,
+          "recall": 0.4485,
+          "f1": 0.4916,
+          "auc": 0.5085,
+          "brier": 0.27803,
+          "log_loss": 0.76208,
+          "ece": 0.1317,
+          "pred_up_pct": 43.6,
+          "actual_up_pct": 52.9,
+          "mean_p": 0.481,
+          "accuracy_ci95_date_clustered": [
+            0.4874,
+            0.5292
+          ],
+          "platt_calibrated": {
+            "brier": 0.25247,
+            "log_loss": 0.69809,
+            "ece": 0.0576,
+            "auc": 0.4915
+          },
+          "paired_vs_production_blend": {
+            "n": 3375,
+            "n_dates": 125,
+            "accuracy_diff": 0.005,
+            "accuracy_diff_ci95": [
+              -0.0145,
+              0.0231
+            ],
+            "brier_diff": 0.00221,
+            "brier_diff_ci95": [
+              -0.00154,
+              0.00631
+            ]
+          },
+          "returns": {
+            "horizon_days": 5,
+            "n_up_calls": 1473,
+            "n_down_calls": 1902,
+            "mean_ret_up_calls": 0.4845,
+            "median_ret_up_calls": 0.302,
+            "mean_ret_down_calls": 0.4476,
+            "median_ret_down_calls": 0.2438,
+            "spread_up_minus_down": 0.0368,
+            "hit_rate_up_calls": 0.5438,
+            "downside_rate_up_calls": 0.4562,
+            "mean_ret_all": 0.4637
+          }
+        },
+        "10d": {
+          "n": 3375,
+          "accuracy": 0.4767,
+          "balanced_accuracy": 0.4827,
+          "precision": 0.5289,
+          "recall": 0.4209,
+          "f1": 0.4687,
+          "auc": 0.476,
+          "brier": 0.2877,
+          "log_loss": 0.78316,
+          "ece": 0.1641,
+          "pred_up_pct": 43.6,
+          "actual_up_pct": 54.8,
+          "mean_p": 0.481,
+          "accuracy_ci95_date_clustered": [
+            0.4587,
+            0.4948
+          ],
+          "platt_calibrated": {
+            "brier": 0.26027,
+            "log_loss": 0.71383,
+            "ece": 0.113,
+            "auc": 0.524
+          },
+          "paired_vs_production_blend": {
+            "n": 3375,
+            "n_dates": 125,
+            "accuracy_diff": -0.0033,
+            "accuracy_diff_ci95": [
+              -0.0213,
+              0.0136
+            ],
+            "brier_diff": 0.00357,
+            "brier_diff_ci95": [
+              -0.00046,
+              0.00775
+            ]
+          }
+        }
+      },
+      "FINAL": {
+        "1d": {
+          "n": 6642,
+          "accuracy": 0.4895,
+          "balanced_accuracy": 0.4885,
+          "precision": 0.4722,
+          "recall": 0.4585,
+          "f1": 0.4652,
+          "auc": 0.4965,
+          "brier": 0.28054,
+          "log_loss": 0.7661,
+          "ece": 0.1515,
+          "pred_up_pct": 47.0,
+          "actual_up_pct": 48.4,
+          "mean_p": 0.4911,
+          "accuracy_ci95_date_clustered": [
+            0.4764,
+            0.5033
+          ],
+          "platt_calibrated": {
+            "brier": 0.24977,
+            "log_loss": 0.69268,
+            "ece": 0.0026,
+            "auc": 0.5035
+          },
+          "paired_vs_production_blend": {
+            "n": 6642,
+            "n_dates": 246,
+            "accuracy_diff": -0.0131,
+            "accuracy_diff_ci95": [
+              -0.0242,
+              -0.0007
+            ],
+            "brier_diff": 0.00394,
+            "brier_diff_ci95": [
+              0.00038,
+              0.00736
+            ]
+          },
+          "returns": {
+            "horizon_days": 1,
+            "n_up_calls": 3124,
+            "n_down_calls": 3518,
+            "mean_ret_up_calls": -0.004,
+            "median_ret_up_calls": -0.1004,
+            "mean_ret_down_calls": 0.0908,
+            "median_ret_down_calls": 0.0,
+            "spread_up_minus_down": -0.0949,
+            "hit_rate_up_calls": 0.4722,
+            "downside_rate_up_calls": 0.5256,
+            "mean_ret_all": 0.0462,
+            "long_only_days": 246,
+            "long_only_mean_daily_pct": 0.0156,
+            "long_only_total_pct": 2.06,
+            "long_only_max_drawdown_pct": -13.81,
+            "equal_weight_all_total_pct": 10.26,
+            "equal_weight_all_max_drawdown_pct": -14.15,
+            "turnover_per_day": 0.2806
+          }
+        },
+        "3d": {
+          "n": 6588,
+          "accuracy": 0.4883,
+          "balanced_accuracy": 0.4875,
+          "precision": 0.4735,
+          "recall": 0.4565,
+          "f1": 0.4648,
+          "auc": 0.4969,
+          "brier": 0.28066,
+          "log_loss": 0.76677,
+          "ece": 0.1533,
+          "pred_up_pct": 46.9,
+          "actual_up_pct": 48.7,
+          "mean_p": 0.4909,
+          "accuracy_ci95_date_clustered": [
+            0.4721,
+            0.503
+          ],
+          "platt_calibrated": {
+            "brier": 0.2499,
+            "log_loss": 0.69294,
+            "ece": 0.0052,
+            "auc": 0.5031
+          },
+          "paired_vs_production_blend": {
+            "n": 6588,
+            "n_dates": 244,
+            "accuracy_diff": -0.0073,
+            "accuracy_diff_ci95": [
+              -0.0196,
+              0.0047
+            ],
+            "brier_diff": 0.00166,
+            "brier_diff_ci95": [
+              -0.00183,
+              0.00532
+            ]
+          }
+        },
+        "5d": {
+          "n": 6534,
+          "accuracy": 0.4976,
+          "balanced_accuracy": 0.4968,
+          "precision": 0.4851,
+          "recall": 0.4655,
+          "f1": 0.4751,
+          "auc": 0.502,
+          "brier": 0.27975,
+          "log_loss": 0.76603,
+          "ece": 0.1467,
+          "pred_up_pct": 46.9,
+          "actual_up_pct": 48.9,
+          "mean_p": 0.4907,
+          "accuracy_ci95_date_clustered": [
+            0.4832,
+            0.5127
+          ],
+          "platt_calibrated": {
+            "brier": 0.24987,
+            "log_loss": 0.69289,
+            "ece": 0.0006,
+            "auc": 0.498
+          },
+          "paired_vs_production_blend": {
+            "n": 6534,
+            "n_dates": 242,
+            "accuracy_diff": -0.004,
+            "accuracy_diff_ci95": [
+              -0.0153,
+              0.0072
+            ],
+            "brier_diff": 0.00301,
+            "brier_diff_ci95": [
+              -0.00056,
+              0.00653
+            ]
+          },
+          "returns": {
+            "horizon_days": 5,
+            "n_up_calls": 3063,
+            "n_down_calls": 3471,
+            "mean_ret_up_calls": 0.2618,
+            "median_ret_up_calls": -0.1301,
+            "mean_ret_down_calls": 0.2505,
+            "median_ret_down_calls": -0.0715,
+            "spread_up_minus_down": 0.0113,
+            "hit_rate_up_calls": 0.4851,
+            "downside_rate_up_calls": 0.5149,
+            "mean_ret_all": 0.2558
+          }
+        },
+        "10d": {
+          "n": 6399,
+          "accuracy": 0.5105,
+          "balanced_accuracy": 0.5107,
+          "precision": 0.5143,
+          "recall": 0.482,
+          "f1": 0.4976,
+          "auc": 0.5118,
+          "brier": 0.27751,
+          "log_loss": 0.76128,
+          "ece": 0.135,
+          "pred_up_pct": 47.1,
+          "actual_up_pct": 50.3,
+          "mean_p": 0.492,
+          "accuracy_ci95_date_clustered": [
+            0.4946,
+            0.5277
+          ],
+          "platt_calibrated": {
+            "brier": 0.25084,
+            "log_loss": 0.69483,
+            "ece": 0.0185,
+            "auc": 0.4882
+          },
+          "paired_vs_production_blend": {
+            "n": 6399,
+            "n_dates": 237,
+            "accuracy_diff": 0.003,
+            "accuracy_diff_ci95": [
+              -0.0088,
+              0.0156
+            ],
+            "brier_diff": 0.00377,
+            "brier_diff_ci95": [
+              0.00037,
+              0.00709
+            ]
+          }
+        }
+      }
+    },
+    "gb": {
+      "DEV": {
+        "1d": {
+          "n": 3375,
+          "accuracy": 0.5034,
+          "balanced_accuracy": 0.5034,
+          "precision": 0.5032,
+          "recall": 0.4715,
+          "f1": 0.4868,
+          "auc": 0.5016,
+          "brier": 0.31771,
+          "log_loss": 0.90356,
+          "ece": 0.2214,
+          "pred_up_pct": 46.8,
+          "actual_up_pct": 50.0,
+          "mean_p": 0.4782,
+          "accuracy_ci95_date_clustered": [
+            0.4862,
+            0.5221
+          ],
+          "platt_calibrated": {
+            "brier": 0.25041,
+            "log_loss": 0.69396,
+            "ece": 0.0188,
+            "auc": 0.4984
+          },
+          "paired_vs_production_blend": {
+            "n": 3375,
+            "n_dates": 125,
+            "accuracy_diff": 0.0036,
+            "accuracy_diff_ci95": [
+              -0.0098,
+              0.0175
+            ],
+            "brier_diff": 0.04159,
+            "brier_diff_ci95": [
+              0.03563,
+              0.04763
+            ]
+          },
+          "returns": {
+            "horizon_days": 1,
+            "n_up_calls": 1580,
+            "n_down_calls": 1795,
+            "mean_ret_up_calls": 0.0932,
+            "median_ret_up_calls": 0.0165,
+            "mean_ret_down_calls": 0.0689,
+            "median_ret_down_calls": -0.0106,
+            "spread_up_minus_down": 0.0243,
+            "hit_rate_up_calls": 0.5032,
+            "downside_rate_up_calls": 0.4924,
+            "mean_ret_all": 0.0803,
+            "long_only_days": 125,
+            "long_only_mean_daily_pct": 0.0698,
+            "long_only_total_pct": 8.28,
+            "long_only_max_drawdown_pct": -9.91,
+            "equal_weight_all_total_pct": 9.75,
+            "equal_weight_all_max_drawdown_pct": -7.07,
+            "turnover_per_day": 0.3199
+          }
+        },
+        "3d": {
+          "n": 3375,
+          "accuracy": 0.5013,
+          "balanced_accuracy": 0.5023,
+          "precision": 0.5177,
+          "recall": 0.4704,
+          "f1": 0.4929,
+          "auc": 0.4988,
+          "brier": 0.31946,
+          "log_loss": 0.90587,
+          "ece": 0.2234,
+          "pred_up_pct": 46.8,
+          "actual_up_pct": 51.5,
+          "mean_p": 0.4782,
+          "accuracy_ci95_date_clustered": [
+            0.4806,
+            0.5206
+          ],
+          "platt_calibrated": {
+            "brier": 0.25131,
+            "log_loss": 0.69577,
+            "ece": 0.0381,
+            "auc": 0.5012
+          },
+          "paired_vs_production_blend": {
+            "n": 3375,
+            "n_dates": 125,
+            "accuracy_diff": 0.0,
+            "accuracy_diff_ci95": [
+              -0.0169,
+              0.0163
+            ],
+            "brier_diff": 0.04205,
+            "brier_diff_ci95": [
+              0.03581,
+              0.04877
+            ]
+          }
+        },
+        "5d": {
+          "n": 3375,
+          "accuracy": 0.5022,
+          "balanced_accuracy": 0.5041,
+          "precision": 0.5335,
+          "recall": 0.472,
+          "f1": 0.5009,
+          "auc": 0.5094,
+          "brier": 0.31533,
+          "log_loss": 0.89311,
+          "ece": 0.2225,
+          "pred_up_pct": 46.8,
+          "actual_up_pct": 52.9,
+          "mean_p": 0.4782,
+          "accuracy_ci95_date_clustered": [
+            0.48,
+            0.5233
+          ],
+          "platt_calibrated": {
+            "brier": 0.25252,
+            "log_loss": 0.69819,
+            "ece": 0.0574,
+            "auc": 0.4906
+          },
+          "paired_vs_production_blend": {
+            "n": 3375,
+            "n_dates": 125,
+            "accuracy_diff": -0.0018,
+            "accuracy_diff_ci95": [
+              -0.0169,
+              0.0131
+            ],
+            "brier_diff": 0.03951,
+            "brier_diff_ci95": [
+              0.03325,
+              0.04609
+            ]
+          },
+          "returns": {
+            "horizon_days": 5,
+            "n_up_calls": 1580,
+            "n_down_calls": 1795,
+            "mean_ret_up_calls": 0.4267,
+            "median_ret_up_calls": 0.2079,
+            "mean_ret_down_calls": 0.4963,
+            "median_ret_down_calls": 0.2945,
+            "spread_up_minus_down": -0.0696,
+            "hit_rate_up_calls": 0.5335,
+            "downside_rate_up_calls": 0.4658,
+            "mean_ret_all": 0.4637
+          }
+        },
+        "10d": {
+          "n": 3375,
+          "accuracy": 0.48,
+          "balanced_accuracy": 0.4829,
+          "precision": 0.5304,
+          "recall": 0.4527,
+          "f1": 0.4885,
+          "auc": 0.4818,
+          "brier": 0.32839,
+          "log_loss": 0.92582,
+          "ece": 0.2448,
+          "pred_up_pct": 46.8,
+          "actual_up_pct": 54.8,
+          "mean_p": 0.4782,
+          "accuracy_ci95_date_clustered": [
+            0.4637,
+            0.4963
+          ],
+          "platt_calibrated": {
+            "brier": 0.26018,
+            "log_loss": 0.71366,
+            "ece": 0.1126,
+            "auc": 0.5182
+          },
+          "paired_vs_production_blend": {
+            "n": 3375,
+            "n_dates": 125,
+            "accuracy_diff": 0.0,
+            "accuracy_diff_ci95": [
+              -0.0166,
+              0.0154
+            ],
+            "brier_diff": 0.04426,
+            "brier_diff_ci95": [
+              0.03868,
+              0.04986
+            ]
+          }
+        }
+      },
+      "FINAL": {
+        "1d": {
+          "n": 6642,
+          "accuracy": 0.4943,
+          "balanced_accuracy": 0.4934,
+          "precision": 0.4773,
+          "recall": 0.4641,
+          "f1": 0.4706,
+          "auc": 0.4913,
+          "brier": 0.32522,
+          "log_loss": 0.92658,
+          "ece": 0.2377,
+          "pred_up_pct": 47.1,
+          "actual_up_pct": 48.4,
+          "mean_p": 0.4793,
+          "accuracy_ci95_date_clustered": [
+            0.4803,
+            0.5074
+          ],
+          "platt_calibrated": {
+            "brier": 0.24971,
+            "log_loss": 0.69256,
+            "ece": 0.0034,
+            "auc": 0.5087
+          },
+          "paired_vs_production_blend": {
+            "n": 6642,
+            "n_dates": 246,
+            "accuracy_diff": -0.0083,
+            "accuracy_diff_ci95": [
+              -0.02,
+              0.0021
+            ],
+            "brier_diff": 0.04862,
+            "brier_diff_ci95": [
+              0.04396,
+              0.05309
+            ]
+          },
+          "returns": {
+            "horizon_days": 1,
+            "n_up_calls": 3128,
+            "n_down_calls": 3514,
+            "mean_ret_up_calls": 0.0344,
+            "median_ret_up_calls": -0.0741,
+            "mean_ret_down_calls": 0.0567,
+            "median_ret_down_calls": -0.0166,
+            "spread_up_minus_down": -0.0224,
+            "hit_rate_up_calls": 0.4773,
+            "downside_rate_up_calls": 0.5198,
+            "mean_ret_all": 0.0462,
+            "long_only_days": 246,
+            "long_only_mean_daily_pct": 0.0343,
+            "long_only_total_pct": 6.97,
+            "long_only_max_drawdown_pct": -15.08,
+            "equal_weight_all_total_pct": 10.26,
+            "equal_weight_all_max_drawdown_pct": -14.15,
+            "turnover_per_day": 0.3161
+          }
+        },
+        "3d": {
+          "n": 6588,
+          "accuracy": 0.4923,
+          "balanced_accuracy": 0.4915,
+          "precision": 0.4778,
+          "recall": 0.4624,
+          "f1": 0.47,
+          "auc": 0.4858,
+          "brier": 0.32819,
+          "log_loss": 0.93588,
+          "ece": 0.2399,
+          "pred_up_pct": 47.1,
+          "actual_up_pct": 48.7,
+          "mean_p": 0.4794,
+          "accuracy_ci95_date_clustered": [
+            0.4787,
+            0.5067
+          ],
+          "platt_calibrated": {
+            "brier": 0.24968,
+            "log_loss": 0.69251,
+            "ece": 0.0026,
+            "auc": 0.5142
+          },
+          "paired_vs_production_blend": {
+            "n": 6588,
+            "n_dates": 244,
+            "accuracy_diff": -0.0033,
+            "accuracy_diff_ci95": [
+              -0.0138,
+              0.0068
+            ],
+            "brier_diff": 0.04919,
+            "brier_diff_ci95": [
+              0.04497,
+              0.05332
+            ]
+          }
+        },
+        "5d": {
+          "n": 6534,
+          "accuracy": 0.4962,
+          "balanced_accuracy": 0.4955,
+          "precision": 0.4838,
+          "recall": 0.4671,
+          "f1": 0.4753,
+          "auc": 0.4931,
+          "brier": 0.32486,
+          "log_loss": 0.92761,
+          "ece": 0.2359,
+          "pred_up_pct": 47.2,
+          "actual_up_pct": 48.9,
+          "mean_p": 0.4794,
+          "accuracy_ci95_date_clustered": [
+            0.483,
+            0.5092
+          ],
+          "platt_calibrated": {
+            "brier": 0.24987,
+            "log_loss": 0.69289,
+            "ece": 0.0005,
+            "auc": 0.4931
+          },
+          "paired_vs_production_blend": {
+            "n": 6534,
+            "n_dates": 242,
+            "accuracy_diff": -0.0054,
+            "accuracy_diff_ci95": [
+              -0.0153,
+              0.0052
+            ],
+            "brier_diff": 0.04811,
+            "brier_diff_ci95": [
+              0.04398,
+              0.05234
+            ]
+          },
+          "returns": {
+            "horizon_days": 5,
+            "n_up_calls": 3082,
+            "n_down_calls": 3452,
+            "mean_ret_up_calls": 0.2871,
+            "median_ret_up_calls": -0.1398,
+            "mean_ret_down_calls": 0.2278,
+            "median_ret_down_calls": -0.0597,
+            "spread_up_minus_down": 0.0594,
+            "hit_rate_up_calls": 0.4838,
+            "downside_rate_up_calls": 0.5156,
+            "mean_ret_all": 0.2558
+          }
+        },
+        "10d": {
+          "n": 6399,
+          "accuracy": 0.5018,
+          "balanced_accuracy": 0.5019,
+          "precision": 0.5049,
+          "recall": 0.477,
+          "f1": 0.4906,
+          "auc": 0.5046,
+          "brier": 0.32008,
+          "log_loss": 0.91637,
+          "ece": 0.2302,
+          "pred_up_pct": 47.5,
+          "actual_up_pct": 50.3,
+          "mean_p": 0.481,
+          "accuracy_ci95_date_clustered": [
+            0.4869,
+            0.5163
+          ],
+          "platt_calibrated": {
+            "brier": 0.25058,
+            "log_loss": 0.69431,
+            "ece": 0.0226,
+            "auc": 0.4954
+          },
+          "paired_vs_production_blend": {
+            "n": 6399,
+            "n_dates": 237,
+            "accuracy_diff": -0.0058,
+            "accuracy_diff_ci95": [
+              -0.0163,
+              0.0047
+            ],
+            "brier_diff": 0.04634,
+            "brier_diff_ci95": [
+              0.04241,
+              0.05062
+            ]
+          }
+        }
+      }
+    },
+    "ens": {
+      "DEV": {
+        "1d": {
+          "n": 3375,
+          "accuracy": 0.4999,
+          "balanced_accuracy": 0.4998,
+          "precision": 0.4993,
+          "recall": 0.4466,
+          "f1": 0.4715,
+          "auc": 0.5011,
+          "brier": 0.27612,
+          "log_loss": 0.75429,
+          "ece": 0.1342,
+          "pred_up_pct": 44.7,
+          "actual_up_pct": 50.0,
+          "mean_p": 0.4784,
+          "accuracy_ci95_date_clustered": [
+            0.4809,
+            0.5185
+          ],
+          "platt_calibrated": {
+            "brier": 0.25051,
+            "log_loss": 0.69416,
+            "ece": 0.017,
+            "auc": 0.4989
+          },
+          "returns": {
+            "horizon_days": 1,
+            "n_up_calls": 1508,
+            "n_down_calls": 1867,
+            "mean_ret_up_calls": 0.0453,
+            "median_ret_up_calls": 0.0,
+            "mean_ret_down_calls": 0.1085,
+            "median_ret_down_calls": 0.0,
+            "spread_up_minus_down": -0.0632,
+            "hit_rate_up_calls": 0.4993,
+            "downside_rate_up_calls": 0.498,
+            "mean_ret_all": 0.0803,
+            "long_only_days": 125,
+            "long_only_mean_daily_pct": 0.0155,
+            "long_only_total_pct": 1.24,
+            "long_only_max_drawdown_pct": -11.42,
+            "equal_weight_all_total_pct": 9.75,
+            "equal_weight_all_max_drawdown_pct": -7.07,
+            "turnover_per_day": 0.2927
+          }
+        },
+        "3d": {
+          "n": 3375,
+          "accuracy": 0.5013,
+          "balanced_accuracy": 0.503,
+          "precision": 0.5186,
+          "recall": 0.4497,
+          "f1": 0.4817,
+          "auc": 0.4985,
+          "brier": 0.2774,
+          "log_loss": 0.75687,
+          "ece": 0.1328,
+          "pred_up_pct": 44.7,
+          "actual_up_pct": 51.5,
+          "mean_p": 0.4784,
+          "accuracy_ci95_date_clustered": [
+            0.4794,
+            0.5227
+          ],
+          "platt_calibrated": {
+            "brier": 0.25132,
+            "log_loss": 0.6958,
+            "ece": 0.036,
+            "auc": 0.5015
+          }
+        },
+        "5d": {
+          "n": 3375,
+          "accuracy": 0.504,
+          "balanced_accuracy": 0.5071,
+          "precision": 0.5371,
+          "recall": 0.4535,
+          "f1": 0.4918,
+          "auc": 0.5065,
+          "brier": 0.27582,
+          "log_loss": 0.7532,
+          "ece": 0.1302,
+          "pred_up_pct": 44.7,
+          "actual_up_pct": 52.9,
+          "mean_p": 0.4784,
+          "accuracy_ci95_date_clustered": [
+            0.4815,
+            0.5271
+          ],
+          "platt_calibrated": {
+            "brier": 0.25246,
+            "log_loss": 0.69807,
+            "ece": 0.0566,
+            "auc": 0.4935
+          },
+          "returns": {
+            "horizon_days": 5,
+            "n_up_calls": 1508,
+            "n_down_calls": 1867,
+            "mean_ret_up_calls": 0.4176,
+            "median_ret_up_calls": 0.2926,
+            "mean_ret_down_calls": 0.501,
+            "median_ret_down_calls": 0.2626,
+            "spread_up_minus_down": -0.0835,
+            "hit_rate_up_calls": 0.5371,
+            "downside_rate_up_calls": 0.4622,
+            "mean_ret_all": 0.4637
+          }
+        },
+        "10d": {
+          "n": 3375,
+          "accuracy": 0.48,
+          "balanced_accuracy": 0.485,
+          "precision": 0.5318,
+          "recall": 0.4333,
+          "f1": 0.4775,
+          "auc": 0.4776,
+          "brier": 0.28413,
+          "log_loss": 0.77096,
+          "ece": 0.1547,
+          "pred_up_pct": 44.7,
+          "actual_up_pct": 54.8,
+          "mean_p": 0.4784,
+          "accuracy_ci95_date_clustered": [
+            0.4593,
+            0.501
+          ],
+          "platt_calibrated": {
+            "brier": 0.26002,
+            "log_loss": 0.71332,
+            "ece": 0.1121,
+            "auc": 0.5224
+          }
+        }
+      },
+      "FINAL": {
+        "1d": {
+          "n": 6642,
+          "accuracy": 0.5026,
+          "balanced_accuracy": 0.5009,
+          "precision": 0.4854,
+          "recall": 0.4486,
+          "f1": 0.4662,
+          "auc": 0.4995,
+          "brier": 0.2766,
+          "log_loss": 0.75493,
+          "ece": 0.1355,
+          "pred_up_pct": 44.8,
+          "actual_up_pct": 48.4,
+          "mean_p": 0.4814,
+          "accuracy_ci95_date_clustered": [
+            0.4881,
+            0.5167
+          ],
+          "platt_calibrated": {
+            "brier": 0.24991,
+            "log_loss": 0.69297,
+            "ece": 0.0034,
+            "auc": 0.5005
+          },
+          "returns": {
+            "horizon_days": 1,
+            "n_up_calls": 2973,
+            "n_down_calls": 3669,
+            "mean_ret_up_calls": 0.076,
+            "median_ret_up_calls": -0.0495,
+            "mean_ret_down_calls": 0.022,
+            "median_ret_down_calls": -0.0405,
+            "spread_up_minus_down": 0.054,
+            "hit_rate_up_calls": 0.4854,
+            "downside_rate_up_calls": 0.5119,
+            "mean_ret_all": 0.0462,
+            "long_only_days": 246,
+            "long_only_mean_daily_pct": 0.0495,
+            "long_only_total_pct": 10.98,
+            "long_only_max_drawdown_pct": -14.75,
+            "equal_weight_all_total_pct": 10.26,
+            "equal_weight_all_max_drawdown_pct": -14.15,
+            "turnover_per_day": 0.2892
+          }
+        },
+        "3d": {
+          "n": 6588,
+          "accuracy": 0.4956,
+          "balanced_accuracy": 0.4942,
+          "precision": 0.4803,
+          "recall": 0.4409,
+          "f1": 0.4598,
+          "auc": 0.4923,
+          "brier": 0.279,
+          "log_loss": 0.76036,
+          "ece": 0.1425,
+          "pred_up_pct": 44.7,
+          "actual_up_pct": 48.7,
+          "mean_p": 0.4813,
+          "accuracy_ci95_date_clustered": [
+            0.4821,
+            0.5103
+          ],
+          "platt_calibrated": {
+            "brier": 0.24986,
+            "log_loss": 0.69287,
+            "ece": 0.0032,
+            "auc": 0.5077
+          }
+        },
+        "5d": {
+          "n": 6534,
+          "accuracy": 0.5015,
+          "balanced_accuracy": 0.5003,
+          "precision": 0.4889,
+          "recall": 0.4467,
+          "f1": 0.4669,
+          "auc": 0.5021,
+          "brier": 0.27674,
+          "log_loss": 0.75604,
+          "ece": 0.1366,
+          "pred_up_pct": 44.6,
+          "actual_up_pct": 48.9,
+          "mean_p": 0.4811,
+          "accuracy_ci95_date_clustered": [
+            0.4881,
+            0.5145
+          ],
+          "platt_calibrated": {
+            "brier": 0.24989,
+            "log_loss": 0.69293,
+            "ece": 0.0009,
+            "auc": 0.4979
+          },
+          "returns": {
+            "horizon_days": 5,
+            "n_up_calls": 2917,
+            "n_down_calls": 3617,
+            "mean_ret_up_calls": 0.3111,
+            "median_ret_up_calls": -0.1031,
+            "mean_ret_down_calls": 0.2112,
+            "median_ret_down_calls": -0.0902,
+            "spread_up_minus_down": 0.0999,
+            "hit_rate_up_calls": 0.4889,
+            "downside_rate_up_calls": 0.5105,
+            "mean_ret_all": 0.2558
+          }
+        },
+        "10d": {
+          "n": 6399,
+          "accuracy": 0.5076,
+          "balanced_accuracy": 0.5079,
+          "precision": 0.5117,
+          "recall": 0.4565,
+          "f1": 0.4825,
+          "auc": 0.514,
+          "brier": 0.27374,
+          "log_loss": 0.74952,
+          "ece": 0.1304,
+          "pred_up_pct": 44.9,
+          "actual_up_pct": 50.3,
+          "mean_p": 0.482,
+          "accuracy_ci95_date_clustered": [
+            0.4907,
+            0.5224
+          ],
+          "platt_calibrated": {
+            "brier": 0.25094,
+            "log_loss": 0.69502,
+            "ece": 0.0262,
+            "auc": 0.486
+          }
+        }
+      }
+    },
+    "ens_equal": {
+      "DEV": {
+        "1d": {
+          "n": 3375,
+          "accuracy": 0.5081,
+          "balanced_accuracy": 0.5081,
+          "precision": 0.5086,
+          "recall": 0.4573,
+          "f1": 0.4816,
+          "auc": 0.5053,
+          "brier": 0.27141,
+          "log_loss": 0.74273,
+          "ece": 0.1143,
+          "pred_up_pct": 44.9,
+          "actual_up_pct": 50.0,
+          "mean_p": 0.4814,
+          "accuracy_ci95_date_clustered": [
+            0.4913,
+            0.5265
+          ],
+          "platt_calibrated": {
+            "brier": 0.25054,
+            "log_loss": 0.69423,
+            "ece": 0.0178,
+            "auc": 0.4947
+          },
+          "paired_vs_production_blend": {
+            "n": 3375,
+            "n_dates": 125,
+            "accuracy_diff": 0.0083,
+            "accuracy_diff_ci95": [
+              0.0003,
+              0.0163
+            ],
+            "brier_diff": -0.00471,
+            "brier_diff_ci95": [
+              -0.00588,
+              -0.00351
+            ]
+          },
+          "returns": {
+            "horizon_days": 1,
+            "n_up_calls": 1516,
+            "n_down_calls": 1859,
+            "mean_ret_up_calls": 0.0863,
+            "median_ret_up_calls": 0.0288,
+            "mean_ret_down_calls": 0.0754,
+            "median_ret_down_calls": -0.0151,
+            "spread_up_minus_down": 0.0109,
+            "hit_rate_up_calls": 0.5086,
+            "downside_rate_up_calls": 0.4888,
+            "mean_ret_all": 0.0803,
+            "long_only_days": 125,
+            "long_only_mean_daily_pct": 0.0504,
+            "long_only_total_pct": 5.76,
+            "long_only_max_drawdown_pct": -10.38,
+            "equal_weight_all_total_pct": 9.75,
+            "equal_weight_all_max_drawdown_pct": -7.07,
+            "turnover_per_day": 0.2811
+          }
+        },
+        "3d": {
+          "n": 3375,
+          "accuracy": 0.5037,
+          "balanced_accuracy": 0.5053,
+          "precision": 0.5211,
+          "recall": 0.4543,
+          "f1": 0.4854,
+          "auc": 0.5017,
+          "brier": 0.27273,
+          "log_loss": 0.7454,
+          "ece": 0.1187,
+          "pred_up_pct": 44.9,
+          "actual_up_pct": 51.5,
+          "mean_p": 0.4814,
+          "accuracy_ci95_date_clustered": [
+            0.4818,
+            0.5233
+          ],
+          "platt_calibrated": {
+            "brier": 0.25136,
+            "log_loss": 0.69587,
+            "ece": 0.0368,
+            "auc": 0.4983
+          },
+          "paired_vs_production_blend": {
+            "n": 3375,
+            "n_dates": 125,
+            "accuracy_diff": 0.0024,
+            "accuracy_diff_ci95": [
+              -0.0071,
+              0.0107
+            ],
+            "brier_diff": -0.00467,
+            "brier_diff_ci95": [
+              -0.00592,
+              -0.00337
+            ]
+          }
+        },
+        "5d": {
+          "n": 3375,
+          "accuracy": 0.507,
+          "balanced_accuracy": 0.51,
+          "precision": 0.5402,
+          "recall": 0.4586,
+          "f1": 0.4961,
+          "auc": 0.5119,
+          "brier": 0.27053,
+          "log_loss": 0.74042,
+          "ece": 0.1154,
+          "pred_up_pct": 44.9,
+          "actual_up_pct": 52.9,
+          "mean_p": 0.4814,
+          "accuracy_ci95_date_clustered": [
+            0.4856,
+            0.5286
+          ],
+          "platt_calibrated": {
+            "brier": 0.2525,
+            "log_loss": 0.69815,
+            "ece": 0.0572,
+            "auc": 0.4881
+          },
+          "paired_vs_production_blend": {
+            "n": 3375,
+            "n_dates": 125,
+            "accuracy_diff": 0.003,
+            "accuracy_diff_ci95": [
+              -0.0059,
+              0.0113
+            ],
+            "brier_diff": -0.00529,
+            "brier_diff_ci95": [
+              -0.00644,
+              -0.00407
+            ]
+          },
+          "returns": {
+            "horizon_days": 5,
+            "n_up_calls": 1516,
+            "n_down_calls": 1859,
+            "mean_ret_up_calls": 0.4971,
+            "median_ret_up_calls": 0.2983,
+            "mean_ret_down_calls": 0.4365,
+            "median_ret_down_calls": 0.2483,
+            "spread_up_minus_down": 0.0605,
+            "hit_rate_up_calls": 0.5402,
+            "downside_rate_up_calls": 0.4598,
+            "mean_ret_all": 0.4637
+          }
+        },
+        "10d": {
+          "n": 3375,
+          "accuracy": 0.4824,
+          "balanced_accuracy": 0.4872,
+          "precision": 0.5343,
+          "recall": 0.4376,
+          "f1": 0.4811,
+          "auc": 0.4857,
+          "brier": 0.27723,
+          "log_loss": 0.75429,
+          "ece": 0.1401,
+          "pred_up_pct": 44.9,
+          "actual_up_pct": 54.8,
+          "mean_p": 0.4814,
+          "accuracy_ci95_date_clustered": [
+            0.4601,
+            0.5016
+          ],
+          "platt_calibrated": {
+            "brier": 0.26035,
+            "log_loss": 0.71398,
+            "ece": 0.1129,
+            "auc": 0.5143
+          },
+          "paired_vs_production_blend": {
+            "n": 3375,
+            "n_dates": 125,
+            "accuracy_diff": 0.0024,
+            "accuracy_diff_ci95": [
+              -0.0059,
+              0.0107
+            ],
+            "brier_diff": -0.00691,
+            "brier_diff_ci95": [
+              -0.00798,
+              -0.00583
+            ]
+          }
+        }
+      },
+      "FINAL": {
+        "1d": {
+          "n": 6642,
+          "accuracy": 0.5003,
+          "balanced_accuracy": 0.4986,
+          "precision": 0.4828,
+          "recall": 0.4445,
+          "f1": 0.4629,
+          "auc": 0.501,
+          "brier": 0.27248,
+          "log_loss": 0.74464,
+          "ece": 0.1268,
+          "pred_up_pct": 44.6,
+          "actual_up_pct": 48.4,
+          "mean_p": 0.4823,
+          "accuracy_ci95_date_clustered": [
+            0.4855,
+            0.5146
+          ],
+          "platt_calibrated": {
+            "brier": 0.24988,
+            "log_loss": 0.69291,
+            "ece": 0.0032,
+            "auc": 0.499
+          },
+          "paired_vs_production_blend": {
+            "n": 6642,
+            "n_dates": 246,
+            "accuracy_diff": -0.0023,
+            "accuracy_diff_ci95": [
+              -0.008,
+              0.0033
+            ],
+            "brier_diff": -0.00412,
+            "brier_diff_ci95": [
+              -0.0049,
+              -0.00326
+            ]
+          },
+          "returns": {
+            "horizon_days": 1,
+            "n_up_calls": 2962,
+            "n_down_calls": 3680,
+            "mean_ret_up_calls": 0.0597,
+            "median_ret_up_calls": -0.0548,
+            "mean_ret_down_calls": 0.0353,
+            "median_ret_down_calls": -0.0356,
+            "spread_up_minus_down": 0.0244,
+            "hit_rate_up_calls": 0.4828,
+            "downside_rate_up_calls": 0.5145,
+            "mean_ret_all": 0.0462,
+            "long_only_days": 246,
+            "long_only_mean_daily_pct": 0.0356,
+            "long_only_total_pct": 7.26,
+            "long_only_max_drawdown_pct": -14.8,
+            "equal_weight_all_total_pct": 10.26,
+            "equal_weight_all_max_drawdown_pct": -14.15,
+            "turnover_per_day": 0.2641
+          }
+        },
+        "3d": {
+          "n": 6588,
+          "accuracy": 0.4921,
+          "balanced_accuracy": 0.4907,
+          "precision": 0.4763,
+          "recall": 0.4359,
+          "f1": 0.4552,
+          "auc": 0.4934,
+          "brier": 0.27491,
+          "log_loss": 0.75017,
+          "ece": 0.135,
+          "pred_up_pct": 44.6,
+          "actual_up_pct": 48.7,
+          "mean_p": 0.4822,
+          "accuracy_ci95_date_clustered": [
+            0.4777,
+            0.508
+          ],
+          "platt_calibrated": {
+            "brier": 0.24984,
+            "log_loss": 0.69283,
+            "ece": 0.003,
+            "auc": 0.5066
+          },
+          "paired_vs_production_blend": {
+            "n": 6588,
+            "n_dates": 244,
+            "accuracy_diff": -0.0035,
+            "accuracy_diff_ci95": [
+              -0.0091,
+              0.0017
+            ],
+            "brier_diff": -0.0041,
+            "brier_diff_ci95": [
+              -0.00491,
+              -0.00322
+            ]
+          }
+        },
+        "5d": {
+          "n": 6534,
+          "accuracy": 0.5014,
+          "balanced_accuracy": 0.5001,
+          "precision": 0.4886,
+          "recall": 0.4445,
+          "f1": 0.4656,
+          "auc": 0.5034,
+          "brier": 0.27289,
+          "log_loss": 0.74642,
+          "ece": 0.1258,
+          "pred_up_pct": 44.4,
+          "actual_up_pct": 48.9,
+          "mean_p": 0.482,
+          "accuracy_ci95_date_clustered": [
+            0.4871,
+            0.5155
+          ],
+          "platt_calibrated": {
+            "brier": 0.24987,
+            "log_loss": 0.69288,
+            "ece": 0.0006,
+            "auc": 0.5034
+          },
+          "paired_vs_production_blend": {
+            "n": 6534,
+            "n_dates": 242,
+            "accuracy_diff": -0.0002,
+            "accuracy_diff_ci95": [
+              -0.0058,
+              0.0054
+            ],
+            "brier_diff": -0.00386,
+            "brier_diff_ci95": [
+              -0.00471,
+              -0.00303
+            ]
+          },
+          "returns": {
+            "horizon_days": 5,
+            "n_up_calls": 2904,
+            "n_down_calls": 3630,
+            "mean_ret_up_calls": 0.3202,
+            "median_ret_up_calls": -0.1019,
+            "mean_ret_down_calls": 0.2042,
+            "median_ret_down_calls": -0.0909,
+            "spread_up_minus_down": 0.116,
+            "hit_rate_up_calls": 0.4886,
+            "downside_rate_up_calls": 0.5107,
+            "mean_ret_all": 0.2558
+          }
+        },
+        "10d": {
+          "n": 6399,
+          "accuracy": 0.511,
+          "balanced_accuracy": 0.5113,
+          "precision": 0.5156,
+          "recall": 0.4574,
+          "f1": 0.4848,
+          "auc": 0.5171,
+          "brier": 0.26958,
+          "log_loss": 0.73917,
+          "ece": 0.116,
+          "pred_up_pct": 44.6,
+          "actual_up_pct": 50.3,
+          "mean_p": 0.4828,
+          "accuracy_ci95_date_clustered": [
+            0.4948,
+            0.5268
+          ],
+          "platt_calibrated": {
+            "brier": 0.25069,
+            "log_loss": 0.69454,
+            "ece": 0.0189,
+            "auc": 0.4829
+          },
+          "paired_vs_production_blend": {
+            "n": 6399,
+            "n_dates": 237,
+            "accuracy_diff": 0.0034,
+            "accuracy_diff_ci95": [
+              -0.0022,
+              0.0086
+            ],
+            "brier_diff": -0.00416,
+            "brier_diff_ci95": [
+              -0.005,
+              -0.00337
+            ]
+          }
+        }
+      }
+    }
+  }
+}
