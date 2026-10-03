@@ -152,3 +152,10 @@ class TestMetrics:
 
     def test_max_drawdown(self):
         assert rm.max_drawdown(np.array([10.0, -50.0, 20.0])) == -50.0
+
+
+def test_spread_ci_of_a_perfect_split():
+    df = pd.DataFrame({"date": np.repeat(pd.bdate_range("2025-01-01", periods=30), 2),
+                       "p": np.tile([0.9, 0.1], 30), "ret_5d": np.tile([1.0, -1.0], 30)})
+    r = rm.spread_ci(df, "p", 5)
+    assert r["spread_pp"] == 2.0 and r["ci95"] == [2.0, 2.0]

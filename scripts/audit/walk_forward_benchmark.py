@@ -93,6 +93,16 @@ CONFIGS = {
         "eval_end": "2026-09-30",
         "stride_trading_days": 5,
     },
+    # Phase 15 decision-engine research: the 9 months BEFORE the `full`
+    # period, so thresholds are chosen on data disjoint from `full`. The
+    # 2023-06-01 snapshot start gives only ~19 months of weekly history at
+    # the first issue date (production uses 2 years).
+    "research_dev": {
+        "symbols": _LARGE + _MID + _SMALL,
+        "eval_start": "2025-01-01",
+        "eval_end": "2025-09-30",
+        "stride_trading_days": 5,
+    },
 }
 
 

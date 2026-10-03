@@ -264,6 +264,30 @@ def return_diagnostics(df: pd.DataFrame, p_col: str, h: int, threshold: float = 
     return out
 
 
+def spread_ci(df: pd.DataFrame, p_col: str, h: int, threshold: float = 0.5,
+              n_boot: int = 1000, seed: int = 0) -> dict:
+    """
+    Mean h-day return of up-calls minus down-calls, with a date-clustered
+    bootstrap CI. Dates are resampled as whole blocks; overlapping h-day
+    returns of consecutive dates remain correlated, so for h > 1 the CI is
+    still somewhat optimistic.
+    """
+    d = df[["date", p_col, f"ret_{h}d"]].dropna()
+    up = (d[p_col] > threshold).to_numpy()
+    r = d[f"ret_{h}d"].to_numpy(float)
+    codes, uniq = pd.factorize(d["date"])
+    sums = np.zeros((len(uniq), 4))
+    np.add.at(sums, codes, np.c_[r * up, up, r * ~up, ~up])
+    draws = np.random.default_rng(seed).integers(0, len(uniq), size=(n_boot, len(uniq)))
+    tot = sums[draws].sum(axis=1)
+    with np.errstate(invalid="ignore", divide="ignore"):
+        boot = tot[:, 0] / tot[:, 1] - tot[:, 2] / tot[:, 3]
+    point = r[up].mean() - r[~up].mean() if up.any() and (~up).any() else float("nan")
+    return {"spread_pp": round(float(point), 4),
+            "ci95": [round(float(np.nanpercentile(boot, 2.5)), 4),
+                     round(float(np.nanpercentile(boot, 97.5)), 4)]}
+
+
 def wilson_pct(k: int, n: int):
     return wilson_interval(k, n)
 

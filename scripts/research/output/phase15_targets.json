@@ -1,0 +1,591 @@
+{
+  "experiment": "E15.T",
+  "by_target": {
+    "1d": {
+      "config_key": "6a4ae6b5218b",
+      "n_predictions": 15066,
+      "DEV": {
+        "n": 3375,
+        "accuracy": 0.4999,
+        "accuracy_ci95": [
+          48.3,
+          51.7
+        ],
+        "balanced_accuracy": 0.4998,
+        "precision": 0.4993,
+        "recall": 0.4466,
+        "f1": 0.4715,
+        "auc": 0.5011,
+        "brier": 0.27612,
+        "log_loss": 0.75429,
+        "ece": 0.1342,
+        "pred_up_pct": 44.7,
+        "actual_up_pct": 50.0,
+        "mean_p": 0.4784,
+        "accuracy_ci95_date_clustered": [
+          0.4809,
+          0.5185
+        ],
+        "train_up_rate_mean": 0.4868,
+        "baseline_majority_accuracy": 0.4999,
+        "baseline_prev_direction_accuracy": 0.5111,
+        "platt_calibrated": {
+          "brier": 0.25051,
+          "log_loss": 0.69416,
+          "ece": 0.017,
+          "auc": 0.4989
+        },
+        "returns": {
+          "horizon_days": 1,
+          "n_up_calls": 1508,
+          "n_down_calls": 1867,
+          "mean_ret_up_calls": 0.0453,
+          "median_ret_up_calls": 0.0,
+          "mean_ret_down_calls": 0.1085,
+          "median_ret_down_calls": 0.0,
+          "spread_up_minus_down": -0.0632,
+          "hit_rate_up_calls": 0.4993,
+          "downside_rate_up_calls": 0.498,
+          "mean_ret_all": 0.0803,
+          "long_only_days": 125,
+          "long_only_mean_daily_pct": 0.0155,
+          "long_only_total_pct": 1.24,
+          "long_only_max_drawdown_pct": -11.42,
+          "equal_weight_all_total_pct": 9.75,
+          "equal_weight_all_max_drawdown_pct": -7.07,
+          "turnover_per_day": 0.2927
+        },
+        "spread_ci": {
+          "spread_pp": -0.0632,
+          "ci95": [
+            -0.1975,
+            0.081
+          ]
+        },
+        "spread_ci_1d_target_model": {
+          "spread_pp": -0.0632,
+          "ci95": [
+            -0.1975,
+            0.081
+          ]
+        }
+      },
+      "FINAL": {
+        "n": 6642,
+        "accuracy": 0.5026,
+        "accuracy_ci95": [
+          49.1,
+          51.5
+        ],
+        "balanced_accuracy": 0.5009,
+        "precision": 0.4854,
+        "recall": 0.4486,
+        "f1": 0.4662,
+        "auc": 0.4995,
+        "brier": 0.2766,
+        "log_loss": 0.75493,
+        "ece": 0.1355,
+        "pred_up_pct": 44.8,
+        "actual_up_pct": 48.4,
+        "mean_p": 0.4814,
+        "accuracy_ci95_date_clustered": [
+          0.4881,
+          0.5167
+        ],
+        "train_up_rate_mean": 0.4852,
+        "baseline_majority_accuracy": 0.5041,
+        "baseline_prev_direction_accuracy": 0.4887,
+        "platt_calibrated": {
+          "brier": 0.24991,
+          "log_loss": 0.69297,
+          "ece": 0.0034,
+          "auc": 0.5005
+        },
+        "returns": {
+          "horizon_days": 1,
+          "n_up_calls": 2973,
+          "n_down_calls": 3669,
+          "mean_ret_up_calls": 0.076,
+          "median_ret_up_calls": -0.0495,
+          "mean_ret_down_calls": 0.022,
+          "median_ret_down_calls": -0.0405,
+          "spread_up_minus_down": 0.054,
+          "hit_rate_up_calls": 0.4854,
+          "downside_rate_up_calls": 0.5119,
+          "mean_ret_all": 0.0462,
+          "long_only_days": 246,
+          "long_only_mean_daily_pct": 0.0495,
+          "long_only_total_pct": 10.98,
+          "long_only_max_drawdown_pct": -14.75,
+          "equal_weight_all_total_pct": 10.26,
+          "equal_weight_all_max_drawdown_pct": -14.15,
+          "turnover_per_day": 0.2892
+        },
+        "spread_ci": {
+          "spread_pp": 0.054,
+          "ci95": [
+            -0.0775,
+            0.1885
+          ]
+        },
+        "spread_ci_1d_target_model": {
+          "spread_pp": 0.054,
+          "ci95": [
+            -0.0775,
+            0.1885
+          ]
+        }
+      }
+    },
+    "3d": {
+      "config_key": "dd0c0a669ee1",
+      "n_predictions": 15066,
+      "DEV": {
+        "n": 3375,
+        "accuracy": 0.4895,
+        "accuracy_ci95": [
+          47.3,
+          50.6
+        ],
+        "balanced_accuracy": 0.4905,
+        "precision": 0.5051,
+        "recall": 0.4572,
+        "f1": 0.4799,
+        "auc": 0.4917,
+        "brier": 0.29258,
+        "log_loss": 0.80023,
+        "ece": 0.1758,
+        "pred_up_pct": 46.6,
+        "actual_up_pct": 51.5,
+        "mean_p": 0.4833,
+        "accuracy_ci95_date_clustered": [
+          0.4708,
+          0.5105
+        ],
+        "train_up_rate_mean": 0.4881,
+        "baseline_majority_accuracy": 0.4954,
+        "baseline_prev_direction_accuracy": 0.4972,
+        "platt_calibrated": {
+          "brier": 0.25137,
+          "log_loss": 0.69589,
+          "ece": 0.0395,
+          "auc": 0.4917
+        },
+        "returns": {
+          "horizon_days": 3,
+          "n_up_calls": 1574,
+          "n_down_calls": 1801,
+          "mean_ret_up_calls": 0.2674,
+          "median_ret_up_calls": 0.0511,
+          "mean_ret_down_calls": 0.2137,
+          "median_ret_down_calls": 0.1713,
+          "spread_up_minus_down": 0.0537,
+          "hit_rate_up_calls": 0.5051,
+          "downside_rate_up_calls": 0.4936,
+          "mean_ret_all": 0.2387
+        },
+        "spread_ci": {
+          "spread_pp": 0.0537,
+          "ci95": [
+            -0.1844,
+            0.3184
+          ]
+        },
+        "spread_ci_1d_target_model": {
+          "spread_pp": -0.0148,
+          "ci95": [
+            -0.297,
+            0.2609
+          ]
+        },
+        "paired_vs_1d_target_model": {
+          "n": 3375,
+          "n_dates": 125,
+          "accuracy_diff": -0.0119,
+          "accuracy_diff_ci95": [
+            -0.0341,
+            0.0104
+          ],
+          "brier_diff": 0.01518,
+          "brier_diff_ci95": [
+            0.00764,
+            0.02288
+          ]
+        }
+      },
+      "FINAL": {
+        "n": 6588,
+        "accuracy": 0.5071,
+        "accuracy_ci95": [
+          49.5,
+          51.9
+        ],
+        "balanced_accuracy": 0.5063,
+        "precision": 0.4935,
+        "recall": 0.4752,
+        "f1": 0.4842,
+        "auc": 0.5079,
+        "brier": 0.2877,
+        "log_loss": 0.78865,
+        "ece": 0.1638,
+        "pred_up_pct": 46.9,
+        "actual_up_pct": 48.7,
+        "mean_p": 0.4863,
+        "accuracy_ci95_date_clustered": [
+          0.493,
+          0.5206
+        ],
+        "train_up_rate_mean": 0.5016,
+        "baseline_majority_accuracy": 0.5088,
+        "baseline_prev_direction_accuracy": 0.4912,
+        "platt_calibrated": {
+          "brier": 0.24988,
+          "log_loss": 0.69291,
+          "ece": 0.0026,
+          "auc": 0.4921
+        },
+        "returns": {
+          "horizon_days": 3,
+          "n_up_calls": 3088,
+          "n_down_calls": 3500,
+          "mean_ret_up_calls": 0.1684,
+          "median_ret_up_calls": -0.0403,
+          "mean_ret_down_calls": 0.1251,
+          "median_ret_down_calls": -0.0997,
+          "spread_up_minus_down": 0.0433,
+          "hit_rate_up_calls": 0.4935,
+          "downside_rate_up_calls": 0.5058,
+          "mean_ret_all": 0.1454
+        },
+        "spread_ci": {
+          "spread_pp": 0.0433,
+          "ci95": [
+            -0.1505,
+            0.2268
+          ]
+        },
+        "spread_ci_1d_target_model": {
+          "spread_pp": 0.0613,
+          "ci95": [
+            -0.1518,
+            0.2864
+          ]
+        },
+        "paired_vs_1d_target_model": {
+          "n": 6588,
+          "n_dates": 244,
+          "accuracy_diff": 0.0115,
+          "accuracy_diff_ci95": [
+            -0.003,
+            0.0272
+          ],
+          "brier_diff": 0.0087,
+          "brier_diff_ci95": [
+            0.00339,
+            0.01388
+          ]
+        }
+      }
+    },
+    "5d": {
+      "config_key": "dc6f2b3d002c",
+      "n_predictions": 15066,
+      "DEV": {
+        "n": 3375,
+        "accuracy": 0.5099,
+        "accuracy_ci95": [
+          49.3,
+          52.7
+        ],
+        "balanced_accuracy": 0.5123,
+        "precision": 0.5426,
+        "recall": 0.4709,
+        "f1": 0.5042,
+        "auc": 0.5077,
+        "brier": 0.29939,
+        "log_loss": 0.83168,
+        "ece": 0.1817,
+        "pred_up_pct": 45.9,
+        "actual_up_pct": 52.9,
+        "mean_p": 0.4841,
+        "accuracy_ci95_date_clustered": [
+          0.4907,
+          0.5292
+        ],
+        "train_up_rate_mean": 0.4892,
+        "baseline_majority_accuracy": 0.5001,
+        "baseline_prev_direction_accuracy": 0.4856,
+        "platt_calibrated": {
+          "brier": 0.25279,
+          "log_loss": 0.69874,
+          "ece": 0.0597,
+          "auc": 0.5077
+        },
+        "returns": {
+          "horizon_days": 5,
+          "n_up_calls": 1550,
+          "n_down_calls": 1825,
+          "mean_ret_up_calls": 0.6994,
+          "median_ret_up_calls": 0.3489,
+          "mean_ret_down_calls": 0.2635,
+          "median_ret_down_calls": 0.1924,
+          "spread_up_minus_down": 0.4359,
+          "hit_rate_up_calls": 0.5426,
+          "downside_rate_up_calls": 0.4574,
+          "mean_ret_all": 0.4637
+        },
+        "spread_ci": {
+          "spread_pp": 0.4359,
+          "ci95": [
+            0.0831,
+            0.8206
+          ]
+        },
+        "spread_ci_1d_target_model": {
+          "spread_pp": -0.0835,
+          "ci95": [
+            -0.5086,
+            0.3242
+          ]
+        },
+        "paired_vs_1d_target_model": {
+          "n": 3375,
+          "n_dates": 125,
+          "accuracy_diff": 0.0059,
+          "accuracy_diff_ci95": [
+            -0.0172,
+            0.0302
+          ],
+          "brier_diff": 0.02357,
+          "brier_diff_ci95": [
+            0.01451,
+            0.0326
+          ]
+        }
+      },
+      "FINAL": {
+        "n": 6534,
+        "accuracy": 0.5047,
+        "accuracy_ci95": [
+          49.3,
+          51.7
+        ],
+        "balanced_accuracy": 0.5041,
+        "precision": 0.4929,
+        "recall": 0.4774,
+        "f1": 0.485,
+        "auc": 0.5053,
+        "brier": 0.29946,
+        "log_loss": 0.82627,
+        "ece": 0.1895,
+        "pred_up_pct": 47.3,
+        "actual_up_pct": 48.9,
+        "mean_p": 0.487,
+        "accuracy_ci95_date_clustered": [
+          0.4925,
+          0.5175
+        ],
+        "train_up_rate_mean": 0.5073,
+        "baseline_majority_accuracy": 0.4977,
+        "baseline_prev_direction_accuracy": 0.4946,
+        "platt_calibrated": {
+          "brier": 0.24986,
+          "log_loss": 0.69286,
+          "ece": 0.0003,
+          "auc": 0.5053
+        },
+        "returns": {
+          "horizon_days": 5,
+          "n_up_calls": 3092,
+          "n_down_calls": 3442,
+          "mean_ret_up_calls": 0.2703,
+          "median_ret_up_calls": -0.0591,
+          "mean_ret_down_calls": 0.2427,
+          "median_ret_down_calls": -0.1167,
+          "spread_up_minus_down": 0.0276,
+          "hit_rate_up_calls": 0.4929,
+          "downside_rate_up_calls": 0.5058,
+          "mean_ret_all": 0.2558
+        },
+        "spread_ci": {
+          "spread_pp": 0.0276,
+          "ci95": [
+            -0.2226,
+            0.2824
+          ]
+        },
+        "spread_ci_1d_target_model": {
+          "spread_pp": 0.0999,
+          "ci95": [
+            -0.1597,
+            0.3702
+          ]
+        },
+        "paired_vs_1d_target_model": {
+          "n": 6534,
+          "n_dates": 242,
+          "accuracy_diff": 0.0032,
+          "accuracy_diff_ci95": [
+            -0.0135,
+            0.0199
+          ],
+          "brier_diff": 0.02272,
+          "brier_diff_ci95": [
+            0.01694,
+            0.02874
+          ]
+        }
+      }
+    },
+    "10d": {
+      "config_key": "2997513cc7fb",
+      "n_predictions": 15066,
+      "DEV": {
+        "n": 3375,
+        "accuracy": 0.5209,
+        "accuracy_ci95": [
+          50.4,
+          53.8
+        ],
+        "balanced_accuracy": 0.5246,
+        "precision": 0.5747,
+        "recall": 0.4862,
+        "f1": 0.5268,
+        "auc": 0.5199,
+        "brier": 0.31307,
+        "log_loss": 0.88863,
+        "ece": 0.221,
+        "pred_up_pct": 46.4,
+        "actual_up_pct": 54.8,
+        "mean_p": 0.4762,
+        "accuracy_ci95_date_clustered": [
+          0.5046,
+          0.5381
+        ],
+        "train_up_rate_mean": 0.4759,
+        "baseline_majority_accuracy": 0.4767,
+        "baseline_prev_direction_accuracy": 0.4871,
+        "platt_calibrated": {
+          "brier": 0.26083,
+          "log_loss": 0.71509,
+          "ece": 0.1044,
+          "auc": 0.4801
+        },
+        "returns": {
+          "horizon_days": 10,
+          "n_up_calls": 1566,
+          "n_down_calls": 1809,
+          "mean_ret_up_calls": 1.2905,
+          "median_ret_up_calls": 0.9531,
+          "mean_ret_down_calls": 0.5843,
+          "median_ret_down_calls": 0.3934,
+          "spread_up_minus_down": 0.7062,
+          "hit_rate_up_calls": 0.5747,
+          "downside_rate_up_calls": 0.4253,
+          "mean_ret_all": 0.912
+        },
+        "spread_ci": {
+          "spread_pp": 0.7062,
+          "ci95": [
+            0.3175,
+            1.0928
+          ]
+        },
+        "spread_ci_1d_target_model": {
+          "spread_pp": -0.1392,
+          "ci95": [
+            -0.6704,
+            0.4104
+          ]
+        },
+        "paired_vs_1d_target_model": {
+          "n": 3375,
+          "n_dates": 125,
+          "accuracy_diff": 0.0409,
+          "accuracy_diff_ci95": [
+            0.0219,
+            0.0599
+          ],
+          "brier_diff": 0.02894,
+          "brier_diff_ci95": [
+            0.02121,
+            0.03682
+          ]
+        }
+      },
+      "FINAL": {
+        "n": 6399,
+        "accuracy": 0.5029,
+        "accuracy_ci95": [
+          49.1,
+          51.5
+        ],
+        "balanced_accuracy": 0.503,
+        "precision": 0.5061,
+        "recall": 0.4776,
+        "f1": 0.4914,
+        "auc": 0.4969,
+        "brier": 0.32029,
+        "log_loss": 0.90054,
+        "ece": 0.2262,
+        "pred_up_pct": 47.5,
+        "actual_up_pct": 50.3,
+        "mean_p": 0.4858,
+        "accuracy_ci95_date_clustered": [
+          0.4877,
+          0.5187
+        ],
+        "train_up_rate_mean": 0.5192,
+        "baseline_majority_accuracy": 0.5037,
+        "baseline_prev_direction_accuracy": 0.492,
+        "platt_calibrated": {
+          "brier": 0.25062,
+          "log_loss": 0.69438,
+          "ece": 0.019,
+          "auc": 0.5031
+        },
+        "returns": {
+          "horizon_days": 10,
+          "n_up_calls": 3037,
+          "n_down_calls": 3362,
+          "mean_ret_up_calls": 0.8076,
+          "median_ret_up_calls": 0.1077,
+          "mean_ret_down_calls": 0.3773,
+          "median_ret_down_calls": 0.0045,
+          "spread_up_minus_down": 0.4302,
+          "hit_rate_up_calls": 0.5061,
+          "downside_rate_up_calls": 0.4936,
+          "mean_ret_all": 0.5815
+        },
+        "spread_ci": {
+          "spread_pp": 0.4302,
+          "ci95": [
+            -0.0343,
+            0.9093
+          ]
+        },
+        "spread_ci_1d_target_model": {
+          "spread_pp": 0.2727,
+          "ci95": [
+            -0.1702,
+            0.7281
+          ]
+        },
+        "paired_vs_1d_target_model": {
+          "n": 6399,
+          "n_dates": 237,
+          "accuracy_diff": -0.0047,
+          "accuracy_diff_ci95": [
+            -0.0228,
+            0.0141
+          ],
+          "brier_diff": 0.04654,
+          "brier_diff_ci95": [
+            0.03853,
+            0.05391
+          ]
+        }
+      }
+    }
+  }
+}
