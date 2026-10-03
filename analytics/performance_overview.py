@@ -31,7 +31,7 @@ from ranking import tracking
 # sections 11-14 and 24). Static: the validation is complete and frozen.
 RANKING_VALIDATION = {
     "title": "Ranking Engine v1.0 — historical point-in-time validation",
-    "methodology": "Production StockAI Score recomputed at 39 month-ends (Jul 2023 – Sep 2026) using only data "
+    "methodology": "Production StockLens Score recomputed at 39 month-ends (Jul 2023 – Sep 2026) using only data "
                    "available at each date; development period Jul 2023 – Dec 2024, final test period "
                    "Jan 2025 – Sep 2026 used once.",
     "benchmark": "NIFTY 50 and the equal-weight eligible universe",
@@ -42,7 +42,7 @@ RANKING_VALIDATION = {
         {"metric": "Top 10 vs eligible universe, 3 months (development period)", "value": "+0.2%"},
         {"metric": "Rank correlation of score with 3-month return (final / development)", "value": "-0.004 / 0.004"},
     ],
-    "conclusion": "The validation did not establish a statistically reliable stock-selection edge. The StockAI "
+    "conclusion": "The validation did not establish a statistically reliable stock-selection edge. The StockLens "
                   "Score is provided as a transparent analytical ranking; its live results are being tracked "
                   "prospectively below.",
     "limitations": ["About 1.5 years per test period in one market cycle",
@@ -121,7 +121,7 @@ def _legacy() -> tuple[dict, dict]:
         pre, "Legacy signals (retired methodology)",
         "BUY/SELL/HOLD signals from the earlier ML-and-technical engine, recorded before the temporal-integrity fix.",
         "Retired. These signals were generated with a look-ahead defect in the ML direction input "
-        "(docs/PRODUCTION_TEMPORAL_INTEGRITY.md) and are not comparable to the current StockAI Score. "
+        "(docs/PRODUCTION_TEMPORAL_INTEGRITY.md) and are not comparable to the current StockLens Score. "
         "Shown for transparency only; they are not evidence of skill.")
     post_fix = _signal_block(
         post, "Legacy signals after the temporal-integrity fix",

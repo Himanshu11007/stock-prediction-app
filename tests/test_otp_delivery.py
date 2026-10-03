@@ -22,7 +22,7 @@ from auth.otp_delivery import (
 def make_smtp_service(**overrides):
     defaults = dict(
         host="smtp.example.com", port=587, username="apikey", password="secret",
-        from_address="no-reply@stockaipro.app", use_tls=True,
+        from_address="no-reply@stocklens.app", use_tls=True,
     )
     defaults.update(overrides)
     return SmtpOtpDeliveryService(**defaults)

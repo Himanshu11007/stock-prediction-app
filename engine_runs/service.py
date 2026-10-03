@@ -9,7 +9,7 @@ One run:
      FUNDAMENTALS_TTL_HOURS unless refresh is requested)
   4. computes technical/risk metrics and, optionally, the ML signal
   5. derives industry median PE from real peer snapshots
-  6. evaluates FQVF and the StockAI Score; stores one StockAnalysisResult per stock
+  6. evaluates FQVF and the StockLens Score; stores one StockAnalysisResult per stock
   7. records counts, errors and the final status on the EngineRun
 
 Failure isolation: every per-stock stage is wrapped; a failure is recorded in
@@ -395,7 +395,7 @@ def execute_run(engine, run_id: str) -> None:
                     errors.append({"symbol": None, "stage": "tracking", "error": f"{type(e).__name__}: {e}"[:300]})
 
             # Outcome per stock: failed = a processing stage raised; succeeded =
-            # a StockAI Score was produced; skipped = processed but not
+            # a StockLens Score was produced; skipped = processed but not
             # scorable (missing data), never fabricated.
             failed |= {e["symbol"] for e in errors if e.get("stage") in ("market", "technical") and e.get("symbol")}
             failed &= set(symbols)

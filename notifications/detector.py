@@ -7,7 +7,7 @@ are reported (thresholds from notifications.settings):
 
   entered_top / left_top   membership of the Top Investment Candidates
                            (eligible, rank <= top_picks.limit, active company)
-  score                    |StockAI Score change| >= score_change_threshold
+  score                    |StockLens Score change| >= score_change_threshold
   fqvf                     |change in FQVF checks passed| >= fqvf_change_min_checks
   rank                     |rank change| >= rank_change_threshold (both ranked)
   status                   eligibility gained/lost, or the risk component
@@ -107,7 +107,7 @@ def removal_reason(prev: StockAnalysisResult, cur: Optional[StockAnalysisResult]
         return f"data quality / eligibility changed ({reasons})."
     parts = []
     if prev.stockai_score is not None and cur.stockai_score is not None and cur.stockai_score < prev.stockai_score:
-        parts.append(f"StockAI Score decreased from {_fmt(prev.stockai_score)} to {_fmt(cur.stockai_score)}")
+        parts.append(f"StockLens Score decreased from {_fmt(prev.stockai_score)} to {_fmt(cur.stockai_score)}")
     pr, cr = _component(prev, "risk"), _component(cur, "risk")
     if pr is not None and cr is not None and cr <= pr - 10:
         parts.append("risk increased")

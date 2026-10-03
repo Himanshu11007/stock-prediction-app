@@ -1,5 +1,5 @@
 """
-ranking/service.py — StockRankingService: the StockAI Score.
+ranking/service.py — StockRankingService: the StockLens Score.
 
 The score is a weighted average of component scores (each 0-100), computed
 only over the components that are available for that stock; the weights of

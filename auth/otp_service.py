@@ -96,7 +96,7 @@ def request_otp(
     issued too recently, or OtpRateLimitedError if too many codes have
     already been issued for this destination OR this IP within the rolling
     window. Always raises or succeeds the same way regardless of whether
-    `destination` has an existing StockAI account - account lookup only
+    `destination` has an existing StockLens account - account lookup only
     happens at verify time - so this endpoint can't be used to enumerate
     registered users.
     """
@@ -160,7 +160,7 @@ def verify_otp(session: Session, destination: str, code: str, *, purpose: str = 
 
     On success, marks the challenge consumed so it can never be verified
     again. This function only validates the code itself - the caller is
-    responsible for finding/creating the StockAI user for `destination`.
+    responsible for finding/creating the StockLens user for `destination`.
     """
     destination = normalize_destination(destination)
     challenge = session.exec(

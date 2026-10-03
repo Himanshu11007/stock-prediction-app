@@ -1,4 +1,4 @@
-# StockAI Pro Authentication — Phase 8 / 8.1
+# StockLens Authentication — Phase 8 / 8.1
 
 This document covers the Phase 8 authentication expansion (Google/Apple
 sign-in, OTP login, device/session management, account linking, and the
@@ -140,7 +140,7 @@ regardless of whether `destination` has an account, so this endpoint can't
 be used to enumerate registered users.
 
 `POST /auth/otp/verify {destination, code}` → validates the code
-(expiry, one-time-use, attempt limit), then finds-or-creates the StockAI
+(expiry, one-time-use, attempt limit), then finds-or-creates the StockLens
 user for `destination` and issues tokens exactly like any other login path.
 
 Configuration (`config.py`, all overridable via environment variables):
@@ -236,7 +236,7 @@ This is the most important security property in this phase:
 ```
 Google / Apple / OTP / existing login
         ↓
-Authenticated StockAI session (JWT + refresh token, as always)
+Authenticated StockLens session (JWT + refresh token, as always)
         ↓
 Trusted device established (trusted_devices row)
         ↓
@@ -278,7 +278,7 @@ An authenticated user can explicitly attach another sign-in method:
   (`400`) if it would leave the account with no way to sign in at all
 
 Linking is **never automatic**. If a brand-new Google/Apple/OTP identity's
-email matches an existing StockAI account, login returns `409 Conflict`
+email matches an existing StockLens account, login returns `409 Conflict`
 with instructions to sign in to the existing account and link explicitly
 from there (`auth/external_identity.py:AccountLinkingRequiredError`) —
 email collision alone is never treated as proof of ownership.

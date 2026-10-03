@@ -1,1 +1,1 @@
-"""StockAI Score: StockRankingService and technical metrics."""
+"""StockLens Score: StockRankingService and technical metrics."""

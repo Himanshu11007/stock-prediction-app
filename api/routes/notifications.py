@@ -128,7 +128,7 @@ class FeedbackRequest(BaseModel):
     context: Optional[dict] = None
 
 
-RECORDED = ("Report #{id} recorded. The StockAI Pro team reviews reports in the admin console; "
+RECORDED = ("Report #{id} recorded. The StockLens team reviews reports in the admin console; "
             "you can see its status under Account > My reports.")
 
 

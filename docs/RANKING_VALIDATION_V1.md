@@ -1,8 +1,10 @@
 # Ranking Engine v1.0 — Out-of-Sample Validation and Freeze
 
+> **Naming note (2026-10-03):** the product was renamed from StockAI Pro to **StockLens**; the "StockLens Score" in this document is the same score previously called "StockAI Score". The research, data and conclusions are unchanged.
+
 **Status: Ranking Engine `ranking-v1.0` is FROZEN** (`config.RANKING_ENGINE_STATUS`).
 **Verdict: Current Ranking Engine v1.0 does not demonstrate sufficient
-out-of-sample evidence of incremental stock-selection skill.** The StockAI
+out-of-sample evidence of incremental stock-selection skill.** The StockLens
 Score is therefore an **analytical ranking, not a validated predictive
 edge**. It stays in production unchanged, and prospective tracking of every
 production ranking has started (section 28).
@@ -328,7 +330,7 @@ conclusion is supported. Full results are in `regime_results.csv`.
 horizon:
 
 - **Component-alone IC:** the component score used as the ranking signal.
-- **Leave-one-out:** the change in StockAI Score IC when that component's
+- **Leave-one-out:** the change in StockLens Score IC when that component's
   weight is set to 0.
 
 | Component | IC alone, DEV 1M / 3M / 6M | IC alone, FINAL 1M / 3M / 6M | Stable? |
@@ -460,7 +462,7 @@ rank:
 stock. Each row holds:
 
 - `run_id`, symbol and ranking timestamp;
-- StockAI Score, score coverage, eligibility and rank;
+- StockLens Score, score coverage, eligibility and rank;
 - FQVF summary (score, coverage, PASS/WARNING/FAIL/NOT_AVAILABLE counts,
   version) and every component score;
 - data freshness (fundamentals fetched at, fiscal period, market data as-of,

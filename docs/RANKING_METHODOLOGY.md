@@ -1,4 +1,4 @@
-# StockAI Score and Top Investment Candidates
+# StockLens Score and Top Investment Candidates
 
 Implementation: `ranking/service.py` (`StockRankingService`),
 `ranking/technical.py` (technical/risk metrics), `engine_runs/service.py`
@@ -13,7 +13,7 @@ unchanged as an **analytical ranking rather than a validated predictive
 edge**, and every production run is tracked prospectively. Changing weights,
 rules or components requires a new engine version and a new validation.
 
-The StockAI Score (0–100) ranks stocks against each other on the same,
+The StockLens Score (0–100) ranks stocks against each other on the same,
 explained inputs. **It is not a probability, a price target or a return
 forecast.**
 
@@ -39,7 +39,7 @@ on-demand analysis is ranked against the latest full run's universe.
 ## Formula
 
 ```
-StockAI Score = Σ (weight_i × score_i) / Σ weight_i     over available components i with weight > 0
+StockLens Score = Σ (weight_i × score_i) / Σ weight_i     over available components i with weight > 0
 coverage      = Σ available weights / Σ all weights
 ```
 
@@ -76,7 +76,7 @@ Eligibility rules (`ranking.rules`, administrator-configurable):
 Ineligible stocks still have a score in their own analysis, with the reasons
 listed (`ineligible_reasons`).
 
-Every candidate carries: rank, StockAI Score, coverage, FQVF score and
+Every candidate carries: rank, StockLens Score, coverage, FQVF score and
 summary, positive factors (FQVF PASS explanations and strong components),
 risks (FAIL/WARNING checks, weak components, unavailable checks, high
 volatility), data freshness (fundamentals fetched, fiscal period, market data

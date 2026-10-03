@@ -152,7 +152,7 @@ def explanation(r: StockAnalysisResult, eligible_total: Optional[int], top_limit
         where = "Not ranked: " + ("; ".join(r.ineligible_reasons or []) or "eligibility rules not met") + "."
     lines = [where]
     if r.stockai_score is not None:
-        lines.append(f"StockAI Score {r.stockai_score:.1f}/100 is the weighted average of the components below "
+        lines.append(f"StockLens Score {r.stockai_score:.1f}/100 is the weighted average of the components below "
                      f"(data coverage {(r.score_coverage or 0):.0%}).")
     if strengths:
         lines.append("Strongest: " + ", ".join(f"{SHORT_NAMES.get(k, k)} {c['score']:.0f}"
@@ -164,7 +164,7 @@ def explanation(r: StockAnalysisResult, eligible_total: Optional[int], top_limit
         lines.append("Not available (excluded, not counted as zero): " + ", ".join(missing) + ".")
     return {"summary": " ".join(lines), "strengths": [SHORT_NAMES.get(k, k) for k, _ in strengths],
             "weaknesses": [SHORT_NAMES.get(k, k) for k, _ in weaknesses], "missing": missing,
-            "note": "The StockAI Score is an analytical ranking of stocks against each other on the data "
+            "note": "The StockLens Score is an analytical ranking of stocks against each other on the data "
                     "shown; it is not a forecast or a guarantee of returns."}
 
 

@@ -23,21 +23,21 @@ def overview(session: Session) -> dict[str, Any]:
     return {
         "sections": [
             {"key": "market", "title": "Market intelligence",
-             "status": "Used in the StockAI Score",
+             "status": "Used in the StockLens Score",
              "text": "The NIFTY 50 regime (Bullish / Sideways / Bearish / High Volatility) from trend, momentum "
                      "and volatility of the index, recomputed at every analysis run.",
              "regime": presenter.regime_payload(runs.latest_market_regime(session)),
              "market_status": market_status(holidays=masters.get_config(session, "market.holidays"))},
             {"key": "fundamental", "title": "Fundamental analysis (FQVF)",
-             "status": "Used in the StockAI Score",
+             "status": "Used in the StockLens Score",
              "text": "18 fixed checks on earnings, returns on capital, valuation, leverage and cash flow. Missing "
                      "data is shown as 'Not available', never as a failure. See each stock's FQVF tab."},
             {"key": "technical", "title": "Technical information",
-             "status": "Used in the StockAI Score",
+             "status": "Used in the StockLens Score",
              "text": "Daily and weekly trend, 60-day momentum, volatility and drawdown relative to the analysed "
                      "universe. See each stock's Market tab."},
             {"key": "ml_signal", "title": "ML direction signal",
-             "status": f"Informational only - weight {weights.get('ml_signal', 0):g} in the StockAI Score",
+             "status": f"Informational only - weight {weights.get('ml_signal', 0):g} in the StockLens Score",
              "text": "A next-day up/down probability from a machine-learning model. Research on this model did not "
                      "demonstrate reliable predictive skill, so it does not affect scores or rankings and is shown "
                      "only for transparency.",
@@ -46,12 +46,12 @@ def overview(session: Session) -> dict[str, Any]:
              "status": "Not used in scoring",
              "text": "News items do not carry reliable publication timestamps in our data source, so they cannot "
                      "be shown as information that was known before any analysis date. News is not an input to "
-                     "FQVF or the StockAI Score."},
+                     "FQVF or the StockLens Score."},
             {"key": "legacy", "title": "Legacy signal analytics",
              "status": "Retired methodology",
              "text": "Analytics of BUY/SELL/HOLD signals from the earlier engine, mostly recorded before a "
                      "look-ahead defect was fixed. Shown for transparency only; not comparable to the current "
-                     "StockAI Score and not evidence of skill."},
+                     "StockLens Score and not evidence of skill."},
         ],
-        "note": "StockAI Pro provides analysis, not investment advice. No signal or score guarantees returns.",
+        "note": "StockLens provides analysis, not investment advice. No signal or score guarantees returns.",
     }

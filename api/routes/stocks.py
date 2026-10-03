@@ -66,7 +66,7 @@ def _result_or_404(session: Session, symbol: str):
 
 @router.get("/{symbol}/analysis")
 def get_stock_analysis(symbol: str, session: Session = Depends(get_session)):
-    """Full investment analysis: StockAI Score with components and reasons,
+    """Full investment analysis: StockLens Score with components and reasons,
     the 18 FQVF checks, market/technical data, ML signal (informational) and
     data freshness, from the latest completed engine run."""
     company = _active_company_or_404(session, symbol)
@@ -85,7 +85,7 @@ def get_stock_fqvf(symbol: str, session: Session = Depends(get_session)):
 
 @router.get("/{symbol}/ranking")
 def get_stock_ranking(symbol: str, session: Session = Depends(get_session)):
-    """StockAI Score, components, positive factors and risks."""
+    """StockLens Score, components, positive factors and risks."""
     company = _active_company_or_404(session, symbol)
     result = _result_or_404(session, company.symbol)
     return success_envelope({"symbol": company.symbol, "name": company.name, **presenter.ranking_payload(result)},

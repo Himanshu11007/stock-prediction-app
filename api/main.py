@@ -1,5 +1,5 @@
 """
-api/main.py — StockAI Pro FastAPI backend MVP.
+api/main.py — StockLens FastAPI backend MVP.
 
 Run locally:
     uvicorn api.main:app --reload
@@ -42,7 +42,14 @@ from api.schemas import HealthResponse
 
 from storage.recommendation_validation import migrate_schema
 from utils.logger import get_logger, configure_logging
-from config import ENABLE_DEBUG_LOGS, IS_PRODUCTION, CORS_ALLOWED_ORIGINS
+from pathlib import Path
+
+from fastapi.openapi.docs import get_redoc_html, get_swagger_ui_html
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
+
+from config import (ENABLE_DEBUG_LOGS, IS_PRODUCTION, CORS_ALLOWED_ORIGINS, PRODUCT_DESCRIPTION, PRODUCT_NAME,
+                    PRODUCT_TAGLINE)
 
 # ── Logging setup — reuses the existing centralized logger, same config ──────
 configure_logging(debug=ENABLE_DEBUG_LOGS)
@@ -55,16 +62,34 @@ API_VERSION = "v1"
 API_PREFIX  = f"/api/{API_VERSION}"
 
 app = FastAPI(
-    title="StockAI Pro API",
-    description=(
-        "REST API around the existing StockAI Pro ML + sentiment stock "
-        "recommendation engine. Built so the same engine can be consumed "
-        "by the Streamlit frontend, a future .NET MAUI mobile app, and a "
-        "future subscription product — without duplicating any ML or "
-        "scoring logic."
-    ),
+    title=f"{PRODUCT_NAME} API",
+    description=f"{PRODUCT_NAME} — {PRODUCT_TAGLINE}. {PRODUCT_DESCRIPTION}",
     version="0.1.0",
+    docs_url=None,     # served below with the StockLens favicon
+    redoc_url=None,
 )
+
+# Brand assets (favicon, app icons, social image) generated from the approved
+# master icon by scripts/generate_brand_assets.py.
+BRANDING_DIR = Path(__file__).resolve().parents[1] / "branding"
+app.mount("/static/branding", StaticFiles(directory=str(BRANDING_DIR)), name="branding")
+
+
+@app.get("/docs", include_in_schema=False)
+def swagger_docs():
+    return get_swagger_ui_html(openapi_url=app.openapi_url, title=f"{PRODUCT_NAME} API - Docs",
+                               swagger_favicon_url="/static/branding/favicon-32.png")
+
+
+@app.get("/redoc", include_in_schema=False)
+def redoc_docs():
+    return get_redoc_html(openapi_url=app.openapi_url, title=f"{PRODUCT_NAME} API - ReDoc",
+                          redoc_favicon_url="/static/branding/favicon-32.png")
+
+
+@app.get("/favicon.ico", include_in_schema=False)
+def favicon():
+    return FileResponse(BRANDING_DIR / "favicon.ico")
 
 def _check_production_settings() -> None:
     """Refuse to start a production deployment with insecure defaults."""
@@ -183,14 +208,14 @@ app.include_router(admin_notifications.router, prefix=API_PREFIX, tags=["Admin"]
 @app.get(f"{API_PREFIX}/health", response_model=HealthResponse, tags=["Health"])
 def health():
     """Health check — no auth required."""
-    return {"status": "ok", "app": "StockAI Pro API", "version": "0.1.0"}
+    return {"status": "ok", "app": f"{PRODUCT_NAME} API", "version": "0.1.0"}
 
 
 @app.on_event("startup")
 def on_startup():
-    logger.info("StockAI Pro API starting up")
+    logger.info("%s API starting up", PRODUCT_NAME)
 
 
 @app.on_event("shutdown")
 def on_shutdown():
-    logger.info("StockAI Pro API shutting down")
+    logger.info("%s API shutting down", PRODUCT_NAME)

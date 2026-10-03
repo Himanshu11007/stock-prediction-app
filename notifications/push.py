@@ -105,7 +105,9 @@ class FcmProvider:
                                   "notification": {"title": message.title, "body": message.body},
                                   "data": message.data,
                                   "android": {"priority": "high",
-                                              "notification": {"channel_id": "stockai_alerts"}}}},
+                                              "notification": {"channel_id": "stockai_alerts",
+                                                               "icon": "ic_stat_stocklens",
+                                                               "color": "#3B82F6"}}}},
                 timeout=15)
         except Exception as e:
             return PushResult(FAILED, error=f"{type(e).__name__}"[:200])

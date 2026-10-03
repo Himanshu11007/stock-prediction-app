@@ -299,7 +299,7 @@ def _stock_route(symbol: str) -> str:
 def _watchlist_text(c: detector.StockChange, a: WatchlistAlertSetting) -> list[str]:
     parts = []
     if a.score_changes and c.score:
-        parts.append(f"StockAI Score {_score(c.score['old'])} -> {_score(c.score['new'])} "
+        parts.append(f"StockLens Score {_score(c.score['old'])} -> {_score(c.score['new'])} "
                      f"({c.score['delta']:+.1f})")
     if a.rank_changes and c.rank:
         parts.append(f"rank {c.rank['old']} -> {c.rank['new']}")

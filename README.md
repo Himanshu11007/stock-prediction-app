@@ -1,14 +1,14 @@
-# StockAI Pro — Backend
+# StockLens — Backend
 
-StockAI Pro is a transparent stock-analysis and ranking system for NSE-listed
+StockLens is a transparent stock-analysis and ranking system for NSE-listed
 stocks. The backend (this repository) is the single source of truth: it
 ingests market and fundamental data, evaluates every stock with the
-**Fundamental Quality & Value Framework (FQVF)**, computes the **StockAI
+**Fundamental Quality & Value Framework (FQVF)**, computes the **StockLens
 Score**, publishes the **Top Investment Candidates**, and serves everything to
 the .NET MAUI mobile app ([StockAIPro.Mobile](https://github.com/Himanshu11007/StockAIPro.Mobile))
 and the Streamlit admin console.
 
-> StockAI Pro provides research and analysis, not investment advice. Scores
+> StockLens provides research and analysis, not investment advice. Scores
 > rank stocks on the data available; they are not predictions or guarantees of
 > returns. The ML direction model showed **no demonstrated out-of-sample
 > predictive skill** (docs/ML_EXPERIMENT_REGISTRY.md) and is informational only.
@@ -18,7 +18,7 @@ Yahoo Finance ──► fundamentals/provider.py ──► FundamentalSnapshot /
                                                          │
              engine_runs/service.py (controlled runs, failure isolation)
                     │                     │                    │
-                fqvf/ (18 checks)   ranking/ (StockAI Score)  data_health/
+                fqvf/ (18 checks)   ranking/ (StockLens Score)  data_health/
                     └─────────► StockAnalysisResult ◄─────────┘
                                          │
                           FastAPI /api/v1 (api/main.py)
@@ -52,10 +52,11 @@ uvicorn api.main:app --host 0.0.0.0 --port 8000        # API: http://127.0.0.1:8
 |---|---|
 | System architecture | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) |
 | Fundamental Quality & Value Framework (18 checks, thresholds, formulas) | [docs/FQVF.md](docs/FQVF.md) |
-| StockAI Score / Top Investment Candidates methodology | [docs/RANKING_METHODOLOGY.md](docs/RANKING_METHODOLOGY.md) |
+| StockLens Score / Top Investment Candidates methodology | [docs/RANKING_METHODOLOGY.md](docs/RANKING_METHODOLOGY.md) |
 | Ranking v1.0 out-of-sample validation, freeze and prospective tracking | [docs/RANKING_VALIDATION_V1.md](docs/RANKING_VALIDATION_V1.md) |
 | Notifications, push devices, preferences, reports | [docs/NOTIFICATIONS.md](docs/NOTIFICATIONS.md) |
 | Scheduled jobs (daily ranking, summaries, outcomes) | [docs/SCHEDULING.md](docs/SCHEDULING.md) |
+| Brand, icon assets, retained technical identifiers | [docs/BRANDING.md](docs/BRANDING.md) |
 | Admin / master controls | [docs/ADMIN_CONSOLE.md](docs/ADMIN_CONSOLE.md) |
 | API reference (mobile + admin endpoints) | [docs/API.md](docs/API.md) |
 | Data health and engine runs | [docs/DATA_HEALTH_AND_ENGINE_RUNS.md](docs/DATA_HEALTH_AND_ENGINE_RUNS.md) |

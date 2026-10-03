@@ -12,7 +12,7 @@ _verify_oidc_id_token() helper below instead of duplicating it.
 
 CRITICAL: the client-supplied email is NEVER trusted as proof of identity.
 Only `sub`, once verified against the provider's own signature, is used to
-find or create a StockAI account - see find_or_create_user_for_identity().
+find or create a StockLens account - see find_or_create_user_for_identity().
 """
 from __future__ import annotations
 
@@ -39,7 +39,7 @@ class ExternalIdentityError(Exception):
 
 class AccountLinkingRequiredError(Exception):
     """Raised instead of silently merging accounts when a brand-new
-    external identity's email matches an existing StockAI account. An
+    external identity's email matches an existing StockLens account. An
     email match alone is never proof of ownership (a password account's
     email could be unverified, a typo, or stale) - the user must sign in to
     the existing account and explicitly link the provider from there (see
@@ -52,7 +52,7 @@ class AccountLinkingRequiredError(Exception):
 
 class DuplicateExternalIdentityError(Exception):
     """Raised when linking an identity that's already linked to a
-    *different* StockAI account, or when the calling account already has a
+    *different* StockLens account, or when the calling account already has a
     linked identity for this provider."""
 
 
@@ -210,7 +210,7 @@ def find_or_create_user_for_identity(
     1. An external_identities row already matches (provider, subject) ->
        that user (returning user - the common case on every login after
        the first).
-    2. No match, but an existing StockAI account already has this exact
+    2. No match, but an existing StockLens account already has this exact
        email -> raise AccountLinkingRequiredError rather than silently
        attaching this identity to it (see that class's docstring for why).
     3. No match anywhere -> create a brand-new user from this identity.
@@ -264,7 +264,7 @@ def link_identity(session: Session, user: User, identity: VerifiedExternalIdenti
         if existing_link.user_id == user.id:
             return existing_link
         raise DuplicateExternalIdentityError(
-            f"This {identity.provider.title()} account is already linked to a different StockAI account"
+            f"This {identity.provider.title()} account is already linked to a different StockLens account"
         )
 
     already_has_provider = session.exec(

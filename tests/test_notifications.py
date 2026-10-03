@@ -83,7 +83,7 @@ def _comps(score, risk=50.0):
 
 def _run(s, run_id, started, scores, regime=("Bullish", 0.6), kind="RANKING", config=None, passes=None,
          ineligible=(), risk=None):
-    """scores: symbol -> StockAI Score; rank by score among eligible."""
+    """scores: symbol -> StockLens Score; rank by score among eligible."""
     s.add(EngineRun(run_id=run_id, kind=kind, status="COMPLETED", started_at=started, finished_at=started,
                     engine_version="ranking-v1.0", fqvf_version="fqvf-v1.0", config=config or {}))
     ranked = sorted((sym for sym in scores if sym not in ineligible), key=lambda x: -scores[x])
@@ -140,10 +140,10 @@ def test_new_and_removed_top_candidates_are_detected_with_reasons(db, router):
         new = {n.symbol: n for n in rows if n.type == "NEW_TOP_CANDIDATE"}
         assert set(new) == {"S10.NS", "S05.NS"}
         assert "Stock 10 has entered the Top Investment Candidates at rank 1" in new["S10.NS"].body
-        assert "StockAI Score: 99.0/100" in new["S10.NS"].body
+        assert "StockLens Score: 99.0/100" in new["S10.NS"].body
         assert new["S10.NS"].route == "/stock/S10.NS" and new["S10.NS"].ranking_run_id == "R2"
         removed = {n.symbol: n for n in rows if n.type == "TOP_CANDIDATE_REMOVED"}
-        assert "StockAI Score decreased from 89.0 to 70.0" in removed["S01.NS"].body
+        assert "StockLens Score decreased from 89.0 to 70.0" in removed["S01.NS"].body
         assert "data quality / eligibility changed (market data stale)" in removed["S02.NS"].body
         # no "buy" language anywhere
         assert not any("buy" in (n.title + n.body).lower() for n in rows)
@@ -215,7 +215,7 @@ def test_many_new_candidates_are_aggregated_into_one_notification(db, router):
         rows = s.exec(select(Notification).where(Notification.user_id == uid,
                                                  Notification.type == "NEW_TOP_CANDIDATE")).all()
         assert len(rows) == 1 and rows[0].route == "/top-picks"
-        assert rows[0].title == "New StockAI Top Candidates" and "6 stocks entered" in rows[0].body
+        assert rows[0].title == "New StockLens Top Candidates" and "6 stocks entered" in rows[0].body
 
 
 def test_watchlist_alert_combines_changes_and_respects_per_stock_switches(db, router):
@@ -235,7 +235,7 @@ def test_watchlist_alert_combines_changes_and_respects_per_stock_switches(db, ro
                                                  Notification.type == "WATCHLIST_ALERT")).all()
         assert [n.symbol for n in mine] == ["S20.NS"]                      # S21 muted
         body = mine[0].body
-        assert "StockAI Score 70.0 -> 95.0 (+25.0)" in body and "rank 21 -> 1" in body
+        assert "StockLens Score 70.0 -> 95.0 (+25.0)" in body and "rank 21 -> 1" in body
         assert "entered the Top Investment Candidates" in body
         assert "FQVF 10/18 -> 13/18" in body and mine[0].title == "Watchlist: Stock 20"
         # The watched stock is not notified a second time as a new candidate.
@@ -244,7 +244,7 @@ def test_watchlist_alert_combines_changes_and_respects_per_stock_switches(db, ro
                                                      Notification.type == "NEW_TOP_CANDIDATE")).all()
         theirs = s.exec(select(Notification).where(Notification.user_id == other.id,
                                                    Notification.type == "WATCHLIST_ALERT")).one()
-        assert "StockAI Score" not in theirs.body and "FQVF 10/18 -> 13/18" in theirs.body
+        assert "StockLens Score" not in theirs.body and "FQVF 10/18 -> 13/18" in theirs.body
 
 
 # ── dedup, rate limits, cooldown, quiet hours, global switch ─────────────────

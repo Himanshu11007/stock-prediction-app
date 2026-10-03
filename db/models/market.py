@@ -9,7 +9,7 @@ backend is the single source of truth for what the mobile app displays:
   MarketSnapshot              latest price bar + technical/risk metrics per fetch
   MarketRegimeSnapshot        market-wide regime (NIFTY 50) per computation
   EngineRun                   one controlled analysis run (counts, errors)
-  StockAnalysisResult         FQVF + StockAI Score for one stock in one run
+  StockAnalysisResult         FQVF + StockLens Score for one stock in one run
   AppConfig                   key/value application configuration
 
 No row ever holds a fabricated value: missing data is stored as NULL with a

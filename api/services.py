@@ -1,5 +1,5 @@
 """
-api/services.py — Service layer wrapping the existing StockAI Pro engine.
+api/services.py — Service layer wrapping the existing StockLens engine.
 
 This module contains ZERO new business logic. Every function here is a thin
 pass-through to existing modules (scanner/, storage/, news/, utils/, data/,

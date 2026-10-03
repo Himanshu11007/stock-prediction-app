@@ -1,1 +1,1 @@
-"""StockAI Pro admin / master control console (Streamlit, API-backed)."""
+"""StockLens admin / master control console (Streamlit, API-backed)."""

@@ -155,7 +155,7 @@ def change_password(session: Session, user: User, current_password: str, new_pas
 def create_external_user(
     session: Session, *, email: Optional[str] = None, phone: Optional[str] = None
 ) -> User:
-    """Creates a new StockAI user with no password - used the first time an
+    """Creates a new StockLens user with no password - used the first time an
     external identity (Google/Apple/OTP) is seen with no existing account to
     attach to. Assigns the default USER role same as create_user(). Does NOT
     check for an existing user with this email/phone first - callers

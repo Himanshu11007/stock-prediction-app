@@ -22,7 +22,7 @@ Response shapes: business routes return `{"success": true, "data": …,
 | GET/POST | `/auth/sessions`, `/auth/sessions/revoke`, `/auth/sessions/revoke-all`, `/auth/devices/pin-enabled` | user | device sessions |
 | GET | `/stocks?search=&limit=&offset=` | user | Stock Master search (active stocks) |
 | GET | `/stocks/{symbol}` | user | one stock |
-| GET | `/stocks/{symbol}/analysis` | user | StockAI Score + components + reasons, 18 FQVF checks, market/technical, ML (informational), freshness, engine |
+| GET | `/stocks/{symbol}/analysis` | user | StockLens Score + components + reasons, 18 FQVF checks, market/technical, ML (informational), freshness, engine |
 | GET | `/stocks/{symbol}/fqvf` | user | FQVF only |
 | GET | `/stocks/{symbol}/ranking` | user | score, components, positives, risks |
 | POST | `/stocks/{symbol}/analysis/refresh` | user | on-demand analysis (10–30 s); returns existing result if < 60 min old; 409 if busy |

@@ -70,12 +70,17 @@ from storage.watchlist import (
 
 init_watchlist_table()  # ensure watchlist table exists on every start
 
-from config import CATEGORIES
+from config import CATEGORIES, PRODUCT_NAME, PRODUCT_TAGLINE
+import base64 as _b64
+from pathlib import Path as _Path
+
+_BRAND_ICON = _Path(__file__).resolve().parent / "branding" / "icon-192.png"
+_BRAND_ICON_B64 = _b64.b64encode(_BRAND_ICON.read_bytes()).decode() if _BRAND_ICON.exists() else ""
 
 # ─── PAGE CONFIG ──────────────────────────────────────────────────────────────
 st.set_page_config(
-    page_title="StockAI Pro",
-    page_icon="📈",
+    page_title=f"{PRODUCT_NAME} — {PRODUCT_TAGLINE}",
+    page_icon=str(_BRAND_ICON),
     layout="wide",
     initial_sidebar_state="collapsed",
 )
@@ -154,9 +159,9 @@ company_map: dict = dict(zip(
 ))
 
 # ─── HERO ─────────────────────────────────────────────────────────────────────
-st.markdown("""
+st.markdown(f"""
 <div class="hero">
-  <div class="hero-title">📈 StockAI Pro</div>
+  <div class="hero-title"><img src="data:image/png;base64,{_BRAND_ICON_B64}" alt="" style="height:2.2rem;vertical-align:-0.45rem;margin-right:.5rem;border-radius:.5rem">{PRODUCT_NAME}</div>
   <div class="hero-sub">ML + FinBERT sentiment · NIFTY Large / Mid / Small Cap universe · NSE</div>
   <span class="hero-badge">⚠️ Experimental model &nbsp;·&nbsp; Not financial advice</span>
 </div>

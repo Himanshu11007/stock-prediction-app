@@ -9,6 +9,7 @@ import smtplib
 from email.message import EmailMessage
 from typing import Protocol
 
+from config import PRODUCT_NAME
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -103,11 +104,11 @@ class SmtpOtpDeliveryService:
             )
 
         message = EmailMessage()
-        message["Subject"] = "Your StockAI Pro verification code"
+        message["Subject"] = f"Your {PRODUCT_NAME} verification code"
         message["From"] = self._from_address
         message["To"] = destination
         message.set_content(
-            f"Your StockAI Pro verification code is: {code}\n\n"
+            f"Your {PRODUCT_NAME} verification code is: {code}\n\n"
             "This code expires shortly and can only be used once. If you didn't request this, "
             "you can safely ignore this email."
         )

@@ -1,6 +1,6 @@
 """
 admin_console/client.py — the admin console's only path to data: the
-StockAI Pro REST API, authenticated with an ADMIN user's access token.
+StockLens REST API, authenticated with an ADMIN user's access token.
 
 The console never touches the database directly, so every admin action goes
 through the same authorization (require_admin) and audit logging as any

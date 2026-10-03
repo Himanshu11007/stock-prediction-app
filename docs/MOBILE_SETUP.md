@@ -75,7 +75,7 @@ tapped while signed out opens after sign-in. See the backend's docs/NOTIFICATION
 ## Screens
 
 Home (market regime, announcement, disclaimer), Analyse (Stock Master
-search → analysis), Stock Analysis (`/stock/{symbol}`: StockAI Score,
+search → analysis), Stock Analysis (`/stock/{symbol}`: StockLens Score,
 components, positive factors, risks, 18 FQVF checks, market/technical data,
 informational ML signal, data freshness, engine version, on-demand
 analysis), Top Investment Candidates, Watchlist (links to analysis),

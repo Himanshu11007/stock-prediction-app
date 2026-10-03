@@ -1,12 +1,12 @@
 """
 evaluation/ranking_validation.py — point-in-time validation of the production
-StockAI ranking (docs/RANKING_VALIDATION_V1.md).
+StockLens ranking (docs/RANKING_VALIDATION_V1.md).
 
 For a ranking date D everything is reconstructed from information available
 at D and scored with the UNMODIFIED production code:
   technical metrics  ranking.technical.technical_snapshot(prices up to D)
   FQVF               fqvf.evaluate(point-in-time FQVFInputs)
-  StockAI Score      ranking.service.StockRankingService(weights, rules).rank()
+  StockLens Score      ranking.service.StockRankingService(weights, rules).rank()
 
 Point-in-time rules
   prices        daily bars dated <= D only

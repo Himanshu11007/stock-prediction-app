@@ -29,7 +29,7 @@ def top_investment_candidates(
 ):
     """
     Top Investment Candidates: the highest-ranked eligible stocks from the
-    latest completed analysis-engine run (FQVF + StockAI Score), with
+    latest completed analysis-engine run (FQVF + StockLens Score), with
     positive factors, risks, data freshness and engine version.
 
     Rankings compare stocks on available data; they are not predictions or

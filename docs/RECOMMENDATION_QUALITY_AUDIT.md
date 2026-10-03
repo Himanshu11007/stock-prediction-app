@@ -1,4 +1,6 @@
-# StockAI Pro — Recommendation Quality Audit (Phase 9)
+# StockLens — Recommendation Quality Audit (Phase 9)
+
+> **Naming note (2026-10-03):** the product was renamed from StockAI Pro to **StockLens**; the "StockLens Score" in this document is the same score previously called "StockAI Score". The research, data and conclusions are unchanged.
 
 **Status: AUDIT ONLY.** Nothing in this document changed model weights,
 thresholds, hyperparameters, feature sets, train/test splits, recommendation

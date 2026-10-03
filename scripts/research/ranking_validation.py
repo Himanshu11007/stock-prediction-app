@@ -1,5 +1,5 @@
 """
-scripts/research/ranking_validation.py — validate the production StockAI
+scripts/research/ranking_validation.py — validate the production StockLens
 ranking out of sample (docs/RANKING_VALIDATION_V1.md).
 
 PRE-REGISTERED PROTOCOL (fixed before results were computed)
@@ -8,7 +8,7 @@ PRE-REGISTERED PROTOCOL (fixed before results were computed)
                  only if its forward window ends before 2025-01-01
   FINAL          ranking dates 2025-01-01 .. 2026-09-30; used once
   Population     production-eligible stocks, ranked by the production engine
-  Primary metric mean cross-sectional Spearman rank-IC between StockAI Score
+  Primary metric mean cross-sectional Spearman rank-IC between StockLens Score
                  and 3-month forward return (Newey-West t, lags = 2)
   Selection      production weights (A) are kept unless an alternative beats
                  A on DEV by >= 0.02 mean 3M IC with a Newey-West t >= 2 on

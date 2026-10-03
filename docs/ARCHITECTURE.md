@@ -1,4 +1,4 @@
-# StockAI Pro — Architecture
+# StockLens — Architecture
 
 ```
 Python data/analysis engine ──► FastAPI backend (/api/v1, JWT) ──► .NET MAUI Blazor Hybrid app (Android, iOS)
@@ -21,7 +21,7 @@ scoring logic. Feature flags, the disclaimer and the announcement come from
 | Data ingestion | `fundamentals/provider.py` | Yahoo Finance; values are provider data or NULL with recorded issues |
 | Snapshots | `FundamentalSnapshot`, `MarketSnapshot`, `MarketRegimeSnapshot` | append-only history |
 | FQVF | `fqvf/service.py` | fixed 18 checks (docs/FQVF.md) |
-| Ranking | `ranking/service.py`, `ranking/technical.py`, `ranking/presenter.py` | StockAI Score (docs/RANKING_METHODOLOGY.md); presenter = single API representation |
+| Ranking | `ranking/service.py`, `ranking/technical.py`, `ranking/presenter.py` | StockLens Score (docs/RANKING_METHODOLOGY.md); presenter = single API representation |
 | Engine runs | `engine_runs/service.py`, `EngineRun`, `StockAnalysisResult` | controlled runs, lock, failure isolation (docs/DATA_HEALTH_AND_ENGINE_RUNS.md) |
 | Data health | `data_health/service.py` | data/API health reports for admins |
 | Admin | `admin/service.py`, `admin/audit.py`, `api/routes/admin*.py`, `admin_console/` | every mutation audited in the same transaction |
@@ -39,7 +39,7 @@ scoring logic. Feature flags, the disclaimer and the announcement come from
 5. Technical/risk metrics (+ informational ML signal) → `MarketSnapshot`
    (computed in worker threads, written sequentially).
 6. Industry PE medians from real peer snapshots.
-7. FQVF + StockAI Score → `StockAnalysisResult`; `Company.data_status` updated.
+7. FQVF + StockLens Score → `StockAnalysisResult`; `Company.data_status` updated.
 8. `EngineRun` finalised with counts and errors.
 
 ## Databases

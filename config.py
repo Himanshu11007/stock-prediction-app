@@ -84,6 +84,17 @@ CORS_ALLOWED_ORIGINS = [
         "CORS_ALLOWED_ORIGINS", "" if IS_PRODUCTION else "*").split(",") if o.strip()
 ]
 
+# ── Product identity ─────────────────────────────────────────────────────────
+# The one place the product name is defined for the backend, API metadata,
+# admin console, web app and emails. Technical identifiers that predate the
+# StockLens name (API field stockai_score, env STOCKAI_API_URL, the Android
+# notification channel id, storage paths) are intentionally unchanged.
+PRODUCT_NAME = "StockLens"
+PRODUCT_TAGLINE = "Stock Analysis & Investment Intelligence"
+PRODUCT_DESCRIPTION = ("StockLens provides structured stock analysis, fundamental quality evaluation, valuation "
+                       "insights, market intelligence and ranked investment candidates. It provides analytical "
+                       "information for research and decision support and does not guarantee investment returns.")
+
 # ── Product analysis engine (FQVF + ranking) ─────────────────────────────────
 FQVF_ENGINE_VERSION    = "fqvf-v1.0"
 RANKING_ENGINE_VERSION = "ranking-v1.0"
@@ -157,5 +168,5 @@ OTP_SMTP_HOST          = os.environ.get("OTP_SMTP_HOST")  # e.g. "smtp.sendgrid.
 OTP_SMTP_PORT          = int(os.environ.get("OTP_SMTP_PORT", "587"))
 OTP_SMTP_USERNAME      = os.environ.get("OTP_SMTP_USERNAME", "")
 OTP_SMTP_PASSWORD      = os.environ.get("OTP_SMTP_PASSWORD", "")  # SECRET - env var / deployment secret only, never commit
-OTP_SMTP_FROM_ADDRESS  = os.environ.get("OTP_SMTP_FROM_ADDRESS", "no-reply@stockaipro.app")
+OTP_SMTP_FROM_ADDRESS  = os.environ.get("OTP_SMTP_FROM_ADDRESS", "no-reply@stocklens.app")
 OTP_SMTP_USE_TLS       = os.environ.get("OTP_SMTP_USE_TLS", "true").lower() == "true"

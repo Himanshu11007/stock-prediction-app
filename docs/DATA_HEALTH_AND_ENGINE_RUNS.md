@@ -2,7 +2,7 @@
 
 ## Engine runs (`engine_runs/service.py`)
 
-An **engine run** fetches data and computes FQVF + StockAI Score for a set of
+An **engine run** fetches data and computes FQVF + StockLens Score for a set of
 stocks. Two kinds:
 
 | Kind | Started by | Scope | Concurrency |
@@ -16,7 +16,7 @@ Every run records `run_id`, `kind`, `status` (`RUNNING`, `COMPLETED`,
 (weights, rules, options), and counts:
 
 - `total` / `processed` — stocks in scope;
-- `succeeded` — a StockAI Score was produced;
+- `succeeded` — a StockLens Score was produced;
 - `skipped` — processed but not scorable (missing data; never fabricated);
 - `failed` — a processing stage raised for that stock;
 - `errors` — list of `{symbol, stage, error}`.

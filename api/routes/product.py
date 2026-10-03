@@ -13,6 +13,7 @@ from sqlmodel import Session
 import engine_runs.service as runs
 import masters.service as masters
 from api.schemas import success_envelope
+from config import PRODUCT_NAME
 from auth.dependencies import get_current_user
 from data_health.service import engine_versions
 from db.session import get_session
@@ -28,6 +29,7 @@ def app_config(session: Session = Depends(get_session)):
     """Backend-controlled client configuration: feature flags, disclaimer,
     announcement, Top Picks size and engine versions."""
     return success_envelope({
+        "product_name": PRODUCT_NAME,
         "features": masters.get_config(session, "app.features"),
         "disclaimer": masters.get_config(session, "app.disclaimer"),
         "announcement": masters.get_config(session, "app.announcement"),
@@ -61,6 +63,6 @@ def fqvf_reference():
 
 @router.get("/ranking/reference")
 def ranking_reference(session: Session = Depends(get_session)):
-    """StockAI Score components, current weights and eligibility rules."""
+    """StockLens Score components, current weights and eligibility rules."""
     weights, rules = masters.ranking_config(session)
     return success_envelope(presenter.ranking_reference(weights, rules), message="Ranking reference")

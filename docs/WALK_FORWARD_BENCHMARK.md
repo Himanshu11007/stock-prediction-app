@@ -1,5 +1,7 @@
 # Walk-Forward Benchmark (Phase 10)
 
+> **Naming note (2026-10-03):** the product was renamed from StockAI Pro to **StockLens**; the "StockLens Score" in this document is the same score previously called "StockAI Score". The research, data and conclusions are unchanged.
+
 Status: evaluation infrastructure only. No model, threshold, feature, target,
 scoring, Top Picks, mobile or authentication behaviour was changed to produce
 anything in this document. This document gives no overall score, no
@@ -21,7 +23,7 @@ and [PRODUCTION_TEMPORAL_INTEGRITY.md](PRODUCTION_TEMPORAL_INTEGRITY.md) (Phase 
 
 Make this statement defensible:
 
-> For a prediction made at historical time T, StockAI used only information
+> For a prediction made at historical time T, StockLens used only information
 > available at T, generated the same production prediction it would have
 > generated at that time, and we can subsequently measure its 1D/3D/5D/10D
 > outcome.

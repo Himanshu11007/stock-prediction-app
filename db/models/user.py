@@ -74,7 +74,7 @@ class RefreshToken(SQLModel, table=True):
 
 
 class ExternalIdentity(SQLModel, table=True):
-    """Links a StockAI user to an external identity provider (Google, Apple).
+    """Links a StockLens user to an external identity provider (Google, Apple).
 
     provider_subject is the provider's own stable, durable user identifier
     (Google's `sub` claim / Apple's `sub` claim) - never the email, which can

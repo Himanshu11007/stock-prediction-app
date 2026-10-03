@@ -1,5 +1,5 @@
 """
-utils/explainability.py — Explainable AI engine for StockAI Pro.
+utils/explainability.py — Explainable AI engine for StockLens.
 
 Converts raw model/scoring values into structured, human-readable
 explanations for every recommendation. Purely presentational — this

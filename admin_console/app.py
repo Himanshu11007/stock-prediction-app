@@ -1,5 +1,5 @@
 """
-admin_console/app.py — StockAI Pro Admin / Master Control console (Streamlit).
+admin_console/app.py — StockLens Admin / Master Control console (Streamlit).
 
 Run:   streamlit run admin_console/app.py
 API:   STOCKAI_API_URL (default http://127.0.0.1:8000/api/v1)
@@ -22,7 +22,11 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from admin_console.client import DEFAULT_API_URL, AdminApiClient, ApiError  # noqa: E402
 
-st.set_page_config(page_title="StockAI Pro - Admin", layout="wide")
+from config import PRODUCT_NAME  # noqa: E402
+
+BRAND_ICON = Path(__file__).resolve().parents[1] / "branding" / "icon-192.png"
+st.set_page_config(page_title=f"{PRODUCT_NAME} - Admin", page_icon=str(BRAND_ICON), layout="wide")
+st.logo(str(BRAND_ICON), size="large")
 
 PAGES = [
     "Admin Dashboard", "Stock Master", "Sector Master", "Industry Master", "Fundamental Data",
@@ -61,7 +65,7 @@ def table(rows, columns=None, empty="No records."):
 # ── authentication ───────────────────────────────────────────────────────────
 
 def login_page():
-    st.title("StockAI Pro - Admin Console")
+    st.title(f"{PRODUCT_NAME} - Admin Console")
     st.caption("Sign in with an account that has the ADMIN role.")
     with st.form("login"):
         api_url = st.text_input("API base URL", value=st.session_state.get("api_url", DEFAULT_API_URL))

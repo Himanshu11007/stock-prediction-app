@@ -3,7 +3,7 @@
 Two-step flow: POST /auth/otp/request generates+delivers a code (always a
 generic response, regardless of whether the destination has an account, so
 this can't be used to enumerate registered users); POST /auth/otp/verify
-checks it and issues a token pair, creating a new StockAI account on first
+checks it and issues a token pair, creating a new StockLens account on first
 use of a destination exactly like Google/Apple do.
 """
 from __future__ import annotations

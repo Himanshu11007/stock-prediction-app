@@ -28,7 +28,7 @@ NEWS_TIMESTAMP_STATUS = {
     "status": "UNAVAILABLE",
     "reason": ("The news source (Google News RSS via news/api.py) is used for live headlines only; "
                "publication timestamps are not captured, so historical news cannot be time-aligned. "
-               "News is not an input to FQVF or the StockAI Score."),
+               "News is not an input to FQVF or the StockLens Score."),
 }
 
 

@@ -24,7 +24,7 @@ router = APIRouter(dependencies=[Depends(get_current_user)])
 @router.post("/analyze-stock")
 def analyze_stock(payload: AnalyzeStockRequest):
     """
-    Run the full StockAI Pro analysis pipeline for one symbol.
+    Run the full StockLens analysis pipeline for one symbol.
 
     Reuses the exact same step order as app.py's "Analyse Stock" tab:
     load data → engineer features → train model → predict → fetch news →

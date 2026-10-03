@@ -21,7 +21,7 @@ DEFAULT_SETTINGS: dict[str, Any] = {
     "enabled": True,                         # global emergency switch (False = nothing is created or pushed)
     "push_enabled": True,                    # False = Notification Center only, no push
     "event_types": {t: True for t in EVENT_TYPES},
-    "score_change_threshold": 10.0,          # StockAI Score points (0-100 scale)
+    "score_change_threshold": 10.0,          # StockLens Score points (0-100 scale)
     "rank_change_threshold": 15,             # places, watchlist alerts
     "fqvf_change_min_checks": 2,             # change in FQVF checks passed
     "regime_min_score_change": 0.3,          # regime score is -1..+1
@@ -38,23 +38,23 @@ DEFAULT_SETTINGS: dict[str, Any] = {
 
 DEFAULT_TEMPLATES: dict[str, dict[str, str]] = {
     "NEW_TOP_CANDIDATE": {
-        "title": "New StockAI Top Candidate",
+        "title": "New StockLens Top Candidate",
         "body": "{name} has entered the Top Investment Candidates at rank {rank}. "
-                "StockAI Score: {score}/100. Tap to view analysis."},
+                "StockLens Score: {score}/100. Tap to view analysis."},
     "NEW_TOP_CANDIDATE_MULTI": {
-        "title": "New StockAI Top Candidates",
+        "title": "New StockLens Top Candidates",
         "body": "{count} stocks entered the Top Investment Candidates: {list}. Tap to view."},
     "TOP_CANDIDATE_REMOVED": {
-        "title": "StockAI Candidate Update",
+        "title": "StockLens Candidate Update",
         "body": "{name} is no longer in the Top Investment Candidates. Reason: {reason}"},
     "TOP_CANDIDATE_REMOVED_MULTI": {
-        "title": "StockAI Candidate Update",
+        "title": "StockLens Candidate Update",
         "body": "{count} stocks left the Top Investment Candidates: {list}. Tap to review."},
     "SCORE_CHANGE": {
-        "title": "StockAI Score Update",
-        "body": "{name}'s StockAI Score changed from {old_score} to {new_score} ({delta}). Tap to review."},
+        "title": "StockLens Score Update",
+        "body": "{name}'s StockLens Score changed from {old_score} to {new_score} ({delta}). Tap to review."},
     "SCORE_CHANGE_MULTI": {
-        "title": "StockAI Score Updates",
+        "title": "StockLens Score Updates",
         "body": "{count} candidates changed materially: {list}. Tap to review."},
     "FQVF_CHANGE": {
         "title": "FQVF Update",
@@ -66,13 +66,13 @@ DEFAULT_TEMPLATES: dict[str, dict[str, str]] = {
         "title": "Watchlist: {name}",
         "body": "{changes}. Tap to view analysis."},
     "DAILY_SUMMARY": {
-        "title": "Today's StockAI Top Candidates",
+        "title": "Today's StockLens Top Candidates",
         "body": "Analysis of {date}: {list}. Tap to view today's analysis."},
     "MARKET_REGIME_CHANGE": {
         "title": "Market Regime Update",
         "body": "The NIFTY 50 regime changed from {old_regime} to {new_regime}. Tap for details."},
     "TEST": {
-        "title": "StockAI Pro test notification",
+        "title": "StockLens test notification",
         "body": "Push notifications are working on this device."},
 }
 

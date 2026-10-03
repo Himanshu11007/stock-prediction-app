@@ -27,23 +27,23 @@ def _now() -> datetime:
 
 # key -> (default, description). Only these keys can be set.
 CONFIG_KEYS: dict[str, tuple[Any, str]] = {
-    "ranking.weights": (DEFAULT_WEIGHTS, "StockAI Score component weights (docs/RANKING_METHODOLOGY.md)"),
+    "ranking.weights": (DEFAULT_WEIGHTS, "StockLens Score component weights (docs/RANKING_METHODOLOGY.md)"),
     "ranking.rules": (DEFAULT_RULES, "Top Picks eligibility rules"),
     "top_picks.limit": (20, "Maximum number of Top Investment Candidates returned to clients"),
     "app.features": ({"top_picks": True, "stock_analysis": True, "watchlist": True,
                       "performance": True, "intelligence": True, "ml_signal_display": True,
                       "notifications": True, "feedback": True},
                      "Feature availability flags read by the mobile app"),
-    "app.disclaimer": ("StockAI Pro provides research and analysis, not investment advice. "
+    "app.disclaimer": ("StockLens provides research and analysis, not investment advice. "
                        "Scores rank stocks on available data; they are not predictions or "
                        "guarantees of returns. Past performance does not indicate future results.",
                        "Disclaimer shown by clients"),
     "app.announcement": (None, "Optional message shown on the mobile home screen (null = none)"),
     "app.onboarding": ([
-        {"title": "Welcome to StockAI Pro",
-         "body": "StockAI Pro analyses NSE stocks with a transparent, rules-based method so you can see "
+        {"title": "Welcome to StockLens",
+         "body": "StockLens analyses NSE stocks with a transparent, rules-based method so you can see "
                  "exactly why each stock is rated the way it is."},
-        {"title": "StockAI Score",
+        {"title": "StockLens Score",
          "body": "A 0-100 score that ranks stocks against each other on quality, valuation, financial "
                  "health, trend, momentum, risk and market regime. It is a relative ranking, not a price "
                  "target or a return forecast."},
@@ -58,12 +58,12 @@ CONFIG_KEYS: dict[str, tuple[Any, str]] = {
                  "or a daily summary. You choose which ones, and quiet hours are respected."},
         {"title": "Data and limitations",
          "body": "Market data can be delayed and fundamentals are updated periodically; every screen "
-                 "shows when its data was last updated. StockAI Pro provides analysis, not investment "
+                 "shows when its data was last updated. StockLens provides analysis, not investment "
                  "advice, and no analysis guarantees returns."},
     ], "First-use onboarding screens shown by the mobile app (list of {title, body})"),
     "app.legal": ({"privacy_url": None, "terms_url": None, "support_email": None,
                    "privacy_summary": (
-                       "StockAI Pro stores your account details (email or phone, sign-in methods), your "
+                       "StockLens stores your account details (email or phone, sign-in methods), your "
                        "watchlist, notification preferences, registered devices with their push tokens, "
                        "your in-app notifications and any reports you submit. Push tokens are used only to "
                        "deliver notifications you enabled and are removed when you sign out of a device. "

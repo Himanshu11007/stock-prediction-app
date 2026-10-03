@@ -1,5 +1,5 @@
 """
-utils/logger.py — Centralized logging system for StockAI Pro.
+utils/logger.py — Centralized logging system for StockLens.
 
 Features
 ────────

@@ -29,7 +29,7 @@ def get_my_watchlist(
 
 @router.get("/overview")
 def watchlist_overview(current_user: User = Depends(get_current_user), session: Session = Depends(get_session)):
-    """Watched stocks with current StockAI Score, rank, FQVF, last price,
+    """Watched stocks with current StockLens Score, rank, FQVF, last price,
     score change since the previous full run, freshness and alert settings."""
     items = watchlist_service.overview(session, current_user)
     return success_envelope({"items": items},

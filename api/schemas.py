@@ -1,5 +1,5 @@
 """
-api/schemas.py — Pydantic request/response models for the StockAI Pro API.
+api/schemas.py — Pydantic request/response models for the StockLens API.
 
 These define the API's contract. No business logic lives here — only
 type-validated data shapes that routes and services pass between each other
@@ -28,7 +28,7 @@ class ErrorResponse(BaseModel):
 
 class HealthResponse(BaseModel):
     status:  str = "ok"
-    app:     str = "StockAI Pro API"
+    app:     str = "StockLens API"  # config.PRODUCT_NAME + " API"
     version: str = "0.1.0"
 
 

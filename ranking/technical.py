@@ -100,8 +100,8 @@ def technical_snapshot(df: pd.DataFrame) -> dict[str, Any]:
 
 ML_DISCLAIMER = (
     "Informational only. The direction classifier showed no measurable "
-    "out-of-sample discrimination in StockAI's walk-forward research "
-    "(docs/ML_EXPERIMENT_REGISTRY.md); it carries no weight in the StockAI "
+    "out-of-sample discrimination in StockLens's walk-forward research "
+    "(docs/ML_EXPERIMENT_REGISTRY.md); it carries no weight in the StockLens "
     "Score unless an administrator assigns one."
 )
 
