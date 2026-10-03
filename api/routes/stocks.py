@@ -56,8 +56,10 @@ def _result_or_404(session: Session, symbol: str):
     if result is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"{symbol.upper()} has not been analysed yet. Request POST "
-                   f"/api/v1/stocks/{symbol.upper()}/analysis/refresh or wait for the next engine run.")
+            # User-facing text (shown by clients); the refresh endpoint is
+            # POST /api/v1/stocks/{symbol}/analysis/refresh.
+            detail=f"{symbol.upper()} has not been analysed yet. Run an analysis now or wait "
+                   f"for the next scheduled analysis run.")
     return result
 
 

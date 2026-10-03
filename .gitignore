@@ -49,3 +49,4 @@ scripts/research/.cache/
 
 # Local database backups
 storage/*.bak*
+storage/e2e_app.db
