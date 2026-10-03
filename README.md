@@ -57,6 +57,7 @@ uvicorn api.main:app --host 0.0.0.0 --port 8000        # API: http://127.0.0.1:8
 | Notifications, push devices, preferences, reports | [docs/NOTIFICATIONS.md](docs/NOTIFICATIONS.md) |
 | Scheduled jobs (daily ranking, summaries, outcomes) | [docs/SCHEDULING.md](docs/SCHEDULING.md) |
 | Brand, icon assets, retained technical identifiers | [docs/BRANDING.md](docs/BRANDING.md) |
+| Cloud deployment (Render, step by step) | [docs/DEPLOY_RENDER.md](docs/DEPLOY_RENDER.md) |
 | Admin / master controls | [docs/ADMIN_CONSOLE.md](docs/ADMIN_CONSOLE.md) |
 | API reference (mobile + admin endpoints) | [docs/API.md](docs/API.md) |
 | Data health and engine runs | [docs/DATA_HEALTH_AND_ENGINE_RUNS.md](docs/DATA_HEALTH_AND_ENGINE_RUNS.md) |

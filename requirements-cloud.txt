@@ -1,0 +1,28 @@
+# Production (cloud) dependencies for the StockLens API and scheduled jobs.
+# requirements.txt additionally contains the heavy optional ML stack
+# (torch / transformers: FinBERT news sentiment, used only by the legacy
+# Streamlit app with a TextBlob fallback) and the test tools. The API, the
+# ranking engine (FQVF + StockLens Score) and the jobs do not need them.
+fastapi
+uvicorn[standard]
+pydantic
+email-validator
+sqlmodel
+alembic
+psycopg2-binary
+bcrypt
+pyjwt
+cryptography
+python-multipart
+httpx>=0.27
+h2>=4.1,<5
+requests
+pandas
+numpy
+yfinance
+scikit-learn
+xgboost
+textblob
+feedparser
+plotly
+streamlit

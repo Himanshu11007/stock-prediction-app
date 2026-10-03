@@ -5,6 +5,8 @@ The console's HTTP layer (admin_console.client.requests) is routed into the
 real FastAPI app (api.main.app, in-memory database), so these tests exercise
 the actual login form, authorization and every admin page without a server.
 """
+from pathlib import Path
+
 import pytest
 import requests as real_requests
 from fastapi.testclient import TestClient
@@ -57,7 +59,8 @@ def backend(monkeypatch):
 
 
 def _login(email, password):
-    at = AppTest.from_file("admin_console/app.py", default_timeout=60)
+    # Absolute path: newer Streamlit resolves relative paths against the test file.
+    at = AppTest.from_file(str(Path(__file__).resolve().parents[1] / "admin_console" / "app.py"), default_timeout=60)
     at.run()
     at.text_input[0].set_value(BASE)
     at.text_input[1].set_value(email)

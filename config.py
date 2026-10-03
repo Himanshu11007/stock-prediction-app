@@ -66,6 +66,10 @@ W_MOMENTUM  = 0.10
 DATABASE_URL = os.environ.get(
     "DATABASE_URL", f"sqlite:///{(STORAGE_DIR / 'app.db').as_posix()}"
 )
+# Hosting providers (Render, Heroku) hand out "postgres://" URLs; SQLAlchemy
+# requires "postgresql://".
+if DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = "postgresql://" + DATABASE_URL[len("postgres://"):]
 
 # ── Logging ────────────────────────────────────────────────────────────────────
 LOG_DIR          = STORAGE_DIR / "logs"

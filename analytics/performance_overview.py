@@ -103,9 +103,32 @@ def _signal_block(rows: list[sqlite3.Row], title: str, methodology: str, caveat:
     }
 
 
-def _legacy() -> tuple[dict, dict]:
-    rows: list[sqlite3.Row] = []
+def _legacy_from_db(session: Session) -> list[dict]:
+    """Legacy validations from the main database (migrated from tracker.db by
+    scripts/migrate_legacy_tracker.py) - used where the local tracker.db file
+    does not exist, e.g. a cloud deployment."""
+    from db.models.tracker import Recommendation, RecommendationValidation
+    rows = session.exec(select(Recommendation, RecommendationValidation).where(
+        RecommendationValidation.recommendation_id == Recommendation.id)).all()
+    out = []
+    for rec, val in rows:
+        days = None
+        if val.validation_date and rec.saved_date:
+            try:
+                from datetime import date as _d
+                days = (_d.fromisoformat(val.validation_date[:10]) - _d.fromisoformat(rec.saved_date[:10])).days
+            except ValueError:
+                days = None
+        out.append({"saved_date": rec.saved_date, "signal": rec.signal, "return_pct": val.return_pct,
+                    "success": val.success, "engine_version": rec.engine_version, "days": days})
+    return out
+
+
+def _legacy(session: Optional[Session] = None) -> tuple[dict, dict]:
+    rows: list = []
     try:
+        if not TRACKER_DB.exists():          # never create an empty tracker.db
+            raise sqlite3.OperationalError("tracker.db not present")
         con = sqlite3.connect(str(TRACKER_DB))
         con.row_factory = sqlite3.Row
         if con.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='recommendation_validation'").fetchone():
@@ -115,6 +138,8 @@ def _legacy() -> tuple[dict, dict]:
         con.close()
     except sqlite3.Error:
         rows = []
+    if not rows and session is not None:
+        rows = _legacy_from_db(session)
     pre = [r for r in rows if r["engine_version"] in PRE_TEMPORAL_FIX_ENGINE_VERSIONS]
     post = [r for r in rows if r["engine_version"] not in PRE_TEMPORAL_FIX_ENGINE_VERSIONS]
     legacy = _signal_block(
@@ -131,7 +156,7 @@ def _legacy() -> tuple[dict, dict]:
 
 
 def overview(session: Session) -> dict[str, Any]:
-    legacy, post_fix = _legacy()
+    legacy, post_fix = _legacy(session)
     return {
         "sections": {
             "ranking_v1_prospective": _prospective(session),
