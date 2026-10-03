@@ -18,7 +18,9 @@ from api.schemas_admin import (
     AdminDashboardResponse,
     AdminRecommendationResponse,
     AdminStockResponse,
+    AdminStockCreateRequest,
     AdminStockUpdateRequest,
+    RoleResponse,
     AdminUserResponse,
     AdminWatchlistItemResponse,
     AssignRoleRequest,
@@ -156,8 +158,24 @@ def update_stock(
     company = _get_stock_or_404(session, symbol)
     return admin_service.update_stock_flags(
         session, current_admin, company,
-        active=payload.active, analysis_enabled=payload.analysis_enabled,
+        active=payload.active, analysis_enabled=payload.analysis_enabled, tradable=payload.tradable,
+        name=payload.name, sector=payload.sector, industry=payload.industry,
     )
+
+
+@router.post("/stocks", response_model=AdminStockResponse, status_code=status.HTTP_201_CREATED)
+def create_stock(
+    payload: AdminStockCreateRequest,
+    current_admin: User = Depends(require_admin),
+    session: Session = Depends(get_session),
+):
+    return admin_service.create_stock(session, current_admin, symbol=payload.symbol, name=payload.name,
+                                      exchange=payload.exchange, sector=payload.sector, industry=payload.industry)
+
+
+@router.get("/roles", response_model=list[RoleResponse])
+def list_roles(session: Session = Depends(get_session)):
+    return admin_service.list_roles(session)
 
 
 # ── Recommendations (read-only) ─────────────────────────────────────────────

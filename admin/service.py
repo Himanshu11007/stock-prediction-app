@@ -190,14 +190,24 @@ def update_stock_flags(
     company: Company,
     active: Optional[bool] = None,
     analysis_enabled: Optional[bool] = None,
+    tradable: Optional[bool] = None,
+    name: Optional[str] = None,
+    sector: Optional[str] = None,
+    industry: Optional[str] = None,
 ) -> Company:
     changes = {}
-    if active is not None and active != company.active:
-        company.active = active
-        changes["active"] = active
-    if analysis_enabled is not None and analysis_enabled != company.analysis_enabled:
-        company.analysis_enabled = analysis_enabled
-        changes["analysis_enabled"] = analysis_enabled
+    for field, value in (("active", active), ("analysis_enabled", analysis_enabled), ("tradable", tradable)):
+        if value is not None and value != getattr(company, field):
+            setattr(company, field, value)
+            changes[field] = value
+    for field, value in (("name", name), ("sector", sector), ("industry", industry)):
+        if value is not None:
+            value = value.strip() or None
+            if field == "name" and not value:
+                raise ValueError("name must not be empty")
+            if value != getattr(company, field):
+                changes[field] = [getattr(company, field), value]
+                setattr(company, field, value)
 
     if changes:
         try:
@@ -241,3 +251,35 @@ def list_watchlist(session: Session, limit: int = 50, offset: int = 0) -> list[W
 def list_audit_logs(session: Session, limit: int = 50, offset: int = 0) -> list[AdminAuditLog]:
     stmt = select(AdminAuditLog).order_by(AdminAuditLog.id.desc()).offset(offset).limit(limit)
     return list(session.exec(stmt).all())
+
+
+SYMBOL_PATTERN = r"^[A-Z0-9&\-]{1,20}\.(NS|BO)$"
+
+
+def create_stock(session: Session, admin_user: User, *, symbol: str, name: str, exchange: str = "NSE",
+                 sector: Optional[str] = None, industry: Optional[str] = None) -> Company:
+    import re
+
+    symbol = symbol.strip().upper()
+    if not re.match(SYMBOL_PATTERN, symbol):
+        raise ValueError("symbol must look like RELIANCE.NS or RELIANCE.BO")
+    if not name or not name.strip():
+        raise ValueError("name must not be empty")
+    if session.get(Company, symbol) is not None:
+        raise ValueError(f"{symbol} already exists in the Stock Master")
+    company = Company(symbol=symbol, name=name.strip(), exchange=exchange.strip().upper() or "NSE",
+                      sector=(sector or "").strip() or None, industry=(industry or "").strip() or None)
+    try:
+        session.add(company)
+        log_action(session, admin_user, action="create_stock", entity="company", entity_id=symbol,
+                   extra_data={"name": company.name, "exchange": company.exchange})
+        session.commit()
+    except Exception:
+        session.rollback()
+        raise
+    session.refresh(company)
+    return company
+
+
+def list_roles(session: Session) -> list[Role]:
+    return list(session.exec(select(Role).order_by(Role.name)).all())

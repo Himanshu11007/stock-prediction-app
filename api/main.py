@@ -28,6 +28,7 @@ Routes never need to construct HTTPException themselves for these cases.
 from __future__ import annotations
 
 import time
+import uuid
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -35,13 +36,13 @@ from fastapi.responses import JSONResponse
 
 from api.routes import (
     analysis, top_picks, tracker, performance, logs, intelligence, auth, auth_sso, auth_otp,
-    auth_devices, admin, watchlist, stocks,
+    auth_devices, admin, admin_masters, watchlist, stocks, product,
 )
 from api.schemas import HealthResponse
 
 from storage.recommendation_validation import migrate_schema
 from utils.logger import get_logger, configure_logging
-from config import ENABLE_DEBUG_LOGS
+from config import ENABLE_DEBUG_LOGS, IS_PRODUCTION, CORS_ALLOWED_ORIGINS
 
 # ── Logging setup — reuses the existing centralized logger, same config ──────
 configure_logging(debug=ENABLE_DEBUG_LOGS)
@@ -65,14 +66,29 @@ app = FastAPI(
     version="0.1.0",
 )
 
-# ── CORS — open for MVP; restrict allow_origins before production ────────────
-# allow_credentials must be False here: browsers reject allow_origins=["*"]
-# combined with allow_credentials=True, which silently breaks any credentialed
-# cross-origin request. This API doesn't use cookie-based auth, so no
-# credentialed requests are expected.
+def _check_production_settings() -> None:
+    """Refuse to start a production deployment with insecure defaults."""
+    import os
+    problems = []
+    if not os.environ.get("JWT_SECRET_KEY"):
+        problems.append("JWT_SECRET_KEY is not set (tokens would be signed with an ephemeral key)")
+    if not CORS_ALLOWED_ORIGINS or "*" in CORS_ALLOWED_ORIGINS:
+        problems.append("CORS_ALLOWED_ORIGINS must list explicit origins (not '*')")
+    if not os.environ.get("DATABASE_URL"):
+        problems.append("DATABASE_URL is not set (would use the local SQLite dev database)")
+    if problems:
+        raise RuntimeError("Insecure production configuration: " + "; ".join(problems))
+
+
+if IS_PRODUCTION:
+    _check_production_settings()
+
+# ── CORS — origins from config (CORS_ALLOWED_ORIGINS) ────────────────────────
+# allow_credentials must be False: browsers reject allow_origins=["*"] with
+# credentials, and this API uses bearer tokens, not cookies.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=CORS_ALLOWED_ORIGINS,
     allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -132,10 +148,14 @@ async def key_error_handler(request: Request, exc: KeyError):
 
 @app.exception_handler(Exception)
 async def unhandled_exception_handler(request: Request, exc: Exception):
-    logger.error("Unhandled exception on %s %s: %s", request.method, request.url.path, exc)
+    # The client gets a reference id only; the exception text and traceback
+    # stay in the server log (they can contain paths, SQL or data values).
+    ref = uuid.uuid4().hex[:12]
+    logger.exception("Unhandled exception [ref=%s] on %s %s", ref, request.method, request.url.path)
     return JSONResponse(
         status_code=500,
-        content={"success": False, "error": "Internal server error", "details": str(exc)},
+        content={"success": False, "error": "Internal server error",
+                 "details": f"Unexpected server error (reference {ref})"},
     )
 
 
@@ -145,6 +165,9 @@ app.include_router(auth_sso.router,    prefix=API_PREFIX, tags=["Auth"])
 app.include_router(auth_otp.router,    prefix=API_PREFIX, tags=["Auth"])
 app.include_router(auth_devices.router, prefix=API_PREFIX, tags=["Auth"])
 app.include_router(admin.router,       prefix=API_PREFIX, tags=["Admin"])
+app.include_router(admin_masters.router, prefix=API_PREFIX, tags=["Admin"])
+app.include_router(product.public_router, prefix=API_PREFIX, tags=["App"])
+app.include_router(product.router,     prefix=API_PREFIX, tags=["App"])
 app.include_router(watchlist.router,   prefix=API_PREFIX, tags=["Watchlist"])
 app.include_router(stocks.router,      prefix=API_PREFIX, tags=["Stocks"])
 app.include_router(analysis.router,    prefix=API_PREFIX, tags=["Analysis"])

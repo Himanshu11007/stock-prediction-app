@@ -29,6 +29,13 @@ class Company(SQLModel, table=True):
     exchange: str = Field(default="NSE")
     active: bool = Field(default=True)
     analysis_enabled: bool = Field(default=True)
+    # Admin-controlled: False for suspended/delisted/non-tradable symbols.
+    tradable: bool = Field(default=True)
+    # Data availability from the latest engine run: OK / PARTIAL / STALE /
+    # UNAVAILABLE / ERROR (NULL = never checked), with a human-readable reason.
+    data_status: Optional[str] = Field(default=None)
+    data_status_reason: Optional[str] = Field(default=None)
+    data_checked_at: Optional[datetime] = Field(default=None)
     created_at: datetime = Field(default_factory=utcnow)
     updated_at: datetime = Field(default_factory=utcnow)
 

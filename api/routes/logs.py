@@ -1,14 +1,18 @@
 """
-api/routes/logs.py — Application log viewing and clearing.
+api/routes/logs.py — Application log viewing and clearing (ADMIN only).
+
+Logs can contain symbols, user ids and request paths, and clearing them
+destroys audit evidence, so both routes require the ADMIN role.
 """
 from __future__ import annotations
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 
 from api import services
 from api.schemas import success_envelope
+from auth.dependencies import require_admin
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(require_admin)])
 
 
 @router.get("/logs/latest")

@@ -6,13 +6,57 @@ Picks action, not an admin-only operation.
 """
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
+from sqlmodel import Session, select
 
+import engine_runs.service as runs
+import masters.service as masters
 from api import services
 from api.schemas import StartScanRequest, success_envelope
 from auth.dependencies import get_current_user
+from db.models.market import StockAnalysisResult
+from db.models.stock import Company
+from db.session import get_session
+from ranking import presenter
 
 router = APIRouter(dependencies=[Depends(get_current_user)])
+
+
+@router.get("/top-picks")
+def top_investment_candidates(
+    limit: int | None = Query(default=None, ge=1, le=100), session: Session = Depends(get_session)
+):
+    """
+    Top Investment Candidates: the highest-ranked eligible stocks from the
+    latest completed analysis-engine run (FQVF + StockAI Score), with
+    positive factors, risks, data freshness and engine version.
+
+    Rankings compare stocks on available data; they are not predictions or
+    guarantees of returns. Returns an empty list (not an error) when no run
+    has completed yet.
+    """
+    cap = masters.get_config(session, "top_picks.limit")
+    limit = min(limit or cap, cap)
+    run = runs.latest_completed_run(session)
+    data = {
+        "items": [], "total_eligible": 0, "limit": limit, "run": None,
+        "market_regime": presenter.regime_payload(runs.latest_market_regime(session)),
+        "disclaimer": masters.get_config(session, "app.disclaimer"),
+    }
+    if run is None:
+        return success_envelope(data, message="No completed analysis run yet")
+    rows = session.exec(
+        select(StockAnalysisResult, Company)
+        .join(Company, Company.symbol == StockAnalysisResult.symbol)
+        .where(StockAnalysisResult.run_id == run.run_id, StockAnalysisResult.eligible == True,  # noqa: E712
+               Company.active == True)  # noqa: E712
+        .order_by(StockAnalysisResult.rank)).all()
+    data["total_eligible"] = len(rows)
+    data["items"] = [presenter.candidate_payload(r, c) for r, c in rows[:limit]]
+    data["run"] = {"run_id": run.run_id, "status": run.status, "finished_at": presenter._iso(run.finished_at),
+                   "stocks_analysed": run.processed, "engine_version": run.engine_version,
+                   "fqvf_version": run.fqvf_version}
+    return success_envelope(data, message=f"{len(data['items'])} candidate(s)")
 
 
 @router.post("/top-picks/start")

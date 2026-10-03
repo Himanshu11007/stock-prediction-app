@@ -70,6 +70,32 @@ DATABASE_URL = os.environ.get(
 # ── Logging ────────────────────────────────────────────────────────────────────
 LOG_DIR          = STORAGE_DIR / "logs"
 LOG_FILE         = LOG_DIR / "app.log"
+# ── Deployment environment ───────────────────────────────────────────────────
+# "development" (default) or "production". Production refuses to start with
+# insecure defaults (see api/main.py:_check_production_settings).
+APP_ENV = os.environ.get("APP_ENV", "development").strip().lower()
+IS_PRODUCTION = APP_ENV == "production"
+
+# Comma-separated list of allowed browser origins. The mobile app is not a
+# browser and is unaffected by CORS; this only matters for web clients.
+# Development default "*"; production must list explicit origins.
+CORS_ALLOWED_ORIGINS = [
+    o.strip() for o in os.environ.get(
+        "CORS_ALLOWED_ORIGINS", "" if IS_PRODUCTION else "*").split(",") if o.strip()
+]
+
+# ── Product analysis engine (FQVF + ranking) ─────────────────────────────────
+FQVF_ENGINE_VERSION    = "fqvf-v1.0"
+RANKING_ENGINE_VERSION = "ranking-v1.0"
+# Fundamentals older than this are re-fetched by an engine run.
+FUNDAMENTALS_TTL_HOURS = int(os.environ.get("FUNDAMENTALS_TTL_HOURS", "24"))
+# A market-data snapshot whose last bar is older than this many calendar days
+# is STALE (covers weekends + one holiday).
+MARKET_DATA_STALE_DAYS = int(os.environ.get("MARKET_DATA_STALE_DAYS", "4"))
+# Fundamentals older than this are STALE for data-health purposes.
+FUNDAMENTALS_STALE_DAYS = int(os.environ.get("FUNDAMENTALS_STALE_DAYS", "7"))
+ENGINE_RUN_MAX_WORKERS = int(os.environ.get("ENGINE_RUN_MAX_WORKERS", "8"))
+
 ENABLE_DEBUG_LOGS = False   # set True to write DEBUG-level pillar diagnostics
 
 # ── Phase 8 authentication: Google / Apple SSO ──────────────────────────────────

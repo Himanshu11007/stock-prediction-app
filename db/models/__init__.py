@@ -9,3 +9,13 @@ from db.models.tracker import (  # noqa: F401
     Signal,
     WatchlistItem,
 )
+from db.models.market import (  # noqa: F401
+    AppConfig,
+    EngineRun,
+    FundamentalSnapshot,
+    Industry,
+    MarketRegimeSnapshot,
+    MarketSnapshot,
+    Sector,
+    StockAnalysisResult,
+)

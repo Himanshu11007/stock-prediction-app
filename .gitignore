@@ -46,3 +46,6 @@ Thumbs.db
 
 # Research harness prediction cache (regenerable from the price snapshot)
 scripts/research/.cache/
+
+# Local database backups
+storage/*.bak*
