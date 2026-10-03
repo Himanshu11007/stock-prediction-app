@@ -53,6 +53,7 @@ uvicorn api.main:app --host 0.0.0.0 --port 8000        # API: http://127.0.0.1:8
 | System architecture | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) |
 | Fundamental Quality & Value Framework (18 checks, thresholds, formulas) | [docs/FQVF.md](docs/FQVF.md) |
 | StockAI Score / Top Investment Candidates methodology | [docs/RANKING_METHODOLOGY.md](docs/RANKING_METHODOLOGY.md) |
+| Ranking v1.0 out-of-sample validation, freeze and prospective tracking | [docs/RANKING_VALIDATION_V1.md](docs/RANKING_VALIDATION_V1.md) |
 | Admin / master controls | [docs/ADMIN_CONSOLE.md](docs/ADMIN_CONSOLE.md) |
 | API reference (mobile + admin endpoints) | [docs/API.md](docs/API.md) |
 | Data health and engine runs | [docs/DATA_HEALTH_AND_ENGINE_RUNS.md](docs/DATA_HEALTH_AND_ENGINE_RUNS.md) |
@@ -80,4 +81,8 @@ python scripts/e2e_backend.py --user U --user-password P --admin A --admin-passw
   per sector in the Sector Master; until then it is NOT_AVAILABLE.
 - News has no point-in-time timestamps and is not an input to FQVF or the score.
 - The ML direction signal has no demonstrated skill and carries weight 0.
+- Ranking Engine v1.0 is frozen as an analytical ranking: point-in-time
+  validation (2023-07 → 2026-09) found no sufficient out-of-sample evidence
+  of stock-selection skill; production rankings are tracked prospectively
+  (docs/RANKING_VALIDATION_V1.md).
 - See each document's limitations section for details.

@@ -16,6 +16,8 @@ from db.models.market import (  # noqa: F401
     Industry,
     MarketRegimeSnapshot,
     MarketSnapshot,
+    RankingOutcome,
+    RankingSnapshot,
     Sector,
     StockAnalysisResult,
 )

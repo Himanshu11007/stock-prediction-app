@@ -35,6 +35,12 @@ Scheduling: runs are started explicitly. For a daily schedule, call
 `POST /api/v1/admin/engine-runs` from cron / Task Scheduler with an admin token
 after the market closes (16:00 IST or later).
 
+Prospective tracking: every completed RANKING run also writes an append-only
+`ranking_snapshots` row per stock (score, rank, FQVF summary, components,
+freshness, regime, reference price). Call `POST /api/v1/admin/ranking-tracking/outcomes`
+periodically (e.g. weekly) to insert realised 1M/3M/6M/12M outcomes once each
+horizon has elapsed; see docs/RANKING_VALIDATION_V1.md section 28.
+
 ## Data health (`data_health/service.py`, `GET /admin/data-health`)
 
 Reads stored snapshots only; never fetches or fills. Findings per stock:

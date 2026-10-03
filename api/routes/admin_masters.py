@@ -20,13 +20,14 @@ from admin.audit import log_action
 from api.schemas_admin import (ConfigUpdateRequest, EngineRunStartRequest, IndustryUpdateRequest,
                                SectorUpdateRequest)
 from auth.dependencies import require_admin
+from config import RANKING_ENGINE_STATUS, RANKING_ENGINE_VERSION
 from data_health.service import api_health, data_health, engine_versions
 from db.models.market import (EngineRun, FundamentalSnapshot, MarketRegimeSnapshot, MarketSnapshot,
-                              StockAnalysisResult)
+                              RankingOutcome, RankingSnapshot, StockAnalysisResult)
 from db.models.stock import Company
 from db.models.user import User
 from db.session import engine, get_session
-from ranking import presenter
+from ranking import presenter, tracking
 
 router = APIRouter(prefix="/admin", dependencies=[Depends(require_admin)])
 
@@ -213,6 +214,36 @@ def start_engine_run(payload: EngineRunStartRequest, current_admin: User = Depen
                 "refresh_fundamentals": payload.refresh_fundamentals})
     session.commit()
     return {"run_id": run.run_id, "status": "RUNNING"}
+
+
+# ── Prospective ranking tracking (append-only) ───────────────────────────────
+
+@router.get("/ranking-tracking/snapshots")
+def ranking_snapshots(run_id: Optional[str] = None, limit: int = Query(100, ge=1, le=1000), offset: int = 0,
+                      session: Session = Depends(get_session)):
+    q = select(RankingSnapshot)
+    if run_id:
+        q = q.where(RankingSnapshot.run_id == run_id)
+    rows = session.exec(q.order_by(RankingSnapshot.ranked_at.desc(), RankingSnapshot.rank)
+                        .offset(offset).limit(limit)).all()
+    return _dump(rows)
+
+
+@router.get("/ranking-tracking/summary")
+def ranking_tracking_summary(session: Session = Depends(get_session)):
+    return {"engine_status": RANKING_ENGINE_STATUS, "engine_version": RANKING_ENGINE_VERSION,
+            "snapshots": len(session.exec(select(RankingSnapshot.id)).all()),
+            "outcomes": len(session.exec(select(RankingOutcome.id)).all()),
+            "performance": tracking.summarise_outcomes(session)}
+
+
+@router.post("/ranking-tracking/outcomes")
+def record_ranking_outcomes(current_admin: User = Depends(require_admin), session: Session = Depends(get_session)):
+    """Insert realised outcomes for elapsed horizons (existing rows are never changed)."""
+    result = tracking.record_outcomes(session)
+    log_action(session, current_admin, "RANKING_OUTCOMES_RECORDED", "ranking_outcomes", None, result)
+    session.commit()
+    return result
 
 
 # ── Health and versions ──────────────────────────────────────────────────────

@@ -43,6 +43,8 @@ Response shapes: business routes return `{"success": true, "data": …,
 `/admin/analysis-results`, `/admin/engine-runs` (GET/POST),
 `/admin/engine-runs/{run_id}`, `/admin/data-health`, `/admin/api-health`,
 `/admin/engine-versions`, `/admin/stock-master/summary`,
+`/admin/ranking-tracking/snapshots`, `/admin/ranking-tracking/summary`,
+`POST /admin/ranking-tracking/outcomes` (prospective tracking, docs/RANKING_VALIDATION_V1.md),
 `/admin/recommendations`, `/admin/watchlist`, `/admin/audit-logs`,
 `/logs/latest`, `DELETE /logs/clear`, `POST /tracker/save`, `POST /tracker/validate-old`.
 

@@ -87,6 +87,10 @@ CORS_ALLOWED_ORIGINS = [
 # ── Product analysis engine (FQVF + ranking) ─────────────────────────────────
 FQVF_ENGINE_VERSION    = "fqvf-v1.0"
 RANKING_ENGINE_VERSION = "ranking-v1.0"
+# Ranking Engine v1.0 is FROZEN after the out-of-sample validation in
+# docs/RANKING_VALIDATION_V1.md: weights, rules and components must not change
+# without a new version and a new validation (tests/test_ranking_validation.py).
+RANKING_ENGINE_STATUS  = "FROZEN"
 # Fundamentals older than this are re-fetched by an engine run.
 FUNDAMENTALS_TTL_HOURS = int(os.environ.get("FUNDAMENTALS_TTL_HOURS", "24"))
 # A market-data snapshot whose last bar is older than this many calendar days

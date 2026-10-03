@@ -164,6 +164,52 @@ class StockAnalysisResult(SQLModel, table=True):
     fqvf_version: str
 
 
+# ── Prospective ranking tracking (docs/RANKING_VALIDATION_V1.md) ─────────────
+# Append-only. A RankingSnapshot is written once per stock when a RANKING run
+# completes and is never modified; a RankingOutcome is inserted only after its
+# horizon has fully elapsed and is never recomputed or overwritten.
+
+class RankingSnapshot(SQLModel, table=True):
+    __tablename__ = "ranking_snapshots"
+    __table_args__ = (UniqueConstraint("run_id", "symbol", name="uq_ranking_snapshot_run_symbol"),)
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    run_id: str = Field(foreign_key="engine_runs.run_id", index=True)
+    symbol: str = Field(foreign_key="companies.symbol", index=True)
+    ranked_at: datetime = Field(default_factory=utcnow, index=True)
+    engine_version: str
+    fqvf_version: str
+    stockai_score: Optional[float] = Field(default=None)
+    score_coverage: Optional[float] = Field(default=None)
+    eligible: bool = Field(default=False)
+    rank: Optional[int] = Field(default=None)
+    fqvf_summary: Optional[dict[str, Any]] = Field(default=None, sa_column=Column(JSON))
+    component_scores: Optional[dict[str, Any]] = Field(default=None, sa_column=Column(JSON))
+    freshness: Optional[dict[str, Any]] = Field(default=None, sa_column=Column(JSON))
+    market_regime: Optional[str] = Field(default=None)
+    reference_date: Optional[str] = Field(default=None)
+    reference_price: Optional[float] = Field(default=None)
+    benchmark_symbol: str = Field(default="^NSEI")
+    benchmark_reference_price: Optional[float] = Field(default=None)
+
+
+class RankingOutcome(SQLModel, table=True):
+    __tablename__ = "ranking_outcomes"
+    __table_args__ = (UniqueConstraint("snapshot_id", "horizon", name="uq_ranking_outcome_snapshot_horizon"),)
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    snapshot_id: int = Field(foreign_key="ranking_snapshots.id", index=True)
+    horizon: str                       # 1M / 3M / 6M / 12M (21 / 63 / 126 / 252 sessions)
+    start_date: str
+    start_price: float
+    outcome_date: str
+    outcome_price: float
+    stock_return: float
+    benchmark_return: Optional[float] = Field(default=None)
+    excess_return: Optional[float] = Field(default=None)
+    computed_at: datetime = Field(default_factory=utcnow)
+
+
 class AppConfig(SQLModel, table=True):
     __tablename__ = "app_config"
 

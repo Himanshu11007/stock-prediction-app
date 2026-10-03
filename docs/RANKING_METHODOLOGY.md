@@ -5,6 +5,14 @@ Implementation: `ranking/service.py` (`StockRankingService`),
 (orchestration). Version: `ranking-v1.0` (`config.RANKING_ENGINE_VERSION`).
 Tests: `tests/test_ranking.py`.
 
+**Status: FROZEN** (`config.RANKING_ENGINE_STATUS`). The out-of-sample
+validation in [RANKING_VALIDATION_V1.md](RANKING_VALIDATION_V1.md) found no
+sufficient evidence of incremental stock-selection skill (3-month rank-IC
+about 0 in both the development and the final test period). v1.0 is kept
+unchanged as an **analytical ranking rather than a validated predictive
+edge**, and every production run is tracked prospectively. Changing weights,
+rules or components requires a new engine version and a new validation.
+
 The StockAI Score (0–100) ranks stocks against each other on the same,
 explained inputs. **It is not a probability, a price target or a return
 forecast.**
@@ -78,5 +86,9 @@ as-of, technicals computed, sector outlook set), engine version and timestamp.
 
 - Scores are relative to the analysed universe and the period's data.
 - No evidence is claimed that higher scores produce higher returns; the
-  ranking is a transparent screen, not a validated forecast.
+  ranking is a transparent screen, not a validated forecast. The
+  point-in-time validation (docs/RANKING_VALIDATION_V1.md) confirms this:
+  buckets are not monotonic and Top N does not significantly beat the
+  eligible universe out of sample. Of the components only Valuation showed a
+  stable positive association; Sector Outlook could not be tested.
 - Technical/momentum/risk inputs use daily bars up to the last session.

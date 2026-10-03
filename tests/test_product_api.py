@@ -104,7 +104,7 @@ ADMIN_GETS = ["/admin/sectors", "/admin/industries", "/admin/fundamentals", "/ad
               "/admin/valuation", "/admin/market-regime", "/admin/fqvf/reference", "/admin/config",
               "/admin/ranking/config", "/admin/analysis-results", "/admin/engine-runs", "/admin/data-health",
               "/admin/api-health", "/admin/engine-versions", "/admin/stock-master/summary", "/admin/roles",
-              "/logs/latest"]
+              "/admin/ranking-tracking/snapshots", "/admin/ranking-tracking/summary", "/logs/latest"]
 
 
 @pytest.mark.parametrize("path", ADMIN_GETS)
@@ -123,6 +123,7 @@ def test_admin_routes_work_for_admin(client, db, path):
     ("PATCH", "/api/v1/admin/sectors/1", {"outlook": "POSITIVE"}),
     ("PUT", "/api/v1/admin/config/top_picks.limit", {"value": 5}),
     ("POST", "/api/v1/admin/engine-runs", {}),
+    ("POST", "/api/v1/admin/ranking-tracking/outcomes", None),
     ("POST", "/api/v1/admin/stocks", {"symbol": "ZZZ.NS", "name": "Zed"}),
     ("DELETE", "/api/v1/logs/clear", None),
 ])

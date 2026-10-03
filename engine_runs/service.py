@@ -39,6 +39,7 @@ from db.models.stock import Company, StockUniverseMember
 from fqvf import FQVFInputs, evaluate
 from fundamentals import provider
 from masters.service import ranking_config, upsert_classification
+from ranking import tracking
 from ranking.service import RankingInput, StockRankingService
 from ranking.technical import ml_signal, price_issues, technical_snapshot
 from utils.logger import get_logger
@@ -238,6 +239,7 @@ def execute_run(engine, run_id: str) -> None:
             logger.info("ENGINE_RUN_START | %s | %d stocks", run_id, len(symbols))
 
             # 1. market regime (NIFTY 50)
+            regime_label, bench_close = None, None
             try:
                 idx = provider.fetch_price_history([MARKET_INDEX]).get(MARKET_INDEX)
                 if idx is None:
@@ -245,6 +247,7 @@ def execute_run(engine, run_id: str) -> None:
                                                      reason="provider returned no index history"))
                 else:
                     t = technical_snapshot(idx)
+                    regime_label, bench_close = t["regime"], float(idx["Close"].iloc[-1])
                     session.add(MarketRegimeSnapshot(run_id=run_id, as_of_date=t["as_of_date"], regime=t["regime"],
                                                      regime_score=t["regime_score"], reason=t["regime_reason"]))
             except Exception as e:
@@ -365,6 +368,16 @@ def execute_run(engine, run_id: str) -> None:
                 company.data_status, company.data_status_reason = _company_data_status(mkt, fund_status, r)
                 company.data_checked_at = now
                 session.add(company)
+
+            # Prospective tracking: freeze this run's rankings (append-only).
+            if run.kind == "RANKING":
+                try:
+                    tracking.record_run_snapshots(
+                        session, run_id,
+                        {s: (m.as_of_date, m.close) for s, m in markets.items() if m is not None},
+                        regime_label, bench_close, weights, rules)
+                except Exception as e:
+                    errors.append({"symbol": None, "stage": "tracking", "error": f"{type(e).__name__}: {e}"[:300]})
 
             # Outcome per stock: failed = a processing stage raised; succeeded =
             # a StockAI Score was produced; skipped = processed but not

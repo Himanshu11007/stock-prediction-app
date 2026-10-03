@@ -1,0 +1,3473 @@
+{
+  "protocol": "\nscripts/research/ranking_validation.py \u2014 validate the production StockAI\nranking out of sample (docs/RANKING_VALIDATION_V1.md).\n\nPRE-REGISTERED PROTOCOL (fixed before results were computed)\n  Ranking dates  last NIFTY 50 session of each month, 2023-07 .. 2026-09\n  DEV            ranking dates 2023-07-31 .. 2024-12-31; an observation is used\n                 only if its forward window ends before 2025-01-01\n  FINAL          ranking dates 2025-01-01 .. 2026-09-30; used once\n  Population     production-eligible stocks, ranked by the production engine\n  Primary metric mean cross-sectional Spearman rank-IC between StockAI Score\n                 and 3-month forward return (Newey-West t, lags = 2)\n  Selection      production weights (A) are kept unless an alternative beats\n                 A on DEV by >= 0.02 mean 3M IC with a Newey-West t >= 2 on\n                 the per-date IC difference; at most one change.\n  Alternatives   A production 25/20/15/10/10/10/5/5; B equal weights over\n                 the 8 non-ML components; C quality-heavy 35/15/20/5/5/10/5/5;\n                 D quality-valuation balanced 25/25/15/10/5/10/5/5\n                 (order: quality/valuation/financial_health/trend/momentum/\n                 risk/sector_outlook/market_regime; ml_signal 0 throughout)\n\nUsage:  python scripts/research/ranking_validation.py [--refresh-prices]\nOutput: scripts/research/output/ranking_validation/*.json|csv\n",
+  "price_manifest_sha256": "f41ea4ea589168cc6b49b6d24e04a8c4c31de18c51d28d624211aa9ca13e9ce0",
+  "ranking_dates": [
+    "2023-07-31",
+    "2023-08-31",
+    "2023-09-29",
+    "2023-10-31",
+    "2023-11-30",
+    "2023-12-29",
+    "2024-01-31",
+    "2024-02-29",
+    "2024-03-28",
+    "2024-04-30",
+    "2024-05-31",
+    "2024-06-28",
+    "2024-07-31",
+    "2024-08-30",
+    "2024-09-30",
+    "2024-10-31",
+    "2024-11-29",
+    "2024-12-31",
+    "2025-01-31",
+    "2025-02-28",
+    "2025-03-28",
+    "2025-04-30",
+    "2025-05-30",
+    "2025-06-30",
+    "2025-07-31",
+    "2025-08-29",
+    "2025-09-30",
+    "2025-10-31",
+    "2025-11-28",
+    "2025-12-31",
+    "2026-01-30",
+    "2026-02-27",
+    "2026-03-30",
+    "2026-04-30",
+    "2026-05-29",
+    "2026-06-30",
+    "2026-07-31",
+    "2026-08-31",
+    "2026-09-30"
+  ],
+  "stocks_with_prices": 282,
+  "universe_symbols": 299,
+  "universe_without_price_history": [
+    "AEGISCHEM.NS",
+    "AKZOINDIA.NS",
+    "ALEXOTYRES.NS",
+    "CG.NS",
+    "GUJGASLTD.NS",
+    "ISEC.NS",
+    "ITDCEM.NS",
+    "LAXMIMACH.NS",
+    "LTIM.NS",
+    "MTAR.NS",
+    "SUNDRFAST.NS",
+    "SUVENPHAR.NS",
+    "TATAMOTORS.NS",
+    "ULTRAMARINE.NS",
+    "VARUNBEV.NS",
+    "VIP.NS",
+    "ZOMATO.NS"
+  ],
+  "benchmark": "NIFTY 50 price index (^NSEI)",
+  "coverage": [
+    {
+      "date": "2023-07-31",
+      "stocks": 277,
+      "scored": 277,
+      "eligible": 170,
+      "mean_fqvf_coverage": 0.5814945848375451,
+      "mean_score_coverage": 0.9487364620938629
+    },
+    {
+      "date": "2023-08-31",
+      "stocks": 277,
+      "scored": 277,
+      "eligible": 166,
+      "mean_fqvf_coverage": 0.5826209386281588,
+      "mean_score_coverage": 0.9481949458483754
+    },
+    {
+      "date": "2023-09-29",
+      "stocks": 278,
+      "scored": 278,
+      "eligible": 166,
+      "mean_fqvf_coverage": 0.5838956834532374,
+      "mean_score_coverage": 0.9474820143884891
+    },
+    {
+      "date": "2023-10-31",
+      "stocks": 278,
+      "scored": 278,
+      "eligible": 158,
+      "mean_fqvf_coverage": 0.5838956834532374,
+      "mean_score_coverage": 0.9474820143884891
+    },
+    {
+      "date": "2023-11-30",
+      "stocks": 279,
+      "scored": 279,
+      "eligible": 160,
+      "mean_fqvf_coverage": 0.5840430107526882,
+      "mean_score_coverage": 0.946236559139785
+    },
+    {
+      "date": "2023-12-29",
+      "stocks": 279,
+      "scored": 279,
+      "eligible": 177,
+      "mean_fqvf_coverage": 0.5840430107526882,
+      "mean_score_coverage": 0.9474910394265231
+    },
+    {
+      "date": "2024-01-31",
+      "stocks": 280,
+      "scored": 280,
+      "eligible": 172,
+      "mean_fqvf_coverage": 0.5837428571428571,
+      "mean_score_coverage": 0.945892857142857
+    },
+    {
+      "date": "2024-02-29",
+      "stocks": 281,
+      "scored": 281,
+      "eligible": 172,
+      "mean_fqvf_coverage": 0.5836654804270464,
+      "mean_score_coverage": 0.9459074733096086
+    },
+    {
+      "date": "2024-03-28",
+      "stocks": 281,
+      "scored": 281,
+      "eligible": 172,
+      "mean_fqvf_coverage": 0.5836654804270464,
+      "mean_score_coverage": 0.9459074733096086
+    },
+    {
+      "date": "2024-04-30",
+      "stocks": 281,
+      "scored": 281,
+      "eligible": 169,
+      "mean_fqvf_coverage": 0.583220640569395,
+      "mean_score_coverage": 0.9471530249110319
+    },
+    {
+      "date": "2024-05-31",
+      "stocks": 281,
+      "scored": 281,
+      "eligible": 169,
+      "mean_fqvf_coverage": 0.5827758007117438,
+      "mean_score_coverage": 0.9483985765124555
+    },
+    {
+      "date": "2024-06-28",
+      "stocks": 281,
+      "scored": 281,
+      "eligible": 190,
+      "mean_fqvf_coverage": 0.5825444839857651,
+      "mean_score_coverage": 0.9485765124555161
+    },
+    {
+      "date": "2024-07-31",
+      "stocks": 281,
+      "scored": 281,
+      "eligible": 178,
+      "mean_fqvf_coverage": 0.5827686832740214,
+      "mean_score_coverage": 0.9485765124555161
+    },
+    {
+      "date": "2024-08-30",
+      "stocks": 281,
+      "scored": 281,
+      "eligible": 175,
+      "mean_fqvf_coverage": 0.58344128113879,
+      "mean_score_coverage": 0.948932384341637
+    },
+    {
+      "date": "2024-09-30",
+      "stocks": 281,
+      "scored": 281,
+      "eligible": 172,
+      "mean_fqvf_coverage": 0.5847758007117437,
+      "mean_score_coverage": 0.948932384341637
+    },
+    {
+      "date": "2024-10-31",
+      "stocks": 281,
+      "scored": 281,
+      "eligible": 172,
+      "mean_fqvf_coverage": 0.5847758007117437,
+      "mean_score_coverage": 0.949288256227758
+    },
+    {
+      "date": "2024-11-29",
+      "stocks": 281,
+      "scored": 281,
+      "eligible": 165,
+      "mean_fqvf_coverage": 0.5847758007117437,
+      "mean_score_coverage": 0.949288256227758
+    },
+    {
+      "date": "2024-12-31",
+      "stocks": 281,
+      "scored": 281,
+      "eligible": 162,
+      "mean_fqvf_coverage": 0.5854412811387901,
+      "mean_score_coverage": 0.949288256227758
+    },
+    {
+      "date": "2025-01-31",
+      "stocks": 281,
+      "scored": 281,
+      "eligible": 163,
+      "mean_fqvf_coverage": 0.5849964412811388,
+      "mean_score_coverage": 0.949288256227758
+    },
+    {
+      "date": "2025-02-28",
+      "stocks": 281,
+      "scored": 281,
+      "eligible": 173,
+      "mean_fqvf_coverage": 0.5849928825622777,
+      "mean_score_coverage": 0.949288256227758
+    },
+    {
+      "date": "2025-03-28",
+      "stocks": 281,
+      "scored": 281,
+      "eligible": 173,
+      "mean_fqvf_coverage": 0.5876583629893238,
+      "mean_score_coverage": 0.949288256227758
+    },
+    {
+      "date": "2025-04-30",
+      "stocks": 281,
+      "scored": 281,
+      "eligible": 164,
+      "mean_fqvf_coverage": 0.5876583629893238,
+      "mean_score_coverage": 0.949288256227758
+    },
+    {
+      "date": "2025-05-30",
+      "stocks": 281,
+      "scored": 281,
+      "eligible": 162,
+      "mean_fqvf_coverage": 0.5869928825622776,
+      "mean_score_coverage": 0.949288256227758
+    },
+    {
+      "date": "2025-06-30",
+      "stocks": 281,
+      "scored": 281,
+      "eligible": 174,
+      "mean_fqvf_coverage": 0.7642455516014235,
+      "mean_score_coverage": 0.949288256227758
+    },
+    {
+      "date": "2025-07-31",
+      "stocks": 281,
+      "scored": 281,
+      "eligible": 168,
+      "mean_fqvf_coverage": 0.7633629893238434,
+      "mean_score_coverage": 0.949288256227758
+    },
+    {
+      "date": "2025-08-29",
+      "stocks": 281,
+      "scored": 281,
+      "eligible": 160,
+      "mean_fqvf_coverage": 0.7651281138790036,
+      "mean_score_coverage": 0.948932384341637
+    },
+    {
+      "date": "2025-09-30",
+      "stocks": 281,
+      "scored": 281,
+      "eligible": 158,
+      "mean_fqvf_coverage": 0.7662313167259787,
+      "mean_score_coverage": 0.948932384341637
+    },
+    {
+      "date": "2025-10-31",
+      "stocks": 281,
+      "scored": 281,
+      "eligible": 152,
+      "mean_fqvf_coverage": 0.7662313167259787,
+      "mean_score_coverage": 0.948932384341637
+    },
+    {
+      "date": "2025-11-28",
+      "stocks": 281,
+      "scored": 281,
+      "eligible": 160,
+      "mean_fqvf_coverage": 0.7664519572953737,
+      "mean_score_coverage": 0.9485765124555161
+    },
+    {
+      "date": "2025-12-31",
+      "stocks": 281,
+      "scored": 281,
+      "eligible": 144,
+      "mean_fqvf_coverage": 0.7666761565836299,
+      "mean_score_coverage": 0.948932384341637
+    },
+    {
+      "date": "2026-01-30",
+      "stocks": 281,
+      "scored": 281,
+      "eligible": 149,
+      "mean_fqvf_coverage": 0.7666725978647687,
+      "mean_score_coverage": 0.948932384341637
+    },
+    {
+      "date": "2026-02-27",
+      "stocks": 281,
+      "scored": 281,
+      "eligible": 153,
+      "mean_fqvf_coverage": 0.7662313167259787,
+      "mean_score_coverage": 0.948932384341637
+    },
+    {
+      "date": "2026-03-30",
+      "stocks": 281,
+      "scored": 281,
+      "eligible": 170,
+      "mean_fqvf_coverage": 0.7673451957295373,
+      "mean_score_coverage": 0.948932384341637
+    },
+    {
+      "date": "2026-04-30",
+      "stocks": 281,
+      "scored": 281,
+      "eligible": 177,
+      "mean_fqvf_coverage": 0.7673451957295373,
+      "mean_score_coverage": 0.948932384341637
+    },
+    {
+      "date": "2026-05-29",
+      "stocks": 281,
+      "scored": 281,
+      "eligible": 181,
+      "mean_fqvf_coverage": 0.7673451957295373,
+      "mean_score_coverage": 0.948932384341637
+    },
+    {
+      "date": "2026-06-30",
+      "stocks": 281,
+      "scored": 281,
+      "eligible": 167,
+      "mean_fqvf_coverage": 0.8256761565836299,
+      "mean_score_coverage": 0.9482206405693949
+    },
+    {
+      "date": "2026-07-31",
+      "stocks": 282,
+      "scored": 282,
+      "eligible": 171,
+      "mean_fqvf_coverage": 0.824081560283688,
+      "mean_score_coverage": 0.9462765957446807
+    },
+    {
+      "date": "2026-08-31",
+      "stocks": 282,
+      "scored": 282,
+      "eligible": 163,
+      "mean_fqvf_coverage": 0.824081560283688,
+      "mean_score_coverage": 0.9462765957446807
+    },
+    {
+      "date": "2026-09-30",
+      "stocks": 282,
+      "scored": 282,
+      "eligible": 156,
+      "mean_fqvf_coverage": 0.8249716312056737,
+      "mean_score_coverage": 0.9462765957446807
+    }
+  ],
+  "buckets": [
+    {
+      "segment": "DEV",
+      "horizon": "1M",
+      "bucket": "Top 10%",
+      "dates": 17,
+      "ret_n": 297,
+      "ret_mean": 0.033082977971711995,
+      "ret_median": 0.020712725021042155,
+      "ret_hit_rate": 0.6161616161616161,
+      "ret_std": 0.10963143767241344,
+      "mean_excess_vs_nifty": 0.020642726237269298,
+      "per_date_excess_mean": 0.021,
+      "per_date_excess_ci95": [
+        0.0048,
+        0.0373
+      ]
+    },
+    {
+      "segment": "DEV",
+      "horizon": "1M",
+      "bucket": "10-25%",
+      "dates": 17,
+      "ret_n": 435,
+      "ret_mean": 0.032362060137745015,
+      "ret_median": 0.018910064850467423,
+      "ret_hit_rate": 0.6068965517241379,
+      "ret_std": 0.09928211041612132,
+      "mean_excess_vs_nifty": 0.019535816921130423,
+      "per_date_excess_mean": 0.0195,
+      "per_date_excess_ci95": [
+        0.0091,
+        0.0299
+      ]
+    },
+    {
+      "segment": "DEV",
+      "horizon": "1M",
+      "bucket": "25-50%",
+      "dates": 17,
+      "ret_n": 722,
+      "ret_mean": 0.022717461234667394,
+      "ret_median": 0.014033939606315604,
+      "ret_hit_rate": 0.5706371191135734,
+      "ret_std": 0.0922559227232336,
+      "mean_excess_vs_nifty": 0.01003388219132455,
+      "per_date_excess_mean": 0.0101,
+      "per_date_excess_ci95": [
+        0.0012,
+        0.0191
+      ]
+    },
+    {
+      "segment": "DEV",
+      "horizon": "1M",
+      "bucket": "50-75%",
+      "dates": 17,
+      "ret_n": 728,
+      "ret_mean": 0.031001591328405135,
+      "ret_median": 0.019938200027089015,
+      "ret_hit_rate": 0.5810439560439561,
+      "ret_std": 0.10095545985363989,
+      "mean_excess_vs_nifty": 0.01832692737066557,
+      "per_date_excess_mean": 0.0186,
+      "per_date_excess_ci95": [
+        0.0089,
+        0.0283
+      ]
+    },
+    {
+      "segment": "DEV",
+      "horizon": "1M",
+      "bucket": "Bottom 25%",
+      "dates": 17,
+      "ret_n": 721,
+      "ret_mean": 0.029987713820561247,
+      "ret_median": 0.018083736355670288,
+      "ret_hit_rate": 0.5589459084604715,
+      "ret_std": 0.11048952801958564,
+      "mean_excess_vs_nifty": 0.017318142279402583,
+      "per_date_excess_mean": 0.0175,
+      "per_date_excess_ci95": [
+        -0.0007,
+        0.0357
+      ]
+    },
+    {
+      "segment": "DEV",
+      "horizon": "1M",
+      "bucket": "Top10% minus Bottom25%",
+      "dates": 17,
+      "per_date_excess_mean": 0.0035,
+      "per_date_excess_ci95": [
+        -0.0095,
+        0.0166
+      ],
+      "nw_t": 0.53
+    },
+    {
+      "segment": "DEV",
+      "horizon": "3M",
+      "bucket": "Top 10%",
+      "dates": 14,
+      "ret_n": 244,
+      "ret_mean": 0.11688089155105594,
+      "ret_median": 0.072527136348981,
+      "ret_hit_rate": 0.6721311475409836,
+      "ret_std": 0.21909553138686738,
+      "mean_excess_vs_nifty": 0.05842851484917247,
+      "per_date_excess_mean": 0.0601,
+      "per_date_excess_ci95": [
+        0.0117,
+        0.1085
+      ]
+    },
+    {
+      "segment": "DEV",
+      "horizon": "3M",
+      "bucket": "10-25%",
+      "dates": 14,
+      "ret_n": 360,
+      "ret_mean": 0.10120373354585305,
+      "ret_median": 0.08104781200153777,
+      "ret_hit_rate": 0.675,
+      "ret_std": 0.18820427412015858,
+      "mean_excess_vs_nifty": 0.04237803699242246,
+      "per_date_excess_mean": 0.0432,
+      "per_date_excess_ci95": [
+        0.0164,
+        0.07
+      ]
+    },
+    {
+      "segment": "DEV",
+      "horizon": "3M",
+      "bucket": "25-50%",
+      "dates": 14,
+      "ret_n": 595,
+      "ret_mean": 0.09910055760419498,
+      "ret_median": 0.06682458919961554,
+      "ret_hit_rate": 0.6571428571428571,
+      "ret_std": 0.20231989946321408,
+      "mean_excess_vs_nifty": 0.04056699160833167,
+      "per_date_excess_mean": 0.0418,
+      "per_date_excess_ci95": [
+        0.013,
+        0.0707
+      ]
+    },
+    {
+      "segment": "DEV",
+      "horizon": "3M",
+      "bucket": "50-75%",
+      "dates": 14,
+      "ret_n": 601,
+      "ret_mean": 0.11702115412005618,
+      "ret_median": 0.07521209358556025,
+      "ret_hit_rate": 0.7038269550748752,
+      "ret_std": 0.2052305062836718,
+      "mean_excess_vs_nifty": 0.05848727198469024,
+      "per_date_excess_mean": 0.0603,
+      "per_date_excess_ci95": [
+        0.0197,
+        0.1009
+      ]
+    },
+    {
+      "segment": "DEV",
+      "horizon": "3M",
+      "bucket": "Bottom 25%",
+      "dates": 14,
+      "ret_n": 594,
+      "ret_mean": 0.10638532313152035,
+      "ret_median": 0.06857489978007103,
+      "ret_hit_rate": 0.6380471380471381,
+      "ret_std": 0.2191422567929473,
+      "mean_excess_vs_nifty": 0.04768918364960128,
+      "per_date_excess_mean": 0.0494,
+      "per_date_excess_ci95": [
+        -0.0013,
+        0.1002
+      ]
+    },
+    {
+      "segment": "DEV",
+      "horizon": "3M",
+      "bucket": "Top10% minus Bottom25%",
+      "dates": 14,
+      "per_date_excess_mean": 0.0107,
+      "per_date_excess_ci95": [
+        -0.0139,
+        0.0353
+      ],
+      "nw_t": 0.85
+    },
+    {
+      "segment": "DEV",
+      "horizon": "6M",
+      "bucket": "Top 10%",
+      "dates": 12,
+      "ret_n": 208,
+      "ret_mean": 0.23157228135055855,
+      "ret_median": 0.15675030942756618,
+      "ret_hit_rate": 0.7740384615384616,
+      "ret_std": 0.3220592192320563,
+      "mean_excess_vs_nifty": 0.1187230119110775,
+      "per_date_excess_mean": 0.1205,
+      "per_date_excess_ci95": [
+        0.0398,
+        0.2012
+      ]
+    },
+    {
+      "segment": "DEV",
+      "horizon": "6M",
+      "bucket": "10-25%",
+      "dates": 12,
+      "ret_n": 307,
+      "ret_mean": 0.20019638425224281,
+      "ret_median": 0.1646425100344726,
+      "ret_hit_rate": 0.7785016286644951,
+      "ret_std": 0.2699694529214559,
+      "mean_excess_vs_nifty": 0.08811103191167421,
+      "per_date_excess_mean": 0.0892,
+      "per_date_excess_ci95": [
+        0.0673,
+        0.1111
+      ]
+    },
+    {
+      "segment": "DEV",
+      "horizon": "6M",
+      "bucket": "25-50%",
+      "dates": 12,
+      "ret_n": 507,
+      "ret_mean": 0.21317070352593992,
+      "ret_median": 0.1382677938966439,
+      "ret_hit_rate": 0.7337278106508875,
+      "ret_std": 0.3216575839801129,
+      "mean_excess_vs_nifty": 0.10064958731390325,
+      "per_date_excess_mean": 0.1018,
+      "per_date_excess_ci95": [
+        0.0523,
+        0.1513
+      ]
+    },
+    {
+      "segment": "DEV",
+      "horizon": "6M",
+      "bucket": "50-75%",
+      "dates": 12,
+      "ret_n": 512,
+      "ret_mean": 0.24414484733860814,
+      "ret_median": 0.1789031002570498,
+      "ret_hit_rate": 0.794921875,
+      "ret_std": 0.33990468866294404,
+      "mean_excess_vs_nifty": 0.13163039197220291,
+      "per_date_excess_mean": 0.1337,
+      "per_date_excess_ci95": [
+        0.05,
+        0.2175
+      ]
+    },
+    {
+      "segment": "DEV",
+      "horizon": "6M",
+      "bucket": "Bottom 25%",
+      "dates": 12,
+      "ret_n": 507,
+      "ret_mean": 0.2203735961112509,
+      "ret_median": 0.1716729805949977,
+      "ret_hit_rate": 0.7001972386587771,
+      "ret_std": 0.3375923588203991,
+      "mean_excess_vs_nifty": 0.10785247989921429,
+      "per_date_excess_mean": 0.1103,
+      "per_date_excess_ci95": [
+        0.0154,
+        0.2052
+      ]
+    },
+    {
+      "segment": "DEV",
+      "horizon": "6M",
+      "bucket": "Top10% minus Bottom25%",
+      "dates": 12,
+      "per_date_excess_mean": 0.0101,
+      "per_date_excess_ci95": [
+        -0.022,
+        0.0423
+      ],
+      "nw_t": 0.62
+    },
+    {
+      "segment": "DEV",
+      "horizon": "12M",
+      "bucket": "Top 10%",
+      "dates": 5,
+      "ret_n": 83,
+      "ret_mean": 0.6230963012090289,
+      "ret_median": 0.5302853556744955,
+      "ret_hit_rate": 0.963855421686747,
+      "ret_std": 0.48377606907313475,
+      "mean_excess_vs_nifty": 0.3605833231034437,
+      "per_date_excess_mean": 0.3571,
+      "per_date_excess_ci95": [
+        0.2738,
+        0.4404
+      ]
+    },
+    {
+      "segment": "DEV",
+      "horizon": "12M",
+      "bucket": "10-25%",
+      "dates": 5,
+      "ret_n": 124,
+      "ret_mean": 0.5278296794564369,
+      "ret_median": 0.4068675927206843,
+      "ret_hit_rate": 0.9354838709677419,
+      "ret_std": 0.48290770866357663,
+      "mean_excess_vs_nifty": 0.26569900143468517,
+      "per_date_excess_mean": 0.2666,
+      "per_date_excess_ci95": [
+        0.2472,
+        0.2859
+      ]
+    },
+    {
+      "segment": "DEV",
+      "horizon": "12M",
+      "bucket": "25-50%",
+      "dates": 5,
+      "ret_n": 203,
+      "ret_mean": 0.469193523536378,
+      "ret_median": 0.3372916680233504,
+      "ret_hit_rate": 0.8817733990147784,
+      "ret_std": 0.5192092747225867,
+      "mean_excess_vs_nifty": 0.20710112054940932,
+      "per_date_excess_mean": 0.2051,
+      "per_date_excess_ci95": [
+        0.1537,
+        0.2564
+      ]
+    },
+    {
+      "segment": "DEV",
+      "horizon": "12M",
+      "bucket": "50-75%",
+      "dates": 5,
+      "ret_n": 207,
+      "ret_mean": 0.5870448337772672,
+      "ret_median": 0.5056955821635865,
+      "ret_hit_rate": 0.8695652173913043,
+      "ret_std": 0.5722346312046441,
+      "mean_excess_vs_nifty": 0.3247608663499204,
+      "per_date_excess_mean": 0.3242,
+      "per_date_excess_ci95": [
+        0.3062,
+        0.3422
+      ]
+    },
+    {
+      "segment": "DEV",
+      "horizon": "12M",
+      "bucket": "Bottom 25%",
+      "dates": 5,
+      "ret_n": 203,
+      "ret_mean": 0.5433851333287182,
+      "ret_median": 0.4584922883806446,
+      "ret_hit_rate": 0.8325123152709359,
+      "ret_std": 0.6715736659044165,
+      "mean_excess_vs_nifty": 0.28129273034174945,
+      "per_date_excess_mean": 0.2812,
+      "per_date_excess_ci95": [
+        0.269,
+        0.2934
+      ]
+    },
+    {
+      "segment": "DEV",
+      "horizon": "12M",
+      "bucket": "Top10% minus Bottom25%",
+      "dates": 5,
+      "per_date_excess_mean": 0.0759,
+      "per_date_excess_ci95": [
+        -0.0012,
+        0.1529
+      ],
+      "nw_t": 1.93
+    },
+    {
+      "segment": "FINAL",
+      "horizon": "1M",
+      "bucket": "Top 10%",
+      "dates": 20,
+      "ret_n": 338,
+      "ret_mean": 0.010221191389185494,
+      "ret_median": 0.009798452189048512,
+      "ret_hit_rate": 0.5443786982248521,
+      "ret_std": 0.09853431938725458,
+      "mean_excess_vs_nifty": 0.01139492668852048,
+      "per_date_excess_mean": 0.0122,
+      "per_date_excess_ci95": [
+        -0.0006,
+        0.0249
+      ]
+    },
+    {
+      "segment": "FINAL",
+      "horizon": "1M",
+      "bucket": "10-25%",
+      "dates": 20,
+      "ret_n": 490,
+      "ret_mean": 0.007713784378355028,
+      "ret_median": 0.0049149136794897075,
+      "ret_hit_rate": 0.5285714285714286,
+      "ret_std": 0.09935106771209484,
+      "mean_excess_vs_nifty": 0.008509664308607123,
+      "per_date_excess_mean": 0.0087,
+      "per_date_excess_ci95": [
+        0.0003,
+        0.0171
+      ]
+    },
+    {
+      "segment": "FINAL",
+      "horizon": "1M",
+      "bucket": "25-50%",
+      "dates": 20,
+      "ret_n": 818,
+      "ret_mean": 0.0016593576366704913,
+      "ret_median": -0.0036996457464701926,
+      "ret_hit_rate": 0.4841075794621027,
+      "ret_std": 0.10068244339007248,
+      "mean_excess_vs_nifty": 0.0027430008874129524,
+      "per_date_excess_mean": 0.0025,
+      "per_date_excess_ci95": [
+        -0.0087,
+        0.0136
+      ]
+    },
+    {
+      "segment": "FINAL",
+      "horizon": "1M",
+      "bucket": "50-75%",
+      "dates": 20,
+      "ret_n": 822,
+      "ret_mean": 0.007816665796328014,
+      "ret_median": -0.0024206553370997863,
+      "ret_hit_rate": 0.48175182481751827,
+      "ret_std": 0.10230241002097337,
+      "mean_excess_vs_nifty": 0.008738231387811808,
+      "per_date_excess_mean": 0.0082,
+      "per_date_excess_ci95": [
+        -0.0035,
+        0.02
+      ]
+    },
+    {
+      "segment": "FINAL",
+      "horizon": "1M",
+      "bucket": "Bottom 25%",
+      "dates": 20,
+      "ret_n": 814,
+      "ret_mean": 0.010738368409239306,
+      "ret_median": 0.0011187377165717827,
+      "ret_hit_rate": 0.5012285012285013,
+      "ret_std": 0.1199044641714065,
+      "mean_excess_vs_nifty": 0.011684777201901666,
+      "per_date_excess_mean": 0.0106,
+      "per_date_excess_ci95": [
+        -0.0079,
+        0.0292
+      ]
+    },
+    {
+      "segment": "FINAL",
+      "horizon": "1M",
+      "bucket": "Top10% minus Bottom25%",
+      "dates": 20,
+      "per_date_excess_mean": 0.0015,
+      "per_date_excess_ci95": [
+        -0.019,
+        0.0221
+      ],
+      "nw_t": 0.15
+    },
+    {
+      "segment": "FINAL",
+      "horizon": "3M",
+      "bucket": "Top 10%",
+      "dates": 18,
+      "ret_n": 303,
+      "ret_mean": 0.051399270627773455,
+      "ret_median": 0.02357927875841548,
+      "ret_hit_rate": 0.5643564356435643,
+      "ret_std": 0.17764687479642263,
+      "mean_excess_vs_nifty": 0.03937163490139542,
+      "per_date_excess_mean": 0.0417,
+      "per_date_excess_ci95": [
+        0.0062,
+        0.0772
+      ]
+    },
+    {
+      "segment": "FINAL",
+      "horizon": "3M",
+      "bucket": "10-25%",
+      "dates": 18,
+      "ret_n": 441,
+      "ret_mean": 0.01867861317096577,
+      "ret_median": 0.01001809027515832,
+      "ret_hit_rate": 0.528344671201814,
+      "ret_std": 0.13813654199323053,
+      "mean_excess_vs_nifty": 0.006259269342705338,
+      "per_date_excess_mean": 0.0075,
+      "per_date_excess_ci95": [
+        -0.0149,
+        0.0299
+      ]
+    },
+    {
+      "segment": "FINAL",
+      "horizon": "3M",
+      "bucket": "25-50%",
+      "dates": 18,
+      "ret_n": 734,
+      "ret_mean": 0.02059281194376049,
+      "ret_median": 0.0010264999537690223,
+      "ret_hit_rate": 0.5068119891008175,
+      "ret_std": 0.17192004421706458,
+      "mean_excess_vs_nifty": 0.008479923841758765,
+      "per_date_excess_mean": 0.0085,
+      "per_date_excess_ci95": [
+        -0.0082,
+        0.0252
+      ]
+    },
+    {
+      "segment": "FINAL",
+      "horizon": "3M",
+      "bucket": "50-75%",
+      "dates": 18,
+      "ret_n": 738,
+      "ret_mean": 0.03610748239464734,
+      "ret_median": 0.020314212979352764,
+      "ret_hit_rate": 0.559620596205962,
+      "ret_std": 0.15564905338831486,
+      "mean_excess_vs_nifty": 0.02392260234328217,
+      "per_date_excess_mean": 0.0233,
+      "per_date_excess_ci95": [
+        -0.0057,
+        0.0524
+      ]
+    },
+    {
+      "segment": "FINAL",
+      "horizon": "3M",
+      "bucket": "Bottom 25%",
+      "dates": 18,
+      "ret_n": 732,
+      "ret_mean": 0.038656412083208726,
+      "ret_median": 0.010932170168655442,
+      "ret_hit_rate": 0.5327868852459017,
+      "ret_std": 0.2149470081683358,
+      "mean_excess_vs_nifty": 0.02649277155522021,
+      "per_date_excess_mean": 0.0256,
+      "per_date_excess_ci95": [
+        -0.0309,
+        0.082
+      ]
+    },
+    {
+      "segment": "FINAL",
+      "horizon": "3M",
+      "bucket": "Top10% minus Bottom25%",
+      "dates": 18,
+      "per_date_excess_mean": 0.0161,
+      "per_date_excess_ci95": [
+        -0.0615,
+        0.0938
+      ],
+      "nw_t": 0.41
+    },
+    {
+      "segment": "FINAL",
+      "horizon": "6M",
+      "bucket": "Top 10%",
+      "dates": 15,
+      "ret_n": 249,
+      "ret_mean": 0.06651933856250239,
+      "ret_median": 0.017986956431691237,
+      "ret_hit_rate": 0.5381526104417671,
+      "ret_std": 0.25704360073154764,
+      "mean_excess_vs_nifty": 0.061310929173431644,
+      "per_date_excess_mean": 0.0618,
+      "per_date_excess_ci95": [
+        0.0212,
+        0.1024
+      ]
+    },
+    {
+      "segment": "FINAL",
+      "horizon": "6M",
+      "bucket": "10-25%",
+      "dates": 15,
+      "ret_n": 362,
+      "ret_mean": 0.036759553817503635,
+      "ret_median": 0.024803304577952434,
+      "ret_hit_rate": 0.5552486187845304,
+      "ret_std": 0.19908363307189872,
+      "mean_excess_vs_nifty": 0.03182676114561985,
+      "per_date_excess_mean": 0.0336,
+      "per_date_excess_ci95": [
+        -0.0081,
+        0.0752
+      ]
+    },
+    {
+      "segment": "FINAL",
+      "horizon": "6M",
+      "bucket": "25-50%",
+      "dates": 15,
+      "ret_n": 603,
+      "ret_mean": 0.02634788939688424,
+      "ret_median": 0.0029144194463417428,
+      "ret_hit_rate": 0.5058043117744611,
+      "ret_std": 0.23197930619078339,
+      "mean_excess_vs_nifty": 0.021494159467038882,
+      "per_date_excess_mean": 0.0219,
+      "per_date_excess_ci95": [
+        -0.0044,
+        0.0482
+      ]
+    },
+    {
+      "segment": "FINAL",
+      "horizon": "6M",
+      "bucket": "50-75%",
+      "dates": 15,
+      "ret_n": 607,
+      "ret_mean": 0.026310304335963812,
+      "ret_median": 0.021177274518900058,
+      "ret_hit_rate": 0.5453047775947282,
+      "ret_std": 0.1829839867678005,
+      "mean_excess_vs_nifty": 0.021388561926023387,
+      "per_date_excess_mean": 0.0231,
+      "per_date_excess_ci95": [
+        -0.0315,
+        0.0778
+      ]
+    },
+    {
+      "segment": "FINAL",
+      "horizon": "6M",
+      "bucket": "Bottom 25%",
+      "dates": 15,
+      "ret_n": 602,
+      "ret_mean": 0.0400544733330929,
+      "ret_median": 0.007180624704642091,
+      "ret_hit_rate": 0.5116279069767442,
+      "ret_std": 0.2919333032398637,
+      "mean_excess_vs_nifty": 0.03527331567747558,
+      "per_date_excess_mean": 0.0379,
+      "per_date_excess_ci95": [
+        -0.0655,
+        0.1412
+      ]
+    },
+    {
+      "segment": "FINAL",
+      "horizon": "6M",
+      "bucket": "Top10% minus Bottom25%",
+      "dates": 15,
+      "per_date_excess_mean": 0.0239,
+      "per_date_excess_ci95": [
+        -0.0909,
+        0.1388
+      ],
+      "nw_t": 0.41
+    },
+    {
+      "segment": "FINAL",
+      "horizon": "12M",
+      "bucket": "Top 10%",
+      "dates": 8,
+      "ret_n": 138,
+      "ret_mean": 0.13085077670214085,
+      "ret_median": 0.09231121364799366,
+      "ret_hit_rate": 0.6231884057971014,
+      "ret_std": 0.2688893775152284,
+      "mean_excess_vs_nifty": 0.12527658523229698,
+      "per_date_excess_mean": 0.1256,
+      "per_date_excess_ci95": [
+        0.0959,
+        0.1553
+      ]
+    },
+    {
+      "segment": "FINAL",
+      "horizon": "12M",
+      "bucket": "10-25%",
+      "dates": 8,
+      "ret_n": 199,
+      "ret_mean": 0.0772719715888406,
+      "ret_median": 0.03331318718882015,
+      "ret_hit_rate": 0.5577889447236181,
+      "ret_std": 0.27528489284232227,
+      "mean_excess_vs_nifty": 0.07192547030163284,
+      "per_date_excess_mean": 0.0721,
+      "per_date_excess_ci95": [
+        0.0416,
+        0.1027
+      ]
+    },
+    {
+      "segment": "FINAL",
+      "horizon": "12M",
+      "bucket": "25-50%",
+      "dates": 8,
+      "ret_n": 333,
+      "ret_mean": 0.03589283089838052,
+      "ret_median": -0.007126269371069638,
+      "ret_hit_rate": 0.4804804804804805,
+      "ret_std": 0.30388492367724246,
+      "mean_excess_vs_nifty": 0.030344495096158244,
+      "per_date_excess_mean": 0.0299,
+      "per_date_excess_ci95": [
+        0.02,
+        0.0397
+      ]
+    },
+    {
+      "segment": "FINAL",
+      "horizon": "12M",
+      "bucket": "50-75%",
+      "dates": 8,
+      "ret_n": 335,
+      "ret_mean": 0.04509643745071473,
+      "ret_median": 0.021494627168594294,
+      "ret_hit_rate": 0.5373134328358209,
+      "ret_std": 0.2873205843696521,
+      "mean_excess_vs_nifty": 0.03994499335437077,
+      "per_date_excess_mean": 0.041,
+      "per_date_excess_ci95": [
+        0.03,
+        0.052
+      ]
+    },
+    {
+      "segment": "FINAL",
+      "horizon": "12M",
+      "bucket": "Bottom 25%",
+      "dates": 8,
+      "ret_n": 332,
+      "ret_mean": 0.04028381036033878,
+      "ret_median": -0.022891766904036936,
+      "ret_hit_rate": 0.4608433734939759,
+      "ret_std": 0.36888143781233074,
+      "mean_excess_vs_nifty": 0.03502100026690388,
+      "per_date_excess_mean": 0.0359,
+      "per_date_excess_ci95": [
+        -0.0297,
+        0.1016
+      ]
+    },
+    {
+      "segment": "FINAL",
+      "horizon": "12M",
+      "bucket": "Top10% minus Bottom25%",
+      "dates": 8,
+      "per_date_excess_mean": 0.0896,
+      "per_date_excess_ci95": [
+        0.0456,
+        0.1336
+      ],
+      "nw_t": 3.99
+    }
+  ],
+  "rank_ic": {
+    "DEV": {
+      "1M": {
+        "dates": 17,
+        "mean_ic": 0.017,
+        "nw_se": 0.0265,
+        "nw_t": 0.64,
+        "share_positive": 0.529
+      },
+      "3M": {
+        "dates": 14,
+        "mean_ic": 0.004,
+        "nw_se": 0.0307,
+        "nw_t": 0.13,
+        "share_positive": 0.643
+      },
+      "6M": {
+        "dates": 12,
+        "mean_ic": 0.0003,
+        "nw_se": 0.0417,
+        "nw_t": 0.01,
+        "share_positive": 0.5
+      },
+      "12M": {
+        "dates": 5,
+        "mean_ic": 0.0256,
+        "nw_se": 0.006,
+        "nw_t": 4.29,
+        "share_positive": 0.8
+      }
+    },
+    "FINAL": {
+      "1M": {
+        "dates": 20,
+        "mean_ic": 0.0154,
+        "nw_se": 0.036,
+        "nw_t": 0.43,
+        "share_positive": 0.4
+      },
+      "3M": {
+        "dates": 18,
+        "mean_ic": -0.0041,
+        "nw_se": 0.0744,
+        "nw_t": -0.06,
+        "share_positive": 0.5
+      },
+      "6M": {
+        "dates": 15,
+        "mean_ic": 0.0187,
+        "nw_se": 0.0855,
+        "nw_t": 0.22,
+        "share_positive": 0.533
+      },
+      "12M": {
+        "dates": 8,
+        "mean_ic": 0.1031,
+        "nw_se": 0.0232,
+        "nw_t": 4.44,
+        "share_positive": 0.875
+      }
+    }
+  },
+  "top_n": [
+    {
+      "portfolio": "Top 5",
+      "segment": "DEV",
+      "horizon": "1M",
+      "dates": 17,
+      "mean_return": 0.035412528942762686,
+      "median_return": 0.013488965965663647,
+      "hit_rate_positive": 0.7058823529411765,
+      "mean_excess_vs_nifty": 0.0225,
+      "excess_vs_nifty_ci95": [
+        -0.0054,
+        0.0504
+      ],
+      "nw_t_vs_nifty": 1.58,
+      "mean_excess_vs_eligible_universe": 0.0059,
+      "nw_t_vs_universe": 0.49,
+      "hit_rate_vs_nifty": 0.5882352941176471,
+      "stock_level_median": 0.026553455883024046
+    },
+    {
+      "portfolio": "Top 5",
+      "segment": "DEV",
+      "horizon": "3M",
+      "dates": 14,
+      "mean_return": 0.0971502976584506,
+      "median_return": 0.11727154993431715,
+      "hit_rate_positive": 0.6428571428571429,
+      "mean_excess_vs_nifty": 0.0374,
+      "excess_vs_nifty_ci95": [
+        -0.0375,
+        0.1124
+      ],
+      "nw_t_vs_nifty": 0.98,
+      "mean_excess_vs_eligible_universe": -0.0131,
+      "nw_t_vs_universe": -0.48,
+      "hit_rate_vs_nifty": 0.5714285714285714,
+      "stock_level_median": 0.07777931728388132
+    },
+    {
+      "portfolio": "Top 5",
+      "segment": "DEV",
+      "horizon": "6M",
+      "dates": 12,
+      "mean_return": 0.2610640203200984,
+      "median_return": 0.24505628892708575,
+      "hit_rate_positive": 0.9166666666666666,
+      "mean_excess_vs_nifty": 0.1468,
+      "excess_vs_nifty_ci95": [
+        0.0097,
+        0.2839
+      ],
+      "nw_t_vs_nifty": 2.1,
+      "mean_excess_vs_eligible_universe": 0.0349,
+      "nw_t_vs_universe": 0.8,
+      "hit_rate_vs_nifty": 0.75,
+      "stock_level_median": 0.16367805272308067
+    },
+    {
+      "portfolio": "Top 5",
+      "segment": "DEV",
+      "horizon": "12M",
+      "dates": 5,
+      "mean_return": 0.5231440774172731,
+      "median_return": 0.45932035010387795,
+      "hit_rate_positive": 1.0,
+      "mean_excess_vs_nifty": 0.2611,
+      "excess_vs_nifty_ci95": [
+        0.1145,
+        0.4076
+      ],
+      "nw_t_vs_nifty": 3.49,
+      "mean_excess_vs_eligible_universe": -0.0175,
+      "nw_t_vs_universe": -0.28,
+      "hit_rate_vs_nifty": 1.0,
+      "stock_level_median": 0.4440673729065452
+    },
+    {
+      "portfolio": "Top 5",
+      "segment": "FINAL",
+      "horizon": "1M",
+      "dates": 20,
+      "mean_return": 0.016915319205265556,
+      "median_return": 0.01887956462075525,
+      "hit_rate_positive": 0.55,
+      "mean_excess_vs_nifty": 0.0187,
+      "excess_vs_nifty_ci95": [
+        0.0037,
+        0.0338
+      ],
+      "nw_t_vs_nifty": 2.44,
+      "mean_excess_vs_eligible_universe": 0.0109,
+      "nw_t_vs_universe": 1.31,
+      "hit_rate_vs_nifty": 0.65,
+      "stock_level_median": 0.02545521103205206
+    },
+    {
+      "portfolio": "Top 5",
+      "segment": "FINAL",
+      "horizon": "3M",
+      "dates": 18,
+      "mean_return": 0.055611184689705065,
+      "median_return": 0.08483649147201039,
+      "hit_rate_positive": 0.6111111111111112,
+      "mean_excess_vs_nifty": 0.0454,
+      "excess_vs_nifty_ci95": [
+        -0.006,
+        0.0968
+      ],
+      "nw_t_vs_nifty": 1.73,
+      "mean_excess_vs_eligible_universe": 0.0258,
+      "nw_t_vs_universe": 0.75,
+      "hit_rate_vs_nifty": 0.6111111111111112,
+      "stock_level_median": 0.047869194248318814
+    },
+    {
+      "portfolio": "Top 5",
+      "segment": "FINAL",
+      "horizon": "6M",
+      "dates": 15,
+      "mean_return": 0.08040159705454433,
+      "median_return": 0.1179318494244703,
+      "hit_rate_positive": 0.8,
+      "mean_excess_vs_nifty": 0.078,
+      "excess_vs_nifty_ci95": [
+        0.0206,
+        0.1354
+      ],
+      "nw_t_vs_nifty": 2.67,
+      "mean_excess_vs_eligible_universe": 0.046,
+      "nw_t_vs_universe": 0.96,
+      "hit_rate_vs_nifty": 0.8666666666666667,
+      "stock_level_median": 0.0625857296284793
+    },
+    {
+      "portfolio": "Top 5",
+      "segment": "FINAL",
+      "horizon": "12M",
+      "dates": 8,
+      "mean_return": 0.11900953352960342,
+      "median_return": 0.12079812655552272,
+      "hit_rate_positive": 1.0,
+      "mean_excess_vs_nifty": 0.1139,
+      "excess_vs_nifty_ci95": [
+        0.097,
+        0.1308
+      ],
+      "nw_t_vs_nifty": 13.23,
+      "mean_excess_vs_eligible_universe": 0.0636,
+      "nw_t_vs_universe": 5.7,
+      "hit_rate_vs_nifty": 1.0,
+      "stock_level_median": 0.1206725703913667
+    },
+    {
+      "portfolio": "Top 10",
+      "segment": "DEV",
+      "horizon": "1M",
+      "dates": 17,
+      "mean_return": 0.029736082691251164,
+      "median_return": 0.018359695494398087,
+      "hit_rate_positive": 0.7058823529411765,
+      "mean_excess_vs_nifty": 0.0168,
+      "excess_vs_nifty_ci95": [
+        -0.0033,
+        0.0369
+      ],
+      "nw_t_vs_nifty": 1.64,
+      "mean_excess_vs_eligible_universe": 0.0002,
+      "nw_t_vs_universe": 0.03,
+      "hit_rate_vs_nifty": 0.8235294117647058,
+      "stock_level_median": 0.01875174375805344
+    },
+    {
+      "portfolio": "Top 10",
+      "segment": "DEV",
+      "horizon": "3M",
+      "dates": 14,
+      "mean_return": 0.11265683512175648,
+      "median_return": 0.10710938278657256,
+      "hit_rate_positive": 0.8571428571428571,
+      "mean_excess_vs_nifty": 0.0529,
+      "excess_vs_nifty_ci95": [
+        -0.0058,
+        0.1117
+      ],
+      "nw_t_vs_nifty": 1.77,
+      "mean_excess_vs_eligible_universe": 0.0024,
+      "nw_t_vs_universe": 0.16,
+      "hit_rate_vs_nifty": 0.7142857142857143,
+      "stock_level_median": 0.07258680089449765
+    },
+    {
+      "portfolio": "Top 10",
+      "segment": "DEV",
+      "horizon": "6M",
+      "dates": 12,
+      "mean_return": 0.24321323592205893,
+      "median_return": 0.24166276295556063,
+      "hit_rate_positive": 0.9166666666666666,
+      "mean_excess_vs_nifty": 0.1289,
+      "excess_vs_nifty_ci95": [
+        0.0223,
+        0.2356
+      ],
+      "nw_t_vs_nifty": 2.37,
+      "mean_excess_vs_eligible_universe": 0.017,
+      "nw_t_vs_universe": 0.68,
+      "hit_rate_vs_nifty": 0.8333333333333334,
+      "stock_level_median": 0.14492392816642186
+    },
+    {
+      "portfolio": "Top 10",
+      "segment": "DEV",
+      "horizon": "12M",
+      "dates": 5,
+      "mean_return": 0.5703596251832999,
+      "median_return": 0.5740486228991463,
+      "hit_rate_positive": 1.0,
+      "mean_excess_vs_nifty": 0.3083,
+      "excess_vs_nifty_ci95": [
+        0.2285,
+        0.3881
+      ],
+      "nw_t_vs_nifty": 7.57,
+      "mean_excess_vs_eligible_universe": 0.0297,
+      "nw_t_vs_universe": 1.04,
+      "hit_rate_vs_nifty": 1.0,
+      "stock_level_median": 0.49595844941566825
+    },
+    {
+      "portfolio": "Top 10",
+      "segment": "FINAL",
+      "horizon": "1M",
+      "dates": 20,
+      "mean_return": 0.012950562009148453,
+      "median_return": 0.018653952537736204,
+      "hit_rate_positive": 0.65,
+      "mean_excess_vs_nifty": 0.0148,
+      "excess_vs_nifty_ci95": [
+        0.001,
+        0.0286
+      ],
+      "nw_t_vs_nifty": 2.1,
+      "mean_excess_vs_eligible_universe": 0.0069,
+      "nw_t_vs_universe": 1.02,
+      "hit_rate_vs_nifty": 0.6,
+      "stock_level_median": 0.01242035099345129
+    },
+    {
+      "portfolio": "Top 10",
+      "segment": "FINAL",
+      "horizon": "3M",
+      "dates": 18,
+      "mean_return": 0.06259981800165422,
+      "median_return": 0.05138869863821571,
+      "hit_rate_positive": 0.7777777777777778,
+      "mean_excess_vs_nifty": 0.0524,
+      "excess_vs_nifty_ci95": [
+        0.0165,
+        0.0884
+      ],
+      "nw_t_vs_nifty": 2.86,
+      "mean_excess_vs_eligible_universe": 0.0327,
+      "nw_t_vs_universe": 1.36,
+      "hit_rate_vs_nifty": 0.9444444444444444,
+      "stock_level_median": 0.028611119853461542
+    },
+    {
+      "portfolio": "Top 10",
+      "segment": "FINAL",
+      "horizon": "6M",
+      "dates": 15,
+      "mean_return": 0.08730556545495771,
+      "median_return": 0.102284917381537,
+      "hit_rate_positive": 0.8,
+      "mean_excess_vs_nifty": 0.0849,
+      "excess_vs_nifty_ci95": [
+        0.0446,
+        0.1252
+      ],
+      "nw_t_vs_nifty": 4.13,
+      "mean_excess_vs_eligible_universe": 0.0529,
+      "nw_t_vs_universe": 1.81,
+      "hit_rate_vs_nifty": 0.8666666666666667,
+      "stock_level_median": 0.042749236620166386
+    },
+    {
+      "portfolio": "Top 10",
+      "segment": "FINAL",
+      "horizon": "12M",
+      "dates": 8,
+      "mean_return": 0.13613646527966594,
+      "median_return": 0.1284466133557692,
+      "hit_rate_positive": 1.0,
+      "mean_excess_vs_nifty": 0.131,
+      "excess_vs_nifty_ci95": [
+        0.0976,
+        0.1645
+      ],
+      "nw_t_vs_nifty": 7.68,
+      "mean_excess_vs_eligible_universe": 0.0807,
+      "nw_t_vs_universe": 8.27,
+      "hit_rate_vs_nifty": 1.0,
+      "stock_level_median": 0.09489710570994925
+    },
+    {
+      "portfolio": "Top 20",
+      "segment": "DEV",
+      "horizon": "1M",
+      "dates": 17,
+      "mean_return": 0.03470794830336661,
+      "median_return": 0.030230112962858303,
+      "hit_rate_positive": 0.7647058823529411,
+      "mean_excess_vs_nifty": 0.0218,
+      "excess_vs_nifty_ci95": [
+        0.0062,
+        0.0374
+      ],
+      "nw_t_vs_nifty": 2.75,
+      "mean_excess_vs_eligible_universe": 0.0052,
+      "nw_t_vs_universe": 1.1,
+      "hit_rate_vs_nifty": 0.8235294117647058,
+      "stock_level_median": 0.020879448656038635
+    },
+    {
+      "portfolio": "Top 20",
+      "segment": "DEV",
+      "horizon": "3M",
+      "dates": 14,
+      "mean_return": 0.11677972868485752,
+      "median_return": 0.13270123201110215,
+      "hit_rate_positive": 0.8571428571428571,
+      "mean_excess_vs_nifty": 0.0571,
+      "excess_vs_nifty_ci95": [
+        0.0119,
+        0.1022
+      ],
+      "nw_t_vs_nifty": 2.48,
+      "mean_excess_vs_eligible_universe": 0.0066,
+      "nw_t_vs_universe": 0.66,
+      "hit_rate_vs_nifty": 0.7857142857142857,
+      "stock_level_median": 0.06765064055378722
+    },
+    {
+      "portfolio": "Top 20",
+      "segment": "DEV",
+      "horizon": "6M",
+      "dates": 12,
+      "mean_return": 0.225512711472588,
+      "median_return": 0.24902691453607118,
+      "hit_rate_positive": 0.9166666666666666,
+      "mean_excess_vs_nifty": 0.1112,
+      "excess_vs_nifty_ci95": [
+        0.041,
+        0.1814
+      ],
+      "nw_t_vs_nifty": 3.11,
+      "mean_excess_vs_eligible_universe": -0.0007,
+      "nw_t_vs_universe": -0.1,
+      "hit_rate_vs_nifty": 0.9166666666666666,
+      "stock_level_median": 0.15214693936785584
+    },
+    {
+      "portfolio": "Top 20",
+      "segment": "DEV",
+      "horizon": "12M",
+      "dates": 5,
+      "mean_return": 0.6077189864038184,
+      "median_return": 0.5940414795498684,
+      "hit_rate_positive": 1.0,
+      "mean_excess_vs_nifty": 0.3456,
+      "excess_vs_nifty_ci95": [
+        0.2793,
+        0.412
+      ],
+      "nw_t_vs_nifty": 10.2,
+      "mean_excess_vs_eligible_universe": 0.067,
+      "nw_t_vs_universe": 3.08,
+      "hit_rate_vs_nifty": 1.0,
+      "stock_level_median": 0.536947111208626
+    },
+    {
+      "portfolio": "Top 20",
+      "segment": "FINAL",
+      "horizon": "1M",
+      "dates": 20,
+      "mean_return": 0.011458975064348422,
+      "median_return": 0.015301867993216384,
+      "hit_rate_positive": 0.65,
+      "mean_excess_vs_nifty": 0.0133,
+      "excess_vs_nifty_ci95": [
+        0.0016,
+        0.0249
+      ],
+      "nw_t_vs_nifty": 2.23,
+      "mean_excess_vs_eligible_universe": 0.0054,
+      "nw_t_vs_universe": 0.91,
+      "hit_rate_vs_nifty": 0.7,
+      "stock_level_median": 0.009309403299330055
+    },
+    {
+      "portfolio": "Top 20",
+      "segment": "FINAL",
+      "horizon": "3M",
+      "dates": 18,
+      "mean_return": 0.050719496142222736,
+      "median_return": 0.05583304805902069,
+      "hit_rate_positive": 0.7222222222222222,
+      "mean_excess_vs_nifty": 0.0405,
+      "excess_vs_nifty_ci95": [
+        0.0054,
+        0.0757
+      ],
+      "nw_t_vs_nifty": 2.26,
+      "mean_excess_vs_eligible_universe": 0.0209,
+      "nw_t_vs_universe": 0.98,
+      "hit_rate_vs_nifty": 0.7777777777777778,
+      "stock_level_median": 0.023616089031337162
+    },
+    {
+      "portfolio": "Top 20",
+      "segment": "FINAL",
+      "horizon": "6M",
+      "dates": 15,
+      "mean_return": 0.062311568458402244,
+      "median_return": 0.0575070838330344,
+      "hit_rate_positive": 0.8666666666666667,
+      "mean_excess_vs_nifty": 0.0599,
+      "excess_vs_nifty_ci95": [
+        0.0236,
+        0.0962
+      ],
+      "nw_t_vs_nifty": 3.24,
+      "mean_excess_vs_eligible_universe": 0.028,
+      "nw_t_vs_universe": 1.05,
+      "hit_rate_vs_nifty": 0.8666666666666667,
+      "stock_level_median": 0.031179997726556774
+    },
+    {
+      "portfolio": "Top 20",
+      "segment": "FINAL",
+      "horizon": "12M",
+      "dates": 8,
+      "mean_return": 0.12009956992648615,
+      "median_return": 0.07472778380151715,
+      "hit_rate_positive": 1.0,
+      "mean_excess_vs_nifty": 0.115,
+      "excess_vs_nifty_ci95": [
+        0.0949,
+        0.1351
+      ],
+      "nw_t_vs_nifty": 11.23,
+      "mean_excess_vs_eligible_universe": 0.0646,
+      "nw_t_vs_universe": 8.99,
+      "hit_rate_vs_nifty": 1.0,
+      "stock_level_median": 0.0910939777116957
+    }
+  ],
+  "risk_1m_rebalanced": {
+    "Top 5 DEV": {
+      "periods": 17,
+      "mean_period_return": 0.035412528942762686,
+      "cumulative_return": 0.7206535604117168,
+      "benchmark_cumulative": 0.23137093913940832,
+      "annualised_volatility": 0.27964034111600966,
+      "downside_volatility": 0.23156173676647251,
+      "sharpe_rf0": 1.519631772787962,
+      "information_ratio": 1.288377186083697,
+      "max_drawdown": -0.1444988686754345,
+      "hit_rate_vs_benchmark": 0.5882352941176471,
+      "avg_monthly_turnover": 0.44999999999999996
+    },
+    "Top 5 FINAL": {
+      "periods": 20,
+      "mean_period_return": 0.016915319205265556,
+      "cumulative_return": 0.3412605697738602,
+      "benchmark_cumulative": -0.052560902114720975,
+      "annualised_volatility": 0.2300934720534231,
+      "downside_volatility": 0.20925480111621708,
+      "sharpe_rf0": 0.8821798752120089,
+      "information_ratio": 1.8393074103388516,
+      "max_drawdown": -0.15851704092584312,
+      "hit_rate_vs_benchmark": 0.65,
+      "avg_monthly_turnover": 0.39999999999999997
+    },
+    "Top 10 DEV": {
+      "periods": 17,
+      "mean_period_return": 0.029736082691251164,
+      "cumulative_return": 0.5918637284241406,
+      "benchmark_cumulative": 0.23137093913940832,
+      "annualised_volatility": 0.2260213920835249,
+      "downside_volatility": 0.22130432806489372,
+      "sharpe_rf0": 1.5787576078778789,
+      "information_ratio": 1.336565546172993,
+      "max_drawdown": -0.16959279418993778,
+      "hit_rate_vs_benchmark": 0.8235294117647058,
+      "avg_monthly_turnover": 0.45625000000000004
+    },
+    "Top 10 FINAL": {
+      "periods": 20,
+      "mean_period_return": 0.012950562009148453,
+      "cumulative_return": 0.2511753021083134,
+      "benchmark_cumulative": -0.052560902114720975,
+      "annualised_volatility": 0.20693264718867993,
+      "downside_volatility": 0.20649310468260432,
+      "sharpe_rf0": 0.7510015757353286,
+      "information_ratio": 1.582245831814623,
+      "max_drawdown": -0.11121839356185222,
+      "hit_rate_vs_benchmark": 0.6,
+      "avg_monthly_turnover": 0.3684210526315789
+    },
+    "Top 20 DEV": {
+      "periods": 17,
+      "mean_period_return": 0.03470794830336661,
+      "cumulative_return": 0.7428667484516764,
+      "benchmark_cumulative": 0.23137093913940832,
+      "annualised_volatility": 0.19609375545336857,
+      "downside_volatility": 0.18356590670539075,
+      "sharpe_rf0": 2.1239604426844823,
+      "information_ratio": 2.2378199429020023,
+      "max_drawdown": -0.10721501049678919,
+      "hit_rate_vs_benchmark": 0.8235294117647058,
+      "avg_monthly_turnover": 0.365625
+    },
+    "Top 20 FINAL": {
+      "periods": 20,
+      "mean_period_return": 0.011458975064348422,
+      "cumulative_return": 0.22281019550864012,
+      "benchmark_cumulative": -0.052560902114720975,
+      "annualised_volatility": 0.18583654448946593,
+      "downside_volatility": 0.180927862621025,
+      "sharpe_rf0": 0.7399389670634756,
+      "information_ratio": 1.684753435785802,
+      "max_drawdown": -0.09780448692544937,
+      "hit_rate_vs_benchmark": 0.7,
+      "avg_monthly_turnover": 0.3263157894736843
+    },
+    "Eligible universe equal-weight DEV": {
+      "periods": 17,
+      "mean_period_return": 0.029523223815692966,
+      "cumulative_return": 0.6106913681400292,
+      "benchmark_cumulative": 0.23137093913940832,
+      "annualised_volatility": 0.16857708596164186,
+      "downside_volatility": 0.16470601876181268,
+      "sharpe_rf0": 2.1015826900040753,
+      "information_ratio": 2.4369330015417097,
+      "max_drawdown": -0.07855940372751542,
+      "hit_rate_vs_benchmark": 0.8235294117647058
+    },
+    "NIFTY 50 DEV": {
+      "periods": 17,
+      "mean_period_return": 0.01291436700080032,
+      "cumulative_return": 0.23137093913940832,
+      "benchmark_cumulative": 0.23137093913940832,
+      "annualised_volatility": 0.12423611572543891,
+      "downside_volatility": 0.1017485158209537,
+      "sharpe_rf0": 1.247402199470659,
+      "information_ratio": null,
+      "max_drawdown": -0.06634489975804879,
+      "hit_rate_vs_benchmark": 0.0
+    },
+    "Eligible universe equal-weight FINAL": {
+      "periods": 20,
+      "mean_period_return": 0.006050297532073137,
+      "cumulative_return": 0.09241031523713983,
+      "benchmark_cumulative": -0.052560902114720975,
+      "annualised_volatility": 0.2039186386258223,
+      "downside_volatility": 0.19802631942283636,
+      "sharpe_rf0": 0.35604185509545583,
+      "information_ratio": 1.1378469344303008,
+      "max_drawdown": -0.1539573800708112,
+      "hit_rate_vs_benchmark": 0.6
+    },
+    "NIFTY 50 FINAL": {
+      "periods": 20,
+      "mean_period_return": -0.0018092580766673084,
+      "cumulative_return": -0.052560902114720975,
+      "benchmark_cumulative": -0.052560902114720975,
+      "annualised_volatility": 0.14880636999171803,
+      "downside_volatility": 0.15562914180916587,
+      "sharpe_rf0": -0.14590166349206724,
+      "information_ratio": null,
+      "max_drawdown": -0.15800302715334205,
+      "hit_rate_vs_benchmark": 0.0
+    }
+  },
+  "regime": [
+    {
+      "segment": "DEV",
+      "horizon": "1M",
+      "regime": "Bearish",
+      "dates": 2,
+      "mean_ic": 0.038056270386095506,
+      "top10_mean_excess_vs_nifty": 0.015589580510718005
+    },
+    {
+      "segment": "DEV",
+      "horizon": "1M",
+      "regime": "Bullish",
+      "dates": 5,
+      "mean_ic": -0.06108634089413101,
+      "top10_mean_excess_vs_nifty": 0.008973818899753261
+    },
+    {
+      "segment": "DEV",
+      "horizon": "1M",
+      "regime": "Sideways",
+      "dates": 10,
+      "mean_ic": 0.05179393496857544,
+      "top10_mean_excess_vs_nifty": 0.020992091121746194
+    },
+    {
+      "segment": "DEV",
+      "horizon": "3M",
+      "regime": "Bearish",
+      "dates": 1,
+      "mean_ic": -0.09536790959939695,
+      "top10_mean_excess_vs_nifty": 0.1111208515400613
+    },
+    {
+      "segment": "DEV",
+      "horizon": "3M",
+      "regime": "Bullish",
+      "dates": 4,
+      "mean_ic": -0.032159208909289146,
+      "top10_mean_excess_vs_nifty": 0.0830495780767951
+    },
+    {
+      "segment": "DEV",
+      "horizon": "3M",
+      "regime": "Sideways",
+      "dates": 9,
+      "mean_ic": 0.031178204515330377,
+      "top10_mean_excess_vs_nifty": 0.03308180967386942
+    },
+    {
+      "segment": "FINAL",
+      "horizon": "1M",
+      "regime": "Bearish",
+      "dates": 5,
+      "mean_ic": -0.05779176210167325,
+      "top10_mean_excess_vs_nifty": 0.04054613601196307
+    },
+    {
+      "segment": "FINAL",
+      "horizon": "1M",
+      "regime": "Bullish",
+      "dates": 4,
+      "mean_ic": 0.055750443397796334,
+      "top10_mean_excess_vs_nifty": 0.02318235063449155
+    },
+    {
+      "segment": "FINAL",
+      "horizon": "1M",
+      "regime": "Sideways",
+      "dates": 11,
+      "mean_ic": 0.03403263586631792,
+      "top10_mean_excess_vs_nifty": -2.397098922421112e-05
+    },
+    {
+      "segment": "FINAL",
+      "horizon": "3M",
+      "regime": "Bearish",
+      "dates": 5,
+      "mean_ic": -0.1322753000471111,
+      "top10_mean_excess_vs_nifty": 0.04918332354601605
+    },
+    {
+      "segment": "FINAL",
+      "horizon": "3M",
+      "regime": "Bullish",
+      "dates": 4,
+      "mean_ic": 0.13378227262634593,
+      "top10_mean_excess_vs_nifty": 0.09847119544104282
+    },
+    {
+      "segment": "FINAL",
+      "horizon": "3M",
+      "regime": "Sideways",
+      "dates": 9,
+      "mean_ic": 0.005797489067761582,
+      "top10_mean_excess_vs_nifty": 0.03372886188302382
+    },
+    {
+      "segment": "ALL",
+      "horizon": "1M",
+      "regime": "Bearish",
+      "dates": 8,
+      "mean_ic": -0.034996182110639026,
+      "top10_mean_excess_vs_nifty": 0.021174534790736475
+    },
+    {
+      "segment": "ALL",
+      "horizon": "1M",
+      "regime": "Bullish",
+      "dates": 9,
+      "mean_ic": -0.00915888120882997,
+      "top10_mean_excess_vs_nifty": 0.015288721892970277
+    },
+    {
+      "segment": "ALL",
+      "horizon": "1M",
+      "regime": "Sideways",
+      "dates": 21,
+      "mean_ic": 0.042490397343583404,
+      "top10_mean_excess_vs_nifty": 0.009983677635047412
+    },
+    {
+      "segment": "ALL",
+      "horizon": "3M",
+      "regime": "Bearish",
+      "dates": 8,
+      "mean_ic": -0.08096190652153815,
+      "top10_mean_excess_vs_nifty": 0.03540016260955734
+    },
+    {
+      "segment": "ALL",
+      "horizon": "3M",
+      "regime": "Bullish",
+      "dates": 9,
+      "mean_ic": 0.048839413940782776,
+      "top10_mean_excess_vs_nifty": 0.07377924736302617
+    },
+    {
+      "segment": "ALL",
+      "horizon": "3M",
+      "regime": "Sideways",
+      "dates": 19,
+      "mean_ic": 0.02227797242157852,
+      "top10_mean_excess_vs_nifty": 0.030791586198249708
+    }
+  ],
+  "regime_by_date": {
+    "2023-07-31": "Bullish",
+    "2023-08-31": "Sideways",
+    "2023-09-29": "Sideways",
+    "2023-10-31": "Bearish",
+    "2023-11-30": "Bullish",
+    "2023-12-29": "Bullish",
+    "2024-01-31": "Bullish",
+    "2024-02-29": "Sideways",
+    "2024-03-28": "Sideways",
+    "2024-04-30": "Sideways",
+    "2024-05-31": "Sideways",
+    "2024-06-28": "Sideways",
+    "2024-07-31": "Sideways",
+    "2024-08-30": "Sideways",
+    "2024-09-30": "Bullish",
+    "2024-10-31": "Bearish",
+    "2024-11-29": "Sideways",
+    "2024-12-31": "Bearish",
+    "2025-01-31": "Sideways",
+    "2025-02-28": "Bearish",
+    "2025-03-28": "Bullish",
+    "2025-04-30": "Bullish",
+    "2025-05-30": "Sideways",
+    "2025-06-30": "Sideways",
+    "2025-07-31": "Bearish",
+    "2025-08-29": "Bearish",
+    "2025-09-30": "Sideways",
+    "2025-10-31": "Bullish",
+    "2025-11-28": "Bullish",
+    "2025-12-31": "Sideways",
+    "2026-01-30": "Bearish",
+    "2026-02-27": "Sideways",
+    "2026-03-30": "Bearish",
+    "2026-04-30": "Sideways",
+    "2026-05-29": "Sideways",
+    "2026-06-30": "Sideways",
+    "2026-07-31": "Sideways",
+    "2026-08-31": "Sideways",
+    "2026-09-30": "Bearish"
+  },
+  "components": [
+    {
+      "component": "quality",
+      "test": "component_alone",
+      "segment": "DEV",
+      "horizon": "1M",
+      "coverage": 1.0,
+      "dates": 17,
+      "mean_ic": -0.0203,
+      "nw_se": 0.0308,
+      "nw_t": -0.66,
+      "share_positive": 0.471
+    },
+    {
+      "component": "quality",
+      "test": "component_alone",
+      "segment": "DEV",
+      "horizon": "3M",
+      "coverage": 1.0,
+      "dates": 14,
+      "mean_ic": -0.0598,
+      "nw_se": 0.0608,
+      "nw_t": -0.98,
+      "share_positive": 0.571
+    },
+    {
+      "component": "quality",
+      "test": "component_alone",
+      "segment": "DEV",
+      "horizon": "6M",
+      "coverage": 1.0,
+      "dates": 12,
+      "mean_ic": -0.0965,
+      "nw_se": 0.0853,
+      "nw_t": -1.13,
+      "share_positive": 0.417
+    },
+    {
+      "component": "quality",
+      "test": "component_alone",
+      "segment": "FINAL",
+      "horizon": "1M",
+      "coverage": 1.0,
+      "dates": 20,
+      "mean_ic": 0.0148,
+      "nw_se": 0.0204,
+      "nw_t": 0.73,
+      "share_positive": 0.6
+    },
+    {
+      "component": "quality",
+      "test": "component_alone",
+      "segment": "FINAL",
+      "horizon": "3M",
+      "coverage": 1.0,
+      "dates": 18,
+      "mean_ic": 0.0023,
+      "nw_se": 0.0386,
+      "nw_t": 0.06,
+      "share_positive": 0.444
+    },
+    {
+      "component": "quality",
+      "test": "component_alone",
+      "segment": "FINAL",
+      "horizon": "6M",
+      "coverage": 1.0,
+      "dates": 15,
+      "mean_ic": -0.0003,
+      "nw_se": 0.0429,
+      "nw_t": -0.01,
+      "share_positive": 0.4
+    },
+    {
+      "component": "valuation",
+      "test": "component_alone",
+      "segment": "DEV",
+      "horizon": "1M",
+      "coverage": 1.0,
+      "dates": 17,
+      "mean_ic": 0.0363,
+      "nw_se": 0.0308,
+      "nw_t": 1.18,
+      "share_positive": 0.588
+    },
+    {
+      "component": "valuation",
+      "test": "component_alone",
+      "segment": "DEV",
+      "horizon": "3M",
+      "coverage": 1.0,
+      "dates": 14,
+      "mean_ic": 0.059,
+      "nw_se": 0.0281,
+      "nw_t": 2.1,
+      "share_positive": 0.714
+    },
+    {
+      "component": "valuation",
+      "test": "component_alone",
+      "segment": "DEV",
+      "horizon": "6M",
+      "coverage": 1.0,
+      "dates": 12,
+      "mean_ic": 0.0937,
+      "nw_se": 0.0292,
+      "nw_t": 3.21,
+      "share_positive": 0.917
+    },
+    {
+      "component": "valuation",
+      "test": "component_alone",
+      "segment": "FINAL",
+      "horizon": "1M",
+      "coverage": 1.0,
+      "dates": 20,
+      "mean_ic": 0.0709,
+      "nw_se": 0.021,
+      "nw_t": 3.38,
+      "share_positive": 0.75
+    },
+    {
+      "component": "valuation",
+      "test": "component_alone",
+      "segment": "FINAL",
+      "horizon": "3M",
+      "coverage": 1.0,
+      "dates": 18,
+      "mean_ic": 0.0868,
+      "nw_se": 0.0346,
+      "nw_t": 2.51,
+      "share_positive": 0.778
+    },
+    {
+      "component": "valuation",
+      "test": "component_alone",
+      "segment": "FINAL",
+      "horizon": "6M",
+      "coverage": 1.0,
+      "dates": 15,
+      "mean_ic": 0.0916,
+      "nw_se": 0.0515,
+      "nw_t": 1.78,
+      "share_positive": 0.8
+    },
+    {
+      "component": "financial_health",
+      "test": "component_alone",
+      "segment": "DEV",
+      "horizon": "1M",
+      "coverage": 1.0,
+      "dates": 17,
+      "mean_ic": 0.0213,
+      "nw_se": 0.0252,
+      "nw_t": 0.85,
+      "share_positive": 0.471
+    },
+    {
+      "component": "financial_health",
+      "test": "component_alone",
+      "segment": "DEV",
+      "horizon": "3M",
+      "coverage": 1.0,
+      "dates": 14,
+      "mean_ic": 0.0452,
+      "nw_se": 0.025,
+      "nw_t": 1.81,
+      "share_positive": 0.571
+    },
+    {
+      "component": "financial_health",
+      "test": "component_alone",
+      "segment": "DEV",
+      "horizon": "6M",
+      "coverage": 1.0,
+      "dates": 12,
+      "mean_ic": 0.066,
+      "nw_se": 0.0295,
+      "nw_t": 2.23,
+      "share_positive": 0.75
+    },
+    {
+      "component": "financial_health",
+      "test": "component_alone",
+      "segment": "FINAL",
+      "horizon": "1M",
+      "coverage": 1.0,
+      "dates": 20,
+      "mean_ic": 0.0042,
+      "nw_se": 0.0196,
+      "nw_t": 0.22,
+      "share_positive": 0.55
+    },
+    {
+      "component": "financial_health",
+      "test": "component_alone",
+      "segment": "FINAL",
+      "horizon": "3M",
+      "coverage": 1.0,
+      "dates": 18,
+      "mean_ic": -0.0318,
+      "nw_se": 0.0227,
+      "nw_t": -1.4,
+      "share_positive": 0.444
+    },
+    {
+      "component": "financial_health",
+      "test": "component_alone",
+      "segment": "FINAL",
+      "horizon": "6M",
+      "coverage": 1.0,
+      "dates": 15,
+      "mean_ic": -0.0501,
+      "nw_se": 0.0368,
+      "nw_t": -1.36,
+      "share_positive": 0.267
+    },
+    {
+      "component": "technical_trend",
+      "test": "component_alone",
+      "segment": "DEV",
+      "horizon": "1M",
+      "coverage": 1.0,
+      "dates": 17,
+      "mean_ic": 0.0188,
+      "nw_se": 0.0281,
+      "nw_t": 0.67,
+      "share_positive": 0.588
+    },
+    {
+      "component": "technical_trend",
+      "test": "component_alone",
+      "segment": "DEV",
+      "horizon": "3M",
+      "coverage": 1.0,
+      "dates": 14,
+      "mean_ic": 0.0484,
+      "nw_se": 0.0326,
+      "nw_t": 1.48,
+      "share_positive": 0.714
+    },
+    {
+      "component": "technical_trend",
+      "test": "component_alone",
+      "segment": "DEV",
+      "horizon": "6M",
+      "coverage": 1.0,
+      "dates": 12,
+      "mean_ic": 0.0866,
+      "nw_se": 0.0355,
+      "nw_t": 2.44,
+      "share_positive": 0.75
+    },
+    {
+      "component": "technical_trend",
+      "test": "component_alone",
+      "segment": "FINAL",
+      "horizon": "1M",
+      "coverage": 1.0,
+      "dates": 20,
+      "mean_ic": -0.0238,
+      "nw_se": 0.035,
+      "nw_t": -0.68,
+      "share_positive": 0.4
+    },
+    {
+      "component": "technical_trend",
+      "test": "component_alone",
+      "segment": "FINAL",
+      "horizon": "3M",
+      "coverage": 1.0,
+      "dates": 18,
+      "mean_ic": -0.0432,
+      "nw_se": 0.057,
+      "nw_t": -0.76,
+      "share_positive": 0.389
+    },
+    {
+      "component": "technical_trend",
+      "test": "component_alone",
+      "segment": "FINAL",
+      "horizon": "6M",
+      "coverage": 1.0,
+      "dates": 15,
+      "mean_ic": -0.0127,
+      "nw_se": 0.0471,
+      "nw_t": -0.27,
+      "share_positive": 0.467
+    },
+    {
+      "component": "momentum",
+      "test": "component_alone",
+      "segment": "DEV",
+      "horizon": "1M",
+      "coverage": 1.0,
+      "dates": 17,
+      "mean_ic": 0.0415,
+      "nw_se": 0.0345,
+      "nw_t": 1.2,
+      "share_positive": 0.647
+    },
+    {
+      "component": "momentum",
+      "test": "component_alone",
+      "segment": "DEV",
+      "horizon": "3M",
+      "coverage": 1.0,
+      "dates": 14,
+      "mean_ic": 0.0607,
+      "nw_se": 0.0578,
+      "nw_t": 1.05,
+      "share_positive": 0.643
+    },
+    {
+      "component": "momentum",
+      "test": "component_alone",
+      "segment": "DEV",
+      "horizon": "6M",
+      "coverage": 1.0,
+      "dates": 12,
+      "mean_ic": 0.0911,
+      "nw_se": 0.0594,
+      "nw_t": 1.53,
+      "share_positive": 0.75
+    },
+    {
+      "component": "momentum",
+      "test": "component_alone",
+      "segment": "FINAL",
+      "horizon": "1M",
+      "coverage": 1.0,
+      "dates": 20,
+      "mean_ic": -0.0493,
+      "nw_se": 0.0411,
+      "nw_t": -1.2,
+      "share_positive": 0.4
+    },
+    {
+      "component": "momentum",
+      "test": "component_alone",
+      "segment": "FINAL",
+      "horizon": "3M",
+      "coverage": 1.0,
+      "dates": 18,
+      "mean_ic": -0.0702,
+      "nw_se": 0.0596,
+      "nw_t": -1.18,
+      "share_positive": 0.389
+    },
+    {
+      "component": "momentum",
+      "test": "component_alone",
+      "segment": "FINAL",
+      "horizon": "6M",
+      "coverage": 1.0,
+      "dates": 15,
+      "mean_ic": -0.0418,
+      "nw_se": 0.0427,
+      "nw_t": -0.98,
+      "share_positive": 0.4
+    },
+    {
+      "component": "risk",
+      "test": "component_alone",
+      "segment": "DEV",
+      "horizon": "1M",
+      "coverage": 1.0,
+      "dates": 17,
+      "mean_ic": -0.0326,
+      "nw_se": 0.0368,
+      "nw_t": -0.88,
+      "share_positive": 0.412
+    },
+    {
+      "component": "risk",
+      "test": "component_alone",
+      "segment": "DEV",
+      "horizon": "3M",
+      "coverage": 1.0,
+      "dates": 14,
+      "mean_ic": -0.0354,
+      "nw_se": 0.0554,
+      "nw_t": -0.64,
+      "share_positive": 0.357
+    },
+    {
+      "component": "risk",
+      "test": "component_alone",
+      "segment": "DEV",
+      "horizon": "6M",
+      "coverage": 1.0,
+      "dates": 12,
+      "mean_ic": -0.0459,
+      "nw_se": 0.0295,
+      "nw_t": -1.56,
+      "share_positive": 0.25
+    },
+    {
+      "component": "risk",
+      "test": "component_alone",
+      "segment": "FINAL",
+      "horizon": "1M",
+      "coverage": 1.0,
+      "dates": 20,
+      "mean_ic": -0.0111,
+      "nw_se": 0.0534,
+      "nw_t": -0.21,
+      "share_positive": 0.45
+    },
+    {
+      "component": "risk",
+      "test": "component_alone",
+      "segment": "FINAL",
+      "horizon": "3M",
+      "coverage": 1.0,
+      "dates": 18,
+      "mean_ic": -0.0106,
+      "nw_se": 0.0895,
+      "nw_t": -0.12,
+      "share_positive": 0.5
+    },
+    {
+      "component": "risk",
+      "test": "component_alone",
+      "segment": "FINAL",
+      "horizon": "6M",
+      "coverage": 1.0,
+      "dates": 15,
+      "mean_ic": 0.018,
+      "nw_se": 0.1081,
+      "nw_t": 0.17,
+      "share_positive": 0.467
+    },
+    {
+      "component": "sector_outlook",
+      "test": "component_alone",
+      "segment": "DEV",
+      "horizon": "1M",
+      "coverage": 0.0,
+      "dates": 0,
+      "mean_ic": null,
+      "nw_se": null,
+      "nw_t": null,
+      "share_positive": null
+    },
+    {
+      "component": "sector_outlook",
+      "test": "component_alone",
+      "segment": "DEV",
+      "horizon": "3M",
+      "coverage": 0.0,
+      "dates": 0,
+      "mean_ic": null,
+      "nw_se": null,
+      "nw_t": null,
+      "share_positive": null
+    },
+    {
+      "component": "sector_outlook",
+      "test": "component_alone",
+      "segment": "DEV",
+      "horizon": "6M",
+      "coverage": 0.0,
+      "dates": 0,
+      "mean_ic": null,
+      "nw_se": null,
+      "nw_t": null,
+      "share_positive": null
+    },
+    {
+      "component": "sector_outlook",
+      "test": "component_alone",
+      "segment": "FINAL",
+      "horizon": "1M",
+      "coverage": 0.0,
+      "dates": 0,
+      "mean_ic": null,
+      "nw_se": null,
+      "nw_t": null,
+      "share_positive": null
+    },
+    {
+      "component": "sector_outlook",
+      "test": "component_alone",
+      "segment": "FINAL",
+      "horizon": "3M",
+      "coverage": 0.0,
+      "dates": 0,
+      "mean_ic": null,
+      "nw_se": null,
+      "nw_t": null,
+      "share_positive": null
+    },
+    {
+      "component": "sector_outlook",
+      "test": "component_alone",
+      "segment": "FINAL",
+      "horizon": "6M",
+      "coverage": 0.0,
+      "dates": 0,
+      "mean_ic": null,
+      "nw_se": null,
+      "nw_t": null,
+      "share_positive": null
+    },
+    {
+      "component": "market_regime",
+      "test": "component_alone",
+      "segment": "DEV",
+      "horizon": "1M",
+      "coverage": 1.0,
+      "dates": 17,
+      "mean_ic": 0.0404,
+      "nw_se": 0.0268,
+      "nw_t": 1.51,
+      "share_positive": 0.588
+    },
+    {
+      "component": "market_regime",
+      "test": "component_alone",
+      "segment": "DEV",
+      "horizon": "3M",
+      "coverage": 1.0,
+      "dates": 14,
+      "mean_ic": 0.0127,
+      "nw_se": 0.0322,
+      "nw_t": 0.4,
+      "share_positive": 0.429
+    },
+    {
+      "component": "market_regime",
+      "test": "component_alone",
+      "segment": "DEV",
+      "horizon": "6M",
+      "coverage": 1.0,
+      "dates": 12,
+      "mean_ic": 0.0076,
+      "nw_se": 0.0338,
+      "nw_t": 0.23,
+      "share_positive": 0.5
+    },
+    {
+      "component": "market_regime",
+      "test": "component_alone",
+      "segment": "FINAL",
+      "horizon": "1M",
+      "coverage": 1.0,
+      "dates": 20,
+      "mean_ic": 0.0094,
+      "nw_se": 0.0322,
+      "nw_t": 0.29,
+      "share_positive": 0.5
+    },
+    {
+      "component": "market_regime",
+      "test": "component_alone",
+      "segment": "FINAL",
+      "horizon": "3M",
+      "coverage": 1.0,
+      "dates": 18,
+      "mean_ic": 0.0021,
+      "nw_se": 0.0433,
+      "nw_t": 0.05,
+      "share_positive": 0.5
+    },
+    {
+      "component": "market_regime",
+      "test": "component_alone",
+      "segment": "FINAL",
+      "horizon": "6M",
+      "coverage": 1.0,
+      "dates": 15,
+      "mean_ic": 0.0405,
+      "nw_se": 0.0122,
+      "nw_t": 3.32,
+      "share_positive": 0.6
+    },
+    {
+      "component": "quality",
+      "test": "leave_one_out",
+      "segment": "DEV",
+      "horizon": "1M",
+      "mean_ic_without": 0.0537,
+      "mean_ic_production": 0.017,
+      "ic_change": 0.0367,
+      "nw_t": 1.41
+    },
+    {
+      "component": "quality",
+      "test": "leave_one_out",
+      "segment": "DEV",
+      "horizon": "3M",
+      "mean_ic_without": 0.0796,
+      "mean_ic_production": 0.004,
+      "ic_change": 0.0755,
+      "nw_t": 1.32
+    },
+    {
+      "component": "quality",
+      "test": "leave_one_out",
+      "segment": "DEV",
+      "horizon": "6M",
+      "mean_ic_without": 0.1217,
+      "mean_ic_production": 0.0003,
+      "ic_change": 0.1214,
+      "nw_t": 1.55
+    },
+    {
+      "component": "quality",
+      "test": "leave_one_out",
+      "segment": "FINAL",
+      "horizon": "1M",
+      "mean_ic_without": 0.0203,
+      "mean_ic_production": 0.0154,
+      "ic_change": 0.0049,
+      "nw_t": 0.28
+    },
+    {
+      "component": "quality",
+      "test": "leave_one_out",
+      "segment": "FINAL",
+      "horizon": "3M",
+      "mean_ic_without": 0.003,
+      "mean_ic_production": -0.0041,
+      "ic_change": 0.0071,
+      "nw_t": 0.81
+    },
+    {
+      "component": "quality",
+      "test": "leave_one_out",
+      "segment": "FINAL",
+      "horizon": "6M",
+      "mean_ic_without": 0.0369,
+      "mean_ic_production": 0.0187,
+      "ic_change": 0.0182,
+      "nw_t": 2.02
+    },
+    {
+      "component": "valuation",
+      "test": "leave_one_out",
+      "segment": "DEV",
+      "horizon": "1M",
+      "mean_ic_without": -0.0008,
+      "mean_ic_production": 0.017,
+      "ic_change": -0.0177,
+      "nw_t": -1.25
+    },
+    {
+      "component": "valuation",
+      "test": "leave_one_out",
+      "segment": "DEV",
+      "horizon": "3M",
+      "mean_ic_without": -0.0224,
+      "mean_ic_production": 0.004,
+      "ic_change": -0.0265,
+      "nw_t": -1.73
+    },
+    {
+      "component": "valuation",
+      "test": "leave_one_out",
+      "segment": "DEV",
+      "horizon": "6M",
+      "mean_ic_without": -0.0395,
+      "mean_ic_production": 0.0003,
+      "ic_change": -0.0398,
+      "nw_t": -2.04
+    },
+    {
+      "component": "valuation",
+      "test": "leave_one_out",
+      "segment": "FINAL",
+      "horizon": "1M",
+      "mean_ic_without": -0.0124,
+      "mean_ic_production": 0.0154,
+      "ic_change": -0.0278,
+      "nw_t": -2.5
+    },
+    {
+      "component": "valuation",
+      "test": "leave_one_out",
+      "segment": "FINAL",
+      "horizon": "3M",
+      "mean_ic_without": -0.0447,
+      "mean_ic_production": -0.0041,
+      "ic_change": -0.0406,
+      "nw_t": -8.53
+    },
+    {
+      "component": "valuation",
+      "test": "leave_one_out",
+      "segment": "FINAL",
+      "horizon": "6M",
+      "mean_ic_without": -0.0273,
+      "mean_ic_production": 0.0187,
+      "ic_change": -0.046,
+      "nw_t": -5.32
+    },
+    {
+      "component": "financial_health",
+      "test": "leave_one_out",
+      "segment": "DEV",
+      "horizon": "1M",
+      "mean_ic_without": 0.012,
+      "mean_ic_production": 0.017,
+      "ic_change": -0.005,
+      "nw_t": -0.84
+    },
+    {
+      "component": "financial_health",
+      "test": "leave_one_out",
+      "segment": "DEV",
+      "horizon": "3M",
+      "mean_ic_without": -0.0104,
+      "mean_ic_production": 0.004,
+      "ic_change": -0.0144,
+      "nw_t": -3.1
+    },
+    {
+      "component": "financial_health",
+      "test": "leave_one_out",
+      "segment": "DEV",
+      "horizon": "6M",
+      "mean_ic_without": -0.0194,
+      "mean_ic_production": 0.0003,
+      "ic_change": -0.0197,
+      "nw_t": -5.36
+    },
+    {
+      "component": "financial_health",
+      "test": "leave_one_out",
+      "segment": "FINAL",
+      "horizon": "1M",
+      "mean_ic_without": 0.0174,
+      "mean_ic_production": 0.0154,
+      "ic_change": 0.002,
+      "nw_t": 0.4
+    },
+    {
+      "component": "financial_health",
+      "test": "leave_one_out",
+      "segment": "FINAL",
+      "horizon": "3M",
+      "mean_ic_without": 0.0084,
+      "mean_ic_production": -0.0041,
+      "ic_change": 0.0125,
+      "nw_t": 2.76
+    },
+    {
+      "component": "financial_health",
+      "test": "leave_one_out",
+      "segment": "FINAL",
+      "horizon": "6M",
+      "mean_ic_without": 0.0373,
+      "mean_ic_production": 0.0187,
+      "ic_change": 0.0186,
+      "nw_t": 5.28
+    },
+    {
+      "component": "technical_trend",
+      "test": "leave_one_out",
+      "segment": "DEV",
+      "horizon": "1M",
+      "mean_ic_without": 0.0121,
+      "mean_ic_production": 0.017,
+      "ic_change": -0.0048,
+      "nw_t": -1.03
+    },
+    {
+      "component": "technical_trend",
+      "test": "leave_one_out",
+      "segment": "DEV",
+      "horizon": "3M",
+      "mean_ic_without": -0.004,
+      "mean_ic_production": 0.004,
+      "ic_change": -0.0081,
+      "nw_t": -1.24
+    },
+    {
+      "component": "technical_trend",
+      "test": "leave_one_out",
+      "segment": "DEV",
+      "horizon": "6M",
+      "mean_ic_without": -0.0135,
+      "mean_ic_production": 0.0003,
+      "ic_change": -0.0138,
+      "nw_t": -1.92
+    },
+    {
+      "component": "technical_trend",
+      "test": "leave_one_out",
+      "segment": "FINAL",
+      "horizon": "1M",
+      "mean_ic_without": 0.0251,
+      "mean_ic_production": 0.0154,
+      "ic_change": 0.0097,
+      "nw_t": 2.02
+    },
+    {
+      "component": "technical_trend",
+      "test": "leave_one_out",
+      "segment": "FINAL",
+      "horizon": "3M",
+      "mean_ic_without": 0.0066,
+      "mean_ic_production": -0.0041,
+      "ic_change": 0.0107,
+      "nw_t": 2.0
+    },
+    {
+      "component": "technical_trend",
+      "test": "leave_one_out",
+      "segment": "FINAL",
+      "horizon": "6M",
+      "mean_ic_without": 0.0234,
+      "mean_ic_production": 0.0187,
+      "ic_change": 0.0047,
+      "nw_t": 1.52
+    },
+    {
+      "component": "momentum",
+      "test": "leave_one_out",
+      "segment": "DEV",
+      "horizon": "1M",
+      "mean_ic_without": 0.0094,
+      "mean_ic_production": 0.017,
+      "ic_change": -0.0076,
+      "nw_t": -1.05
+    },
+    {
+      "component": "momentum",
+      "test": "leave_one_out",
+      "segment": "DEV",
+      "horizon": "3M",
+      "mean_ic_without": -0.0073,
+      "mean_ic_production": 0.004,
+      "ic_change": -0.0114,
+      "nw_t": -0.98
+    },
+    {
+      "component": "momentum",
+      "test": "leave_one_out",
+      "segment": "DEV",
+      "horizon": "6M",
+      "mean_ic_without": -0.0161,
+      "mean_ic_production": 0.0003,
+      "ic_change": -0.0164,
+      "nw_t": -1.36
+    },
+    {
+      "component": "momentum",
+      "test": "leave_one_out",
+      "segment": "FINAL",
+      "horizon": "1M",
+      "mean_ic_without": 0.0315,
+      "mean_ic_production": 0.0154,
+      "ic_change": 0.0161,
+      "nw_t": 2.36
+    },
+    {
+      "component": "momentum",
+      "test": "leave_one_out",
+      "segment": "FINAL",
+      "horizon": "3M",
+      "mean_ic_without": 0.0137,
+      "mean_ic_production": -0.0041,
+      "ic_change": 0.0178,
+      "nw_t": 2.33
+    },
+    {
+      "component": "momentum",
+      "test": "leave_one_out",
+      "segment": "FINAL",
+      "horizon": "6M",
+      "mean_ic_without": 0.0282,
+      "mean_ic_production": 0.0187,
+      "ic_change": 0.0095,
+      "nw_t": 2.71
+    },
+    {
+      "component": "risk",
+      "test": "leave_one_out",
+      "segment": "DEV",
+      "horizon": "1M",
+      "mean_ic_without": 0.023,
+      "mean_ic_production": 0.017,
+      "ic_change": 0.0061,
+      "nw_t": 1.07
+    },
+    {
+      "component": "risk",
+      "test": "leave_one_out",
+      "segment": "DEV",
+      "horizon": "3M",
+      "mean_ic_without": 0.0107,
+      "mean_ic_production": 0.004,
+      "ic_change": 0.0067,
+      "nw_t": 0.73
+    },
+    {
+      "component": "risk",
+      "test": "leave_one_out",
+      "segment": "DEV",
+      "horizon": "6M",
+      "mean_ic_without": 0.0097,
+      "mean_ic_production": 0.0003,
+      "ic_change": 0.0094,
+      "nw_t": 2.23
+    },
+    {
+      "component": "risk",
+      "test": "leave_one_out",
+      "segment": "FINAL",
+      "horizon": "1M",
+      "mean_ic_without": 0.0164,
+      "mean_ic_production": 0.0154,
+      "ic_change": 0.001,
+      "nw_t": 0.1
+    },
+    {
+      "component": "risk",
+      "test": "leave_one_out",
+      "segment": "FINAL",
+      "horizon": "3M",
+      "mean_ic_without": -0.0074,
+      "mean_ic_production": -0.0041,
+      "ic_change": -0.0033,
+      "nw_t": -0.21
+    },
+    {
+      "component": "risk",
+      "test": "leave_one_out",
+      "segment": "FINAL",
+      "horizon": "6M",
+      "mean_ic_without": 0.0088,
+      "mean_ic_production": 0.0187,
+      "ic_change": -0.0099,
+      "nw_t": -0.5
+    },
+    {
+      "component": "sector_outlook",
+      "test": "leave_one_out",
+      "segment": "DEV",
+      "horizon": "1M",
+      "mean_ic_without": 0.017,
+      "mean_ic_production": 0.017,
+      "ic_change": 0.0,
+      "nw_t": null
+    },
+    {
+      "component": "sector_outlook",
+      "test": "leave_one_out",
+      "segment": "DEV",
+      "horizon": "3M",
+      "mean_ic_without": 0.004,
+      "mean_ic_production": 0.004,
+      "ic_change": 0.0,
+      "nw_t": null
+    },
+    {
+      "component": "sector_outlook",
+      "test": "leave_one_out",
+      "segment": "DEV",
+      "horizon": "6M",
+      "mean_ic_without": 0.0003,
+      "mean_ic_production": 0.0003,
+      "ic_change": 0.0,
+      "nw_t": null
+    },
+    {
+      "component": "sector_outlook",
+      "test": "leave_one_out",
+      "segment": "FINAL",
+      "horizon": "1M",
+      "mean_ic_without": 0.0154,
+      "mean_ic_production": 0.0154,
+      "ic_change": 0.0,
+      "nw_t": null
+    },
+    {
+      "component": "sector_outlook",
+      "test": "leave_one_out",
+      "segment": "FINAL",
+      "horizon": "3M",
+      "mean_ic_without": -0.0041,
+      "mean_ic_production": -0.0041,
+      "ic_change": 0.0,
+      "nw_t": null
+    },
+    {
+      "component": "sector_outlook",
+      "test": "leave_one_out",
+      "segment": "FINAL",
+      "horizon": "6M",
+      "mean_ic_without": 0.0187,
+      "mean_ic_production": 0.0187,
+      "ic_change": 0.0,
+      "nw_t": null
+    },
+    {
+      "component": "market_regime",
+      "test": "leave_one_out",
+      "segment": "DEV",
+      "horizon": "1M",
+      "mean_ic_without": 0.0144,
+      "mean_ic_production": 0.017,
+      "ic_change": -0.0025,
+      "nw_t": -1.01
+    },
+    {
+      "component": "market_regime",
+      "test": "leave_one_out",
+      "segment": "DEV",
+      "horizon": "3M",
+      "mean_ic_without": 0.0029,
+      "mean_ic_production": 0.004,
+      "ic_change": -0.0012,
+      "nw_t": -0.56
+    },
+    {
+      "component": "market_regime",
+      "test": "leave_one_out",
+      "segment": "DEV",
+      "horizon": "6M",
+      "mean_ic_without": -0.0014,
+      "mean_ic_production": 0.0003,
+      "ic_change": -0.0017,
+      "nw_t": -0.69
+    },
+    {
+      "component": "market_regime",
+      "test": "leave_one_out",
+      "segment": "FINAL",
+      "horizon": "1M",
+      "mean_ic_without": 0.018,
+      "mean_ic_production": 0.0154,
+      "ic_change": 0.0026,
+      "nw_t": 1.04
+    },
+    {
+      "component": "market_regime",
+      "test": "leave_one_out",
+      "segment": "FINAL",
+      "horizon": "3M",
+      "mean_ic_without": -0.0008,
+      "mean_ic_production": -0.0041,
+      "ic_change": 0.0033,
+      "nw_t": 1.06
+    },
+    {
+      "component": "market_regime",
+      "test": "leave_one_out",
+      "segment": "FINAL",
+      "horizon": "6M",
+      "mean_ic_without": 0.0187,
+      "mean_ic_production": 0.0187,
+      "ic_change": 0.0,
+      "nw_t": 0.0
+    }
+  ],
+  "weight_variants": [
+    {
+      "variant": "A_production",
+      "segment": "DEV",
+      "horizon": "1M",
+      "dates": 17,
+      "mean_ic": 0.017,
+      "nw_se": 0.0265,
+      "nw_t": 0.64,
+      "share_positive": 0.529,
+      "top10_mean_excess_vs_nifty": 0.016821715690450843
+    },
+    {
+      "variant": "A_production",
+      "segment": "DEV",
+      "horizon": "3M",
+      "dates": 14,
+      "mean_ic": 0.004,
+      "nw_se": 0.0307,
+      "nw_t": 0.13,
+      "share_positive": 0.643,
+      "top10_mean_excess_vs_nifty": 0.05293253220800475
+    },
+    {
+      "variant": "A_production",
+      "segment": "DEV",
+      "horizon": "6M",
+      "dates": 12,
+      "mean_ic": 0.0003,
+      "nw_se": 0.0417,
+      "nw_t": 0.01,
+      "share_positive": 0.5,
+      "top10_mean_excess_vs_nifty": 0.12893977077554158
+    },
+    {
+      "variant": "A_production",
+      "segment": "DEV",
+      "horizon": "12M",
+      "dates": 5,
+      "mean_ic": 0.0256,
+      "nw_se": 0.006,
+      "nw_t": 4.29,
+      "share_positive": 0.8,
+      "top10_mean_excess_vs_nifty": 0.3082820104195748
+    },
+    {
+      "variant": "A_production",
+      "segment": "FINAL",
+      "horizon": "1M",
+      "dates": 20,
+      "mean_ic": 0.0154,
+      "nw_se": 0.036,
+      "nw_t": 0.43,
+      "share_positive": 0.4,
+      "top10_mean_excess_vs_nifty": 0.01475982008581576
+    },
+    {
+      "variant": "A_production",
+      "segment": "FINAL",
+      "horizon": "3M",
+      "dates": 18,
+      "mean_ic": -0.0041,
+      "nw_se": 0.0744,
+      "nw_t": -0.06,
+      "share_positive": 0.5,
+      "top10_mean_excess_vs_nifty": 0.052408953135636996
+    },
+    {
+      "variant": "A_production",
+      "segment": "FINAL",
+      "horizon": "6M",
+      "dates": 15,
+      "mean_ic": 0.0187,
+      "nw_se": 0.0855,
+      "nw_t": 0.22,
+      "share_positive": 0.533,
+      "top10_mean_excess_vs_nifty": 0.08490248641190458
+    },
+    {
+      "variant": "A_production",
+      "segment": "FINAL",
+      "horizon": "12M",
+      "dates": 8,
+      "mean_ic": 0.1031,
+      "nw_se": 0.0232,
+      "nw_t": 4.44,
+      "share_positive": 0.875,
+      "top10_mean_excess_vs_nifty": 0.13101753589486187
+    },
+    {
+      "variant": "B_equal",
+      "segment": "DEV",
+      "horizon": "1M",
+      "dates": 17,
+      "mean_ic": 0.0315,
+      "nw_se": 0.0286,
+      "nw_t": 1.1,
+      "share_positive": 0.529,
+      "top10_mean_excess_vs_nifty": 0.0175923810807515
+    },
+    {
+      "variant": "B_equal",
+      "segment": "DEV",
+      "horizon": "3M",
+      "dates": 14,
+      "mean_ic": 0.0217,
+      "nw_se": 0.0181,
+      "nw_t": 1.2,
+      "share_positive": 0.643,
+      "top10_mean_excess_vs_nifty": 0.033578319207128074
+    },
+    {
+      "variant": "B_equal",
+      "segment": "DEV",
+      "horizon": "6M",
+      "dates": 12,
+      "mean_ic": 0.032,
+      "nw_se": 0.0132,
+      "nw_t": 2.42,
+      "share_positive": 0.5,
+      "top10_mean_excess_vs_nifty": 0.11293533194088466
+    },
+    {
+      "variant": "B_equal",
+      "segment": "DEV",
+      "horizon": "12M",
+      "dates": 5,
+      "mean_ic": 0.1152,
+      "nw_se": 0.0056,
+      "nw_t": 20.75,
+      "share_positive": 1.0,
+      "top10_mean_excess_vs_nifty": 0.28512230581002335
+    },
+    {
+      "variant": "B_equal",
+      "segment": "FINAL",
+      "horizon": "1M",
+      "dates": 20,
+      "mean_ic": -0.0058,
+      "nw_se": 0.0447,
+      "nw_t": -0.13,
+      "share_positive": 0.35,
+      "top10_mean_excess_vs_nifty": 0.007184375042718424
+    },
+    {
+      "variant": "B_equal",
+      "segment": "FINAL",
+      "horizon": "3M",
+      "dates": 18,
+      "mean_ic": -0.0277,
+      "nw_se": 0.079,
+      "nw_t": -0.35,
+      "share_positive": 0.389,
+      "top10_mean_excess_vs_nifty": 0.03177977935152187
+    },
+    {
+      "variant": "B_equal",
+      "segment": "FINAL",
+      "horizon": "6M",
+      "dates": 15,
+      "mean_ic": 0.0165,
+      "nw_se": 0.0858,
+      "nw_t": 0.19,
+      "share_positive": 0.533,
+      "top10_mean_excess_vs_nifty": 0.04700926841201425
+    },
+    {
+      "variant": "B_equal",
+      "segment": "FINAL",
+      "horizon": "12M",
+      "dates": 8,
+      "mean_ic": 0.1039,
+      "nw_se": 0.0272,
+      "nw_t": 3.82,
+      "share_positive": 0.875,
+      "top10_mean_excess_vs_nifty": 0.07661560502846546
+    },
+    {
+      "variant": "C_quality_heavy",
+      "segment": "DEV",
+      "horizon": "1M",
+      "dates": 17,
+      "mean_ic": 0.0046,
+      "nw_se": 0.0283,
+      "nw_t": 0.16,
+      "share_positive": 0.529,
+      "top10_mean_excess_vs_nifty": 0.015878851359514518
+    },
+    {
+      "variant": "C_quality_heavy",
+      "segment": "DEV",
+      "horizon": "3M",
+      "dates": 14,
+      "mean_ic": -0.015,
+      "nw_se": 0.0437,
+      "nw_t": -0.34,
+      "share_positive": 0.571,
+      "top10_mean_excess_vs_nifty": 0.034719302166905074
+    },
+    {
+      "variant": "C_quality_heavy",
+      "segment": "DEV",
+      "horizon": "6M",
+      "dates": 12,
+      "mean_ic": -0.0302,
+      "nw_se": 0.0608,
+      "nw_t": -0.5,
+      "share_positive": 0.5,
+      "top10_mean_excess_vs_nifty": 0.09741335373085218
+    },
+    {
+      "variant": "C_quality_heavy",
+      "segment": "DEV",
+      "horizon": "12M",
+      "dates": 5,
+      "mean_ic": -0.0421,
+      "nw_se": 0.0044,
+      "nw_t": -9.61,
+      "share_positive": 0.0,
+      "top10_mean_excess_vs_nifty": 0.20930391720941177
+    },
+    {
+      "variant": "C_quality_heavy",
+      "segment": "FINAL",
+      "horizon": "1M",
+      "dates": 20,
+      "mean_ic": 0.0213,
+      "nw_se": 0.0309,
+      "nw_t": 0.69,
+      "share_positive": 0.5,
+      "top10_mean_excess_vs_nifty": 0.014087281186539813
+    },
+    {
+      "variant": "C_quality_heavy",
+      "segment": "FINAL",
+      "horizon": "3M",
+      "dates": 18,
+      "mean_ic": 0.0001,
+      "nw_se": 0.0663,
+      "nw_t": 0.0,
+      "share_positive": 0.5,
+      "top10_mean_excess_vs_nifty": 0.03792957272381308
+    },
+    {
+      "variant": "C_quality_heavy",
+      "segment": "FINAL",
+      "horizon": "6M",
+      "dates": 15,
+      "mean_ic": 0.0105,
+      "nw_se": 0.0771,
+      "nw_t": 0.14,
+      "share_positive": 0.467,
+      "top10_mean_excess_vs_nifty": 0.07458944215688491
+    },
+    {
+      "variant": "C_quality_heavy",
+      "segment": "FINAL",
+      "horizon": "12M",
+      "dates": 8,
+      "mean_ic": 0.0638,
+      "nw_se": 0.0195,
+      "nw_t": 3.27,
+      "share_positive": 0.875,
+      "top10_mean_excess_vs_nifty": 0.1286540293642625
+    },
+    {
+      "variant": "D_quality_value",
+      "segment": "DEV",
+      "horizon": "1M",
+      "dates": 17,
+      "mean_ic": 0.017,
+      "nw_se": 0.0258,
+      "nw_t": 0.66,
+      "share_positive": 0.471,
+      "top10_mean_excess_vs_nifty": 0.01929564914191951
+    },
+    {
+      "variant": "D_quality_value",
+      "segment": "DEV",
+      "horizon": "3M",
+      "dates": 14,
+      "mean_ic": 0.0057,
+      "nw_se": 0.0325,
+      "nw_t": 0.17,
+      "share_positive": 0.643,
+      "top10_mean_excess_vs_nifty": 0.05910291815133035
+    },
+    {
+      "variant": "D_quality_value",
+      "segment": "DEV",
+      "horizon": "6M",
+      "dates": 12,
+      "mean_ic": 0.0033,
+      "nw_se": 0.0414,
+      "nw_t": 0.08,
+      "share_positive": 0.5,
+      "top10_mean_excess_vs_nifty": 0.13222385449453203
+    },
+    {
+      "variant": "D_quality_value",
+      "segment": "DEV",
+      "horizon": "12M",
+      "dates": 5,
+      "mean_ic": 0.0194,
+      "nw_se": 0.0079,
+      "nw_t": 2.46,
+      "share_positive": 0.8,
+      "top10_mean_excess_vs_nifty": 0.31894600011717517
+    },
+    {
+      "variant": "D_quality_value",
+      "segment": "FINAL",
+      "horizon": "1M",
+      "dates": 20,
+      "mean_ic": 0.0284,
+      "nw_se": 0.0331,
+      "nw_t": 0.86,
+      "share_positive": 0.4,
+      "top10_mean_excess_vs_nifty": 0.017868088778107166
+    },
+    {
+      "variant": "D_quality_value",
+      "segment": "FINAL",
+      "horizon": "3M",
+      "dates": 18,
+      "mean_ic": 0.0119,
+      "nw_se": 0.0716,
+      "nw_t": 0.17,
+      "share_positive": 0.5,
+      "top10_mean_excess_vs_nifty": 0.0412535149417336
+    },
+    {
+      "variant": "D_quality_value",
+      "segment": "FINAL",
+      "horizon": "6M",
+      "dates": 15,
+      "mean_ic": 0.0303,
+      "nw_se": 0.0843,
+      "nw_t": 0.36,
+      "share_positive": 0.533,
+      "top10_mean_excess_vs_nifty": 0.09302420630628251
+    },
+    {
+      "variant": "D_quality_value",
+      "segment": "FINAL",
+      "horizon": "12M",
+      "dates": 8,
+      "mean_ic": 0.1108,
+      "nw_se": 0.0241,
+      "nw_t": 4.59,
+      "share_positive": 0.875,
+      "top10_mean_excess_vs_nifty": 0.1329259454899614
+    }
+  ],
+  "selection": {
+    "rule": "keep A unless an alternative beats A on DEV 3M mean IC by >= 0.02 with NW t >= 2",
+    "comparisons": {
+      "B_equal": {
+        "dev_ic_diff_vs_A": 0.0176,
+        "nw_t": 0.65,
+        "qualifies": false
+      },
+      "C_quality_heavy": {
+        "dev_ic_diff_vs_A": -0.019,
+        "nw_t": -1.25,
+        "qualifies": false
+      },
+      "D_quality_value": {
+        "dev_ic_diff_vs_A": 0.0016,
+        "nw_t": 0.39,
+        "qualifies": false
+      }
+    },
+    "selected": "A_production"
+  },
+  "final_out_of_sample_selected": [
+    {
+      "variant": "A_production",
+      "segment": "FINAL",
+      "horizon": "1M",
+      "dates": 20,
+      "mean_ic": 0.0154,
+      "nw_se": 0.036,
+      "nw_t": 0.43,
+      "share_positive": 0.4,
+      "top10_mean_excess_vs_nifty": 0.01475982008581576
+    },
+    {
+      "variant": "A_production",
+      "segment": "FINAL",
+      "horizon": "3M",
+      "dates": 18,
+      "mean_ic": -0.0041,
+      "nw_se": 0.0744,
+      "nw_t": -0.06,
+      "share_positive": 0.5,
+      "top10_mean_excess_vs_nifty": 0.052408953135636996
+    },
+    {
+      "variant": "A_production",
+      "segment": "FINAL",
+      "horizon": "6M",
+      "dates": 15,
+      "mean_ic": 0.0187,
+      "nw_se": 0.0855,
+      "nw_t": 0.22,
+      "share_positive": 0.533,
+      "top10_mean_excess_vs_nifty": 0.08490248641190458
+    },
+    {
+      "variant": "A_production",
+      "segment": "FINAL",
+      "horizon": "12M",
+      "dates": 8,
+      "mean_ic": 0.1031,
+      "nw_se": 0.0232,
+      "nw_t": 4.44,
+      "share_positive": 0.875,
+      "top10_mean_excess_vs_nifty": 0.13101753589486187
+    }
+  ]
+}
