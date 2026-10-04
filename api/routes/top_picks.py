@@ -18,7 +18,9 @@ from db.models.market import StockAnalysisResult
 from db.models.stock import Company
 from db.session import get_session
 from notifications.detector import latest_full_run
+from prices import service as prices
 from ranking import presenter
+from utils.market_session import market_status as nse_market_status
 
 router = APIRouter(dependencies=[Depends(get_current_user)])
 
@@ -55,10 +57,24 @@ def top_investment_candidates(
                Company.active == True)  # noqa: E712
         .order_by(StockAnalysisResult.rank)).all()
     data["total_eligible"] = len(rows)
-    data["items"] = [presenter.candidate_payload(r, c, cap) for r, c in rows[:limit]]
+    shown = rows[:limit]
+    # The ranking is read, never recalculated. Current prices are separate:
+    # stale quotes of the displayed stocks are refreshed (provider data only;
+    # a failure keeps the previous price and its timestamp).
+    symbols = [r.symbol for r, _ in shown]
+    prices.ensure_fresh(session, symbols)
+    quotes = prices.get_quotes(session, symbols)
+    refs = presenter.reference_prices(session, [r for r, _ in shown])
+    rdate = presenter.ranking_date(session, run)
+    status = nse_market_status(holidays=masters.get_config(session, "market.holidays"))
+    data["items"] = [presenter.candidate_payload(r, c, cap, {
+        "ranking_date": rdate, **refs.get(r.symbol, {"reference_price": None, "reference_price_as_of": None}),
+        **prices.quote_payload(quotes.get(r.symbol)), "market_status": status["status"]}) for r, c in shown]
+    data["ranking_date"] = rdate
+    data["market_status"] = status
     data["run"] = {"run_id": run.run_id, "status": run.status, "finished_at": presenter._iso(run.finished_at),
                    "stocks_analysed": run.processed, "engine_version": run.engine_version,
-                   "fqvf_version": run.fqvf_version}
+                   "fqvf_version": run.fqvf_version, "ranking_date": rdate}
     return success_envelope(data, message=f"{len(data['items'])} candidate(s)")
 
 

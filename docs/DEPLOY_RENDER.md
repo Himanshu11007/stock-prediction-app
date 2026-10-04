@@ -10,7 +10,7 @@ your laptop switched off.
 |---|---|---|---|
 | `stocklens-db` | PostgreSQL database: users, rankings, watchlists, notifications | Basic 256 MB | ~$6 / month |
 | `stocklens-api` | The StockLens API at `https://stocklens-api.onrender.com` | Starter | $7 / month |
-| `stocklens-ranking`, `stocklens-notifications`, `stocklens-outcomes` | Scheduled jobs: daily ranking after market close, notifications, outcome tracking | Starter cron | ~$1–3 / month total |
+| `stocklens-ranking`, `stocklens-prices`, `stocklens-notifications`, `stocklens-outcomes` | Scheduled jobs: daily ranking after market close, current prices during the session, notifications, outcome tracking (docs/SCHEDULING.md) | Starter cron | ~$2–4 / month total |
 
 Region: Singapore (closest to India). Prices are Render's list prices; check
 the summary Render shows before you confirm.
@@ -28,7 +28,7 @@ It creates only a free database and a free web service.
 |---|---|
 | The server sleeps after ~15 minutes without use | The first request after a pause takes ~30–60 s. The app may show "Could not reach the StockLens server" once; tap **Retry** |
 | Free database expires 30 days after creation, no backups | Fine for testing. Upgrade the database plan before day 30 if you want to keep the data |
-| No scheduled jobs | No automatic daily ranking or daily summaries. Start analysis runs from the admin console (Step F4) |
+| No scheduled jobs (Render runs cron jobs only on paid instance types) | **The daily ranking does not run automatically**, and daily summaries are not sent. Start the daily ranking in the admin console: **Engine Runs → Daily schedule → Run the daily ranking job now**. Current prices still update, on demand, when the app opens Top Picks or a stock |
 | 512 MB memory | The informational ML signal is switched off (it has weight 0 in the score) and the engine uses 2 threads. Measured peak for a full 299-stock run: ~370 MB |
 | No Shell access | Admin account and data copy are done from your laptop (below) |
 
@@ -75,7 +75,7 @@ services afterwards. The app address stays the same if you reuse the name
 1. In the Render dashboard click **New +** → **Blueprint**.
 2. Select the `stock-prediction-app` repository → **Connect**.
 3. Blueprint name: `stocklens`. Render lists the database, the web service
-   and the 3 cron jobs from `render.yaml`.
+   and the 4 cron jobs from `render.yaml`.
 4. Click **Apply**.
 
 Render now builds and starts everything (5–15 minutes the first time). The
@@ -156,6 +156,10 @@ needed.
   (`OTP_SMTP_*`, docs/AUTHENTICATION.md). Add the same `FCM_*`/`APNS_*`
   variables to `stocklens-ranking` and `stocklens-notifications` so jobs can
   push too.
+- **Daily ranking status:** admin console → **Engine Runs → Daily
+  schedule**. It shows each day's job (completed, skipped with the reason,
+  or failed), the latest published ranking, the notifications it generated
+  and the freshness of current prices.
 - **Market data:** prices and fundamentals come from Yahoo Finance. Cloud
   servers are occasionally rate-limited; a run then reports data errors and
   the next scheduled run retries. Nothing is ever filled with invented values.

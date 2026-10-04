@@ -135,6 +135,18 @@ ENGINE_RUN_MAX_WORKERS = int(os.environ.get("ENGINE_RUN_MAX_WORKERS", "8"))
 # computes the informational ML signal (weight 0 in the score), which lowers a
 # full run's peak memory from ~480 MB to ~370 MB together with 2 workers.
 ENGINE_RUN_ALLOW_ML = os.environ.get("ENGINE_RUN_ALLOW_ML", "true").lower() != "false"
+# Publish gate: a full ranking run whose scored share of the universe is below
+# this ratio (e.g. the price provider failed for most stocks) is marked FAILED,
+# so the previous completed ranking stays the one users see. Operational
+# safety only; the ranking methodology is unchanged.
+ENGINE_RUN_MIN_SCORED_RATIO = float(os.environ.get("ENGINE_RUN_MIN_SCORED_RATIO", "0.5"))
+
+# Current prices (prices/service.py) are refreshed independently of ranking
+# runs: by the scheduled "prices" job and, when stale, on demand when a client
+# asks for them (only the symbols being displayed). Never invented; a failed
+# refresh keeps the previous price with its own timestamp.
+CURRENT_PRICE_TTL_MINUTES = int(os.environ.get("CURRENT_PRICE_TTL_MINUTES", "15"))
+CURRENT_PRICE_ON_DEMAND = os.environ.get("CURRENT_PRICE_ON_DEMAND", "true").lower() != "false"
 
 ENABLE_DEBUG_LOGS = False   # set True to write DEBUG-level pillar diagnostics
 

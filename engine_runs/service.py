@@ -31,8 +31,9 @@ from typing import Any, Optional
 
 from sqlmodel import Session, select
 
-from config import (ENGINE_RUN_ALLOW_ML, ENGINE_RUN_MAX_WORKERS, FQVF_ENGINE_VERSION, FUNDAMENTALS_STALE_DAYS,
-                    FUNDAMENTALS_TTL_HOURS, MARKET_DATA_STALE_DAYS, RANKING_ENGINE_VERSION)
+from config import (ENGINE_RUN_ALLOW_ML, ENGINE_RUN_MAX_WORKERS, ENGINE_RUN_MIN_SCORED_RATIO, FQVF_ENGINE_VERSION,
+                    FUNDAMENTALS_STALE_DAYS, FUNDAMENTALS_TTL_HOURS, MARKET_DATA_STALE_DAYS,
+                    RANKING_ENGINE_VERSION)
 from db.models.market import (EngineRun, FundamentalSnapshot, MarketRegimeSnapshot, MarketSnapshot,
                               Sector, StockAnalysisResult)
 from db.models.stock import Company, StockUniverseMember
@@ -384,8 +385,30 @@ def execute_run(engine, run_id: str) -> None:
                 company.data_checked_at = now
                 session.add(company)
 
+            # Outcome per stock: failed = a processing stage raised; succeeded =
+            # a StockLens Score was produced; skipped = processed but not
+            # scorable (missing data), never fabricated.
+            failed |= {e["symbol"] for e in errors if e.get("stage") in ("market", "technical") and e.get("symbol")}
+            failed &= set(symbols)
+            succeeded = sum(1 for r in ranked if r["stockai_score"] is not None and r["symbol"] not in failed)
+            # Publish gate (operational safety, not methodology): a ranking run
+            # that scored too little of its universe (e.g. the price provider
+            # failed for most stocks) must not replace the last good ranking.
+            # Counted: stocks scored WITH market data (without prices a stock
+            # still gets a partial, ineligible score from fundamentals).
+            priced = sum(1 for r in ranked if r["stockai_score"] is not None and r["symbol"] not in failed
+                         and markets.get(r["symbol"]) is not None
+                         and markets[r["symbol"]].status != "UNAVAILABLE")
+            quality_failed = (run.kind == "RANKING" and len(companies) > 0
+                              and priced < ENGINE_RUN_MIN_SCORED_RATIO * len(companies))
+            if quality_failed:
+                errors.append({"symbol": None, "stage": "quality_gate",
+                               "error": f"only {priced} of {len(companies)} stocks could be scored with market data "
+                                        f"(minimum {ENGINE_RUN_MIN_SCORED_RATIO:.0%}); run not published, "
+                                        f"the previous completed ranking remains current"})
+
             # Prospective tracking: freeze this run's rankings (append-only).
-            if run.kind == "RANKING":
+            if run.kind == "RANKING" and not quality_failed:
                 try:
                     tracking.record_run_snapshots(
                         session, run_id,
@@ -394,18 +417,13 @@ def execute_run(engine, run_id: str) -> None:
                 except Exception as e:
                     errors.append({"symbol": None, "stage": "tracking", "error": f"{type(e).__name__}: {e}"[:300]})
 
-            # Outcome per stock: failed = a processing stage raised; succeeded =
-            # a StockLens Score was produced; skipped = processed but not
-            # scorable (missing data), never fabricated.
-            failed |= {e["symbol"] for e in errors if e.get("stage") in ("market", "technical") and e.get("symbol")}
-            failed &= set(symbols)
             run = session.exec(select(EngineRun).where(EngineRun.run_id == run_id)).one()
             run.processed = len(companies)
             run.failed = len(failed)
-            run.succeeded = sum(1 for r in ranked if r["stockai_score"] is not None and r["symbol"] not in failed)
+            run.succeeded = succeeded
             run.skipped = run.processed - run.succeeded - run.failed
             run.errors = errors
-            run.status = "COMPLETED_WITH_ERRORS" if errors else "COMPLETED"
+            run.status = "FAILED" if quality_failed else ("COMPLETED_WITH_ERRORS" if errors else "COMPLETED")
             run.finished_at = _now()
             session.add(run)
             session.commit()

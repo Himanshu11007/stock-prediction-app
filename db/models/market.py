@@ -210,6 +210,53 @@ class RankingOutcome(SQLModel, table=True):
     computed_at: datetime = Field(default_factory=utcnow)
 
 
+# ── Current prices and scheduled jobs ────────────────────────────────────────
+
+PRICE_STATUSES = ("LAST_CLOSE", "DELAYED_INTRADAY", "STALE", "ERROR")
+
+
+class PriceQuote(SQLModel, table=True):
+    """Latest available market price per stock, refreshed independently of
+    ranking runs (prices/service.py). Deliberately separate from the
+    ranking reference price (the close a ranking run used, kept immutable in
+    market_snapshots / ranking_snapshots). One row per symbol, updated in
+    place; a failed refresh keeps the previous price and records the error."""
+
+    __tablename__ = "price_quotes"
+
+    symbol: str = Field(foreign_key="companies.symbol", primary_key=True)
+    price: Optional[float] = Field(default=None)
+    bar_date: Optional[str] = Field(default=None)        # trading date of the price (IST)
+    as_of: Optional[datetime] = Field(default=None)      # close time, or retrieval time for intraday
+    status: str = Field(default="ERROR")                 # PRICE_STATUSES
+    source: str = Field(default="yfinance")
+    fetched_at: datetime = Field(default_factory=utcnow, index=True)
+    last_error: Optional[str] = Field(default=None)
+    last_error_at: Optional[datetime] = Field(default=None)
+
+
+JOB_STATUSES = ("RUNNING", "COMPLETED", "SKIPPED", "FAILED")
+
+
+class ScheduledJobRun(SQLModel, table=True):
+    """One execution slot of a scheduled job (scheduling/jobs.py). UNIQUE
+    (job, slot) is the cross-process lock: two scheduler triggers for the same
+    job and slot (e.g. the same trading day) can never both run it."""
+
+    __tablename__ = "scheduled_job_runs"
+    __table_args__ = (UniqueConstraint("job", "slot", name="uq_scheduled_job_slot"),)
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    job: str = Field(index=True)
+    slot: str                                             # e.g. trading date "2026-10-05"
+    status: str = Field(default="RUNNING", index=True)    # JOB_STATUSES
+    attempts: int = Field(default=1)
+    started_at: datetime = Field(default_factory=utcnow, index=True)
+    finished_at: Optional[datetime] = Field(default=None)
+    run_id: Optional[str] = Field(default=None)           # engine run created by the job
+    result: Optional[dict[str, Any]] = Field(default=None, sa_column=Column(JSON))
+
+
 class AppConfig(SQLModel, table=True):
     __tablename__ = "app_config"
 

@@ -49,7 +49,7 @@ existing record and creates nothing.
 | SCORE_CHANGE | \|Δ StockLens Score\| ≥ `score_change_threshold` (10 points), for current or previous Top Candidates | Users with "StockLens Score changes" on (default off) | `/stock/{symbol}` |
 | FQVF_CHANGE | \|Δ checks passed\| ≥ `fqvf_change_min_checks` (2), for current or previous Top Candidates | Users with "FQVF changes" on (default off) | `/stock/{symbol}` |
 | WATCHLIST_ALERT | For each watched stock, **one** combined message covering: score change ≥ threshold; rank change ≥ `rank_change_threshold` (15); entering or leaving the Top Candidates; FQVF change; gaining or losing eligibility; crossing the high-risk line | Owner, if "Watchlist alerts" is on (default **on**) and the stock is not muted; each kind can be switched per stock | `/stock/{symbol}` |
-| DAILY_SUMMARY | Trading days only, after the user's time (IST). Content: top `daily_summary_size` (5) candidates from the latest full run. Skipped if that run is more than 4 days old | Opt-in (default off) | `/top-picks` |
+| DAILY_SUMMARY | Trading days only, after the user's time (IST). Content: top `daily_summary_size` (5) candidates from the latest full run. Skipped if that run is more than 4 days old, and skipped when there is no new ranking run since the last summary (a failed or skipped ranking day does not resend yesterday's list) | Opt-in (default off) | `/top-picks` |
 | MARKET_REGIME_CHANGE | NIFTY 50 regime label changed **and** \|Δ regime score\| ≥ `regime_min_score_change` (0.3). Pushed at most once per `regime_cooldown_hours` (72) | Opt-in (default off) | `/` |
 
 A watched stock is never notified twice in the same run: the watchlist

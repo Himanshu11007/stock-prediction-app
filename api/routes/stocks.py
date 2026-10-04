@@ -10,7 +10,7 @@ from __future__ import annotations
 from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlmodel import Session
+from sqlmodel import Session, select
 
 import stocks.service as stocks_service
 from api.schemas_stocks import StockSearchResultResponse
@@ -18,8 +18,10 @@ import engine_runs.service as runs
 import masters.service as masters
 from api.schemas import success_envelope
 from auth.dependencies import get_current_user
+from db.models.market import EngineRun
 from db.models.user import User
 from db.session import engine, get_session
+from prices import service as prices
 from ranking import presenter
 
 # A refresh request within this window returns the existing analysis instead
@@ -64,6 +66,17 @@ def _result_or_404(session: Session, symbol: str):
     return result
 
 
+def _with_current_price(session: Session, result, company) -> dict:
+    """Analysis payload plus the current price (separate from the analysis'
+    reference price) and the ranking date."""
+    payload = presenter.analysis_payload(session, result, company, masters.get_config(session, "top_picks.limit"))
+    prices.ensure_fresh(session, [company.symbol])
+    payload["current_price"] = prices.quote_payload(prices.get_quotes(session, [company.symbol]).get(company.symbol))
+    run = session.exec(select(EngineRun).where(EngineRun.run_id == result.run_id)).first()
+    payload["ranking_date"] = presenter.ranking_date(session, run)
+    return payload
+
+
 @router.get("/{symbol}/analysis")
 def get_stock_analysis(symbol: str, session: Session = Depends(get_session)):
     """Full investment analysis: StockLens Score with components and reasons,
@@ -71,7 +84,7 @@ def get_stock_analysis(symbol: str, session: Session = Depends(get_session)):
     data freshness, from the latest completed engine run."""
     company = _active_company_or_404(session, symbol)
     result = _result_or_404(session, company.symbol)
-    return success_envelope(presenter.analysis_payload(session, result, company, masters.get_config(session, 'top_picks.limit')), message="Analysis retrieved")
+    return success_envelope(_with_current_price(session, result, company), message="Analysis retrieved")
 
 
 @router.get("/{symbol}/fqvf")
@@ -104,7 +117,7 @@ def refresh_stock_analysis(
     if computed is not None and computed.tzinfo is None:
         computed = computed.replace(tzinfo=timezone.utc)
     if computed is not None and datetime.now(timezone.utc) - computed < ANALYSIS_REFRESH_MIN_AGE:
-        return success_envelope(presenter.analysis_payload(session, existing, company, masters.get_config(session, 'top_picks.limit')),
+        return success_envelope(_with_current_price(session, existing, company),
                                 message="Analysis is less than 60 minutes old; returning the existing result")
     try:
         runs.run_single_stock(engine, company.symbol, triggered_by=current_user.id)
@@ -112,4 +125,4 @@ def refresh_stock_analysis(
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
     session.expire_all()
     result = _result_or_404(session, company.symbol)
-    return success_envelope(presenter.analysis_payload(session, result, company, masters.get_config(session, 'top_picks.limit')), message="Analysis refreshed")
+    return success_envelope(_with_current_price(session, result, company), message="Analysis refreshed")

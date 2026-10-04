@@ -120,3 +120,44 @@ def test_ml_signal_can_be_disabled_for_small_servers(monkeypatch):
     # the engine gates the per-run include_ml request on the server switch
     src = Path(runs.__file__).read_text(encoding="utf-8")
     assert 'cfg.get("include_ml", True) and ENGINE_RUN_ALLOW_ML' in src
+
+
+def _cron_hours(field: str) -> set[int]:
+    out: set[int] = set()
+    for part in field.split(","):
+        if part == "*":
+            return set(range(24))
+        lo, _, hi = part.partition("-")
+        out |= set(range(int(lo), int(hi or lo) + 1))
+    return out
+
+
+def test_daily_ranking_and_price_crons_fit_the_nse_session():
+    crons = {s["name"]: s for s in _blueprint()["services"] if s["type"] == "cron"}
+    ranking, prices = crons["stocklens-ranking"], crons["stocklens-prices"]
+    minute, hour, _, _, dow = ranking["schedule"].split()
+    # Schedules are UTC. The ranking job needs final closing data (16:00 IST =
+    # 10:30 UTC); it fires repeatedly after that so a late provider still
+    # gets a run, and the per-day slot lock makes the extra triggers no-ops.
+    assert dow == "1-5" and minute.startswith("*/")
+    assert max(_cron_hours(hour)) * 60 + 45 >= 10 * 60 + 30 and min(_cron_hours(hour)) <= 10
+    assert ranking["startCommand"].endswith("scheduled_jobs.py ranking")
+    # Prices: every 15 minutes covering 09:15-16:00 IST (03:45-10:30 UTC).
+    minute, hour, _, _, dow = prices["schedule"].split()
+    assert minute == "*/15" and dow == "1-5" and {4, 5, 6, 7, 8, 9, 10} <= _cron_hours(hour)
+    for c in crons.values():
+        assert {"fromGroup": "stocklens-shared"} in c["envVars"]
+    shared = {e["key"]: e["value"] for g in _blueprint()["envVarGroups"] for e in g["envVars"]}
+    assert shared["ENGINE_RUN_ALLOW_ML"] == "false" and shared["ENGINE_RUN_MAX_WORKERS"] == "2"
+
+
+def test_scheduling_never_runs_as_an_in_process_loop():
+    # Render Free has no cron: the daily ranking is started by an operator
+    # (admin console) rather than by a background loop inside the API.
+    for folder in ("api", "scheduling", "prices"):
+        for f in (ROOT / folder).rglob("*.py"):
+            text = f.read_text(encoding="utf-8")
+            assert "while True" not in text, f
+            assert "BackgroundScheduler" not in text and "apscheduler" not in text.lower(), f
+    free = (ROOT / "deploy" / "render-free" / "render.yaml").read_text(encoding="utf-8")
+    assert "DAILY RANKING" in free and "DOES NOT RUN AUTOMATICALLY" in free

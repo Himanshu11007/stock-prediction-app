@@ -37,7 +37,7 @@ refreshed on 401. Tested end to end in `tests/test_admin_console.py`.
 | Data Validation | `/admin/data-health` | findings per stock and category |
 | Data Health | `/admin/data-health` | summary counts, news-timestamp status, latest run |
 | API Health | `/admin/api-health` | database, engine freshness, regime, versions |
-| Engine Runs | `/admin/engine-runs` | start a run (symbols / limit / ML / refresh), list runs, errors per run |
+| Engine Runs | `/admin/scheduled-jobs`, `/admin/engine-runs` | **Daily schedule**: latest published ranking (ranking date, counts, engine version), its notifications, current-price freshness, scheduled job history, and "Run the daily ranking job now". **Manual run**: start a run (symbols / limit / ML / refresh), list runs, errors per run |
 | Audit Logs | `/admin/audit-logs` | every admin mutation |
 | Engine Versions | `/admin/engine-versions` | current versions, results per version, recommendation rows per engine version |
 | Application Configuration | `/admin/config` | `app.features`, `app.disclaimer`, `app.announcement`, `top_picks.limit`, `ranking.rules` (validated, audited) |

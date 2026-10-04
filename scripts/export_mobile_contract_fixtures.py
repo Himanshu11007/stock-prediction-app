@@ -29,11 +29,13 @@ import auth.service as auth_service  # noqa: E402
 import notifications.service as notify  # noqa: E402
 from api.main import app  # noqa: E402
 from auth.security import create_access_token  # noqa: E402
-from db.models.market import MarketSnapshot  # noqa: E402
+import prices.service as price_service  # noqa: E402
+from db.models.market import MarketSnapshot, PriceQuote  # noqa: E402
 from db.models.stock import Company  # noqa: E402
 from db.models.tracker import WatchlistItem  # noqa: E402
 from db.session import get_session  # noqa: E402
 from notifications.push import PushResult, PushRouter, SENT  # noqa: E402
+from ranking import tracking  # noqa: E402
 from tests.test_notifications import _base_scores, _run  # noqa: E402
 
 DEFAULT_MOBILE = ROOT.parent / "StockAIPro-Mobile" / "StockAIPro.Mobile"
@@ -71,6 +73,13 @@ def main() -> None:
                              as_of_date=(now - dt.timedelta(hours=3)).date().isoformat(), close=1234.5,
                              technical={"return_60d": 0.05, "trend_daily": {"trend": "UP", "score": 0.5},
                                         "trend_weekly": {"trend": "SIDEWAYS", "score": 0.0}}))
+        # Ranking reference prices (frozen with R2) and current prices: S00
+        # has a fresh last close, S01 has none (NOT_AVAILABLE).
+        tracking.record_run_snapshots(s, "R2", {f"S{i:02d}.NS": ((now - dt.timedelta(hours=2)).date().isoformat(),
+                                                                 1000.0 + i) for i in range(30)}, "Sideways", 25000.0)
+        for sym, price in (("S00.NS", 1012.25), ("S03.NS", 1250.0), ("S10.NS", 987.6)):
+            s.add(PriceQuote(symbol=sym, price=price, bar_date=now.date().isoformat(), as_of=now,
+                             status="DELAYED_INTRADAY", fetched_at=now))
         s.add(WatchlistItem(user_id=user.id, symbol="S03.NS", stock_name="Stock 03"))
         s.commit()
         notify.update_preferences(s, user, {"score_changes": True})
@@ -80,6 +89,7 @@ def main() -> None:
     def _session():
         with Session(eng) as s:
             yield s
+    price_service._default_fetch = lambda symbols: {}       # never reach the real provider
     app.dependency_overrides[get_session] = _session
     client = TestClient(app)
     h = {"Authorization": f"Bearer {create_access_token(subject='user@example.com', roles=['USER'])}"}

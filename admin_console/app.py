@@ -318,6 +318,30 @@ def page_api_health(c):
 
 
 def page_runs(c):
+    st.subheader("Daily schedule")
+    sched = call(c.get, "/admin/scheduled-jobs")
+    if sched:
+        latest = sched.get("latest_ranking")
+        if latest:
+            st.write(f"Latest published ranking: **{latest['run_id']}** - ranking date **{latest['ranking_date']}** "
+                     f"- {latest['status']} - {latest['succeeded']} scored / {latest['skipped']} skipped / "
+                     f"{latest['failed']} failed - {'scheduled' if latest['scheduled'] else 'manual'} - "
+                     f"engine {latest['engine_version']}")
+            n = latest.get("notifications")
+            st.caption("Notifications for this run: " + (f"{n['status']}, {n['notifications_created']} created, "
+                                                          f"{n['pushes_sent']} pushed" if n else "not processed"))
+        else:
+            st.info("No published (completed full) ranking run yet.")
+        cp = sched.get("current_prices") or {}
+        st.caption(f"Current prices: {cp.get('symbols_with_price', 0)} stocks, newest fetch {cp.get('newest_fetch')}, "
+                   f"oldest {cp.get('oldest_fetch')}, by status {cp.get('by_status')}")
+        table(sched.get("jobs"), ["job", "slot", "status", "attempts", "started_at", "finished_at", "run_id", "result"],
+              empty="No scheduled job executions recorded yet.")
+    if st.button("Run the daily ranking job now (calendar-aware)"):
+        r = call(c.post, "/admin/scheduled-jobs/ranking/run")
+        if r:
+            st.success(r["detail"])
+    st.subheader("Manual run")
     with st.form("start_run"):
         st.write("Start a ranking run (runs in the background; one at a time).")
         symbols = st.text_input("Symbols (comma-separated; blank = Large/Mid/Small Cap universe)")

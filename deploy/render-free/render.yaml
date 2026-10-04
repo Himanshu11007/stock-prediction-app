@@ -7,8 +7,12 @@
 #    request afterwards waits ~30-60 s while it wakes up;
 #  - free PostgreSQL databases expire 30 days after creation (upgrade the
 #    plan before then to keep the data); no backups;
-#  - no cron jobs and no pre-deploy step: migrations run in the start
-#    command, and analysis runs are started from the admin console;
+#  - no cron jobs (Render runs cron jobs only on paid instance types) and no
+#    pre-deploy step: migrations run in the start command. The DAILY RANKING
+#    DOES NOT RUN AUTOMATICALLY on this plan: start it from the admin console
+#    ("Run the daily ranking job now" - same calendar-aware job as the cron).
+#    Current prices still update: the API refreshes stale prices of the
+#    stocks a user opens (Top Picks / Stock Analysis) on demand;
 #  - 512 MB memory: the informational ML signal is disabled and the engine
 #    uses 2 worker threads (measured peak ~370 MB for a full 299-stock run).
 # The paid setup (render.yaml) has none of these limits.

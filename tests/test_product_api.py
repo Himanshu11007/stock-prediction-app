@@ -104,7 +104,8 @@ ADMIN_GETS = ["/admin/sectors", "/admin/industries", "/admin/fundamentals", "/ad
               "/admin/valuation", "/admin/market-regime", "/admin/fqvf/reference", "/admin/config",
               "/admin/ranking/config", "/admin/analysis-results", "/admin/engine-runs", "/admin/data-health",
               "/admin/api-health", "/admin/engine-versions", "/admin/stock-master/summary", "/admin/roles",
-              "/admin/ranking-tracking/snapshots", "/admin/ranking-tracking/summary", "/logs/latest"]
+              "/admin/ranking-tracking/snapshots", "/admin/ranking-tracking/summary", "/admin/scheduled-jobs",
+              "/logs/latest"]
 
 
 @pytest.mark.parametrize("path", ADMIN_GETS)

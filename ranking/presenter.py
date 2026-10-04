@@ -13,7 +13,8 @@ from typing import Any, Optional
 
 from sqlmodel import Session, select
 
-from db.models.market import EngineRun, MarketRegimeSnapshot, MarketSnapshot, StockAnalysisResult
+from db.models.market import (EngineRun, MarketRegimeSnapshot, MarketSnapshot, RankingSnapshot,
+                              StockAnalysisResult)
 from db.models.stock import Company
 from config import MARKET_DATA_STALE_DAYS
 from fqvf import CHECKS, THRESHOLDS
@@ -168,7 +169,10 @@ def explanation(r: StockAnalysisResult, eligible_total: Optional[int], top_limit
                     "shown; it is not a forecast or a guarantee of returns."}
 
 
-def candidate_payload(r: StockAnalysisResult, company: Optional[Company], top_limit: Optional[int] = None) -> dict:
+def candidate_payload(r: StockAnalysisResult, company: Optional[Company], top_limit: Optional[int] = None,
+                      extra: Optional[dict] = None) -> dict:
+    """`extra`: ranking_date, reference price, current price and market status
+    added by the Top Picks route (fields are added, never renamed)."""
     fresh = freshness_status(r)
     return {
         "rank": r.rank,
@@ -177,6 +181,7 @@ def candidate_payload(r: StockAnalysisResult, company: Optional[Company], top_li
         "sector": company.sector if company else None,
         "industry": company.industry if company else None,
         "stockai_score": r.stockai_score,
+        "stocklens_score": r.stockai_score,
         "score_coverage": r.score_coverage,
         "fqvf_score": (r.fqvf or {}).get("score"),
         "fqvf_summary": (r.fqvf or {}).get("summary"),
@@ -189,7 +194,48 @@ def candidate_payload(r: StockAnalysisResult, company: Optional[Company], top_li
         "components": key_components(r),
         "engine_version": r.engine_version,
         "computed_at": _iso(r.computed_at),
+        **(extra or {}),
     }
+
+
+# ── ranking date and reference prices (frozen with the ranking run) ──────────
+
+def ranking_date(session: Session, run: Optional[EngineRun]) -> Optional[str]:
+    """Trading date the run's market data belongs to: the NIFTY 50 bar date
+    of the run's regime snapshot, else the run's start date in IST."""
+    if run is None:
+        return None
+    regime = session.exec(select(MarketRegimeSnapshot).where(MarketRegimeSnapshot.run_id == run.run_id)).first()
+    if regime is not None and regime.as_of_date:
+        return regime.as_of_date
+    started = run.started_at if run.started_at.tzinfo else run.started_at.replace(tzinfo=timezone.utc)
+    from utils.market_session import IST
+    return started.astimezone(IST).date().isoformat()
+
+
+def reference_prices(session: Session, results: list[StockAnalysisResult]) -> dict[str, dict]:
+    """symbol -> {reference_price, reference_price_as_of}: the close the
+    ranking run used. Primary source is the run's frozen ranking snapshot
+    (ranking_snapshots, append-only); otherwise the run's market snapshot
+    (newest market_snapshots row fetched before the result was computed)."""
+    out: dict[str, dict] = {}
+    by_run: dict[str, list[StockAnalysisResult]] = {}
+    for r in results:
+        by_run.setdefault(r.run_id, []).append(r)
+    for run_id, rs in by_run.items():
+        snaps = {s.symbol: s for s in session.exec(select(RankingSnapshot).where(
+            RankingSnapshot.run_id == run_id, RankingSnapshot.symbol.in_([r.symbol for r in rs]))).all()}
+        for r in rs:
+            s = snaps.get(r.symbol)
+            if s is not None and s.reference_price is not None:
+                out[r.symbol] = {"reference_price": s.reference_price, "reference_price_as_of": s.reference_date}
+                continue
+            m = session.exec(select(MarketSnapshot).where(MarketSnapshot.symbol == r.symbol,
+                                                          MarketSnapshot.fetched_at <= r.computed_at)
+                             .order_by(MarketSnapshot.fetched_at.desc())).first()
+            out[r.symbol] = {"reference_price": m.close if m else None,
+                             "reference_price_as_of": m.as_of_date if m else None}
+    return out
 
 
 def market_payload(snap: Optional[MarketSnapshot]) -> Optional[dict]:

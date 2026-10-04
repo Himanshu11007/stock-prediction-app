@@ -539,6 +539,13 @@ def send_daily_summaries(session: Session, now: Optional[dt.datetime] = None,
         return {"created": 0, "reason": "no completed analysis run"}
     if now - _aware(run.finished_at) > dt.timedelta(hours=96):
         return {"created": 0, "reason": "latest analysis is older than 4 days; summary not sent"}
+    # Only a NEW ranking is summarised: if an earlier day's summary already
+    # covered this run (no ranking since), nothing is sent today.
+    earlier = session.exec(select(NotificationRun.id).where(
+        NotificationRun.kind == "DAILY_SUMMARY", NotificationRun.previous_run_id == run.run_id,
+        NotificationRun.source_key != today.isoformat())).first()
+    if earlier is not None:
+        return {"created": 0, "reason": f"no new ranking since the last summary (run {run.run_id})"}
     active = {c.symbol: c.name for c in session.exec(select(Company).where(Company.active == True)).all()}  # noqa: E712
     rows = [r for r in session.exec(select(StockAnalysisResult).where(
         StockAnalysisResult.run_id == run.run_id, StockAnalysisResult.eligible == True)  # noqa: E712
@@ -546,7 +553,8 @@ def send_daily_summaries(session: Session, now: Optional[dt.datetime] = None,
     if not rows:
         return {"created": 0, "reason": "no eligible candidates in the latest run"}
     listing = "; ".join(f"{r.rank}. {active[r.symbol]} ({_score(r.stockai_score)})" for r in rows)
-    analysis_date = _aware(run.finished_at).astimezone(IST).date().isoformat()
+    from ranking.presenter import ranking_date
+    analysis_date = ranking_date(session, run) or _aware(run.finished_at).astimezone(IST).date().isoformat()
     title, body = render(templates(session), "DAILY_SUMMARY", list=listing, date=analysis_date)
     nrun = session.exec(select(NotificationRun).where(NotificationRun.kind == "DAILY_SUMMARY",
                                                       NotificationRun.source_key == today.isoformat())).first()

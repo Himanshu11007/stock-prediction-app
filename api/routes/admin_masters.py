@@ -23,7 +23,7 @@ from auth.dependencies import require_admin
 from config import RANKING_ENGINE_STATUS, RANKING_ENGINE_VERSION
 from data_health.service import api_health, data_health, engine_versions
 from db.models.market import (EngineRun, FundamentalSnapshot, MarketRegimeSnapshot, MarketSnapshot,
-                              RankingOutcome, RankingSnapshot, StockAnalysisResult)
+                              RankingOutcome, RankingSnapshot, ScheduledJobRun, StockAnalysisResult)
 from db.models.stock import Company
 from db.models.user import User
 from db.session import engine, get_session
@@ -214,6 +214,47 @@ def start_engine_run(payload: EngineRunStartRequest, current_admin: User = Depen
                 "refresh_fundamentals": payload.refresh_fundamentals})
     session.commit()
     return {"run_id": run.run_id, "status": "RUNNING"}
+
+
+# ── Scheduled jobs (daily ranking, prices) ───────────────────────────────────
+
+@router.get("/scheduled-jobs")
+def scheduled_jobs(limit: int = Query(30, ge=1, le=500), session: Session = Depends(get_session)):
+    """Scheduler status: recent job executions (cron or admin-triggered), the
+    latest ranking run with its ranking date and notification outcome, and
+    the freshness of current prices."""
+    from db.models.notifications import NotificationRun
+    from notifications.detector import latest_full_run
+    from prices.service import freshness_summary
+    jobs_rows = session.exec(select(ScheduledJobRun).order_by(ScheduledJobRun.started_at.desc()).limit(limit)).all()
+    run = latest_full_run(session)
+    latest = None
+    if run is not None:
+        nrun = session.exec(select(NotificationRun).where(NotificationRun.kind == "RANKING_CHANGES",
+                                                          NotificationRun.source_key == run.run_id)).first()
+        latest = {"run_id": run.run_id, "status": run.status, "started_at": run.started_at,
+                  "finished_at": run.finished_at, "ranking_date": presenter.ranking_date(session, run),
+                  "processed": run.processed, "succeeded": run.succeeded, "skipped": run.skipped,
+                  "failed": run.failed, "engine_version": run.engine_version,
+                  "scheduled": bool((run.config or {}).get("scheduled")),
+                  "notifications": nrun.model_dump() if nrun else None}
+    return presenter.to_jsonable({"jobs": [r.model_dump() for r in jobs_rows], "latest_ranking": latest,
+                                  "current_prices": freshness_summary(session)})
+
+
+@router.post("/scheduled-jobs/ranking/run", status_code=status.HTTP_202_ACCEPTED)
+def run_ranking_job_now(current_admin: User = Depends(require_admin), session: Session = Depends(get_session)):
+    """Run the calendar-aware daily ranking job once, in the background (the
+    same code the cron job runs: trading-day and 16:00 IST checks, per-day
+    lock, notifications, prices). For a ranking outside those rules use
+    POST /admin/engine-runs."""
+    import threading
+
+    from scheduling import jobs
+    threading.Thread(target=jobs.ranking_job, args=(engine,), name="admin-daily-ranking", daemon=True).start()
+    log_action(session, current_admin, "SCHEDULED_RANKING_TRIGGERED", "scheduled_job", "ranking", {})
+    session.commit()
+    return {"status": "STARTED", "detail": "Daily ranking job started; see GET /admin/scheduled-jobs for the result."}
 
 
 # ── Prospective ranking tracking (append-only) ───────────────────────────────
