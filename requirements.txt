@@ -1,4 +1,4 @@
-streamlit
+streamlit>=1.50   # st.navigation + set_page_config per page (Admin Console section)
 pandas
 yfinance
 scikit-learn

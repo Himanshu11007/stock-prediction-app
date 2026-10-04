@@ -39,12 +39,15 @@ uvicorn api.main:app --host 0.0.0.0 --port 8000        # API: http://127.0.0.1:8
 ```
 
 - OpenAPI: http://127.0.0.1:8000/docs and http://127.0.0.1:8000/redoc
-- Admin console: `streamlit run admin_console/app.py` (sign in as an ADMIN user)
+- Admin console: in the Streamlit app (`streamlit run app.py`, deployed at
+  https://ai-stock-predict-dashboard.streamlit.app/) → sidebar
+  **Administration** → **Admin Console** (ADMIN sign-in; docs/ADMIN_CONSOLE.md),
+  or standalone: `streamlit run admin_console/app.py`
 - First analysis run: Admin console → **Engine Runs** → *Start run* (or
   `POST /api/v1/admin/engine-runs`). A full run over the 301-stock
   Large/Mid/Small Cap universe takes several minutes; Top Picks are empty
   (not an error) until one completes.
-- Legacy Streamlit UI (technical/ML signal tools): `streamlit run app.py`
+- Streamlit dashboard (technical/ML signal tools) and Admin Console: `streamlit run app.py`
 
 ## Documentation
 

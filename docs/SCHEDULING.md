@@ -107,17 +107,26 @@ Render runs cron jobs only on paid instance types.
 free plan:
 
 - **The daily ranking does not run automatically.** An administrator starts
-  it in the admin console with **Engine Runs → Daily schedule → Run the
-  daily ranking job now**. This runs the same calendar-aware job:
-  trading-day and 16:00 checks, lock, notifications and prices. The free
-  server also sleeps after ~15 minutes idle, so keep the console open until
-  the run finishes.
+  it each trading day after 16:00 IST from the StockLens Streamlit app
+  (https://ai-stock-predict-dashboard.streamlit.app/) → **Administration** →
+  **Admin Console** → **Engine Runs** → **Daily schedule** → **Run the daily
+  ranking job now**. This runs the same calendar-aware job: trading-day and
+  16:00 checks, lock, notifications and prices. The free server sleeps after
+  ~15 minutes idle; the Engine Runs page refreshes every minute while a run
+  is in progress, so keep it open until the run finishes.
 - **Daily summaries and queued pushes are not sent on a schedule.** Ranking
   notifications are still generated when a ranking run completes.
 - **Current prices still update.** The on-demand refresh needs no cron.
 
-The paid `render.yaml` defines all four cron jobs. Moving to it enables
-fully automatic daily operation.
+Automation options:
+
+| | Scheduler | Status |
+|---|---|---|
+| Now | Manual: Admin Console button (Render Free) | in use |
+| Later | Render paid Cron (`render.yaml`, all four jobs) | ready, needs a paid plan |
+| Later | An external scheduler such as GitHub Actions running `python scripts/scheduled_jobs.py ranking` against the database | not enabled |
+
+All of them run the same job; only the trigger differs.
 
 ## Examples (self-hosted)
 

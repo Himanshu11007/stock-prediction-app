@@ -1,7 +1,9 @@
 """
 admin_console/app.py — StockLens Admin / Master Control console (Streamlit).
 
-Run:   streamlit run admin_console/app.py
+Run:   streamlit run admin_console/app.py          (standalone, any API)
+       or the main Streamlit app (app.py): sidebar -> Administration
+       (admin_console/embedded.py; API fixed by configuration)
 API:   STOCKAI_API_URL (default http://127.0.0.1:8000/api/v1)
 
 Every page reads and writes through the REST API as an ADMIN user
@@ -25,8 +27,12 @@ from admin_console.client import DEFAULT_API_URL, AdminApiClient, ApiError  # no
 from config import PRODUCT_NAME  # noqa: E402
 
 BRAND_ICON = Path(__file__).resolve().parents[1] / "branding" / "icon-192.png"
-st.set_page_config(page_title=f"{PRODUCT_NAME} - Admin", page_icon=str(BRAND_ICON), layout="wide")
-st.logo(str(BRAND_ICON), size="large")
+
+
+def configure_page() -> None:
+    st.set_page_config(page_title=f"{PRODUCT_NAME} - Admin", page_icon=str(BRAND_ICON), layout="wide")
+    st.logo(str(BRAND_ICON), size="large")
+
 
 PAGES = [
     "Admin Dashboard", "Stock Master", "Sector Master", "Industry Master", "Fundamental Data",
@@ -64,11 +70,14 @@ def table(rows, columns=None, empty="No records."):
 
 # ── authentication ───────────────────────────────────────────────────────────
 
-def login_page():
+def login_page(api_url: str | None = None):
+    """Sign-in form. `api_url` fixes the backend (embedded in the main app);
+    without it the standalone console lets the operator choose the API."""
     st.title(f"{PRODUCT_NAME} - Admin Console")
     st.caption("Sign in with an account that has the ADMIN role.")
     with st.form("login"):
-        api_url = st.text_input("API base URL", value=st.session_state.get("api_url", DEFAULT_API_URL))
+        if api_url is None:
+            api_url = st.text_input("API base URL", value=st.session_state.get("api_url", DEFAULT_API_URL))
         email = st.text_input("Email")
         password = st.text_input("Password", type="password")
         if st.form_submit_button("Sign in"):
@@ -355,6 +364,15 @@ def page_runs(c):
             if r:
                 st.success(f"Started {r['run_id']}")
     runs = call(c.get, "/admin/engine-runs")
+    running = any(r.get("status") == "RUNNING" for r in (runs or [])) or \
+        any(j.get("status") == "RUNNING" for j in ((sched or {}).get("jobs") or []))
+    if running:
+        st.info("A run is in progress; this page refreshes every 60 seconds.")
+        try:
+            from streamlit_autorefresh import st_autorefresh
+            st_autorefresh(interval=60_000, key="engine_runs_refresh")
+        except ImportError:                 # optional dependency; refresh manually
+            pass
     table(runs, ["run_id", "kind", "status", "started_at", "finished_at", "total", "processed", "succeeded",
                  "skipped", "failed", "error_count", "engine_version", "fqvf_version"])
     run_id = st.text_input("Run id for details")
@@ -474,6 +492,16 @@ HANDLERS = {
 assert list(HANDLERS) == PAGES
 
 
+def sign_out() -> None:
+    if "client" in st.session_state:
+        try:
+            st.session_state.client.logout()
+        except Exception:                   # the session ends locally either way
+            pass
+    for k in ("me", "client"):
+        st.session_state.pop(k, None)
+
+
 def main():
     if "me" not in st.session_state:
         login_page()
@@ -483,12 +511,12 @@ def main():
         st.write(f"Signed in as **{st.session_state.me.get('email') or st.session_state.me.get('id')}**")
         page = st.radio("Admin pages", PAGES)
         if st.button("Sign out"):
-            c.logout()
-            for k in ("me", "client"):
-                st.session_state.pop(k, None)
+            sign_out()
             st.rerun()
     st.title(page)
     HANDLERS[page](c)
 
 
-main()
+if __name__ == "__main__":                 # standalone: streamlit run admin_console/app.py
+    configure_page()
+    main()

@@ -1,4 +1,23 @@
 import streamlit as st
+
+# ─── NAVIGATION ───────────────────────────────────────────────────────────────
+# One app, two sections: the StockLens dashboard (this file, default page) and
+# the Admin Console (admin_console/embedded.py; ADMIN role, all data through
+# the backend API). Administration pages run here and stop, so they never
+# load the dashboard's models below.
+from admin_console import embedded as _admin
+
+
+def dashboard() -> None:
+    """The StockLens dashboard: the rest of this file."""
+
+
+_dashboard_page = st.Page(dashboard, title="Dashboard", icon=":material/insights:", default=True)
+_current_page = st.navigation({"StockLens": [_dashboard_page], _admin.SECTION: _admin.pages()})
+_current_page.run()
+if _current_page.url_path != _dashboard_page.url_path:
+    st.stop()
+
 import pandas as pd
 from streamlit_autorefresh import st_autorefresh
 
@@ -82,7 +101,7 @@ st.set_page_config(
     page_title=f"{PRODUCT_NAME} — {PRODUCT_TAGLINE}",
     page_icon=str(_BRAND_ICON),
     layout="wide",
-    initial_sidebar_state="collapsed",
+    initial_sidebar_state="auto",
 )
 
 # ─── CSS ──────────────────────────────────────────────────────────────────────
@@ -90,7 +109,8 @@ st.markdown("""
 <style>
 .stApp { background-color: #0d1117; color: #ffffff; }
 .stApp [data-testid="stMarkdownContainer"] * { color: #ffffff; }
-#MainMenu, footer, header { visibility: hidden; }
+#MainMenu, footer { visibility: hidden; }
+header[data-testid="stHeader"] { background: transparent; }  /* keeps the sidebar (navigation) toggle */
 
 .hero {
     background: linear-gradient(135deg, #161b22 0%, #0d1117 60%, #0f3460 100%);

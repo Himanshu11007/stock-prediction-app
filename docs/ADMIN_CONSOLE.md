@@ -1,6 +1,47 @@
 # Admin / Master Control Console
 
-`admin_console/app.py` (Streamlit) — run with:
+## Where to open it
+
+**In the deployed StockLens Streamlit app** (no separate deployment):
+
+https://ai-stock-predict-dashboard.streamlit.app/ → sidebar **Administration**
+→ **Admin Console** → sign in with an ADMIN account → admin pages appear in
+the sidebar. Daily ranking: **Engine Runs** → **Daily schedule** → **Run the
+daily ranking job now (calendar-aware)**. Direct link to the sign-in page:
+https://ai-stock-predict-dashboard.streamlit.app/admin
+
+How it fits together:
+
+```
+Streamlit app (app.py, st.navigation)
+  ├─ StockLens: Dashboard                (the existing dashboard tabs)
+  └─ Administration                      (admin_console/embedded.py)
+       ├─ Admin Console  (sign-in, shown to everyone)
+       └─ after an ADMIN sign-in: the 25 console pages + Sign out
+            ↓ REST, the admin's token (admin_console/client.py)
+  FastAPI backend (Render) → require_admin on every /admin/* request
+            ↓
+  PostgreSQL, ranking engine, daily ranking job, notifications
+```
+
+- Visitors who are not signed in see only the **Admin Console** sign-in
+  entry. The admin page URLs are not registered for them.
+- Sign-in is the backend's own (`POST /auth/login`, `GET /auth/me`), accepted
+  only for the **ADMIN** role. Every admin page then calls the API with that
+  user's token; the backend authorizes and audits every request.
+- The Streamlit app holds no database URL, JWT secret or provider
+  credential. Its only setting is the API address: `STOCKAI_API_URL`
+  (Streamlit Community Cloud: app → **Settings** → **Secrets**,
+  `STOCKAI_API_URL = "https://stocklens-api-otrc.onrender.com/api/v1"`).
+  Without it the production API above is used. The sign-in form does not let
+  users change it.
+- While a run is in progress, Engine Runs refreshes every 60 s. This also
+  keeps the Render Free backend awake until the run finishes.
+- Tested in `tests/test_streamlit_admin_navigation.py`.
+
+## Standalone (local / any API)
+
+`admin_console/app.py` also runs on its own (e.g. against a local API):
 
 ```bash
 set STOCKAI_API_URL=http://127.0.0.1:8000/api/v1     # optional (default shown)

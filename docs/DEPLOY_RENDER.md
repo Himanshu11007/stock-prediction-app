@@ -126,8 +126,11 @@ It asks for a password (hidden input). Use this account in the admin console.
 
 ## Step 5: First analysis run
 
-The ranking job runs automatically every trading day after 16:00 IST. To
-run one now, use the admin console from your laptop against the cloud API:
+On the paid setup the ranking job runs automatically every trading day
+after 16:00 IST; on Render Free it is started by hand. Either way, open the
+Admin Console in the StockLens Streamlit app
+(https://ai-stock-predict-dashboard.streamlit.app/ → **Administration** →
+**Admin Console**, docs/ADMIN_CONSOLE.md), or run it from your laptop:
 ```powershell
 $env:STOCKAI_API_URL = "https://stocklens-api.onrender.com/api/v1"
 venv\Scripts\streamlit.exe run admin_console\app.py
