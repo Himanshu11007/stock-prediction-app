@@ -91,7 +91,7 @@ def test_performance_overview_reads_legacy_from_database_without_tracker_file(mo
 
 
 def test_free_blueprint_fits_the_free_plan():
-    bp = yaml.safe_load((ROOT / "render.free.yaml").read_text(encoding="utf-8"))
+    bp = yaml.safe_load((ROOT / "deploy" / "render-free" / "render.yaml").read_text(encoding="utf-8"))
     assert bp["databases"][0]["plan"] == "free"
     services = bp["services"]
     assert [s["type"] for s in services] == ["web"]                  # no cron jobs on the free plan
@@ -102,7 +102,7 @@ def test_free_blueprint_fits_the_free_plan():
     assert env["ENGINE_RUN_ALLOW_ML"]["value"] == "false" and env["ENGINE_RUN_MAX_WORKERS"]["value"] == "2"
     assert env["JWT_SECRET_KEY"] == {"key": "JWT_SECRET_KEY", "generateValue": True}
     assert env["APP_ENV"]["value"] == "production"
-    text = (ROOT / "render.free.yaml").read_text(encoding="utf-8").lower()
+    text = (ROOT / "deploy" / "render-free" / "render.yaml").read_text(encoding="utf-8").lower()
     assert "postgres://" not in text and "password:" not in text
 
 

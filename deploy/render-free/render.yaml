@@ -1,6 +1,6 @@
 # Render Blueprint — FREE plan, for initial testing (docs/DEPLOY_RENDER.md,
 # "Free plan for testing"). Render → New → Blueprint → this repository →
-# Blueprint Path: render.free.yaml → Apply.
+# Blueprint Path: deploy/render-free/render.yaml → Apply.
 #
 # Free-plan limits (Render's rules, not ours):
 #  - the web service sleeps after ~15 minutes without requests; the first

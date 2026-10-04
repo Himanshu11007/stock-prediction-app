@@ -17,7 +17,7 @@ the summary Render shows before you confirm.
 
 ---
 
-## Free plan for testing (`render.free.yaml`)
+## Free plan for testing (`deploy/render-free/render.yaml`)
 
 To try StockLens in the cloud at no cost, use the free Blueprint instead.
 It creates only a free database and a free web service.
@@ -36,7 +36,7 @@ It creates only a free database and a free web service.
 
 - **F1.** Do Step 1 below (account; a card is not required for free services).
 - **F2.** **New +** → **Blueprint** → select `stock-prediction-app` → **Connect**.
-  In **Blueprint Path**, type `render.free.yaml`. Name `stocklens` → **Apply**.
+  In **Blueprint Path**, type `deploy/render-free/render.yaml`. Name `stocklens` → **Apply**.
 - **F3.** Wait for the deploy (5–15 min), then open
   `https://stocklens-api.onrender.com/api/v1/health`.
 - **F4.** **Data and admin account (from your laptop):**
