@@ -31,7 +31,7 @@ from typing import Any, Optional
 
 from sqlmodel import Session, select
 
-from config import (ENGINE_RUN_MAX_WORKERS, FQVF_ENGINE_VERSION, FUNDAMENTALS_STALE_DAYS,
+from config import (ENGINE_RUN_ALLOW_ML, ENGINE_RUN_MAX_WORKERS, FQVF_ENGINE_VERSION, FUNDAMENTALS_STALE_DAYS,
                     FUNDAMENTALS_TTL_HOURS, MARKET_DATA_STALE_DAYS, RANKING_ENGINE_VERSION)
 from db.models.market import (EngineRun, FundamentalSnapshot, MarketRegimeSnapshot, MarketSnapshot,
                               Sector, StockAnalysisResult)
@@ -321,7 +321,7 @@ def execute_run(engine, run_id: str) -> None:
             def _market(sym):
                 local_errors: list = []
                 try:
-                    return sym, _build_market(sym, prices.get(sym), local_errors, cfg.get("include_ml", True)), local_errors
+                    return sym, _build_market(sym, prices.get(sym), local_errors, cfg.get("include_ml", True) and ENGINE_RUN_ALLOW_ML), local_errors
                 except Exception as e:
                     return sym, None, local_errors + [{"symbol": sym, "stage": "market",
                                                        "error": f"{type(e).__name__}: {e}"[:300]}]

@@ -17,6 +17,50 @@ the summary Render shows before you confirm.
 
 ---
 
+## Free plan for testing (`render.free.yaml`)
+
+To try StockLens in the cloud at no cost, use the free Blueprint instead.
+It creates only a free database and a free web service.
+
+**Free-plan limits (Render's rules):**
+
+| Limit | What it means for you |
+|---|---|
+| The server sleeps after ~15 minutes without use | The first request after a pause takes ~30–60 s. The app may show "Could not reach the StockLens server" once; tap **Retry** |
+| Free database expires 30 days after creation, no backups | Fine for testing. Upgrade the database plan before day 30 if you want to keep the data |
+| No scheduled jobs | No automatic daily ranking or daily summaries. Start analysis runs from the admin console (Step F4) |
+| 512 MB memory | The informational ML signal is switched off (it has weight 0 in the score) and the engine uses 2 threads. Measured peak for a full 299-stock run: ~370 MB |
+| No Shell access | Admin account and data copy are done from your laptop (below) |
+
+**Steps:**
+
+- **F1.** Do Step 1 below (account; a card is not required for free services).
+- **F2.** **New +** → **Blueprint** → select `stock-prediction-app` → **Connect**.
+  In **Blueprint Path**, type `render.free.yaml`. Name `stocklens` → **Apply**.
+- **F3.** Wait for the deploy (5–15 min), then open
+  `https://stocklens-api.onrender.com/api/v1/health`.
+- **F4.** **Data and admin account (from your laptop):**
+  - Copy your data with **Step 3** below (it creates your existing accounts
+    in the cloud too), **or**
+  - Start fresh: register in the app, then make your account an admin. Copy
+    the database's **External Database URL** (dashboard → stocklens-db →
+    **Connect**) and run in PowerShell in the project folder:
+    ```powershell
+    $env:DATABASE_URL = "<External Database URL>"
+    venv\Scripts\python.exe -m scripts.seed_admin your-email@example.com
+    Remove-Item Env:DATABASE_URL
+    ```
+- **F5.** Run the first analysis with **Step 5** below. Keep the admin
+  console's Engine Runs page open and refresh it until the run completes:
+  a free server sleeps when nobody uses it, which would stop a run midway.
+
+**Moving to the paid setup later:** create a new Blueprint from `render.yaml`
+(paid plans, scheduled jobs). Copy the data across, and delete the free
+services afterwards. The app address stays the same if you reuse the name
+`stocklens-api` after deleting the free one.
+
+---
+
 ## Step 1: Create your Render account (once)
 
 1. Open **https://render.com** and click **Get Started**.

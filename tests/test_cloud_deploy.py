@@ -88,3 +88,35 @@ def test_performance_overview_reads_legacy_from_database_without_tracker_file(mo
     assert not missing.exists()                                   # never created an empty tracker.db
     assert out["legacy_signals"]["count"] == 2 and out["post_fix_signals"]["count"] == 1
     assert out["legacy_signals"]["horizon"].startswith("Validated after at least 5 trading days; actual holding 14")
+
+
+def test_free_blueprint_fits_the_free_plan():
+    bp = yaml.safe_load((ROOT / "render.free.yaml").read_text(encoding="utf-8"))
+    assert bp["databases"][0]["plan"] == "free"
+    services = bp["services"]
+    assert [s["type"] for s in services] == ["web"]                  # no cron jobs on the free plan
+    web = services[0]
+    assert web["plan"] == "free" and "preDeployCommand" not in web
+    assert web["startCommand"].startswith("alembic upgrade head && uvicorn api.main:app")
+    env = {e["key"]: e for e in web["envVars"]}
+    assert env["ENGINE_RUN_ALLOW_ML"]["value"] == "false" and env["ENGINE_RUN_MAX_WORKERS"]["value"] == "2"
+    assert env["JWT_SECRET_KEY"] == {"key": "JWT_SECRET_KEY", "generateValue": True}
+    assert env["APP_ENV"]["value"] == "production"
+    text = (ROOT / "render.free.yaml").read_text(encoding="utf-8").lower()
+    assert "postgres://" not in text and "password:" not in text
+
+
+def test_ml_signal_can_be_disabled_for_small_servers(monkeypatch):
+    import config
+    import engine_runs.service as runs
+    monkeypatch.setenv("ENGINE_RUN_ALLOW_ML", "false")
+    try:
+        importlib.reload(config)
+        assert config.ENGINE_RUN_ALLOW_ML is False
+    finally:
+        monkeypatch.delenv("ENGINE_RUN_ALLOW_ML")
+        importlib.reload(config)
+    assert config.ENGINE_RUN_ALLOW_ML is True
+    # the engine gates the per-run include_ml request on the server switch
+    src = Path(runs.__file__).read_text(encoding="utf-8")
+    assert 'cfg.get("include_ml", True) and ENGINE_RUN_ALLOW_ML' in src

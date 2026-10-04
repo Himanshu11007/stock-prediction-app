@@ -131,6 +131,10 @@ MARKET_DATA_STALE_DAYS = int(os.environ.get("MARKET_DATA_STALE_DAYS", "4"))
 # Fundamentals older than this are STALE for data-health purposes.
 FUNDAMENTALS_STALE_DAYS = int(os.environ.get("FUNDAMENTALS_STALE_DAYS", "7"))
 ENGINE_RUN_MAX_WORKERS = int(os.environ.get("ENGINE_RUN_MAX_WORKERS", "8"))
+# Small servers (e.g. Render free, 512 MB): ENGINE_RUN_ALLOW_ML=false never
+# computes the informational ML signal (weight 0 in the score), which lowers a
+# full run's peak memory from ~480 MB to ~370 MB together with 2 workers.
+ENGINE_RUN_ALLOW_ML = os.environ.get("ENGINE_RUN_ALLOW_ML", "true").lower() != "false"
 
 ENABLE_DEBUG_LOGS = False   # set True to write DEBUG-level pillar diagnostics
 

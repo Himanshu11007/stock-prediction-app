@@ -1,0 +1,53 @@
+# Render Blueprint — FREE plan, for initial testing (docs/DEPLOY_RENDER.md,
+# "Free plan for testing"). Render → New → Blueprint → this repository →
+# Blueprint Path: render.free.yaml → Apply.
+#
+# Free-plan limits (Render's rules, not ours):
+#  - the web service sleeps after ~15 minutes without requests; the first
+#    request afterwards waits ~30-60 s while it wakes up;
+#  - free PostgreSQL databases expire 30 days after creation (upgrade the
+#    plan before then to keep the data); no backups;
+#  - no cron jobs and no pre-deploy step: migrations run in the start
+#    command, and analysis runs are started from the admin console;
+#  - 512 MB memory: the informational ML signal is disabled and the engine
+#    uses 2 worker threads (measured peak ~370 MB for a full 299-stock run).
+# The paid setup (render.yaml) has none of these limits.
+
+databases:
+  - name: stocklens-db
+    databaseName: stocklens
+    user: stocklens
+    plan: free
+    region: singapore
+    postgresMajorVersion: "16"
+
+services:
+  - type: web
+    name: stocklens-api
+    runtime: python
+    plan: free
+    region: singapore
+    branch: main
+    autoDeploy: true
+    buildCommand: pip install -r requirements-cloud.txt
+    startCommand: alembic upgrade head && uvicorn api.main:app --host 0.0.0.0 --port $PORT --workers 1 --proxy-headers
+    healthCheckPath: /api/v1/health
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: PYTHON_VERSION
+        value: 3.11.9
+      - key: PYTHONUNBUFFERED
+        value: "1"
+      - key: ENGINE_RUN_MAX_WORKERS
+        value: "2"
+      - key: ENGINE_RUN_ALLOW_ML
+        value: "false"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: stocklens-db
+          property: connectionString
+      - key: JWT_SECRET_KEY
+        generateValue: true
+      - key: CORS_ALLOWED_ORIGINS
+        value: https://stocklens-api.onrender.com
