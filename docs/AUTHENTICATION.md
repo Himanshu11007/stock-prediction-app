@@ -64,13 +64,33 @@ email-subject token keeps working until it naturally expires (15 minutes).
 - See `auth/external_identity.py:GoogleIdentityVerifier` /
   `find_or_create_user_for_identity()`.
 
-**Setup required for production**:
+**Setup (step by step, Google Cloud Console, free):**
 
-1. Register an OAuth 2.0 **Web application** client in Google Cloud
-   Console. Its client ID is the value used for BOTH:
+1. https://console.cloud.google.com → project picker → **New project**
+   (e.g. `StockLens`).
+2. **APIs & Services → OAuth consent screen** (Google Auth Platform →
+   Branding / Audience): app name `StockLens`, your support email,
+   audience **External**. While the app is in *Testing*, add every Google
+   account that should be able to sign in under **Test users** (or publish
+   the app).
+3. **Clients → Create client → Web application** (name `StockLens server`).
+   No redirect URIs are needed. Copy its **Client ID**
+   (`....apps.googleusercontent.com`).
+4. **Clients → Create client → Android** (name `StockLens Android`):
+   - package name `com.companyname.stockaipro.mobile`
+   - SHA-1 certificate fingerprint of the key that signs the APK. For APKs
+     built on the development laptop (debug keystore):
+     `2A:89:D9:F5:90:C3:E3:13:07:55:40:38:AA:E5:D2:07:A0:89:C6:8A`.
+     A release/Play Store build needs its own key's SHA-1 added too
+     (Play App Signing: the SHA-1 shown in Play Console).
+5. Backend: set `GOOGLE_OAUTH_CLIENT_ID` = the **Web** client ID
+   (Render: stocklens-api → Environment).
+6. App: build with `-p:GoogleServerClientId=<the same Web client ID>`.
+
+The Web client ID is used for BOTH:
    - `GOOGLE_OAUTH_CLIENT_ID` (backend, server config) and
-   - `GoogleAuthConfiguration.ServerClientId` (mobile,
-     `StockAIPro.Mobile.Core/Services/Configuration/GoogleAuthConfiguration.cs`) -
+   - `GoogleAuthConfiguration.ServerClientId` (mobile, supplied at build
+     time with `-p:GoogleServerClientId=...` and applied by `MauiProgram`) -
      this is `GetGoogleIdOption.SetServerClientId(...)`'s argument.
    - This client ID is **public client-side configuration, not a secret**:
      it identifies which backend a token was issued for (the token's
@@ -90,11 +110,22 @@ email-subject token keeps working until it naturally expires (15 minutes).
 GOOGLE_OAUTH_CLIENT_ID=<your OAuth Web-application client id>
 ```
 
-Without this set (server) or `GoogleAuthConfiguration.ServerClientId` left
-empty (mobile), Google sign-in fails closed on both sides rather than
-silently accepting anything.
+Without this set (server) or the app built without `GoogleServerClientId`
+(mobile), Google sign-in fails closed on both sides rather than silently
+accepting anything; the app then says "Google sign-in is not configured".
 
-## 3. Apple Sign-In
+**Common Android errors:** "No credentials available" / developer error
+means the Android client's package name or SHA-1 does not match the
+installed APK, or the account is not a test user of an app in *Testing*.
+
+## 3. Apple Sign-In (not offered in the app)
+
+Sign in with Apple was removed from the mobile app (2026-10-04): StockLens
+offers Google, email/phone OTP and password sign-in. The backend endpoints
+below remain and stay disabled (fail closed) unless `APPLE_SERVICES_ID` is
+set. Note for a future iOS release: if Google sign-in is added to the iOS
+app, App Store Review Guideline 4.8 requires offering Sign in with Apple
+(or an equivalent privacy-focused option) as well.
 
 - **iOS** obtains an Apple **identity_token** via .NET MAUI's built-in
   `Microsoft.Maui.Authentication.AppleSignInAuthenticator` (ships with the
