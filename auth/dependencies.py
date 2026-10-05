@@ -7,6 +7,8 @@ client-supplied claim about identity or entitlement is trusted on its own -
 the JWT only carries a user id; roles are the token's cached copy of a
 DB fact, re-checked here against nothing client-controlled.
 """
+from datetime import timezone
+
 import jwt
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
@@ -52,7 +54,21 @@ def get_current_user(
         user = get_user_by_email(session, subject)
     if user is None or not user.is_active:
         raise credentials_error
+    if _issued_before_cutoff(payload.get("iat"), user.token_valid_after):
+        # e.g. the password was reset after this token was issued
+        raise credentials_error
     return user
+
+
+def _issued_before_cutoff(iat, valid_after) -> bool:
+    if valid_after is None:
+        return False
+    if valid_after.tzinfo is None:  # SQLite returns naive UTC datetimes
+        valid_after = valid_after.replace(tzinfo=timezone.utc)
+    try:
+        return float(iat) < valid_after.timestamp()
+    except (TypeError, ValueError):
+        return True  # no usable iat: can't prove the token is recent enough
 
 
 def require_role(role_name: str):

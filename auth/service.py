@@ -5,9 +5,11 @@ piled into this file: external_identities -> auth/external_identity.py,
 otp_challenges -> auth/otp_service.py, trusted_devices -> auth/device_service.py.
 All four modules may still read/write `users` directly (e.g. to create a new
 user), since user creation is fundamentally shared."""
+import logging
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 
+from sqlalchemy import update
 from sqlmodel import Session, select
 
 from auth.security import (
@@ -17,6 +19,7 @@ from auth.security import (
     hash_refresh_token,
     verify_password,
 )
+from auth.security_events import fingerprint, log_security_event
 from db.models.user import RefreshToken, Role, User, UserRoleLink
 
 ADMIN_ROLE = "ADMIN"
@@ -153,7 +156,7 @@ def change_password(session: Session, user: User, current_password: str, new_pas
 
 
 def create_external_user(
-    session: Session, *, email: Optional[str] = None, phone: Optional[str] = None
+    session: Session, *, email: Optional[str] = None, phone: Optional[str] = None, commit: bool = True
 ) -> User:
     """Creates a new StockLens user with no password - used the first time an
     external identity (Google/Apple/OTP) is seen with no existing account to
@@ -162,6 +165,10 @@ def create_external_user(
     (auth/external_identity.py, auth/otp_service.py) are responsible for that
     lookup, since the right thing to do when one already exists is provider-
     specific (link vs. reject), not a blind "reuse it" here.
+
+    commit=False only flushes (the user gets its id) so a caller can create
+    the user together with its first sign-in method in ONE transaction -
+    see auth/external_identity.py:find_or_create_user_for_identity.
     """
     user = User(
         email=email.strip().lower() if email else None,
@@ -169,6 +176,10 @@ def create_external_user(
         hashed_password=None,
     )
     session.add(user)
+    if not commit:
+        session.flush()
+        assign_role(session, user, USER_ROLE, commit=False)
+        return user
     session.commit()
     session.refresh(user)
 
@@ -176,7 +187,9 @@ def create_external_user(
     return user
 
 
-def issue_refresh_token(session: Session, user: User, *, device_id: Optional[str] = None) -> str:
+def issue_refresh_token(
+    session: Session, user: User, *, device_id: Optional[str] = None, commit: bool = True
+) -> str:
     raw_token = generate_refresh_token()
     expires_at = datetime.now(timezone.utc) + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
     session.add(
@@ -187,7 +200,8 @@ def issue_refresh_token(session: Session, user: User, *, device_id: Optional[str
             device_id=device_id,
         )
     )
-    session.commit()
+    if commit:
+        session.commit()
     return raw_token
 
 
@@ -196,22 +210,46 @@ def rotate_refresh_token(session: Session, raw_token: str) -> tuple[User, str]:
     (rotation). Raises InvalidCredentialsError if the token is unknown,
     expired, or already used/revoked. The new token keeps the same
     device_id as the one being rotated - rotation continues the same
-    device's session, it doesn't start a new one."""
+    device's session, it doesn't start a new one.
+
+    Exactly-once: the old token is consumed by ONE conditional UPDATE
+    (... WHERE token_hash = ? AND revoked_at IS NULL AND expires_at > now).
+    The database decides which of several simultaneous requests carrying the
+    same token wins - on PostgreSQL the losers block on the row lock and then
+    match zero rows; on SQLite writes are serialized - so only one request
+    can ever rotate a given token. The revocation and the replacement token
+    are committed in the same transaction: either both happen or neither.
+    (The previous SELECT-then-UPDATE let two concurrent requests both see the
+    token as valid and both receive a new token.)"""
     token_hash = hash_refresh_token(raw_token)
-    row = session.exec(select(RefreshToken).where(RefreshToken.token_hash == token_hash)).first()
     now = datetime.now(timezone.utc)
-    if row is None or row.revoked_at is not None or row.expires_at < now:
+    consumed = session.execute(
+        update(RefreshToken)
+        .where(
+            RefreshToken.token_hash == token_hash,
+            RefreshToken.revoked_at.is_(None),
+            RefreshToken.expires_at > now,
+        )
+        .values(revoked_at=now)
+    )
+    if consumed.rowcount != 1:
+        session.rollback()
+        row = find_refresh_token(session, raw_token)
+        if row is not None and row.revoked_at is not None:
+            # A rotated/revoked token was presented again: either a client
+            # race or a stolen token being replayed.
+            log_security_event("REFRESH_TOKEN_REUSE", level=logging.WARNING, user_id=row.user_id,
+                               device_id=row.device_id, token_fp=fingerprint(token_hash))
         raise InvalidCredentialsError("Invalid or expired refresh token")
 
-    row.revoked_at = now
-    session.add(row)
-    session.commit()
-
+    row = session.exec(select(RefreshToken).where(RefreshToken.token_hash == token_hash)).one()
     user = session.get(User, row.user_id)
     if user is None or not user.is_active:
+        session.commit()  # the presented token stays revoked
         raise InvalidCredentialsError("Invalid or expired refresh token")
 
-    new_raw_token = issue_refresh_token(session, user, device_id=row.device_id)
+    new_raw_token = issue_refresh_token(session, user, device_id=row.device_id, commit=False)
+    session.commit()
     return user, new_raw_token
 
 
@@ -222,9 +260,9 @@ def find_refresh_token(session: Session, raw_token: str) -> Optional[RefreshToke
 
 def revoke_refresh_token(session: Session, raw_token: str) -> None:
     """Used for logout. Silently no-ops if the token is already unknown/revoked."""
-    token_hash = hash_refresh_token(raw_token)
-    row = session.exec(select(RefreshToken).where(RefreshToken.token_hash == token_hash)).first()
-    if row is not None and row.revoked_at is None:
-        row.revoked_at = datetime.now(timezone.utc)
-        session.add(row)
-        session.commit()
+    session.execute(
+        update(RefreshToken)
+        .where(RefreshToken.token_hash == hash_refresh_token(raw_token), RefreshToken.revoked_at.is_(None))
+        .values(revoked_at=datetime.now(timezone.utc))
+    )
+    session.commit()

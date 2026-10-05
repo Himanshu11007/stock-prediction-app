@@ -18,7 +18,7 @@ status and reason. Snapshots are append-only; "latest" is the newest row.
 from datetime import datetime, timezone
 from typing import Any, Optional
 
-from sqlalchemy import JSON, Column, Index
+from sqlalchemy import JSON, Column, Index, text
 from sqlmodel import Field, SQLModel, UniqueConstraint
 
 
@@ -122,6 +122,15 @@ RUN_STATUSES = ("RUNNING", "COMPLETED", "COMPLETED_WITH_ERRORS", "FAILED")
 
 class EngineRun(SQLModel, table=True):
     __tablename__ = "engine_runs"
+    # At most ONE RUNNING full ranking run, enforced by the database itself
+    # (partial unique index, PostgreSQL and SQLite) - holds across API
+    # workers, containers, the cron job and manual admin runs alike; see
+    # engine_runs/service.py:create_run. SINGLE-stock runs are not limited.
+    __table_args__ = (
+        Index("uq_engine_runs_one_running_ranking", "kind", unique=True,
+              postgresql_where=text("status = 'RUNNING' AND kind = 'RANKING'"),
+              sqlite_where=text("status = 'RUNNING' AND kind = 'RANKING'")),
+    )
 
     id: Optional[int] = Field(default=None, primary_key=True)
     run_id: str = Field(unique=True, index=True)

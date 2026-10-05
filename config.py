@@ -163,6 +163,29 @@ GOOGLE_OAUTH_CLIENT_ID = os.environ.get("GOOGLE_OAUTH_CLIENT_ID")
 # fail-closed behavior as above when unset.
 APPLE_SERVICES_ID = os.environ.get("APPLE_SERVICES_ID")
 
+
+def _csv_env(name: str) -> list[str]:
+    return [v.strip() for v in os.environ.get(name, "").split(",") if v.strip()]
+
+
+# Every Google OAuth client id whose id_tokens this server accepts (the
+# token's `aud`). GOOGLE_OAUTH_CLIENT_ID (the Web-application client id that
+# Android Credential Manager and the web Google button both request tokens
+# for) is always included; GOOGLE_WEB_CLIENT_ID / GOOGLE_ANDROID_CLIENT_ID /
+# GOOGLE_IOS_CLIENT_ID and the comma-separated GOOGLE_ALLOWED_AUDIENCES add
+# more. Only list client ids registered in THIS project's Google Cloud
+# project - any id listed here is trusted as "a token issued for StockLens".
+GOOGLE_ALLOWED_AUDIENCES: list[str] = list(dict.fromkeys(
+    [v for v in (GOOGLE_OAUTH_CLIENT_ID, os.environ.get("GOOGLE_WEB_CLIENT_ID"),
+                 os.environ.get("GOOGLE_ANDROID_CLIENT_ID"), os.environ.get("GOOGLE_IOS_CLIENT_ID")) if v]
+    + _csv_env("GOOGLE_ALLOWED_AUDIENCES")
+))
+
+# Allowed clock skew (seconds) when checking exp/iat/nbf of provider id
+# tokens - phones with a slightly wrong clock otherwise fail with "token
+# used before issued". Kept small: it only widens the validity window.
+EXTERNAL_ID_TOKEN_LEEWAY_SECONDS = int(os.environ.get("EXTERNAL_ID_TOKEN_LEEWAY_SECONDS", "60"))
+
 # ── Phase 8 authentication: OTP ──────────────────────────────────────────────────
 OTP_CODE_LENGTH               = int(os.environ.get("OTP_CODE_LENGTH", "6"))
 OTP_EXPIRE_SECONDS            = int(os.environ.get("OTP_EXPIRE_SECONDS", "300"))       # 5 minutes
@@ -190,3 +213,22 @@ OTP_SMTP_USERNAME      = os.environ.get("OTP_SMTP_USERNAME", "")
 OTP_SMTP_PASSWORD      = os.environ.get("OTP_SMTP_PASSWORD", "")  # SECRET - env var / deployment secret only, never commit
 OTP_SMTP_FROM_ADDRESS  = os.environ.get("OTP_SMTP_FROM_ADDRESS", "no-reply@stocklens.app")
 OTP_SMTP_USE_TLS       = os.environ.get("OTP_SMTP_USE_TLS", "true").lower() == "true"
+# ── Password reset (auth/password_reset.py) ──────────────────────────────────────
+# The emailed link is PASSWORD_RESET_URL?token=<token> (e.g.
+# https://app.example.com/reset-password); when unset it is
+# FRONTEND_BASE_URL + "/reset-password". With neither set, no reset email
+# can be sent (the request still answers generically and logs a warning).
+FRONTEND_BASE_URL = os.environ.get("FRONTEND_BASE_URL", "").rstrip("/")
+PASSWORD_RESET_URL = os.environ.get("PASSWORD_RESET_URL", "").strip() or (
+    f"{FRONTEND_BASE_URL}/reset-password" if FRONTEND_BASE_URL else "")
+PASSWORD_RESET_TOKEN_EXPIRY_MINUTES = int(os.environ.get("PASSWORD_RESET_TOKEN_EXPIRY_MINUTES", "30"))
+# Rolling window shared by the limits below (seconds).
+PASSWORD_RESET_WINDOW_SECONDS = int(os.environ.get("PASSWORD_RESET_WINDOW_SECONDS", "3600"))
+# Reset emails per account per window. Beyond this, requests are silently
+# dropped (still the generic response - a 429 here would reveal the account).
+PASSWORD_RESET_MAX_EMAILS_PER_ACCOUNT = int(os.environ.get("PASSWORD_RESET_MAX_EMAILS_PER_ACCOUNT", "3"))
+# forgot-password requests per client IP per window (429 beyond - counted for
+# every request, existing account or not, so it reveals nothing).
+PASSWORD_RESET_MAX_REQUESTS_PER_IP = int(os.environ.get("PASSWORD_RESET_MAX_REQUESTS_PER_IP", "10"))
+# reset-password attempts per client IP per window (429 beyond).
+PASSWORD_RESET_MAX_ATTEMPTS_PER_IP = int(os.environ.get("PASSWORD_RESET_MAX_ATTEMPTS_PER_IP", "20"))

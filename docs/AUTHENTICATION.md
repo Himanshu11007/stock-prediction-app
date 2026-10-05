@@ -57,8 +57,13 @@ email-subject token keeps working until it naturally expires (15 minutes).
   against Google's current developer documentation before choosing this
   approach; see citations in the Phase 8.1 commit/PR description).
 - Backend verifies it as a standard OIDC JWT against Google's own rotating
-  public keys (`https://www.googleapis.com/oauth2/v3/certs`), checking
-  signature, `aud` (must equal `GOOGLE_OAUTH_CLIENT_ID`), and `iss`.
+  public keys (`https://www.googleapis.com/oauth2/v3/certs`, cached
+  process-wide), checking the RS256 signature, `aud` (one of
+  `GOOGLE_ALLOWED_AUDIENCES`: `GOOGLE_OAUTH_CLIENT_ID` plus any extra client
+  ids of the same project), `iss`, `exp`/`iat` (60 s clock-skew leeway) and
+  `sub`. A **new** account is only created from a Google-verified email
+  (`email_verified`), otherwise 403. Full details, error table and the exact
+  Android/iOS configuration: [AUTH_HARDENING.md](AUTH_HARDENING.md) §7.
 - The client-supplied email is **never** trusted by itself — only `sub`,
   once the signature is verified, is used as the identity key.
 - See `auth/external_identity.py:GoogleIdentityVerifier` /
@@ -359,6 +364,15 @@ email collision alone is never treated as proof of ownership.
   final report's "Production readiness" section for the explicit
   YES/NO status.
 
+## 8a. Forgot / reset password
+
+`POST /auth/forgot-password` emails a single-use, 30-minute link to
+`PASSWORD_RESET_URL` (default `FRONTEND_BASE_URL/reset-password`) - the
+StockLens web app's reset page - and always answers with the same generic
+message. `POST /auth/reset-password` sets the new password and revokes every
+session. Design, limits and configuration:
+[AUTH_HARDENING.md](AUTH_HARDENING.md) §4.
+
 ## 9. Production deployment checklist
 
 - [ ] `JWT_SECRET_KEY` — already required pre-Phase-8; unchanged
@@ -375,4 +389,8 @@ email collision alone is never treated as proof of ownership.
       `OTP_SMTP_FROM_ADDRESS` for real email OTP delivery, OR a new
       SMS-specific `IOtpDeliveryService` implementation if SMS is required
 - [ ] `OTP_DEV_LOG_CODES` unset/`false`
+- [ ] `FRONTEND_BASE_URL` (or `PASSWORD_RESET_URL`) set to the StockLens
+      web app so password-reset emails can be sent; `OTP_SMTP_*` configured
+- [ ] Every Google client id the clients use is either
+      `GOOGLE_OAUTH_CLIENT_ID` or listed in `GOOGLE_ALLOWED_AUDIENCES`
 - [ ] `alembic upgrade head` run against the production database

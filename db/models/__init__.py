@@ -1,7 +1,17 @@
 """Import every model module here so SQLModel.metadata is fully populated
 for both Alembic autogenerate and create_all() in tests/scripts."""
 from db.models.stock import Company, StockUniverseMember  # noqa: F401
-from db.models.user import RefreshToken, Role, User, UserRoleLink  # noqa: F401
+from db.models.user import (  # noqa: F401
+    AuthThrottleEvent,
+    ExternalIdentity,
+    OtpChallenge,
+    PasswordResetToken,
+    RefreshToken,
+    Role,
+    TrustedDevice,
+    User,
+    UserRoleLink,
+)
 from db.models.admin import AdminAuditLog  # noqa: F401
 from db.models.tracker import (  # noqa: F401
     Recommendation,

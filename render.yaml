@@ -57,6 +57,14 @@ services:
       # Render asks for the value in the dashboard; it is not stored here.
       - key: GOOGLE_OAUTH_CLIENT_ID
         sync: false
+      # Optional extra Google client ids of the same Google Cloud project
+      # (comma-separated), e.g. a future iOS client (docs/AUTHENTICATION.md).
+      - key: GOOGLE_ALLOWED_AUDIENCES
+        sync: false
+      # Password reset links point at the StockLens web app's /reset-password
+      # page, e.g. https://stocklens-web.onrender.com (docs/AUTH_HARDENING.md).
+      - key: FRONTEND_BASE_URL
+        sync: false
       # The mobile app is a native client (CORS does not apply); browsers may
       # only call the API from its own origin. Update if a web front end is added.
       - key: CORS_ALLOWED_ORIGINS

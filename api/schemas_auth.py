@@ -132,3 +132,19 @@ class RevokeAllSessionsResponse(BaseModel):
 class SetPinEnabledRequest(BaseModel):
     device_id: str = Field(..., max_length=128)
     enabled: bool
+
+
+# ── Forgot / reset password ─────────────────────────────────────────────────
+
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+
+class ResetPasswordRequest(BaseModel):
+    token: str = Field(..., min_length=16, max_length=256)
+    # Same password policy as registration / change-password.
+    new_password: str = Field(..., min_length=8, max_length=72)
+
+
+class MessageResponse(BaseModel):
+    message: str

@@ -18,6 +18,8 @@ Response shapes: business routes return `{"success": true, "data": …,
 | GET | `/app/config` | none | feature flags, disclaimer, announcement, Top Picks limit, engine versions |
 | POST | `/auth/register`, `/auth/login`, `/auth/refresh`, `/auth/logout` | — | password auth, refresh rotation |
 | POST | `/auth/google`, `/auth/apple`, `/auth/otp/request`, `/auth/otp/verify` | — | SSO / OTP |
+| POST | `/auth/forgot-password` `{email}` → 202 `{message}` (identical for every email) | — | emails a reset link to the StockLens web app |
+| POST | `/auth/reset-password` `{token, new_password}` → 200 `{message}`; 400 invalid/expired/used link, 422 password policy, 429 | — | sets the password, ends every session (docs/AUTH_HARDENING.md) |
 | GET | `/auth/me` | user | profile and roles |
 | GET/POST | `/auth/sessions`, `/auth/sessions/revoke`, `/auth/sessions/revoke-all`, `/auth/devices/pin-enabled` | user | device sessions |
 | GET | `/stocks?search=&limit=&offset=` | user | Stock Master search (active stocks) |

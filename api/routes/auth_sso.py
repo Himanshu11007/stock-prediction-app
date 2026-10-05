@@ -24,6 +24,7 @@ from auth.external_identity import (
     AccountLinkingRequiredError,
     AppleIdentityVerifier,
     DuplicateExternalIdentityError,
+    ExternalEmailNotVerifiedError,
     ExternalIdentityError,
     GoogleIdentityVerifier,
     IAppleIdentityVerifier,
@@ -34,6 +35,7 @@ from auth.external_identity import (
     list_identities,
     unlink_identity,
 )
+from auth.security_events import log_security_event
 from auth.token_issuance import issue_token_pair
 from db.models.user import User
 from db.session import get_session
@@ -58,13 +60,23 @@ def login_with_google(
     verifier: IGoogleIdentityVerifier = Depends(get_google_identity_verifier),
     session: Session = Depends(get_session),
 ):
+    """Signs in with a Google ID token (Android Credential Manager / web
+    Google Identity Services). Errors: 401 invalid/expired/forged token or
+    wrong audience/issuer; 403 the Google email is not verified; 409 the
+    email already belongs to a StockLens account that has not linked Google
+    (sign in there and link explicitly)."""
     auth_service.ensure_roles_exist(session)
     try:
         identity = verifier.verify(payload.id_token)
-        user, _is_new = find_or_create_user_for_identity(session, identity)
-    except ExternalIdentityError:
+        user, is_new = find_or_create_user_for_identity(session, identity)
+    except ExternalEmailNotVerifiedError as exc:
+        log_security_event("GOOGLE_LOGIN_FAILED", reason="email_not_verified")
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(exc))
+    except ExternalIdentityError as exc:
+        log_security_event("GOOGLE_LOGIN_FAILED", reason=type(exc.__cause__ or exc).__name__)
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid Google identity token")
     except AccountLinkingRequiredError as exc:
+        log_security_event("GOOGLE_LOGIN_FAILED", reason="account_linking_required")
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc))
 
     if not user.is_active:
@@ -73,6 +85,8 @@ def login_with_google(
     access_token, refresh_token = issue_token_pair(
         session, user, device_id=payload.device_id, device_name=payload.device_name
     )
+    log_security_event("GOOGLE_LOGIN_SUCCEEDED", user_id=user.id, new_user=is_new,
+                       device=bool(payload.device_id))
     return TokenResponse(access_token=access_token, refresh_token=refresh_token)
 
 
@@ -86,6 +100,8 @@ def login_with_apple(
     try:
         identity = verifier.verify(payload.identity_token)
         user, _is_new = find_or_create_user_for_identity(session, identity)
+    except ExternalEmailNotVerifiedError as exc:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(exc))
     except ExternalIdentityError:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid Apple identity token")
     except AccountLinkingRequiredError as exc:

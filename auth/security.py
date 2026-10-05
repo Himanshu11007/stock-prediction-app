@@ -59,7 +59,10 @@ def create_access_token(*, subject: str, roles: list[str]) -> str:
         "sub": subject,
         "roles": roles,
         "type": "access",
-        "iat": now,
+        # Fractional seconds (RFC 7519 NumericDate allows them): lets
+        # get_current_user tell a token issued just before a password reset
+        # from one issued just after it, even within the same second.
+        "iat": now.timestamp(),
         "exp": now + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES),
     }
     return jwt.encode(payload, JWT_SECRET_KEY, algorithm=JWT_ALGORITHM)
