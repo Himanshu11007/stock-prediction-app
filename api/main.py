@@ -36,8 +36,8 @@ from fastapi.responses import JSONResponse
 
 from api.routes import (
     analysis, top_picks, tracker, performance, logs, intelligence, auth, auth_sso, auth_otp,
-    auth_devices, admin, admin_masters, admin_notifications, notifications, watchlist, stocks, product,
-    predictions, scheduler,
+    auth_devices, auth_password, admin, admin_masters, admin_notifications, notifications, watchlist, stocks,
+    product, predictions, scheduler,
 )
 from api.schemas import HealthResponse
 
@@ -111,6 +111,23 @@ def _check_production_settings() -> None:
 
 if IS_PRODUCTION:
     _check_production_settings()
+
+
+def _warn_on_incomplete_auth_settings() -> None:
+    """Features that fail closed when unconfigured - worth a loud log line,
+    not a refusal to start."""
+    from config import GOOGLE_ALLOWED_AUDIENCES, OTP_DEV_LOG_CODES, OTP_SMTP_HOST, PASSWORD_RESET_URL
+    if not GOOGLE_ALLOWED_AUDIENCES:
+        logger.warning("CONFIG | Google sign-in disabled: GOOGLE_OAUTH_CLIENT_ID is not set")
+    if not PASSWORD_RESET_URL:
+        logger.warning("CONFIG | password reset emails disabled: set PASSWORD_RESET_URL or FRONTEND_BASE_URL")
+    if not OTP_SMTP_HOST:
+        logger.warning("CONFIG | no email provider (OTP_SMTP_HOST): OTP and password-reset emails cannot be sent")
+    if IS_PRODUCTION and OTP_DEV_LOG_CODES:
+        logger.error("CONFIG | OTP_DEV_LOG_CODES is enabled in production - OTP codes are being logged")
+
+
+_warn_on_incomplete_auth_settings()
 
 # ── CORS — origins from config (CORS_ALLOWED_ORIGINS) ────────────────────────
 # allow_credentials must be False: browsers reject allow_origins=["*"] with
@@ -213,6 +230,7 @@ app.include_router(auth.router,        prefix=API_PREFIX, tags=["Auth"])
 app.include_router(auth_sso.router,    prefix=API_PREFIX, tags=["Auth"])
 app.include_router(auth_otp.router,    prefix=API_PREFIX, tags=["Auth"])
 app.include_router(auth_devices.router, prefix=API_PREFIX, tags=["Auth"])
+app.include_router(auth_password.router, prefix=API_PREFIX, tags=["Auth"])
 app.include_router(admin.router,       prefix=API_PREFIX, tags=["Admin"])
 app.include_router(admin_masters.router, prefix=API_PREFIX, tags=["Admin"])
 app.include_router(product.public_router, prefix=API_PREFIX, tags=["App"])

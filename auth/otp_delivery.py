@@ -15,6 +15,20 @@ from utils.logger import get_logger
 logger = get_logger(__name__)
 
 
+def send_smtp_message(
+    message: EmailMessage, *, host: str, port: int, username: str, password: str, use_tls: bool = True
+) -> None:
+    """The one SMTP send path for every transactional email this backend
+    sends (OTP codes, password-reset links) - same provider, same settings
+    (OTP_SMTP_*), no second email integration."""
+    with smtplib.SMTP(host, port, timeout=10) as smtp:
+        if use_tls:
+            smtp.starttls()
+        if username:
+            smtp.login(username, password)
+        smtp.send_message(message)
+
+
 class IOtpDeliveryService(Protocol):
     def send(self, destination: str, code: str) -> None: ...
 
@@ -113,14 +127,14 @@ class SmtpOtpDeliveryService:
             "you can safely ignore this email."
         )
 
-        with smtplib.SMTP(self._host, self._port, timeout=10) as smtp:
-            if self._use_tls:
-                smtp.starttls()
-            if self._username:
-                smtp.login(self._username, self._password)
-            smtp.send_message(message)
+        send_smtp_message(
+            message, host=self._host, port=self._port, username=self._username,
+            password=self._password, use_tls=self._use_tls,
+        )
 
-        logger.info("OTP_SENT | destination=%s via=smtp", destination)
+        # Masked: the log needs to show THAT a code went out, not to whom.
+        from auth.security_events import mask_email
+        logger.info("OTP_SENT | destination=%s via=smtp", mask_email(destination))
 
 
 class NotConfiguredOtpDeliveryService:

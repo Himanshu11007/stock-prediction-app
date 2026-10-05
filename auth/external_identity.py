@@ -16,11 +16,14 @@ find or create a StockLens account - see find_or_create_user_for_identity().
 """
 from __future__ import annotations
 
+import threading
 from dataclasses import dataclass
-from typing import Optional, Protocol
+from typing import Optional, Protocol, Sequence, Union
 
 import jwt
+from sqlalchemy.exc import IntegrityError
 
+from auth.security_events import log_security_event, mask_email
 from auth.service import create_external_user
 from db.models.user import ExternalIdentity, User
 from sqlmodel import Session, select
@@ -35,6 +38,14 @@ class ExternalIdentityError(Exception):
     """Raised when a Google/Apple identity token fails verification (bad
     signature, wrong audience/issuer, expired, malformed, or the provider
     isn't configured on this server)."""
+
+
+class ExternalEmailNotVerifiedError(ExternalIdentityError):
+    """The token is genuine, but the provider says its email address is not
+    verified. Such an email is never attached to a new StockLens account:
+    anyone can create a Google account claiming someone else's address, and
+    letting that claim create (and reserve) the account would let an
+    attacker pre-register a victim's email before the victim signs up."""
 
 
 class AccountLinkingRequiredError(Exception):
@@ -77,22 +88,70 @@ class IAppleIdentityVerifier(Protocol):
     def verify(self, identity_token: str) -> VerifiedExternalIdentity: ...
 
 
+class _JwkClient(Protocol):
+    def get_signing_key_from_jwt(self, token: str): ...
+
+
+# One PyJWKClient per JWKS URL for the whole process: it caches the
+# provider's key set (and individual keys), so a login no longer re-downloads
+# Google's certificates every time - previously each request built a fresh
+# client, adding a network round trip to every sign-in and turning any
+# transient googleapis.com hiccup into a failed login. A token signed with a
+# key id the cache doesn't know yet triggers one refetch (PyJWKClient's own
+# behaviour), so key rotation still works.
+_jwk_clients: dict[str, jwt.PyJWKClient] = {}
+_jwk_clients_lock = threading.Lock()
+
+
+def _jwk_client_for(jwks_url: str) -> jwt.PyJWKClient:
+    with _jwk_clients_lock:
+        client = _jwk_clients.get(jwks_url)
+        if client is None:
+            client = jwt.PyJWKClient(jwks_url, cache_jwk_set=True, lifespan=3600, timeout=10)
+            _jwk_clients[jwks_url] = client
+        return client
+
+
+def _normalize_audiences(audience: Union[None, str, Sequence[str]]) -> list[str]:
+    if audience is None:
+        return []
+    if isinstance(audience, str):
+        audience = [audience]
+    return [a.strip() for a in audience if a and a.strip()]
+
+
 def _verify_oidc_id_token(
-    token: str, *, jwks_url: str, issuers: tuple[str, ...], audience: Optional[str]
+    token: str,
+    *,
+    jwks_url: str,
+    issuers: tuple[str, ...],
+    audience: Union[None, str, Sequence[str]],
+    jwk_client: Optional[_JwkClient] = None,
+    leeway: Optional[int] = None,
 ) -> dict:
-    if not audience:
+    """Verifies signature (provider JWKS, RS256 only), `aud` (one of the
+    configured client ids), `iss`, `exp`/`iat` (with a small clock-skew
+    leeway) and the presence of `sub`. Raises ExternalIdentityError with a
+    generic message on any failure - the precise reason goes to the caller
+    via the exception chain, never to the client."""
+    audiences = _normalize_audiences(audience)
+    if not audiences:
         raise ExternalIdentityError(
             "This sign-in method is not configured on the server (missing client id)"
         )
+    if leeway is None:
+        from config import EXTERNAL_ID_TOKEN_LEEWAY_SECONDS
+
+        leeway = EXTERNAL_ID_TOKEN_LEEWAY_SECONDS
     try:
-        jwk_client = jwt.PyJWKClient(jwks_url)
-        signing_key = jwk_client.get_signing_key_from_jwt(token)
+        signing_key = (jwk_client or _jwk_client_for(jwks_url)).get_signing_key_from_jwt(token)
         claims = jwt.decode(
             token,
             signing_key.key,
             algorithms=["RS256"],
-            audience=audience,
-            options={"require": ["exp", "sub"]},
+            audience=audiences,
+            leeway=leeway,
+            options={"require": ["exp", "iat", "iss", "aud", "sub"]},
         )
     except jwt.PyJWTError as exc:
         raise ExternalIdentityError("Invalid identity token") from exc
@@ -101,32 +160,53 @@ def _verify_oidc_id_token(
 
     if claims.get("iss") not in issuers:
         raise ExternalIdentityError("Invalid identity token issuer")
+    if not isinstance(claims.get("sub"), str) or not claims["sub"].strip():
+        raise ExternalIdentityError("Invalid identity token")
     return claims
+
+
+def _claim_is_true(value) -> bool:
+    # Google/Apple have both sent email_verified as a JSON bool and, in some
+    # token flavours, as the string "true"/"false".
+    return value in (True, "true", "True", "1", 1)
 
 
 class GoogleIdentityVerifier:
     """Production verifier - validates against Google's own rotating public
-    keys over the network. Requires GOOGLE_OAUTH_CLIENT_ID (config.py) to be
-    set to this app's registered OAuth client id, which must match the
-    token's `aud` claim exactly - otherwise any Google user's token for a
-    completely different app would be accepted here."""
+    keys over the network. The token's `aud` must be one of
+    config.GOOGLE_ALLOWED_AUDIENCES (GOOGLE_OAUTH_CLIENT_ID plus any extra
+    client ids of this same Google Cloud project) - otherwise any Google
+    user's token for a completely different app would be accepted here.
 
-    def __init__(self, client_id: Optional[str] = None):
+    client_id / jwk_client are injectable for tests (a locally generated RSA
+    key set instead of Google's), production uses neither."""
+
+    def __init__(
+        self,
+        client_id: Union[None, str, Sequence[str]] = None,
+        *,
+        jwk_client: Optional[_JwkClient] = None,
+        leeway: Optional[int] = None,
+    ):
         if client_id is None:
-            from config import GOOGLE_OAUTH_CLIENT_ID
+            from config import GOOGLE_ALLOWED_AUDIENCES
 
-            client_id = GOOGLE_OAUTH_CLIENT_ID
-        self._client_id = client_id
+            client_id = GOOGLE_ALLOWED_AUDIENCES
+        self._audiences = _normalize_audiences(client_id)
+        self._jwk_client = jwk_client
+        self._leeway = leeway
 
     def verify(self, id_token: str) -> VerifiedExternalIdentity:
         claims = _verify_oidc_id_token(
-            id_token, jwks_url=GOOGLE_JWKS_URL, issuers=GOOGLE_ISSUERS, audience=self._client_id
+            id_token, jwks_url=GOOGLE_JWKS_URL, issuers=GOOGLE_ISSUERS, audience=self._audiences,
+            jwk_client=self._jwk_client, leeway=self._leeway,
         )
+        email = claims.get("email")
         return VerifiedExternalIdentity(
             provider="google",
             subject=claims["sub"],
-            email=claims.get("email"),
-            email_verified=bool(claims.get("email_verified", False)),
+            email=email.strip().lower() if isinstance(email, str) and email.strip() else None,
+            email_verified=_claim_is_true(claims.get("email_verified", False)),
         )
 
 
@@ -150,7 +230,6 @@ class AppleIdentityVerifier:
         # Apple's email_verified has been a bool and, in older/web tokens, a
         # string "true"/"false" - accept both rather than silently treating
         # a verified email as unverified.
-        raw_verified = claims.get("email_verified", False)
         return VerifiedExternalIdentity(
             provider="apple",
             subject=claims["sub"],
@@ -160,7 +239,7 @@ class AppleIdentityVerifier:
             # callers must key on `subject`, never on email, for exactly
             # this reason.
             email=claims.get("email"),
-            email_verified=raw_verified in (True, "true", "1", 1),
+            email_verified=_claim_is_true(claims.get("email_verified", False)),
         )
 
 
@@ -202,51 +281,104 @@ class FakeAppleIdentityVerifier:
         return identity
 
 
+def _find_link(session: Session, provider: str, subject: str) -> Optional[ExternalIdentity]:
+    return session.exec(
+        select(ExternalIdentity).where(
+            ExternalIdentity.provider == provider,
+            ExternalIdentity.provider_subject == subject,
+        )
+    ).first()
+
+
+def _user_for_link(session: Session, link: ExternalIdentity) -> User:
+    user = session.get(User, link.user_id)
+    if user is None or not user.is_active:
+        raise ExternalIdentityError("This account is unavailable")
+    return user
+
+
+def _raise_if_email_taken(session: Session, identity: VerifiedExternalIdentity) -> None:
+    if not identity.email:
+        return
+    normalized_email = identity.email.strip().lower()
+    colliding_user = session.exec(select(User).where(User.email == normalized_email)).first()
+    if colliding_user is not None:
+        raise AccountLinkingRequiredError(
+            "An account with this email already exists. Sign in to that account and link "
+            f"{identity.provider.title()} from account settings.",
+            existing_email=normalized_email,
+        )
+
+
 def find_or_create_user_for_identity(
     session: Session, identity: VerifiedExternalIdentity
 ) -> tuple[User, bool]:
-    """Returns (user, is_new_user). Resolution order:
+    """Returns (user, is_new_user). The identity key is ALWAYS the
+    provider's stable (provider, sub) pair - never the email. Resolution:
 
     1. An external_identities row already matches (provider, subject) ->
        that user (returning user - the common case on every login after
-       the first).
-    2. No match, but an existing StockLens account already has this exact
-       email -> raise AccountLinkingRequiredError rather than silently
-       attaching this identity to it (see that class's docstring for why).
-    3. No match anywhere -> create a brand-new user from this identity.
+       the first). The token's current email is irrelevant here: a Google
+       account whose address changed still signs in to the same account.
+    2. No match, and the provider does not vouch for the email
+       (email_verified false) -> ExternalEmailNotVerifiedError. A Google
+       token must also carry an email at all (Google always includes it for
+       the `email` scope Credential Manager / Google Identity Services use).
+    3. No match, but an existing StockLens account already has this exact
+       (normalized) email -> AccountLinkingRequiredError rather than
+       silently attaching this identity to it (see that class's docstring).
+    4. No match anywhere -> create the user AND its identity link in one
+       transaction. Two simultaneous first sign-ins with the same Google
+       account race on uq_external_identity_subject: the loser rolls back
+       (no orphan password-less user is left behind) and signs in to the
+       winner's account instead of getting a 500.
     """
-    existing_link = session.exec(
-        select(ExternalIdentity).where(
-            ExternalIdentity.provider == identity.provider,
-            ExternalIdentity.provider_subject == identity.subject,
-        )
-    ).first()
+    existing_link = _find_link(session, identity.provider, identity.subject)
     if existing_link is not None:
-        user = session.get(User, existing_link.user_id)
-        if user is None or not user.is_active:
-            raise ExternalIdentityError("This account is unavailable")
-        return user, False
+        return _user_for_link(session, existing_link), False
 
-    if identity.email:
-        normalized_email = identity.email.strip().lower()
-        colliding_user = session.exec(select(User).where(User.email == normalized_email)).first()
-        if colliding_user is not None:
-            raise AccountLinkingRequiredError(
-                "An account with this email already exists. Sign in to that account and link "
-                f"{identity.provider.title()} from account settings.",
-                existing_email=normalized_email,
-            )
-
-    user = create_external_user(session, email=identity.email)
-    session.add(
-        ExternalIdentity(
-            user_id=user.id,
-            provider=identity.provider,
-            provider_subject=identity.subject,
-            email=identity.email,
+    if identity.provider == "google" and not identity.email:
+        raise ExternalEmailNotVerifiedError("Your Google account has no email address to sign in with")
+    if identity.email and not identity.email_verified:
+        raise ExternalEmailNotVerifiedError(
+            f"Your {identity.provider.title()} account's email address is not verified"
         )
-    )
-    session.commit()
+
+    try:
+        _raise_if_email_taken(session, identity)
+    except AccountLinkingRequiredError:
+        # The email may belong to the account a concurrent first sign-in
+        # with this very identity just created (it committed between our
+        # link lookup above and the email check) - that is the same person.
+        existing_link = _find_link(session, identity.provider, identity.subject)
+        if existing_link is not None:
+            return _user_for_link(session, existing_link), False
+        raise
+
+    try:
+        user = create_external_user(session, email=identity.email, commit=False)
+        session.add(
+            ExternalIdentity(
+                user_id=user.id,
+                provider=identity.provider,
+                provider_subject=identity.subject,
+                email=identity.email,
+            )
+        )
+        session.commit()
+    except IntegrityError:
+        session.rollback()
+        # Lost a race: either the same identity was linked concurrently
+        # (-> sign in to that account) or the email was registered
+        # concurrently (-> same answer as step 3).
+        existing_link = _find_link(session, identity.provider, identity.subject)
+        if existing_link is not None:
+            return _user_for_link(session, existing_link), False
+        _raise_if_email_taken(session, identity)
+        raise ExternalIdentityError("Could not complete sign-in, please try again")
+    session.refresh(user)
+    log_security_event("EXTERNAL_ACCOUNT_CREATED", provider=identity.provider, user_id=user.id,
+                       email=mask_email(identity.email))
     return user, True
 
 
@@ -284,8 +416,17 @@ def link_identity(session: Session, user: User, identity: VerifiedExternalIdenti
         email=identity.email,
     )
     session.add(link)
-    session.commit()
+    try:
+        session.commit()
+    except IntegrityError:
+        # The same identity (or this provider for this user) was linked by a
+        # concurrent request - the unique constraints decided, not us.
+        session.rollback()
+        raise DuplicateExternalIdentityError(
+            f"This {identity.provider.title()} account is already linked to a StockLens account"
+        )
     session.refresh(link)
+    log_security_event("EXTERNAL_IDENTITY_LINKED", provider=identity.provider, user_id=user.id)
     return link
 
 
@@ -315,6 +456,7 @@ def unlink_identity(session: Session, user: User, provider: str) -> None:
 
     session.delete(link)
     session.commit()
+    log_security_event("EXTERNAL_IDENTITY_UNLINKED", provider=provider, user_id=user.id)
 
 
 def list_identities(session: Session, user: User) -> list[ExternalIdentity]:

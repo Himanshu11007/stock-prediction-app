@@ -7,7 +7,7 @@ without a schema change (per the architecture spec).
 from datetime import datetime, timezone
 from typing import Optional
 
-from sqlalchemy import UniqueConstraint
+from sqlalchemy import Index, UniqueConstraint
 from sqlmodel import Field, SQLModel
 
 
@@ -32,6 +32,11 @@ class User(SQLModel, table=True):
     is_active: bool = Field(default=True)
     created_at: datetime = Field(default_factory=utcnow)
     updated_at: datetime = Field(default_factory=utcnow)
+    # Access tokens issued (JWT `iat`) before this instant are rejected by
+    # auth/dependencies.py:get_current_user even though they haven't
+    # expired - set when the password is reset, so a reset ends every
+    # session immediately rather than up to ACCESS_TOKEN_EXPIRE_MINUTES later.
+    token_valid_after: Optional[datetime] = Field(default=None)
 
 
 class Role(SQLModel, table=True):
@@ -147,3 +152,43 @@ class TrustedDevice(SQLModel, table=True):
     created_at: datetime = Field(default_factory=utcnow)
     last_seen_at: datetime = Field(default_factory=utcnow)
     revoked_at: Optional[datetime] = Field(default=None)
+
+
+class PasswordResetToken(SQLModel, table=True):
+    """One emailed password-reset link (auth/password_reset.py owns this table).
+
+    Only a SHA-256 hash of the token is stored (the token is 256 bits of
+    CSPRNG output, so a fast hash is enough - nothing to brute-force). A
+    token is valid while used_at IS NULL and expires_at is in the future;
+    consuming it is a single conditional UPDATE, so it can succeed once.
+    used_at is also set when a newer link supersedes it or the password is
+    reset by another link.
+    """
+
+    __tablename__ = "password_reset_tokens"
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    user_id: int = Field(foreign_key="users.id", index=True)
+    token_hash: str = Field(unique=True, index=True)
+    created_at: datetime = Field(default_factory=utcnow, index=True)
+    expires_at: datetime
+    used_at: Optional[datetime] = Field(default=None)
+    requested_ip: Optional[str] = Field(default=None, max_length=64)
+    user_agent: Optional[str] = Field(default=None, max_length=256)
+
+
+class AuthThrottleEvent(SQLModel, table=True):
+    """One counted request for a database-backed rate limit (auth/throttle.py)
+    - shared by every API worker/container, unlike an in-process counter.
+    key_hash is a SHA-256 of the throttled key (client IP, email...) so the
+    table never holds raw IPs or addresses."""
+
+    __tablename__ = "auth_throttle_events"
+    __table_args__ = (
+        Index("ix_auth_throttle_bucket_key_created", "bucket", "key_hash", "created_at"),
+    )
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    bucket: str = Field(max_length=64)
+    key_hash: str = Field(max_length=64)
+    created_at: datetime = Field(default_factory=utcnow, index=True)

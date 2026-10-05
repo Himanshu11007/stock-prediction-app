@@ -16,8 +16,11 @@ Failure isolation: every per-stock stage is wrapped; a failure is recorded in
 EngineRun.errors and the stock is marked failed, the run continues. Only an
 infrastructure failure (e.g. database) fails the whole run.
 
-Concurrency: at most one run at a time (in-process lock + a RUNNING row
-check). A RUNNING row older than RUN_STALE_AFTER is treated as abandoned.
+Concurrency: at most one RANKING run at a time - guaranteed by the database
+(partial unique index on RUNNING ranking runs, see create_run), with the
+in-process lock and the RUNNING row check as fast paths. A RUNNING row older
+than RUN_STALE_AFTER is treated as abandoned (marked FAILED, which also frees
+the index for a new run).
 """
 from __future__ import annotations
 
@@ -108,6 +111,12 @@ def _running(session: Session, kind: str = "RANKING") -> Optional[EngineRun]:
 
 
 def create_run(session: Session, *, kind: str, triggered_by: Optional[int], config: dict) -> EngineRun:
+    """Creates a RUNNING run. For kind RANKING, at most one may be RUNNING at
+    a time across every process: the check below gives the friendly answer
+    (and expires an abandoned run), but the guarantee is the partial unique
+    index uq_engine_runs_one_running_ranking - when two workers pass the
+    check simultaneously, the second INSERT fails and becomes
+    RunInProgressError here, exactly as if the check had caught it."""
     if kind == "RANKING" and _running(session, kind) is not None:
         raise RunInProgressError("An engine run is already in progress")
     run = EngineRun(run_id=f"{kind}-{_now():%Y%m%d-%H%M%S}-{uuid.uuid4().hex[:6]}", kind=kind,
@@ -121,6 +130,7 @@ def create_run(session: Session, *, kind: str, triggered_by: Optional[int], conf
         # this insert; the database's partial unique index rejected ours.
         session.rollback()
         if kind == "RANKING":
+            logger.info("ENGINE_RUN_REJECTED | another RANKING run started concurrently")
             raise RunInProgressError("An engine run is already in progress") from None
         raise
     session.refresh(run)

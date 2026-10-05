@@ -47,6 +47,7 @@ def test_google_verifier_defaults_to_config_client_id_when_not_overridden(monkey
     import config
 
     monkeypatch.setattr(config, "GOOGLE_OAUTH_CLIENT_ID", None)
+    monkeypatch.setattr(config, "GOOGLE_ALLOWED_AUDIENCES", [])
     verifier = GoogleIdentityVerifier()  # no explicit client_id -> reads config
     with pytest.raises(ExternalIdentityError):
         verifier.verify("irrelevant-since-it-should-fail-before-parsing")

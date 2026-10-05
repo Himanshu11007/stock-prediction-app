@@ -18,13 +18,17 @@ Security properties:
 from __future__ import annotations
 
 import hashlib
+import hmac
+import logging
 import secrets
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 
+from sqlalchemy import update
 from sqlmodel import Session, select
 
 from auth.otp_delivery import IOtpDeliveryService
+from auth.security_events import log_security_event
 from config import (
     OTP_CODE_LENGTH,
     OTP_EXPIRE_SECONDS,
@@ -152,41 +156,74 @@ def request_otp(
 
 
 def verify_otp(session: Session, destination: str, code: str, *, purpose: str = "login") -> None:
-    """Validates `code` against the most recently issued, not-yet-consumed
-    challenge for `destination`. Raises OtpInvalidError / OtpExpiredError /
+    """Validates `code` against the most recently issued challenge for
+    `destination`. Raises OtpInvalidError / OtpExpiredError /
     OtpAlreadyUsedError / OtpMaxAttemptsError on failure - all with generic,
     user-safe messages (never reveals which specific check failed beyond
     what the user needs to decide their next action).
 
-    On success, marks the challenge consumed so it can never be verified
-    again. This function only validates the code itself - the caller is
+    On success the challenge is consumed so it can never be verified again.
+    This function only validates the code itself - the caller is
     responsible for finding/creating the StockLens user for `destination`.
+
+    Exactly-once, enforced by the database rather than by a read-then-write:
+    1. the attempt is counted with one conditional UPDATE
+       (attempt_count = attempt_count + 1 WHERE not consumed AND not expired
+       AND attempt_count < OTP_MAX_ATTEMPTS) - concurrent guesses can no
+       longer overwrite each other's increments and exceed the limit;
+    2. a matching code consumes the challenge with one conditional UPDATE
+       (consumed_at = now WHERE consumed_at IS NULL) - of any number of
+       simultaneous requests with the same correct code, exactly one
+       matches a row; the rest get OtpAlreadyUsedError.
     """
     destination = normalize_destination(destination)
     challenge = session.exec(
         select(OtpChallenge)
         .where(OtpChallenge.destination == destination, OtpChallenge.purpose == purpose)
-        .order_by(OtpChallenge.created_at.desc())
+        .order_by(OtpChallenge.created_at.desc(), OtpChallenge.id.desc())
     ).first()
     if challenge is None:
         raise OtpInvalidError("Invalid or expired code")
-
-    if challenge.consumed_at is not None:
-        raise OtpAlreadyUsedError("This code has already been used")
+    challenge_id = challenge.id
 
     now = utcnow()
-    if challenge.expires_at < now:
-        raise OtpExpiredError("This code has expired")
+    counted = session.execute(
+        update(OtpChallenge)
+        .where(
+            OtpChallenge.id == challenge_id,
+            OtpChallenge.consumed_at.is_(None),
+            OtpChallenge.expires_at > now,
+            OtpChallenge.attempt_count < OTP_MAX_ATTEMPTS,
+        )
+        .values(attempt_count=OtpChallenge.attempt_count + 1)
+    )
+    if counted.rowcount != 1:
+        session.rollback()
+        _raise_for_unusable_challenge(session, challenge_id, now)
+    session.commit()
 
-    if challenge.attempt_count >= OTP_MAX_ATTEMPTS:
-        raise OtpMaxAttemptsError("Too many incorrect attempts - request a new code")
-
-    challenge.attempt_count += 1
-    if _hash_code(code, challenge.code_salt) != challenge.code_hash:
-        session.add(challenge)
-        session.commit()
+    if not hmac.compare_digest(_hash_code(code, challenge.code_salt), challenge.code_hash):
         raise OtpInvalidError("Invalid or expired code")
 
-    challenge.consumed_at = now
-    session.add(challenge)
+    consumed = session.execute(
+        update(OtpChallenge)
+        .where(OtpChallenge.id == challenge_id, OtpChallenge.consumed_at.is_(None))
+        .values(consumed_at=now)
+    )
+    if consumed.rowcount != 1:
+        session.rollback()
+        log_security_event("OTP_REUSE", level=logging.WARNING, challenge_id=challenge_id)
+        raise OtpAlreadyUsedError("This code has already been used")
     session.commit()
+
+
+def _raise_for_unusable_challenge(session: Session, challenge_id: int, now: datetime) -> None:
+    challenge = session.get(OtpChallenge, challenge_id)
+    session.refresh(challenge)
+    if challenge.consumed_at is not None:
+        log_security_event("OTP_REUSE", level=logging.WARNING, challenge_id=challenge_id)
+        raise OtpAlreadyUsedError("This code has already been used")
+    if challenge.attempt_count >= OTP_MAX_ATTEMPTS:
+        log_security_event("OTP_MAX_ATTEMPTS", level=logging.WARNING, challenge_id=challenge_id)
+        raise OtpMaxAttemptsError("Too many incorrect attempts - request a new code")
+    raise OtpExpiredError("This code has expired")
