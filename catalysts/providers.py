@@ -28,6 +28,7 @@ import datetime as dt
 import email.utils
 import json
 import os
+import re
 import time
 import urllib.error
 import urllib.parse
@@ -119,6 +120,19 @@ def _rfc822(s: Optional[str]) -> Optional[dt.datetime]:
     return None
 
 
+def _as_utf8(body: bytes) -> bytes:
+    """Feeds that declare UTF-8 but contain Windows-1252 bytes (seen on RBI)
+    are re-decoded instead of producing replacement characters."""
+    body = body.lstrip(b"\xef\xbb\xbf")
+    try:
+        body.decode("utf-8")
+        return body
+    except UnicodeDecodeError:
+        text = body.decode("cp1252", errors="replace")
+        text = re.sub(r'encoding=["\'][^"\']+["\']', 'encoding="utf-8"', text, count=1)
+        return text.encode("utf-8")
+
+
 FEEDS: dict[str, tuple[str, str]] = {
     # key: (url, source name)
     "rbi_press": ("https://www.rbi.org.in/pressreleases_rss.xml", "Reserve Bank of India"),
@@ -140,8 +154,8 @@ class RssProvider:
         ok = 0
         for key, (url, source) in self.feeds.items():
             try:
-                body = fetch(url, self.get, sleep=self.sleep)
-                root = ET.fromstring(body.lstrip(b"\xef\xbb\xbf"))
+                body = _as_utf8(fetch(url, self.get, sleep=self.sleep))
+                root = ET.fromstring(body)
             except (ProviderError, ET.ParseError) as e:
                 self.errors.append(f"{key}: {e}")
                 continue

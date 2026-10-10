@@ -195,6 +195,8 @@ def exposures(category: str, text: str, companies: Iterable[tuple[str, Optional[
         if category not in h.categories:
             continue
         d = driver_direction(h.driver, text)
+        if d == 0:
+            continue                      # the text does not say which way the driver moved: no exposure claimed
         st = status.get(h.id, {}).get("status", "UNVALIDATED")
         w = STATUS_WEIGHT.get(st, 0.5)
         for tg in h.targets:

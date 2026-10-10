@@ -175,6 +175,16 @@ def test_rss_provider_parses_items_and_times():
     assert items[0].excerpt == "To meet dollar needs" and items[0].provider_article_id == "rbi_press:prid-1"
 
 
+def test_rss_feed_declaring_utf8_with_windows_1252_bytes_is_decoded():
+    body = ('<?xml version="1.0" encoding="utf-8"?><rss><channel><item><title>Survey: July \x96 September</title>'
+            '<link>https://www.rbi.org.in/x</link><pubDate>Fri, 09 Oct 2026 12:30:00 +0530</pubDate></item>'
+            '</channel></rss>').encode("latin-1")
+    p = prov.RssProvider({"rbi": ("https://www.rbi.org.in/r.xml", "RBI")}, get=lambda u, t, *h: (200, body),
+                         sleep=lambda s: None)
+    (item,) = list(p.fetch(T0 - dt.timedelta(days=1), T0 + dt.timedelta(days=1)))
+    assert item.title == "Survey: July – September"
+
+
 def test_rss_failures_are_bounded_recorded_and_partial():
     calls = []
 
