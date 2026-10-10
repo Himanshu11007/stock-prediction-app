@@ -283,6 +283,18 @@ def prediction_monitor_job(engine, now: Optional[dt.datetime] = None) -> dict:
             else:
                 problems.append({"run_type": run_type, "problem": day_runs[0].status, "run_id": day_runs[0].run_id,
                                  "reason": day_runs[0].failure_reason})
+        # Outcome evaluation has no snapshot of its own: report its slot when it
+        # failed, or has been RUNNING past the stale limit (an interrupted worker).
+        oc = session.exec(select(ScheduledJobRun).where(ScheduledJobRun.job == "prediction_outcomes",
+                                                        ScheduledJobRun.slot == local.date().isoformat())).first()
+        if oc is not None:
+            started = oc.started_at.replace(tzinfo=oc.started_at.tzinfo or dt.timezone.utc) if oc.started_at else None
+            if oc.status == "FAILED":
+                problems.append({"run_type": "OUTCOME_EVALUATION", "problem": "FAILED",
+                                 "reason": (oc.result or {}).get("error"), "attempts": oc.attempts})
+            elif oc.status == "RUNNING" and started and now - started > STALE_RUNNING:
+                problems.append({"run_type": "OUTCOME_EVALUATION", "problem": "STALE_RUNNING",
+                                 "reason": f"running since {started.isoformat()}"})
         out = {"status": "ALERT" if problems else "OK", "checked_at": now.isoformat(), "problems": problems,
                "next_trading_day": cal.next_trading_day(local.date(), holidays).isoformat()}
         session.add(ScheduledJobRun(job="prediction_monitor", slot=f"{local:%Y-%m-%dT%H:%M}", status=(

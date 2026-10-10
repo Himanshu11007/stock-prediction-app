@@ -109,8 +109,8 @@ remain as manual recovery.
 
 | Option | Cost | Reliability | Status |
 |---|---|---|---|
-| Render paid cron jobs (`render.yaml`: 9 jobs, v1 plus v2) | Billed by run time per job; check Render pricing **(approval)** | On time; secrets stay in Render | Template ready, not active |
-| GitHub Actions (public repository: free minutes) | Free | Scheduled starts are often 5–30+ minutes late, so not suitable for the 09:50 confirmed snapshot. Needs `DATABASE_URL` as a GitHub secret | Templates `deploy/github-actions/*.yml` (inactive); the earlier daily-ranking draft is untracked |
+| **GitHub Actions → backend job interface (proposed for v2)** | Free while the repository is public (about 300–700 minutes a month otherwise) | Scheduled starts can be 5–30+ minutes late; two triggers per job plus the monitor; the backend does all work. Needs only a dedicated scheduler token (`STOCKLENS_SCHEDULER_TOKEN`), **not** `DATABASE_URL` | Implemented and tested, **inactive**: docs/SCHEDULER.md |
+| Render paid cron jobs (`render.yaml`: the 4 v1 jobs on `main`) | Billed by run time per job; check Render pricing **(approval)** | On time; secrets stay in Render | Not active. The v2 cron templates were removed in favour of GitHub Actions |
 | Render Free | — | **No cron jobs on the Free plan** | — |
 
 **Activation (approval):** pick one option, then:

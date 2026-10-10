@@ -160,13 +160,16 @@ Home cannot say "holiday".
 
 | Job | When | Purpose |
 |---|---|---|
-| `predict_preopen` | 08:30 IST, retry 08:50 | TODAY_PREOPEN snapshot |
-| `predict_confirmed` | 09:50 IST | TODAY_CONFIRMED, only with an approved intraday feed |
-| `predict_eod` | 19:30 IST, retry 20:15 | TOMORROW_EOD for the next trading day |
-| `prediction_outcomes` | 18:30 IST | 1/3/5-session outcomes and shadow exit states |
-| `prediction_monitor` | 09:40 and 20:40 IST | Missed-snapshot check; exits with code 1 on a gap |
+| `predict_preopen` | 07:45 IST, retry 08:30 | TODAY_PREOPEN snapshot |
+| `predict_confirmed` | 09:50 IST, retry 10:20 | TODAY_CONFIRMED, only with an approved intraday feed (disabled) |
+| `prediction_outcomes` | 18:30 IST, retry 21:00 | 1/3/5-session outcomes and shadow exit states |
+| `predict_eod` | 19:30 IST, retry 20:30 | TOMORROW_EOD for the next trading day |
+| `prediction_monitor` | 09:45 and 21:45 IST | Missed or failed snapshot check; fails the run on a gap |
 
 They use the same slot ledger, calendar and idempotency as the ranking job.
-Templates: `render.yaml` (paid, not active) and
-`deploy/github-actions/prediction-jobs.yml` (inactive). Choosing and
-activating a scheduler needs approval: docs/OPERATIONS_AND_SECURITY.md §4.
+The proposed scheduler is **GitHub Actions calling the backend's authenticated
+job interface**: workflows `.github/workflows/stocklens-*.yml`, client
+`scripts/scheduler_client.py`, interface `scheduling/remote.py`. It is
+inactive until approved; see docs/SCHEDULER.md for UTC and IST times,
+enabling, disabling and recovery. Render is not changed: there are no v2
+cron entries in either blueprint.

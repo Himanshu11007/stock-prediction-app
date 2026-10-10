@@ -1,0 +1,41 @@
+# StockLens scheduler: OUTCOME_EVALUATION
+#   v2 1/3/5-session outcomes and shadow exit states, after final daily bars (16:00 IST).
+#
+# Inactive by default. It never runs on push or pull_request. Scheduled runs
+# only happen from the default branch (GitHub rule) AND when the repository
+# variable STOCKLENS_SCHEDULER_ENABLED is 'true'. Times are UTC; IST = UTC+05:30.
+# Weekends are excluded here; NSE holidays and data readiness are checked by
+# the backend (SKIPPED, exit 0). The backend does all calculations: this
+# workflow only calls the authenticated job interface (docs/SCHEDULER.md).
+name: "StockLens scheduler: OUTCOME_EVALUATION"
+
+on:
+  schedule:
+    - cron: "0 13 * * 1-5"   # 18:30 IST, Mon-Fri
+    - cron: "30 15 * * 1-5"   # 21:00 IST, retry (no-op if done), Mon-Fri
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: stocklens-outcome-evaluation
+  cancel-in-progress: false
+
+jobs:
+  trigger:
+    if: github.event_name == 'workflow_dispatch' || vars.STOCKLENS_SCHEDULER_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    environment: stocklens-scheduler
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: scripts/scheduler_client.py
+          sparse-checkout-cone-mode: false
+          persist-credentials: false
+      - name: Trigger OUTCOME_EVALUATION in the StockLens backend
+        env:
+          STOCKLENS_API_URL: ${{ vars.STOCKLENS_API_URL }}
+          STOCKLENS_SCHEDULER_TOKEN: ${{ secrets.STOCKLENS_SCHEDULER_TOKEN }}
+        run: python3 scripts/scheduler_client.py --job OUTCOME_EVALUATION --timeout-minutes 35

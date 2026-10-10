@@ -93,6 +93,12 @@ API_DOCS_ENABLED = os.environ.get("API_DOCS_ENABLED", "false" if IS_PRODUCTION e
 PREDICTION_V2_PUBLIC = os.environ.get("PREDICTION_V2_PUBLIC", "false").strip().lower() == "true"
 PREDICTION_V2_INTRADAY_ENABLED = os.environ.get("PREDICTION_V2_INTRADAY_ENABLED", "false").strip().lower() == "true"
 
+# External scheduler credential (docs/SCHEDULER.md). Only the SHA-256 hex
+# digest of the scheduler's bearer token is configured on the server; the
+# token itself lives in the scheduler's secret store (GitHub Actions secret).
+# Unset (default): the /scheduler job interface is disabled (404).
+SCHEDULER_TOKEN_SHA256 = os.environ.get("SCHEDULER_TOKEN_SHA256", "").strip().lower()
+
 # Comma-separated list of allowed browser origins. The mobile app is not a
 # browser and is unaffected by CORS; this only matters for web clients.
 # Development default "*"; production must list explicit origins.

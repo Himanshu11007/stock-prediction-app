@@ -1,0 +1,42 @@
+# StockLens scheduler: TODAY_CONFIRMED
+#   v2 intraday-confirmed snapshot (shadow). DISABLED until an approved intraday feed exists: needs
+#   vars.STOCKLENS_TODAY_CONFIRMED_ENABLED == 'true' here AND PREDICTION_V2_INTRADAY_ENABLED=true on the API.
+#
+# Inactive by default. It never runs on push or pull_request. Scheduled runs
+# only happen from the default branch (GitHub rule) AND when the repository
+# variable STOCKLENS_SCHEDULER_ENABLED is 'true'. Times are UTC; IST = UTC+05:30.
+# Weekends are excluded here; NSE holidays and data readiness are checked by
+# the backend (SKIPPED, exit 0). The backend does all calculations: this
+# workflow only calls the authenticated job interface (docs/SCHEDULER.md).
+name: "StockLens scheduler: TODAY_CONFIRMED"
+
+on:
+  schedule:
+    - cron: "20 4 * * 1-5"   # 09:50 IST, Mon-Fri
+    - cron: "50 4 * * 1-5"   # 10:20 IST, retry (no-op if done), Mon-Fri
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: stocklens-today-confirmed
+  cancel-in-progress: false
+
+jobs:
+  trigger:
+    if: (github.event_name == 'workflow_dispatch' || vars.STOCKLENS_SCHEDULER_ENABLED == 'true') && vars.STOCKLENS_TODAY_CONFIRMED_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    environment: stocklens-scheduler
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: scripts/scheduler_client.py
+          sparse-checkout-cone-mode: false
+          persist-credentials: false
+      - name: Trigger TODAY_CONFIRMED in the StockLens backend
+        env:
+          STOCKLENS_API_URL: ${{ vars.STOCKLENS_API_URL }}
+          STOCKLENS_SCHEDULER_TOKEN: ${{ secrets.STOCKLENS_SCHEDULER_TOKEN }}
+        run: python3 scripts/scheduler_client.py --job TODAY_CONFIRMED --timeout-minutes 20

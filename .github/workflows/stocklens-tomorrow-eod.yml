@@ -1,0 +1,42 @@
+# StockLens scheduler: TOMORROW_EOD
+#   v2 next-session snapshot (shadow). Published only after today's NIFTY bar exists and the
+#   quality gate passes (>= 50% of the v2 universe with today's validated bar).
+#
+# Inactive by default. It never runs on push or pull_request. Scheduled runs
+# only happen from the default branch (GitHub rule) AND when the repository
+# variable STOCKLENS_SCHEDULER_ENABLED is 'true'. Times are UTC; IST = UTC+05:30.
+# Weekends are excluded here; NSE holidays and data readiness are checked by
+# the backend (SKIPPED, exit 0). The backend does all calculations: this
+# workflow only calls the authenticated job interface (docs/SCHEDULER.md).
+name: "StockLens scheduler: TOMORROW_EOD"
+
+on:
+  schedule:
+    - cron: "0 14 * * 1-5"   # 19:30 IST, Mon-Fri
+    - cron: "0 15 * * 1-5"   # 20:30 IST, retry (no-op if done), Mon-Fri
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: stocklens-tomorrow-eod
+  cancel-in-progress: false
+
+jobs:
+  trigger:
+    if: github.event_name == 'workflow_dispatch' || vars.STOCKLENS_SCHEDULER_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    environment: stocklens-scheduler
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: scripts/scheduler_client.py
+          sparse-checkout-cone-mode: false
+          persist-credentials: false
+      - name: Trigger TOMORROW_EOD in the StockLens backend
+        env:
+          STOCKLENS_API_URL: ${{ vars.STOCKLENS_API_URL }}
+          STOCKLENS_SCHEDULER_TOKEN: ${{ secrets.STOCKLENS_SCHEDULER_TOKEN }}
+        run: python3 scripts/scheduler_client.py --job TOMORROW_EOD --timeout-minutes 35
