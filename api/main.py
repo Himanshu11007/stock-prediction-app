@@ -37,7 +37,7 @@ from fastapi.responses import JSONResponse
 from api.routes import (
     analysis, top_picks, tracker, performance, logs, intelligence, auth, auth_sso, auth_otp,
     auth_devices, auth_password, admin, admin_masters, admin_notifications, notifications, watchlist, stocks,
-    product, predictions, scheduler,
+    product, predictions, scheduler, news,
 )
 from api.schemas import HealthResponse
 
@@ -250,6 +250,9 @@ app.include_router(predictions.router, prefix=API_PREFIX, tags=["Predictions (sh
 app.include_router(predictions.admin_router, prefix=API_PREFIX, tags=["Admin"])
 # External scheduler job interface (scheduler token only; disabled unless configured).
 app.include_router(scheduler.router, prefix=API_PREFIX, tags=["Scheduler"])
+# News and catalyst intelligence (shadow; same access rule as predictions).
+app.include_router(news.router, prefix=API_PREFIX, tags=["News (shadow)"])
+app.include_router(news.admin_router, prefix=API_PREFIX, tags=["Admin"])
 
 
 @app.get(f"{API_PREFIX}/health", response_model=HealthResponse, tags=["Health"])

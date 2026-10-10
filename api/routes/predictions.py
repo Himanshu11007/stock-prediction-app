@@ -41,7 +41,7 @@ from utils.market_session import now_ist
 SHADOW_NOTICE = ("Prediction Engine v2 is in shadow mode: experimental, unvalidated output for internal "
                  "evaluation. It is not investment advice and not a recommendation to trade.")
 DIRECTIONS = ("UP", "DOWN", "NEUTRAL", "NO_CALL")
-EVENT_PROVIDER_CONFIGURED = False      # no licensed event source is configured yet (docs/PREDICTION_V2.md)
+EVENT_PROVIDER_CONFIGURED = False      # no licensed filings provider; news feeds count once ingestion has run
 
 
 def prediction_reader(current_user: User = Depends(get_current_user), session: Session = Depends(get_session)) -> User:
@@ -181,11 +181,24 @@ def get_prediction(prediction_id: str, session: Session = Depends(get_session)):
 
 @router.get("/stocks/{symbol}/events")
 def stock_events(symbol: str, limit: int = Query(50, ge=1, le=500), session: Session = Depends(get_session)):
+    from db.models.news import EventEntity, NewsIngestionRun
     rows = session.exec(select(MarketEvent).where(MarketEvent.symbol == symbol.upper())
                         .order_by(MarketEvent.effective_available_at.desc()).limit(limit)).all()
+    links = session.exec(select(EventEntity).where(EventEntity.symbol == symbol.upper())).all()
+    linked = []
+    for ln in links:
+        ev = session.get(MarketEvent, ln.event_id)
+        if ev is not None:
+            linked.append({"event_id": ev.id, "title": ev.title, "event_type": ev.event_type,
+                           "effective_available_at": ev.effective_available_at, "relation": ln.relation,
+                           "inferred": ln.inferred, "hypothesis_id": ln.hypothesis_id or None, "sign": ln.sign,
+                           "mechanism": ln.mechanism})
+    linked.sort(key=lambda x: str(x["effective_available_at"]), reverse=True)
+    ingested = session.exec(select(NewsIngestionRun.id).where(NewsIngestionRun.status.in_(("COMPLETED", "PARTIAL")))).first()
     return success_envelope(to_jsonable({
         "symbol": symbol.upper(), "events": [e.model_dump(exclude={"raw"}) for e in rows],
-        "provider_configured": EVENT_PROVIDER_CONFIGURED,
+        "linked_news_events": linked[:limit],
+        "provider_configured": EVENT_PROVIDER_CONFIGURED or ingested is not None,
         "note": "Times: published_at (source), ingested_at (StockLens), effective_available_at = max of both."}),
         message="Events retrieved")
 
