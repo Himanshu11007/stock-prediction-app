@@ -25,6 +25,18 @@ def api_env(monkeypatch):
     monkeypatch.setenv("STOCKAI_API_URL", BASE)
 
 
+@pytest.fixture(autouse=True)
+def _no_legacy_scan(monkeypatch):
+    """The legacy dashboard page starts a background market scan when its
+    cache is empty (always, in a clean checkout). That scan downloads prices,
+    news and the FinBERT model in threads that outlive the test. Navigation
+    tests must stay offline, so the starter is replaced and calls recorded."""
+    import scanner.background as bg
+    started = []
+    monkeypatch.setattr(bg, "start_background_scan", lambda company_map: started.append(len(company_map)) or True)
+    return started
+
+
 def _open(at: AppTest, url_path: str) -> AppTest:
     """Open a page by its URL path, as a browser does (/admin, /admin-engine-runs)."""
     at._page_hash = calc_hash(url_path)    # how st.Page identifies a page

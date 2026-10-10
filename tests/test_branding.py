@@ -48,8 +48,28 @@ def test_openapi_docs_and_icons(client):
     assert client.get("/api/v1/health").json()["app"] == "StockLens API"
 
 
-def test_app_config_and_onboarding_use_the_brand(client):
-    data = client.get("/api/v1/app/config").json()["data"]
+@pytest.fixture()
+def isolated_client():
+    """The app with an empty, migrated in-memory database: the branding check
+    must not depend on (or read) the developer's local storage/app.db."""
+    from sqlalchemy.pool import StaticPool
+    from sqlmodel import Session, SQLModel, create_engine
+
+    from db.session import get_session
+
+    eng = create_engine("sqlite://", connect_args={"check_same_thread": False}, poolclass=StaticPool)
+    SQLModel.metadata.create_all(eng)
+
+    def _session():
+        with Session(eng) as s:
+            yield s
+    app.dependency_overrides[get_session] = _session
+    yield TestClient(app)
+    app.dependency_overrides.pop(get_session, None)
+
+
+def test_app_config_and_onboarding_use_the_brand(isolated_client):
+    data = isolated_client.get("/api/v1/app/config").json()["data"]
     assert data["product_name"] == "StockLens"
     assert data["disclaimer"].startswith("StockLens provides research and analysis")
     text = " ".join(p["title"] + " " + p["body"] for p in data["onboarding"]) + data["legal"]["privacy_summary"]
