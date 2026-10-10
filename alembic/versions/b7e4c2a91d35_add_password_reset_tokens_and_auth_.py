@@ -1,7 +1,7 @@
 """add password reset tokens, auth throttle events and users.token_valid_after
 
 Revision ID: b7e4c2a91d35
-Revises: 66e61a7dffc5
+Revises: b78f20585037
 Create Date: 2026-10-05 10:30:00.000000
 
 Additive only: two new tables and one nullable column, so it is safe on a
@@ -17,7 +17,7 @@ import sqlmodel
 
 # revision identifiers, used by Alembic.
 revision: str = 'b7e4c2a91d35'
-down_revision: Union[str, Sequence[str], None] = '66e61a7dffc5'
+down_revision: Union[str, Sequence[str], None] = 'b78f20585037'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

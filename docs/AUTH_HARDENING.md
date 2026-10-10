@@ -258,8 +258,12 @@ secret is used anywhere.
   `user_id`, `created_at`), `auth_throttle_events` (composite index
   `(bucket, key_hash, created_at)` + `created_at`), nullable
   `users.token_valid_after`. Additive only.
-- `c3f9d8e0a4b2`: marks all but the newest duplicate RUNNING ranking run as
-  FAILED (normally none), then creates the partial unique index.
+- The engine-run guard (partial unique index `uq_engine_runs_one_running_ranking`)
+  is created by `4e6773a9e7db` (Phase 0 safety branch), which **aborts without
+  changing data** if duplicate RUNNING ranking runs exist. This branch's
+  original `c3f9d8e0a4b2` (which auto-marked duplicates FAILED) was dropped in
+  the integration branch, and `b7e4c2a91d35` now follows `b78f20585037`.
+  Chain: `66e61a7dffc5 → 4e6773a9e7db → b78f20585037 → b7e4c2a91d35`.
 
 Both are reversible and verified on PostgreSQL 16 and SQLite: upgrade from
 the previous head, `alembic check` (no drift), downgrade, re-upgrade; the
