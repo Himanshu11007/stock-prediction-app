@@ -134,3 +134,92 @@ services:
         fromDatabase:
           name: stocklens-db
           property: connectionString
+
+  # ── Prediction Engine v2 (SHADOW; docs/PREDICTION_V2.md) ──────────────────
+  # Template only: not active until this paid blueprint is applied (each cron
+  # job is billed by run time - check Render pricing before applying).
+  # Every job is idempotent and calendar-aware; extra triggers are no-ops.
+  # 08:30 and 08:50 IST: TODAY_PREOPEN (second trigger = retry)
+  - type: cron
+    name: stocklens-predict-preopen
+    runtime: python
+    plan: starter
+    region: singapore
+    branch: main
+    schedule: "0,20 3 * * 1-5"
+    buildCommand: pip install -r requirements-cloud.txt
+    startCommand: python scripts/scheduled_jobs.py predict_preopen
+    envVars:
+      - fromGroup: stocklens-shared
+      - key: DATABASE_URL
+        fromDatabase:
+          name: stocklens-db
+          property: connectionString
+
+  # 09:50 IST: TODAY_CONFIRMED (skipped unless an intraday feed is enabled)
+  - type: cron
+    name: stocklens-predict-confirmed
+    runtime: python
+    plan: starter
+    region: singapore
+    branch: main
+    schedule: "20 4 * * 1-5"
+    buildCommand: pip install -r requirements-cloud.txt
+    startCommand: python scripts/scheduled_jobs.py predict_confirmed
+    envVars:
+      - fromGroup: stocklens-shared
+      - key: DATABASE_URL
+        fromDatabase:
+          name: stocklens-db
+          property: connectionString
+
+  # 19:30 and 20:15 IST: TOMORROW_EOD (second trigger = retry)
+  - type: cron
+    name: stocklens-predict-eod
+    runtime: python
+    plan: starter
+    region: singapore
+    branch: main
+    schedule: "0,45 14 * * 1-5"
+    buildCommand: pip install -r requirements-cloud.txt
+    startCommand: python scripts/scheduled_jobs.py predict_eod
+    envVars:
+      - fromGroup: stocklens-shared
+      - key: DATABASE_URL
+        fromDatabase:
+          name: stocklens-db
+          property: connectionString
+
+  # 18:30 IST: outcomes and shadow exit states
+  - type: cron
+    name: stocklens-prediction-outcomes
+    runtime: python
+    plan: starter
+    region: singapore
+    branch: main
+    schedule: "0 13 * * 1-5"
+    buildCommand: pip install -r requirements-cloud.txt
+    startCommand: python scripts/scheduled_jobs.py prediction_outcomes
+    envVars:
+      - fromGroup: stocklens-shared
+      - key: DATABASE_URL
+        fromDatabase:
+          name: stocklens-db
+          property: connectionString
+
+  # 09:40 and 20:40 IST: missed-snapshot check (fails the job on a gap)
+  - type: cron
+    name: stocklens-prediction-monitor
+    runtime: python
+    plan: starter
+    region: singapore
+    branch: main
+    schedule: "10 4,15 * * 1-5"
+    buildCommand: pip install -r requirements-cloud.txt
+    startCommand: python scripts/scheduled_jobs.py prediction_monitor
+    envVars:
+      - fromGroup: stocklens-shared
+      - key: DATABASE_URL
+        fromDatabase:
+          name: stocklens-db
+          property: connectionString

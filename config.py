@@ -85,6 +85,14 @@ IS_PRODUCTION = APP_ENV == "production"
 # API_DOCS_ENABLED=true|false overrides.
 API_DOCS_ENABLED = os.environ.get("API_DOCS_ENABLED", "false" if IS_PRODUCTION else "true").strip().lower() == "true"
 
+# Prediction Engine v2 (shadow mode; docs/PREDICTION_V2.md).
+# PREDICTION_V2_PUBLIC: when false (default) the prediction API is for
+#   administrators only - v2 output is experimental, not a recommendation.
+# PREDICTION_V2_INTRADAY_ENABLED: TODAY_CONFIRMED snapshots run only when an
+#   approved intraday feed is configured; otherwise they are SKIPPED.
+PREDICTION_V2_PUBLIC = os.environ.get("PREDICTION_V2_PUBLIC", "false").strip().lower() == "true"
+PREDICTION_V2_INTRADAY_ENABLED = os.environ.get("PREDICTION_V2_INTRADAY_ENABLED", "false").strip().lower() == "true"
+
 # Comma-separated list of allowed browser origins. The mobile app is not a
 # browser and is unaffected by CORS; this only matters for web clients.
 # Development default "*"; production must list explicit origins.

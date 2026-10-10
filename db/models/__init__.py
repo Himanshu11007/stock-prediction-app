@@ -32,3 +32,15 @@ from db.models.notifications import (  # noqa: F401
     UserFeedback,
     WatchlistAlertSetting,
 )
+from db.models.prediction import (  # noqa: F401
+    EventClassification,
+    ExitState,
+    ExitTransition,
+    FactorObservation,
+    FeatureSnapshot,
+    MarketEvent,
+    Prediction,
+    PredictionOutcome,
+    PredictionRun,
+    V2UniverseMember,
+)

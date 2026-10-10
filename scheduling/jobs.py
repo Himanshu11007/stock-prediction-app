@@ -37,7 +37,8 @@ import masters.service as masters
 from db.models.market import EngineRun, ScheduledJobRun
 from notifications import detector
 from utils.logger import get_logger
-from utils.market_session import DAILY_BAR_FINAL_AFTER, IST, is_trading_day, market_status, now_ist
+from utils.market_session import (DAILY_BAR_FINAL_AFTER, IST, is_daily_bar_complete, is_trading_day,
+                                  market_status, now_ist)
 
 logger = get_logger(__name__)
 
@@ -180,3 +181,116 @@ def prices_job(engine, now: Optional[dt.datetime] = None, fetch: Optional[Callab
             res = refresh_quotes(session, symbols[i:i + 50], now, fetch)
             totals = {k: totals[k] + res[k] for k in totals}
     return {"status": "DONE", "market_status": status["status"], **totals}
+
+
+# ── Prediction Engine v2 (shadow) ────────────────────────────────────────────
+# Same slot ledger as the ranking job, one slot per (job, trading date).
+# Timing and calendar rules live in prediction_v2.service.plan; a trigger
+# that is too early returns SKIPPED without recording (a later trigger the
+# same day still runs), a non-trading day is recorded once.
+
+PREDICTION_JOBS = {"TODAY_PREOPEN": "predict_preopen", "TODAY_CONFIRMED": "predict_confirmed",
+                   "TOMORROW_EOD": "predict_eod"}
+
+
+def prediction_job(engine, run_type: str, now: Optional[dt.datetime] = None, fetch: Optional[Callable] = None,
+                   fetch_intraday: Optional[Callable] = None) -> dict:
+    from prediction_v2 import service as v2
+    now = now or _now()
+    job = PREDICTION_JOBS[run_type]
+    slot = now_ist(now).date().isoformat()
+    with Session(engine) as session:
+        holidays = masters.get_config(session, "market.holidays") or []
+        try:
+            v2.plan(run_type, now, holidays)
+        except v2.RunSkipped as e:
+            if "not a trading day" in str(e):
+                record_skip(session, job, slot, str(e))
+            return {"status": "SKIPPED", "reason": str(e)}
+        claim = acquire_slot(session, job, slot, now)
+        if claim is None:
+            return {"status": "SKIPPED", "reason": f"{job} for {slot} is already running or done"}
+    started = _now()
+    try:
+        out = v2.run_predictions(engine, run_type, now, fetch=fetch, fetch_intraday=fetch_intraday)
+    except Exception as e:                                   # never leave the slot RUNNING
+        logger.exception("PREDICTION_JOB_FAILED | %s | %s", job, slot)
+        out = {"status": "FAILED", "error": f"{type(e).__name__}: {e}"[:500]}
+    out["duration_s"] = round((_now() - started).total_seconds(), 1)
+    status = {"COMPLETED": "COMPLETED", "FAILED": "FAILED"}.get(out["status"], "SKIPPED")
+    with Session(engine) as s:
+        finish_slot(s, claim, status, out, out.get("run_id"))
+    return out
+
+
+def prediction_outcomes_job(engine, now: Optional[dt.datetime] = None, fetch: Optional[Callable] = None) -> dict:
+    """Daily after the close: 1/3/5-session outcomes and shadow exit states.
+    Both steps are idempotent, so a retry is safe."""
+    from prediction_v2 import outcomes
+    now = now or _now()
+    slot = now_ist(now).date().isoformat()
+    with Session(engine) as session:
+        if not is_daily_bar_complete(now_ist(now).date(), now) and is_trading_day(
+                now_ist(now).date(), masters.get_config(session, "market.holidays")):
+            return {"status": "SKIPPED", "reason": "today's daily bars are not final yet"}
+        claim = acquire_slot(session, "prediction_outcomes", slot, now)
+        if claim is None:
+            return {"status": "SKIPPED", "reason": f"prediction outcomes for {slot} already running or done"}
+    try:
+        out = {"status": "DONE", "outcomes": outcomes.evaluate_due(engine, now, fetch),
+               "exits": outcomes.update_exit_states(engine, now, fetch)}
+        status = "COMPLETED"
+    except Exception as e:
+        logger.exception("PREDICTION_OUTCOMES_FAILED | %s", slot)
+        out, status = {"status": "FAILED", "error": f"{type(e).__name__}: {e}"[:500]}, "FAILED"
+    with Session(engine) as s:
+        finish_slot(s, claim, status, out)
+    return out
+
+
+# Snapshots that must exist once a trading day reaches the given IST time.
+EXPECTED_SNAPSHOTS = (("TODAY_PREOPEN", dt.time(9, 30), "today"), ("TOMORROW_EOD", dt.time(20, 30), "next"))
+
+
+def prediction_monitor_job(engine, now: Optional[dt.datetime] = None) -> dict:
+    """Missed-snapshot check. Returns status ALERT (the CLI exits 1, so the
+    scheduler reports a failed job) when an expected snapshot is missing,
+    failed or still running long after its window. TODAY_CONFIRMED is only
+    expected when an intraday feed is enabled."""
+    from config import PREDICTION_V2_INTRADAY_ENABLED
+    from db.models.prediction import PredictionRun
+    from prediction_v2 import calendar as cal
+    now = now or _now()
+    local = now_ist(now)
+    with Session(engine) as session:
+        holidays = masters.get_config(session, "market.holidays") or []
+        if not is_trading_day(local.date(), holidays):
+            return {"status": "OK", "reason": "not a trading day"}
+        expected = list(EXPECTED_SNAPSHOTS)
+        if PREDICTION_V2_INTRADAY_ENABLED:
+            expected.append(("TODAY_CONFIRMED", dt.time(10, 30), "today"))
+        problems = []
+        for run_type, due, _ in expected:
+            if local.time() < due:
+                continue
+            day_runs = session.exec(select(PredictionRun).where(
+                PredictionRun.run_type == run_type, PredictionRun.trading_date == local.date().isoformat())
+                .order_by(PredictionRun.started_at.desc())).all()
+            if any(r.status == "COMPLETED" for r in day_runs):
+                continue
+            if not day_runs:
+                problems.append({"run_type": run_type, "problem": "MISSING"})
+            else:
+                problems.append({"run_type": run_type, "problem": day_runs[0].status, "run_id": day_runs[0].run_id,
+                                 "reason": day_runs[0].failure_reason})
+        out = {"status": "ALERT" if problems else "OK", "checked_at": now.isoformat(), "problems": problems,
+               "next_trading_day": cal.next_trading_day(local.date(), holidays).isoformat()}
+        session.add(ScheduledJobRun(job="prediction_monitor", slot=f"{local:%Y-%m-%dT%H:%M}", status=(
+            "FAILED" if problems else "COMPLETED"), finished_at=now, result=out))
+        try:
+            session.commit()
+        except IntegrityError:
+            session.rollback()
+    if problems:
+        logger.error("PREDICTION_SNAPSHOT_MISSING | %s", problems)
+    return out
