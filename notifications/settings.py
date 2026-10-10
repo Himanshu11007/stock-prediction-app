@@ -57,11 +57,11 @@ DEFAULT_TEMPLATES: dict[str, dict[str, str]] = {
         "title": "StockLens Score Updates",
         "body": "{count} candidates changed materially: {list}. Tap to review."},
     "FQVF_CHANGE": {
-        "title": "FQVF Update",
-        "body": "{name}'s FQVF changed from {old_passes}/18 to {new_passes}/18 checks passed. Tap to review."},
+        "title": "Quality & Value checks update",
+        "body": "{name}'s Fundamental Quality & Value checks changed from {old_passes}/18 to {new_passes}/18 passed. Tap to review."},
     "FQVF_CHANGE_MULTI": {
-        "title": "FQVF Updates",
-        "body": "{count} candidates had FQVF changes: {list}. Tap to review."},
+        "title": "Quality & Value checks updates",
+        "body": "{count} candidates had Quality & Value check changes: {list}. Tap to review."},
     "WATCHLIST_ALERT": {
         "title": "Watchlist: {name}",
         "body": "{changes}. Tap to view analysis."},

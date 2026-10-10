@@ -237,14 +237,14 @@ def test_watchlist_alert_combines_changes_and_respects_per_stock_switches(db, ro
         body = mine[0].body
         assert "StockLens Score 70.0 -> 95.0 (+25.0)" in body and "rank 21 -> 1" in body
         assert "entered the Top Investment Candidates" in body
-        assert "FQVF 10/18 -> 13/18" in body and mine[0].title == "Watchlist: Stock 20"
+        assert "Quality & Value checks 10/18 -> 13/18" in body and mine[0].title == "Watchlist: Stock 20"
         # The watched stock is not notified a second time as a new candidate.
         assert not s.exec(select(Notification).where(Notification.user_id == user.id,
                                                      Notification.symbol == "S20.NS",
                                                      Notification.type == "NEW_TOP_CANDIDATE")).all()
         theirs = s.exec(select(Notification).where(Notification.user_id == other.id,
                                                    Notification.type == "WATCHLIST_ALERT")).one()
-        assert "StockLens Score" not in theirs.body and "FQVF 10/18 -> 13/18" in theirs.body
+        assert "StockLens Score" not in theirs.body and "Quality & Value checks 10/18 -> 13/18" in theirs.body
 
 
 # ── dedup, rate limits, cooldown, quiet hours, global switch ─────────────────

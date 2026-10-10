@@ -308,7 +308,7 @@ def _watchlist_text(c: detector.StockChange, a: WatchlistAlertSetting) -> list[s
     if a.rank_changes and c.left_top:
         parts.append("left the Top Investment Candidates")
     if a.fqvf_changes and c.fqvf:
-        parts.append(f"FQVF {c.fqvf['old_passes']}/18 -> {c.fqvf['new_passes']}/18 checks passed")
+        parts.append(f"Quality & Value checks {c.fqvf['old_passes']}/18 -> {c.fqvf['new_passes']}/18 passed")
     if a.status_changes and c.status:
         if "eligible" in c.status:
             parts.append("now eligible for Top Candidates" if c.status["eligible"]

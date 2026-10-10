@@ -47,7 +47,7 @@ CONFIG_KEYS: dict[str, tuple[Any, str]] = {
          "body": "A 0-100 score that ranks stocks against each other on quality, valuation, financial "
                  "health, trend, momentum, risk and market regime. It is a relative ranking, not a price "
                  "target or a return forecast."},
-        {"title": "FQVF",
+        {"title": "Fundamental Quality & Value Score (FQVF)",
          "body": "The Fundamental Quality & Value Framework runs 18 fixed checks on earnings, returns, "
                  "valuation and balance sheet. 'Not available' means data is missing, never a failure."},
         {"title": "Top Investment Candidates",

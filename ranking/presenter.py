@@ -358,6 +358,12 @@ def fqvf_reference() -> dict:
     return {
         "name": "Fundamental Quality & Value Framework",
         "short_name": "FQVF",
+        # Plain-language labels for user interfaces (additive): the acronym
+        # alone is not self-explanatory, and the score is not a forecast.
+        "display_name": "Fundamental Quality & Value Score",
+        "display_short": "Quality & Value",
+        "not_a_prediction": "Measures fundamentals against fixed checks; it does not predict share-price "
+                            "moves and does not use news or short-term prices.",
         "checks": [{"id": i, "name": n, "scored": s} for i, n, s in CHECKS],
         "statuses": {
             "PASS": "meets the preferred threshold",

@@ -28,10 +28,10 @@ def overview(session: Session) -> dict[str, Any]:
                      "and volatility of the index, recomputed at every analysis run.",
              "regime": presenter.regime_payload(runs.latest_market_regime(session)),
              "market_status": market_status(holidays=masters.get_config(session, "market.holidays"))},
-            {"key": "fundamental", "title": "Fundamental analysis (FQVF)",
+            {"key": "fundamental", "title": "Fundamental Quality & Value Framework (FQVF)",
              "status": "Used in the StockLens Score",
              "text": "18 fixed checks on earnings, returns on capital, valuation, leverage and cash flow. Missing "
-                     "data is shown as 'Not available', never as a failure. See each stock's FQVF tab."},
+                     "data is shown as 'Not available', never as a failure. See each stock's Quality & Value checks."},
             {"key": "technical", "title": "Technical information",
              "status": "Used in the StockLens Score",
              "text": "Daily and weekly trend, 60-day momentum, volatility and drawdown relative to the analysed "
