@@ -100,7 +100,36 @@ def _config(run_type: str, holidays: list[str], intraday: bool) -> dict[str, Any
     return {"rule_version": rules.RULE_VERSION, "thresholds": rules.THRESHOLDS,
             "feature_set_version": feat.FEATURE_SET_VERSION, "blocking_flags": list(rules.BLOCKING_FLAGS),
             "holiday_calendar_configured": bool(holidays), "intraday_confirmation": intraday,
-            "min_usable_ratio": MIN_USABLE_RATIO, "run_type": run_type}
+            "min_usable_ratio": MIN_USABLE_RATIO, "run_type": run_type, **_news_config()}
+
+
+def _news_config() -> dict[str, Any]:
+    from config import PREDICTION_V2_NEWS_ENABLED
+    from catalysts import CLASSIFIER_VERSION, NEWS_RULE_VERSION
+    from catalysts.transmission import TRANSMISSION_VERSION
+    return {"news_enabled": PREDICTION_V2_NEWS_ENABLED, "news_rule_version": NEWS_RULE_VERSION,
+            "news_classifier_version": CLASSIFIER_VERSION, "transmission_version": TRANSMISSION_VERSION}
+
+
+def _price_move(df: Optional[pd.DataFrame], nifty: Optional[pd.DataFrame], cutoff_session: dt.date,
+                atr_pct: Optional[float]) -> Callable[[dt.datetime], Optional[tuple[float, float]]]:
+    """Excess return over NIFTY from the last close before a catalyst became
+    available up to the cutoff close (for the news 'already priced' check)."""
+    def move(since: dt.datetime) -> Optional[tuple[float, float]]:
+        if df is None or nifty is None or not atr_pct:
+            return None
+        local = now_ist(since)
+        base_day = local.date() if local.time() >= NSE_CLOSE else local.date() - dt.timedelta(days=1)
+        d, n = feat.slice_to_cutoff(df, cutoff_session), feat.slice_to_cutoff(nifty, cutoff_session)
+        if d is None or n is None:
+            return None
+        d0, n0 = d[d.index.normalize() <= pd.Timestamp(base_day)], n[n.index.normalize() <= pd.Timestamp(base_day)]
+        if d0.empty or n0.empty:
+            return None
+        r = float(d["Close"].iloc[-1] / d0["Close"].iloc[-1] - 1)
+        rn = float(n["Close"].iloc[-1] / n0["Close"].iloc[-1] - 1)
+        return r - rn, float(atr_pct)
+    return move
 
 
 def _confirm(decision: dict, intraday: Optional[pd.DataFrame], prev_close: Optional[float],
@@ -139,7 +168,9 @@ def run_predictions(engine, run_type: str, now: Optional[dt.datetime] = None,
                     intraday_enabled: Optional[bool] = None) -> dict[str, Any]:
     """Create one snapshot. Returns a result dict with status COMPLETED,
     SKIPPED or FAILED (and the run_id when a run exists)."""
-    from config import PREDICTION_V2_INTRADAY_ENABLED
+    from config import PREDICTION_V2_INTRADAY_ENABLED, PREDICTION_V2_NEWS_ENABLED
+    from catalysts import impact
+    news_on = PREDICTION_V2_NEWS_ENABLED
     now = _utc(now or _now())
     intraday_enabled = PREDICTION_V2_INTRADAY_ENABLED if intraday_enabled is None else intraday_enabled
     with Session(engine) as session:
@@ -197,6 +228,12 @@ def run_predictions(engine, run_type: str, now: Optional[dt.datetime] = None,
         with Session(engine) as session:
             for sym in symbols:
                 decision = rules.decide(feats[sym], flags[sym])
+                news = None
+                if news_on:
+                    news = impact.assess_stock(session, sym, now, _price_move(
+                        data.get(sym), nifty, p["cutoff_session"], feats[sym].get("atr_pct")))
+                    decision = impact.combine(decision, news, feats[sym],
+                                              lambda d_, s_, f_, _t, r_: rules._call(d_, s_, f_, rules.THRESHOLDS, r_))
                 extra: dict[str, Any] = {}
                 if run_type == "TODAY_CONFIRMED":
                     decision, extra = _confirm(decision, intraday.get(sym), feats[sym].get("close"),
@@ -212,9 +249,11 @@ def run_predictions(engine, run_type: str, now: Optional[dt.datetime] = None,
                     entry_condition=decision["entry_condition"], stop_loss=decision["stop_loss"],
                     target=decision["target"], trailing_stop_rule=decision["trailing_stop_rule"],
                     invalidation_condition=decision["invalidation_condition"],
-                    features={**feats[sym], **({"intraday": extra} if extra else {})},
+                    features={**feats[sym], **({"intraday": extra} if extra else {}),
+                              **({"news": news.as_dict()} if news is not None else {})},
                     reasons=decision["reasons"], quality_flags=sorted(set(flags[sym] + decision["quality_flags"])),
-                    event_ids=[e.id for e in events], created_at=now))
+                    event_ids=sorted({e.id for e in events} | {x.event_id for x in (news.evidence if news else [])}),
+                    created_at=now))
             if symbols and usable < MIN_USABLE_RATIO * len(symbols):
                 raise _QualityGate(f"only {usable} of {len(symbols)} stocks had usable data "
                                    f"(minimum {MIN_USABLE_RATIO:.0%}); snapshot not published")

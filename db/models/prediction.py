@@ -204,6 +204,15 @@ class EventClassification(SQLModel, table=True):
     notes: Optional[str] = Field(default=None)
     supersedes_id: Optional[int] = Field(default=None)
     created_at: datetime = Field(default_factory=utcnow)
+    # News intelligence (catalysts/, additive, all nullable): derived labels only.
+    category: Optional[str] = Field(default=None)        # catalysts.taxonomy.CATEGORIES
+    sentiment: Optional[float] = Field(default=None)     # -1 .. +1, lexicon score of the text
+    materiality: Optional[float] = Field(default=None)   # 0 .. 1
+    novelty: Optional[str] = Field(default=None)         # NEW | FOLLOW_UP | REPEAT
+    expectedness: Optional[str] = Field(default=None)    # UNEXPECTED | EXPECTED | UNKNOWN (from the text only)
+    contradicted: Optional[bool] = Field(default=None)   # sources disagree on direction
+    impact_sessions: Optional[int] = Field(default=None) # how long the catalyst is considered live
+    expires_at: Optional[datetime] = Field(default=None)
 
 
 class ExitState(SQLModel, table=True):

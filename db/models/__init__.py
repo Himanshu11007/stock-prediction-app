@@ -54,3 +54,4 @@ from db.models.prediction import (  # noqa: F401
     PredictionRun,
     V2UniverseMember,
 )
+from db.models.news import EventEntity, NewsArticle, NewsIngestionRun  # noqa: F401,E402

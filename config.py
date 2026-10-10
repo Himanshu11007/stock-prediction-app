@@ -92,6 +92,9 @@ API_DOCS_ENABLED = os.environ.get("API_DOCS_ENABLED", "false" if IS_PRODUCTION e
 #   approved intraday feed is configured; otherwise they are SKIPPED.
 PREDICTION_V2_PUBLIC = os.environ.get("PREDICTION_V2_PUBLIC", "false").strip().lower() == "true"
 PREDICTION_V2_INTRADAY_ENABLED = os.environ.get("PREDICTION_V2_INTRADAY_ENABLED", "false").strip().lower() == "true"
+# PREDICTION_V2_NEWS_ENABLED: news-first assessment (catalysts/) in v2
+#   snapshots. With no ingested events it changes nothing; default on (shadow).
+PREDICTION_V2_NEWS_ENABLED = os.environ.get("PREDICTION_V2_NEWS_ENABLED", "true").strip().lower() == "true"
 
 # External scheduler credential (docs/SCHEDULER.md). Only the SHA-256 hex
 # digest of the scheduler's bearer token is configured on the server; the
