@@ -98,7 +98,7 @@ statuses can apply, for example *TESTED; activation REQUIRES_APPROVAL*.
 
 | # | Requirement | Status | Evidence |
 |---|---|---|---|
-| F1 | Reconcile with the remote auth branch; one coherent Alembic graph; graph and clean-database tests | TESTED | B-01; `review/stocklens-integration` |
+| F1 | Reconcile with the remote auth branch; one coherent Alembic graph; graph and clean-database tests | TESTED | B-01; `review/stocklens-integration` (`e32a7d8` cherry-pick of `d8d3c6e`, `0af4988` reconciliation): `alembic heads` = `b7e4c2a91d35` only; upgrade from empty, downgrade to base, re-upgrade, `alembic check` clean (SQLite) |
 | F2 | Backtest config, samples, dates, costs, slippage, benchmarks, metrics | IMPLEMENTED | `backtest_analysis.json`; backtest document |
 | F3 | No look-ahead or misalignment | TESTED (misalignment found and fixed) | P2-01, P2-02 |
 | F4 | Breakdowns by setup, direction, sector, regime, 1/3/5 | IMPLEMENTED | P2-04 |
