@@ -92,3 +92,28 @@ Notification payloads carry `route` (in-app deep link, e.g. `/stock/TCS.NS`,
 
 Authorization is covered by `tests/test_product_api.py`,
 `tests/test_admin.py` and `tests/test_business_endpoint_auth.py`.
+
+## Prediction Engine v2 (shadow, administrators only)
+
+Additive routes under `/api/v1`:
+- `GET /predictions?session=today|tomorrow`
+- `GET /predictions/{id}`
+- `GET /predictions/performance`
+- `GET /predictions/runs`
+- `GET /stocks/{symbol}/events`
+- `GET /watchlist/exit-signals`
+- admin: `GET` / `POST /admin/prediction-runs`, `GET /admin/events`,
+  `PATCH /admin/events/classifications/{id}`, `GET` / `POST /admin/v2-universe`,
+  `POST /admin/v2-universe/deactivate`, `GET /admin/universe-health`
+
+Every route requires ADMIN unless `PREDICTION_V2_PUBLIC=true`. Details are
+in docs/PREDICTION_V2.md.
+
+Top Picks gained three additive fields (existing fields unchanged):
+- `ranking_freshness` (CURRENT / BEHIND / STALE by trading sessions);
+- per-item `run_id`;
+- per-item `reference_price_source` (`ranking_snapshot` |
+  `market_snapshot_at_analysis`).
+
+In production, `/docs`, `/redoc` and `/openapi.json` are disabled unless
+`API_DOCS_ENABLED=true`.

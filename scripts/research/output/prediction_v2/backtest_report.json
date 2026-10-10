@@ -1,0 +1,801 @@
+{
+ "generated_at": "2026-10-10T09:39:41.828407+00:00",
+ "period": "3y",
+ "horizon_sessions": 1,
+ "rule_version": "baseline-v0.1",
+ "thresholds": {
+  "ret_5_min": 0.03,
+  "rs_nifty_5_min": 0.02,
+  "close_location_up": 0.7,
+  "close_location_down": 0.3,
+  "abnormal_volume_min": 1.5,
+  "near_extreme_20": 0.02,
+  "stop_atr": 1.5,
+  "target_atr": 2.0,
+  "trail_atr": 1.0
+ },
+ "feature_set_version": "v2-features-0.1",
+ "universe_requested": 299,
+ "universe_with_data": 281,
+ "symbols_without_data": [
+  "AEGISCHEM.NS",
+  "AKZOINDIA.NS",
+  "ALEXOTYRES.NS",
+  "CG.NS",
+  "GUJGASLTD.NS",
+  "ISEC.NS",
+  "ITDCEM.NS",
+  "JBCHEPHARM.NS",
+  "LAXMIMACH.NS",
+  "LTIM.NS",
+  "MTAR.NS",
+  "SUNDRFAST.NS",
+  "SUVENPHAR.NS",
+  "TATAMOTORS.NS",
+  "ULTRAMARINE.NS",
+  "VARUNBEV.NS",
+  "VIP.NS",
+  "ZOMATO.NS"
+ ],
+ "nifty_sessions": 741,
+ "first_session": "2023-10-09",
+ "last_session": "2026-10-09",
+ "costs": {
+  "10bps": {
+   "cost_bps": 10,
+   "splits": {
+    "development": {
+     "sessions": 407,
+     "first": "2024-01-08",
+     "last": "2025-09-01",
+     "strategies": {
+      "v2": {
+       "calls": 5062,
+       "hit_rate": 0.48873962860529435,
+       "hit_rate_ci95": [
+        0.47498272465552577,
+        0.5025136108003638
+       ],
+       "mean_net_return": -0.0011900318084211343,
+       "mean_net_return_ci95": [
+        -0.0019955194230402364,
+        -0.00038454419380203227
+       ],
+       "coverage": 0.04427263265609558,
+       "no_call_rate": 0.049756421805714685
+      },
+      "always_neutral": {
+       "calls": 0,
+       "hit_rate": null,
+       "hit_rate_ci95": null,
+       "mean_net_return": null,
+       "mean_net_return_ci95": null
+      },
+      "previous_day": {
+       "calls": 113461,
+       "hit_rate": 0.4997488123672451,
+       "hit_rate_ci95": [
+        0.49683947492795194,
+        0.5026581668155501
+       ],
+       "mean_net_return": -0.0005990078160319958,
+       "mean_net_return_ci95": [
+        -0.0007346095698864968,
+        -0.0004634060621774948
+       ]
+      },
+      "sector": {
+       "calls": 113693,
+       "hit_rate": 0.5133297564493856,
+       "hit_rate_ci95": [
+        0.5104239625207013,
+        0.5162346496038416
+       ],
+       "mean_net_return": 0.0002055930716745213,
+       "mean_net_return_ci95": [
+        7.03667695534075e-05,
+        0.0003408193737956351
+       ]
+      },
+      "random_matched": {
+       "calls": 5062,
+       "hit_rate": 0.4834057684709601,
+       "hit_rate_ci95": [
+        0.4696569992810919,
+        0.4971797056012717
+       ],
+       "mean_net_return": -0.0012385840318513862,
+       "mean_net_return_ci95": [
+        -0.0018981859427108856,
+        -0.0005789821209918867
+       ]
+      },
+      "v1_rank": {
+       "calls": 8140,
+       "hit_rate": 0.504054054054054,
+       "hit_rate_ci95": [
+        0.49319295879550434,
+        0.5149113245687496
+       ],
+       "mean_net_return": -0.00031141474871414026,
+       "mean_net_return_ci95": [
+        -0.0007802208941738648,
+        0.0001573913967455843
+       ]
+      }
+     }
+    },
+    "validation": {
+     "sessions": 130,
+     "first": "2025-09-10",
+     "last": "2026-03-19",
+     "strategies": {
+      "v2": {
+       "calls": 1683,
+       "hit_rate": 0.46405228758169936,
+       "hit_rate_ci95": [
+        0.4403347463581922,
+        0.4879335628891018
+       ],
+       "mean_net_return": -0.0021574221782662694,
+       "mean_net_return_ci95": [
+        -0.003359315932541835,
+        -0.0009555284239907039
+       ],
+       "coverage": 0.046071721872433614,
+       "no_call_rate": 0.07637558171366
+      },
+      "always_neutral": {
+       "calls": 0,
+       "hit_rate": null,
+       "hit_rate_ci95": null,
+       "mean_net_return": null,
+       "mean_net_return_ci95": null
+      },
+      "previous_day": {
+       "calls": 36342,
+       "hit_rate": 0.49760607561499093,
+       "hit_rate_ci95": [
+        0.49246596629694644,
+        0.5027466909881719
+       ],
+       "mean_net_return": -0.0009266645225838089,
+       "mean_net_return_ci95": [
+        -0.0011272512762265157,
+        -0.0007260777689411021
+       ]
+      },
+      "sector": {
+       "calls": 36400,
+       "hit_rate": 0.5129670329670329,
+       "hit_rate_ci95": [
+        0.5078310673155197,
+        0.5181002618659587
+       ],
+       "mean_net_return": -0.000286029140886271,
+       "mean_net_return_ci95": [
+        -0.0004860402335250184,
+        -8.601804824752356e-05
+       ]
+      },
+      "random_matched": {
+       "calls": 1683,
+       "hit_rate": 0.48128342245989303,
+       "hit_rate_ci95": [
+        0.4574817171490912,
+        0.5051703777482601
+       ],
+       "mean_net_return": -0.001303980971769977,
+       "mean_net_return_ci95": [
+        -0.0022851588931862674,
+        -0.0003228030503536865
+       ]
+      },
+      "v1_rank": {
+       "calls": 2600,
+       "hit_rate": 0.5157692307692308,
+       "hit_rate_ci95": [
+        0.49655030696709057,
+        0.5349416240320916
+       ],
+       "mean_net_return": -0.0001459599891158528,
+       "mean_net_return_ci95": [
+        -0.0008815984834890542,
+        0.0005896785052573486
+       ]
+      }
+     }
+    },
+    "holdout": {
+     "sessions": 130,
+     "first": "2026-04-01",
+     "last": "2026-10-08",
+     "strategies": {
+      "v2": {
+       "calls": 1604,
+       "hit_rate": 0.47319201995012466,
+       "hit_rate_ci95": [
+        0.44885095942958797,
+        0.49766118455275454
+       ],
+       "mean_net_return": -0.0011906956376171725,
+       "mean_net_return_ci95": [
+        -0.0024482442583387215,
+        6.685298310437661e-05
+       ],
+       "coverage": 0.04390911579523679,
+       "no_call_rate": 0.057514371749247194
+      },
+      "always_neutral": {
+       "calls": 0,
+       "hit_rate": null,
+       "hit_rate_ci95": null,
+       "mean_net_return": null,
+       "mean_net_return_ci95": null
+      },
+      "previous_day": {
+       "calls": 36276,
+       "hit_rate": 0.4809791597750579,
+       "hit_rate_ci95": [
+        0.4758398028791453,
+        0.4861225448285691
+       ],
+       "mean_net_return": -0.0012146179394562798,
+       "mean_net_return_ci95": [
+        -0.0014394068395382365,
+        -0.000989829039374323
+       ]
+      },
+      "sector": {
+       "calls": 36400,
+       "hit_rate": 0.49532967032967035,
+       "hit_rate_ci95": [
+        0.4901940625579329,
+        0.5004662637961956
+       ],
+       "mean_net_return": -0.0006521908696406101,
+       "mean_net_return_ci95": [
+        -0.0008765020777415004,
+        -0.00042787966153971986
+       ]
+      },
+      "random_matched": {
+       "calls": 1604,
+       "hit_rate": 0.5037406483790524,
+       "hit_rate_ci95": [
+        0.47929221068191885,
+        0.528171211087987
+       ],
+       "mean_net_return": -0.0013003246965276065,
+       "mean_net_return_ci95": [
+        -0.0023418187591561974,
+        -0.00025883063389901557
+       ]
+      },
+      "v1_rank": {
+       "calls": 2600,
+       "hit_rate": 0.49153846153846154,
+       "hit_rate_ci95": [
+        0.4723484933031102,
+        0.5107533973802556
+       ],
+       "mean_net_return": -0.000905340054551473,
+       "mean_net_return_ci95": [
+        -0.0016467873961444018,
+        -0.0001638927129585441
+       ]
+      }
+     }
+    }
+   }
+  },
+  "15bps": {
+   "cost_bps": 15,
+   "splits": {
+    "development": {
+     "sessions": 407,
+     "first": "2024-01-08",
+     "last": "2025-09-01",
+     "strategies": {
+      "v2": {
+       "calls": 5062,
+       "hit_rate": 0.48873962860529435,
+       "hit_rate_ci95": [
+        0.47498272465552577,
+        0.5025136108003638
+       ],
+       "mean_net_return": -0.0016900318084211343,
+       "mean_net_return_ci95": [
+        -0.0024955194230402364,
+        -0.0008845441938020323
+       ],
+       "coverage": 0.04427263265609558,
+       "no_call_rate": 0.049756421805714685
+      },
+      "always_neutral": {
+       "calls": 0,
+       "hit_rate": null,
+       "hit_rate_ci95": null,
+       "mean_net_return": null,
+       "mean_net_return_ci95": null
+      },
+      "previous_day": {
+       "calls": 113461,
+       "hit_rate": 0.4997488123672451,
+       "hit_rate_ci95": [
+        0.49683947492795194,
+        0.5026581668155501
+       ],
+       "mean_net_return": -0.0010990078160319956,
+       "mean_net_return_ci95": [
+        -0.0012346095698864967,
+        -0.0009634060621774946
+       ]
+      },
+      "sector": {
+       "calls": 113693,
+       "hit_rate": 0.5133297564493856,
+       "hit_rate_ci95": [
+        0.5104239625207013,
+        0.5162346496038416
+       ],
+       "mean_net_return": -0.0002944069283254785,
+       "mean_net_return_ci95": [
+        -0.00042963323044659227,
+        -0.00015918062620436468
+       ]
+      },
+      "random_matched": {
+       "calls": 5062,
+       "hit_rate": 0.4834057684709601,
+       "hit_rate_ci95": [
+        0.4696569992810919,
+        0.4971797056012717
+       ],
+       "mean_net_return": -0.001738584031851386,
+       "mean_net_return_ci95": [
+        -0.0023981859427108856,
+        -0.0010789821209918865
+       ]
+      },
+      "v1_rank": {
+       "calls": 8140,
+       "hit_rate": 0.504054054054054,
+       "hit_rate_ci95": [
+        0.49319295879550434,
+        0.5149113245687496
+       ],
+       "mean_net_return": -0.00081141474871414,
+       "mean_net_return_ci95": [
+        -0.0012802208941738646,
+        -0.0003426086032544155
+       ]
+      }
+     }
+    },
+    "validation": {
+     "sessions": 130,
+     "first": "2025-09-10",
+     "last": "2026-03-19",
+     "strategies": {
+      "v2": {
+       "calls": 1683,
+       "hit_rate": 0.46405228758169936,
+       "hit_rate_ci95": [
+        0.4403347463581922,
+        0.4879335628891018
+       ],
+       "mean_net_return": -0.0026574221782662694,
+       "mean_net_return_ci95": [
+        -0.003859315932541835,
+        -0.0014555284239907039
+       ],
+       "coverage": 0.046071721872433614,
+       "no_call_rate": 0.07637558171366
+      },
+      "always_neutral": {
+       "calls": 0,
+       "hit_rate": null,
+       "hit_rate_ci95": null,
+       "mean_net_return": null,
+       "mean_net_return_ci95": null
+      },
+      "previous_day": {
+       "calls": 36342,
+       "hit_rate": 0.49760607561499093,
+       "hit_rate_ci95": [
+        0.49246596629694644,
+        0.5027466909881719
+       ],
+       "mean_net_return": -0.0014266645225838087,
+       "mean_net_return_ci95": [
+        -0.0016272512762265155,
+        -0.0012260777689411019
+       ]
+      },
+      "sector": {
+       "calls": 36400,
+       "hit_rate": 0.5129670329670329,
+       "hit_rate_ci95": [
+        0.5078310673155197,
+        0.5181002618659587
+       ],
+       "mean_net_return": -0.0007860291408862707,
+       "mean_net_return_ci95": [
+        -0.0009860402335250182,
+        -0.0005860180482475233
+       ]
+      },
+      "random_matched": {
+       "calls": 1683,
+       "hit_rate": 0.48128342245989303,
+       "hit_rate_ci95": [
+        0.4574817171490912,
+        0.5051703777482601
+       ],
+       "mean_net_return": -0.0018039809717699765,
+       "mean_net_return_ci95": [
+        -0.002785158893186267,
+        -0.000822803050353686
+       ]
+      },
+      "v1_rank": {
+       "calls": 2600,
+       "hit_rate": 0.5157692307692308,
+       "hit_rate_ci95": [
+        0.49655030696709057,
+        0.5349416240320916
+       ],
+       "mean_net_return": -0.0006459599891158525,
+       "mean_net_return_ci95": [
+        -0.0013815984834890539,
+        8.967850525734892e-05
+       ]
+      }
+     }
+    },
+    "holdout": {
+     "sessions": 130,
+     "first": "2026-04-01",
+     "last": "2026-10-08",
+     "strategies": {
+      "v2": {
+       "calls": 1604,
+       "hit_rate": 0.47319201995012466,
+       "hit_rate_ci95": [
+        0.44885095942958797,
+        0.49766118455275454
+       ],
+       "mean_net_return": -0.0016906956376171723,
+       "mean_net_return_ci95": [
+        -0.002948244258338721,
+        -0.0004331470168956232
+       ],
+       "coverage": 0.04390911579523679,
+       "no_call_rate": 0.057514371749247194
+      },
+      "always_neutral": {
+       "calls": 0,
+       "hit_rate": null,
+       "hit_rate_ci95": null,
+       "mean_net_return": null,
+       "mean_net_return_ci95": null
+      },
+      "previous_day": {
+       "calls": 36276,
+       "hit_rate": 0.4809791597750579,
+       "hit_rate_ci95": [
+        0.4758398028791453,
+        0.4861225448285691
+       ],
+       "mean_net_return": -0.0017146179394562794,
+       "mean_net_return_ci95": [
+        -0.001939406839538236,
+        -0.0014898290393743226
+       ]
+      },
+      "sector": {
+       "calls": 36400,
+       "hit_rate": 0.49532967032967035,
+       "hit_rate_ci95": [
+        0.4901940625579329,
+        0.5004662637961956
+       ],
+       "mean_net_return": -0.00115219086964061,
+       "mean_net_return_ci95": [
+        -0.0013765020777415002,
+        -0.0009278796615397196
+       ]
+      },
+      "random_matched": {
+       "calls": 1604,
+       "hit_rate": 0.5037406483790524,
+       "hit_rate_ci95": [
+        0.47929221068191885,
+        0.528171211087987
+       ],
+       "mean_net_return": -0.0018003246965276063,
+       "mean_net_return_ci95": [
+        -0.0028418187591561974,
+        -0.0007588306338990154
+       ]
+      },
+      "v1_rank": {
+       "calls": 2600,
+       "hit_rate": 0.49153846153846154,
+       "hit_rate_ci95": [
+        0.4723484933031102,
+        0.5107533973802556
+       ],
+       "mean_net_return": -0.0014053400545514726,
+       "mean_net_return_ci95": [
+        -0.0021467873961444014,
+        -0.0006638927129585438
+       ]
+      }
+     }
+    }
+   }
+  },
+  "20bps": {
+   "cost_bps": 20,
+   "splits": {
+    "development": {
+     "sessions": 407,
+     "first": "2024-01-08",
+     "last": "2025-09-01",
+     "strategies": {
+      "v2": {
+       "calls": 5062,
+       "hit_rate": 0.48873962860529435,
+       "hit_rate_ci95": [
+        0.47498272465552577,
+        0.5025136108003638
+       ],
+       "mean_net_return": -0.0021900318084211346,
+       "mean_net_return_ci95": [
+        -0.002995519423040237,
+        -0.0013845441938020325
+       ],
+       "coverage": 0.04427263265609558,
+       "no_call_rate": 0.049756421805714685
+      },
+      "always_neutral": {
+       "calls": 0,
+       "hit_rate": null,
+       "hit_rate_ci95": null,
+       "mean_net_return": null,
+       "mean_net_return_ci95": null
+      },
+      "previous_day": {
+       "calls": 113461,
+       "hit_rate": 0.4997488123672451,
+       "hit_rate_ci95": [
+        0.49683947492795194,
+        0.5026581668155501
+       ],
+       "mean_net_return": -0.001599007816031996,
+       "mean_net_return_ci95": [
+        -0.0017346095698864972,
+        -0.001463406062177495
+       ]
+      },
+      "sector": {
+       "calls": 113693,
+       "hit_rate": 0.5133297564493856,
+       "hit_rate_ci95": [
+        0.5104239625207013,
+        0.5162346496038416
+       ],
+       "mean_net_return": -0.0007944069283254789,
+       "mean_net_return_ci95": [
+        -0.0009296332304465927,
+        -0.000659180626204365
+       ]
+      },
+      "random_matched": {
+       "calls": 5062,
+       "hit_rate": 0.4834057684709601,
+       "hit_rate_ci95": [
+        0.4696569992810919,
+        0.4971797056012717
+       ],
+       "mean_net_return": -0.002238584031851386,
+       "mean_net_return_ci95": [
+        -0.0028981859427108857,
+        -0.0015789821209918867
+       ]
+      },
+      "v1_rank": {
+       "calls": 8140,
+       "hit_rate": 0.504054054054054,
+       "hit_rate_ci95": [
+        0.49319295879550434,
+        0.5149113245687496
+       ],
+       "mean_net_return": -0.0013114147487141403,
+       "mean_net_return_ci95": [
+        -0.0017802208941738648,
+        -0.0008426086032544157
+       ]
+      }
+     }
+    },
+    "validation": {
+     "sessions": 130,
+     "first": "2025-09-10",
+     "last": "2026-03-19",
+     "strategies": {
+      "v2": {
+       "calls": 1683,
+       "hit_rate": 0.46405228758169936,
+       "hit_rate_ci95": [
+        0.4403347463581922,
+        0.4879335628891018
+       ],
+       "mean_net_return": -0.0031574221782662694,
+       "mean_net_return_ci95": [
+        -0.0043593159325418344,
+        -0.001955528423990704
+       ],
+       "coverage": 0.046071721872433614,
+       "no_call_rate": 0.07637558171366
+      },
+      "always_neutral": {
+       "calls": 0,
+       "hit_rate": null,
+       "hit_rate_ci95": null,
+       "mean_net_return": null,
+       "mean_net_return_ci95": null
+      },
+      "previous_day": {
+       "calls": 36342,
+       "hit_rate": 0.49760607561499093,
+       "hit_rate_ci95": [
+        0.49246596629694644,
+        0.5027466909881719
+       ],
+       "mean_net_return": -0.001926664522583809,
+       "mean_net_return_ci95": [
+        -0.0021272512762265158,
+        -0.001726077768941102
+       ]
+      },
+      "sector": {
+       "calls": 36400,
+       "hit_rate": 0.5129670329670329,
+       "hit_rate_ci95": [
+        0.5078310673155197,
+        0.5181002618659587
+       ],
+       "mean_net_return": -0.0012860291408862711,
+       "mean_net_return_ci95": [
+        -0.0014860402335250187,
+        -0.0010860180482475236
+       ]
+      },
+      "random_matched": {
+       "calls": 1683,
+       "hit_rate": 0.48128342245989303,
+       "hit_rate_ci95": [
+        0.4574817171490912,
+        0.5051703777482601
+       ],
+       "mean_net_return": -0.0023039809717699767,
+       "mean_net_return_ci95": [
+        -0.003285158893186267,
+        -0.0013228030503536863
+       ]
+      },
+      "v1_rank": {
+       "calls": 2600,
+       "hit_rate": 0.5157692307692308,
+       "hit_rate_ci95": [
+        0.49655030696709057,
+        0.5349416240320916
+       ],
+       "mean_net_return": -0.0011459599891158528,
+       "mean_net_return_ci95": [
+        -0.0018815984834890543,
+        -0.0004103214947426514
+       ]
+      }
+     }
+    },
+    "holdout": {
+     "sessions": 130,
+     "first": "2026-04-01",
+     "last": "2026-10-08",
+     "strategies": {
+      "v2": {
+       "calls": 1604,
+       "hit_rate": 0.47319201995012466,
+       "hit_rate_ci95": [
+        0.44885095942958797,
+        0.49766118455275454
+       ],
+       "mean_net_return": -0.0021906956376171725,
+       "mean_net_return_ci95": [
+        -0.0034482442583387216,
+        -0.0009331470168956234
+       ],
+       "coverage": 0.04390911579523679,
+       "no_call_rate": 0.057514371749247194
+      },
+      "always_neutral": {
+       "calls": 0,
+       "hit_rate": null,
+       "hit_rate_ci95": null,
+       "mean_net_return": null,
+       "mean_net_return_ci95": null
+      },
+      "previous_day": {
+       "calls": 36276,
+       "hit_rate": 0.4809791597750579,
+       "hit_rate_ci95": [
+        0.4758398028791453,
+        0.4861225448285691
+       ],
+       "mean_net_return": -0.0022146179394562796,
+       "mean_net_return_ci95": [
+        -0.002439406839538236,
+        -0.001989829039374323
+       ]
+      },
+      "sector": {
+       "calls": 36400,
+       "hit_rate": 0.49532967032967035,
+       "hit_rate_ci95": [
+        0.4901940625579329,
+        0.5004662637961956
+       ],
+       "mean_net_return": -0.0016521908696406102,
+       "mean_net_return_ci95": [
+        -0.0018765020777415005,
+        -0.0014278796615397199
+       ]
+      },
+      "random_matched": {
+       "calls": 1604,
+       "hit_rate": 0.5037406483790524,
+       "hit_rate_ci95": [
+        0.47929221068191885,
+        0.528171211087987
+       ],
+       "mean_net_return": -0.0023003246965276067,
+       "mean_net_return_ci95": [
+        -0.003341818759156198,
+        -0.0012588306338990158
+       ]
+      },
+      "v1_rank": {
+       "calls": 2600,
+       "hit_rate": 0.49153846153846154,
+       "hit_rate_ci95": [
+        0.4723484933031102,
+        0.5107533973802556
+       ],
+       "mean_net_return": -0.0019053400545514729,
+       "mean_net_return_ci95": [
+        -0.002646787396144402,
+        -0.001163892712958544
+       ]
+      }
+     }
+    }
+   }
+  }
+ },
+ "v2_setups": {
+  "BREAKDOWN": 3333,
+  "MOMENTUM_CONTINUATION": 5016
+ },
+ "limitations": [
+  "Survivorship: today's universe list is applied to the whole period; delisted or renamed symbols are absent.",
+  "Daily Yahoo Finance bars (delayed, adjusted); not exchange data.",
+  "No corporate-event, consensus or intraday inputs; catalyst setups are not tested.",
+  "v1 baseline uses month-end research snapshots, not live production runs.",
+  "Thresholds are a-priori hypotheses; nothing was tuned on these results."
+ ],
+ "runtime_seconds": 574.5
+}

@@ -155,3 +155,18 @@ The jobs use the same `DATABASE_URL` and environment variables as the API.
 December for the coming year. Without it, holidays are treated as trading
 days. The ranking job then finds no new NIFTY bar and skips harmlessly, but
 Home cannot say "holiday".
+
+## Prediction Engine v2 jobs (shadow)
+
+| Job | When | Purpose |
+|---|---|---|
+| `predict_preopen` | 08:30 IST, retry 08:50 | TODAY_PREOPEN snapshot |
+| `predict_confirmed` | 09:50 IST | TODAY_CONFIRMED, only with an approved intraday feed |
+| `predict_eod` | 19:30 IST, retry 20:15 | TOMORROW_EOD for the next trading day |
+| `prediction_outcomes` | 18:30 IST | 1/3/5-session outcomes and shadow exit states |
+| `prediction_monitor` | 09:40 and 20:40 IST | Missed-snapshot check; exits with code 1 on a gap |
+
+They use the same slot ledger, calendar and idempotency as the ranking job.
+Templates: `render.yaml` (paid, not active) and
+`deploy/github-actions/prediction-jobs.yml` (inactive). Choosing and
+activating a scheduler needs approval: docs/OPERATIONS_AND_SECURITY.md §4.
