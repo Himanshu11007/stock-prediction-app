@@ -407,3 +407,22 @@ def test_monitor_flags_stale_news_once_ingestion_exists(api, db, monkeypatch):
                                finished_at=eod(MON, 8, 11)))
         s.commit()
     assert jobs.prediction_monitor_job(db, eod(MON, 9, 0))["status"] == "OK"
+
+
+def test_failed_authentication_is_throttled_per_client(api):
+    from api.routes import scheduler as route
+    for _ in range(route.AUTH_FAIL_LIMIT):
+        assert _post(api, "SNAPSHOT_MONITOR", token="wrong").status_code == 401
+    r = _post(api, "SNAPSHOT_MONITOR", token="wrong")
+    assert r.status_code == 429 and r.headers["Retry-After"] == str(route.AUTH_FAIL_WINDOW)
+    assert _post(api, "SNAPSHOT_MONITOR").status_code == 429            # even the right token, until the window passes
+
+
+def test_triggers_are_rate_limited_per_job_type(api, db, monkeypatch):
+    from api.routes import scheduler as route
+    monkeypatch.setattr(route, "TRIGGER_LIMIT", 3)
+    _calendar(db)
+    _at(monkeypatch, eod(MON, 9, 0))
+    codes = [_post(api, "SNAPSHOT_MONITOR").status_code for _ in range(4)]
+    assert codes == [200, 200, 200, 429]
+    assert _post(api, "OUTCOME_EVALUATION").status_code == 200          # other job types are separate
