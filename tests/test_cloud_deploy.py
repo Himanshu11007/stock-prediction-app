@@ -33,10 +33,19 @@ def test_blueprint_web_service_is_production_ready():
 
 
 def test_blueprint_cron_jobs_match_scheduled_jobs():
+    """Every CLI job has exactly one scheduler: the v1 jobs are Render cron
+    services in the paid blueprint; the Prediction v2 jobs are triggered by
+    the GitHub Actions workflows through the backend job interface
+    (docs/SCHEDULER.md) and are deliberately not Render cron services."""
+    from scheduling.remote import SLOT_JOB
     from scripts.scheduled_jobs import JOBS
     crons = [s for s in _blueprint()["services"] if s["type"] == "cron"]
     jobs = {s["startCommand"].split()[-1] for s in crons}
-    assert jobs == set(JOBS)
+    v2_jobs = set(SLOT_JOB.values())
+    workflows = {p.name for p in (ROOT / ".github" / "workflows").glob("stocklens-*.yml")}
+    assert len(workflows) == len(SLOT_JOB)                       # one workflow per v2 job type
+    assert jobs.isdisjoint(v2_jobs)                              # never scheduled twice
+    assert jobs | v2_jobs == set(JOBS)                           # nothing left unscheduled
     for c in crons:
         assert c["startCommand"].startswith("python scripts/scheduled_jobs.py ")
         assert len(c["schedule"].split()) == 5
