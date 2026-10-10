@@ -13,6 +13,8 @@ Job types (strict; anything else is rejected before any work):
   TOMORROW_EOD        v2 snapshot after the close       -> jobs.prediction_job
   OUTCOME_EVALUATION  1/3/5-session outcomes + exits    -> jobs.prediction_outcomes_job
   SNAPSHOT_MONITOR    missed / failed snapshot check    -> jobs.prediction_monitor_job
+  NEWS_INGESTION      hourly news ingestion, every day  -> jobs.news_ingestion_job
+                      (no trading-calendar preflight; one slot per IST hour)
 
 Lifecycle of a trigger:
   1. preflight (synchronous, no slot used): holiday calendar configured for
@@ -51,12 +53,13 @@ class JobType(str, Enum):
     TOMORROW_EOD = "TOMORROW_EOD"
     OUTCOME_EVALUATION = "OUTCOME_EVALUATION"
     SNAPSHOT_MONITOR = "SNAPSHOT_MONITOR"
+    NEWS_INGESTION = "NEWS_INGESTION"
 
 
 # Slot-ledger job names (shared with the CLI, scripts/scheduled_jobs.py).
 SLOT_JOB = {JobType.TODAY_PREOPEN: "predict_preopen", JobType.TODAY_CONFIRMED: "predict_confirmed",
             JobType.TOMORROW_EOD: "predict_eod", JobType.OUTCOME_EVALUATION: "prediction_outcomes",
-            JobType.SNAPSHOT_MONITOR: "prediction_monitor"}
+            JobType.SNAPSHOT_MONITOR: "prediction_monitor", JobType.NEWS_INGESTION: "news_ingestion"}
 PREDICTION_TYPES = (JobType.TODAY_PREOPEN, JobType.TODAY_CONFIRMED, JobType.TOMORROW_EOD)
 
 # In-process results of triggers that ended without a slot row (e.g. a job
@@ -77,6 +80,8 @@ def calendar_configured(holidays: list[str], year: int) -> bool:
 
 
 def slot_for(job_type: JobType, now: dt.datetime) -> str:
+    if job_type == JobType.NEWS_INGESTION:
+        return f"{now_ist(now):%Y-%m-%dT%H}"                     # hourly
     return now_ist(now).date().isoformat()
 
 
@@ -86,6 +91,8 @@ def preflight(engine, job_type: JobType, now: dt.datetime) -> Optional[dict[str,
     from config import PREDICTION_V2_INTRADAY_ENABLED
     from prediction_v2 import service as v2
     local = now_ist(now)
+    if job_type == JobType.NEWS_INGESTION:
+        return None                                  # news matters on weekends and holidays too
     with Session(engine) as session:
         holidays = masters.get_config(session, "market.holidays") or []
     if not calendar_configured(holidays, local.year):
@@ -114,6 +121,8 @@ def _execute(engine, job_type: JobType, now: Optional[dt.datetime]) -> dict[str,
         return jobs.prediction_job(engine, job_type.value, now)
     if job_type == JobType.OUTCOME_EVALUATION:
         return jobs.prediction_outcomes_job(engine, now)
+    if job_type == JobType.NEWS_INGESTION:
+        return jobs.news_ingestion_job(engine, now)
     return jobs.prediction_monitor_job(engine, now)
 
 

@@ -13,6 +13,7 @@ more often than needed. See docs/SCHEDULING.md.
   python scripts/scheduled_jobs.py predict_eod          v2 TOMORROW_EOD snapshot (after 16:00 IST)
   python scripts/scheduled_jobs.py prediction_outcomes  v2 1/3/5-session outcomes + shadow exit states
   python scripts/scheduled_jobs.py prediction_monitor   v2 missed-snapshot check (exit 1 = alert)
+  python scripts/scheduled_jobs.py news_ingestion       hourly news ingestion (catalysts/; NEWS_PROVIDERS)
 
 ranking job rules (Indian market calendar):
   - skip weekends and the administrator-maintained NSE holiday list
@@ -85,10 +86,14 @@ def prediction_monitor_job(now: dt.datetime | None = None) -> dict:
     return jobs.prediction_monitor_job(engine, now)
 
 
+def news_ingestion_job(now: dt.datetime | None = None) -> dict:
+    return jobs.news_ingestion_job(engine, now)
+
+
 JOBS = {"ranking": ranking_job, "prices": prices_job, "notifications": notifications_job,
         "outcomes": outcomes_job, "predict_preopen": predict_preopen_job, "predict_confirmed": predict_confirmed_job,
         "predict_eod": predict_eod_job, "prediction_outcomes": prediction_outcomes_job,
-        "prediction_monitor": prediction_monitor_job}
+        "prediction_monitor": prediction_monitor_job, "news_ingestion": news_ingestion_job}
 
 
 def main(argv=None) -> int:

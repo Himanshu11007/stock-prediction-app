@@ -1,33 +1,31 @@
-# StockLens scheduler: TOMORROW_EOD
-#   v2 next-session snapshot (shadow). Published only after today's NIFTY bar exists and the
-#   quality gate passes (>= 50% of the v2 universe with today's validated bar); otherwise SKIPPED.
+# StockLens scheduler: NEWS_INGESTION
+#   hourly news ingestion from the configured providers (NEWS_PROVIDERS on the API; default: official
+#   RBI / SEBI / US Federal Reserve feeds). Every day: weekend news matters for the next pre-open.
 #
 # Inactive by default. It never runs on push or pull_request. Scheduled runs
 # only happen from the default branch (GitHub rule) AND when the repository
 # variable STOCKLENS_SCHEDULER_ENABLED is 'true'. Times are UTC; IST = UTC+05:30.
-# Weekends are excluded here; NSE holidays and data readiness are checked by
-# the backend (SKIPPED, exit 0). The backend does all calculations: this
+# Runs every day; the backend deduplicates and resumes each provider's window. The backend does all calculations: this
 # workflow only calls the authenticated job interface (docs/SCHEDULER.md).
-name: "StockLens scheduler: TOMORROW_EOD"
+name: "StockLens scheduler: NEWS_INGESTION"
 
 on:
   schedule:
-    - cron: "45 10 * * 1-5"   # 16:15 IST, Mon-Fri
-    - cron: "0 14 * * 1-5"   # 19:30 IST, retry (late or revised EOD data), Mon-Fri
+    - cron: "40 0-16 * * *"   # hourly at :10, 06:10-22:10 IST, every day, every day
   workflow_dispatch: {}
 
 permissions:
   contents: read
 
 concurrency:
-  group: stocklens-tomorrow-eod
+  group: stocklens-news-ingestion
   cancel-in-progress: false
 
 jobs:
   trigger:
     if: github.event_name == 'workflow_dispatch' || vars.STOCKLENS_SCHEDULER_ENABLED == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    timeout-minutes: 20
     environment: stocklens-scheduler
     steps:
       - uses: actions/checkout@v4
@@ -35,8 +33,8 @@ jobs:
           sparse-checkout: scripts/scheduler_client.py
           sparse-checkout-cone-mode: false
           persist-credentials: false
-      - name: Trigger TOMORROW_EOD in the StockLens backend
+      - name: Trigger NEWS_INGESTION in the StockLens backend
         env:
           STOCKLENS_API_URL: ${{ vars.STOCKLENS_API_URL }}
           STOCKLENS_SCHEDULER_TOKEN: ${{ secrets.STOCKLENS_SCHEDULER_TOKEN }}
-        run: python3 scripts/scheduler_client.py --job TOMORROW_EOD --timeout-minutes 35
+        run: python3 scripts/scheduler_client.py --job NEWS_INGESTION --timeout-minutes 15

@@ -248,6 +248,68 @@ def prediction_outcomes_job(engine, now: Optional[dt.datetime] = None, fetch: Op
     return out
 
 
+# ── News ingestion (catalysts/) ──────────────────────────────────────────────
+# Hourly, every day (weekend and holiday news matters for the next pre-open).
+# One slot per IST hour; each provider resumes from the end of its last
+# successful window (at most NEWS_MAX_LOOKBACK back) so nothing is skipped
+# after an outage, and the overlap is harmless because ingestion deduplicates.
+
+NEWS_MAX_LOOKBACK = dt.timedelta(days=3)
+NEWS_DEFAULT_LOOKBACK = dt.timedelta(hours=24)
+NEWS_STALE_AFTER = dt.timedelta(hours=3)
+
+
+def news_providers() -> list:
+    """Configured providers (NEWS_PROVIDERS, comma-separated; default 'rss').
+    newsapi needs NEWSAPI_KEY; gdelt is research-only and unreliable."""
+    import os
+
+    from catalysts import providers as p
+    names = [n.strip().lower() for n in os.environ.get("NEWS_PROVIDERS", "rss").split(",") if n.strip()]
+    factory = {"rss": p.RssProvider, "newsapi": p.NewsApiProvider, "gdelt": p.GdeltProvider}
+    return [factory[n]() for n in names if n in factory]
+
+
+def news_ingestion_job(engine, now: Optional[dt.datetime] = None, providers: Optional[list] = None) -> dict:
+    from catalysts import pipeline
+    from db.models.news import NewsIngestionRun
+    now = now or _now()
+    slot = f"{now_ist(now):%Y-%m-%dT%H}"
+    with Session(engine) as session:
+        claim = acquire_slot(session, "news_ingestion", slot, now)
+        if claim is None:
+            return {"status": "SKIPPED", "reason": f"news ingestion for {slot} already running or done"}
+    results: list[dict] = []
+    try:
+        provs = providers if providers is not None else news_providers()
+        for prov in provs:
+            with Session(engine) as session:
+                last = session.exec(select(NewsIngestionRun).where(
+                    NewsIngestionRun.provider == prov.name, NewsIngestionRun.status.in_(("COMPLETED", "PARTIAL")))
+                    .order_by(NewsIngestionRun.window_until.desc())).first()
+                since = (last.window_until.replace(tzinfo=last.window_until.tzinfo or dt.timezone.utc)
+                         if last and last.window_until else now - NEWS_DEFAULT_LOOKBACK)
+                since = max(since - dt.timedelta(minutes=30), now - NEWS_MAX_LOOKBACK)
+                run = pipeline.ingest(session, prov, since, now, now=now)
+                results.append({"provider": run.provider, "status": run.status, "fetched": run.fetched,
+                                "inserted": run.inserted, "new_events": run.new_events,
+                                "duplicates": run.duplicates, "error": run.error})
+        ok = sum(r["status"] in ("COMPLETED", "PARTIAL") for r in results)
+        if not results:
+            status, out = "FAILED", {"status": "FAILED", "error": "no news provider configured (NEWS_PROVIDERS)"}
+        elif ok == 0:
+            status, out = "FAILED", {"status": "FAILED", "error": "every provider failed", "providers": results}
+        else:
+            status, out = "COMPLETED", {"status": "DONE", "providers": results,
+                                        "degraded": ok < len(results)}
+    except Exception as e:
+        logger.exception("NEWS_INGESTION_FAILED | %s", slot)
+        status, out = "FAILED", {"status": "FAILED", "error": f"{type(e).__name__}: {e}"[:500], "providers": results}
+    with Session(engine) as s:
+        finish_slot(s, claim, status, out)
+    return out
+
+
 # Snapshots that must exist once a trading day reaches the given IST time.
 EXPECTED_SNAPSHOTS = (("TODAY_PREOPEN", dt.time(9, 30), "today"), ("TOMORROW_EOD", dt.time(20, 30), "next"))
 
@@ -283,6 +345,18 @@ def prediction_monitor_job(engine, now: Optional[dt.datetime] = None) -> dict:
             else:
                 problems.append({"run_type": run_type, "problem": day_runs[0].status, "run_id": day_runs[0].run_id,
                                  "reason": day_runs[0].failure_reason})
+        # News freshness: once ingestion has ever run, the latest successful run
+        # must be recent (news is the primary v2 input).
+        from db.models.news import NewsIngestionRun
+        news_runs = session.exec(select(NewsIngestionRun).order_by(NewsIngestionRun.started_at.desc())).all()
+        if news_runs:
+            done = [r.finished_at.replace(tzinfo=r.finished_at.tzinfo or dt.timezone.utc) for r in news_runs
+                    if r.status in ("COMPLETED", "PARTIAL") and r.finished_at]
+            latest = max(done, default=None)
+            if latest is None or now - latest > NEWS_STALE_AFTER:
+                problems.append({"run_type": "NEWS_INGESTION", "problem": "STALE",
+                                 "reason": f"last successful ingestion: {latest.isoformat() if latest else 'never'}",
+                                 "latest_status": news_runs[0].status})
         # Outcome evaluation has no snapshot of its own: report its slot when it
         # failed, or has been RUNNING past the stale limit (an interrupted worker).
         oc = session.exec(select(ScheduledJobRun).where(ScheduledJobRun.job == "prediction_outcomes",

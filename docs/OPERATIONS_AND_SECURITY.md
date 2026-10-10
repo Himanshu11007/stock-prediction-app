@@ -110,7 +110,7 @@ remain as manual recovery.
 
 | Option | Cost | Reliability | Status |
 |---|---|---|---|
-| **GitHub Actions → backend job interface (proposed for v2)** | Free while the repository is public (about 300–700 minutes a month otherwise) | Scheduled starts can be 5–30+ minutes late; two triggers per job plus the monitor; the backend does all work. Needs only a dedicated scheduler token (`STOCKLENS_SCHEDULER_TOKEN`), **not** `DATABASE_URL` | Implemented and tested, **inactive**: docs/SCHEDULER.md |
+| **GitHub Actions → backend job interface (proposed for v2)** | Free while the repository is public (about 800–1,300 minutes a month with hourly news ingestion) | Scheduled starts can be 5–30+ minutes late; two triggers per job plus the monitor; the backend does all work. Needs only a dedicated scheduler token (`STOCKLENS_SCHEDULER_TOKEN`), **not** `DATABASE_URL` | Implemented and tested, **inactive**: docs/SCHEDULER.md |
 | Render paid cron jobs (`render.yaml`: the 4 v1 jobs on `main`) | Billed by run time per job; check Render pricing **(approval)** | On time; secrets stay in Render | Not active. The v2 cron templates were removed in favour of GitHub Actions |
 | Render Free | — | **No cron jobs on the Free plan** | — |
 

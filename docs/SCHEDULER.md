@@ -31,7 +31,7 @@ GitHub Actions (cron, UTC)              StockLens API (Render)
   never logged or printed.
 - **Interface off by default.** It is disabled (404) until
   `SCHEDULER_TOKEN_SHA256` is set.
-- **Strict job types.** `TODAY_PREOPEN`, `TODAY_CONFIRMED`, `TOMORROW_EOD`,
+- **Strict job types.** `NEWS_INGESTION`, `TODAY_PREOPEN`, `TODAY_CONFIRMED`, `TOMORROW_EOD`,
   `OUTCOME_EVALUATION`, `SNAPSHOT_MONITOR`. Anything else gets 422 before
   any work happens.
 - **Preflight** (no slot is used):
@@ -70,7 +70,7 @@ GitHub Actions (cron, UTC)              StockLens API (Render)
     NO_CALL.
   - The snapshot is published only if at least 50% of the v2 universe has
     usable data. It is written in one transaction.
-- **Monitoring** (`SNAPSHOT_MONITOR`) reports `ALERT` for:
+- **Monitoring** (`SNAPSHOT_MONITOR`) reports `ALERT` for stale news ingestion (no successful run in 3 h, once ingestion has started) and:
   - a missing, failed or still-running TODAY_PREOPEN after 09:30 IST;
   - the same for TOMORROW_EOD after 20:30 IST;
   - the same for TODAY_CONFIRMED after 10:30 IST, only when intraday is
@@ -81,21 +81,32 @@ GitHub Actions (cron, UTC)              StockLens API (Render)
 
 ## Schedules
 
-GitHub cron is in **UTC**. IST = UTC+05:30. Every schedule is Monday to
-Friday; the backend skips NSE holidays from the configured calendar.
+GitHub cron is in **UTC**. IST = UTC+05:30. Prediction, outcome and
+monitor schedules run Monday to Friday, and the backend skips NSE holidays
+from the configured calendar. News ingestion runs **every day**, because
+weekend and holiday news feeds the next pre-open snapshot.
 
 | Workflow | Job type | UTC cron | IST | Purpose |
 |---|---|---|---|---|
-| `stocklens-today-preopen.yml` | `TODAY_PREOPEN` | `15 2 * * 1-5` | 07:45 | snapshot from the previous close (must start before 09:15) |
-| | | `0 3 * * 1-5` | 08:30 | retry; no-op if done |
-| `stocklens-today-confirmed.yml` | `TODAY_CONFIRMED` | `20 4 * * 1-5` | 09:50 | intraday confirmation (**disabled**, see below) |
-| | | `50 4 * * 1-5` | 10:20 | retry |
-| `stocklens-outcome-evaluation.yml` | `OUTCOME_EVALUATION` | `0 13 * * 1-5` | 18:30 | 1/3/5-session outcomes and shadow exit states |
+| `stocklens-news-ingestion.yml` | `NEWS_INGESTION` | `40 0-16 * * *` | 06:10, then hourly to 22:10 | official feeds (and any configured provider); runs before the 08:30 and 16:15 snapshots |
+| `stocklens-today-preopen.yml` | `TODAY_PREOPEN` | `0 3 * * 1-5` | 08:30 | snapshot from the previous close plus news ingested by then (must start before 09:15) |
+| | | `30 3 * * 1-5` | 09:00 | retry; no-op if done |
+| `stocklens-today-confirmed.yml` | `TODAY_CONFIRMED` | `15 4 * * 1-5` | 09:45 | intraday confirmation (**disabled**, see below) |
+| | | `45 4 * * 1-5` | 10:15 | retry |
+| `stocklens-snapshot-monitor.yml` | `SNAPSHOT_MONITOR` | `30 4 * * 1-5` | 10:00 | checks TODAY_PREOPEN and news freshness |
+| | | `15 11 * * 1-5` | 16:45 | checks failed outcomes and news freshness |
+| | | `15 15 * * 1-5` | 20:45 | checks TOMORROW_EOD after its retry, outcomes, news |
+| `stocklens-tomorrow-eod.yml` | `TOMORROW_EOD` | `45 10 * * 1-5` | 16:15 | next-session snapshot once today's validated closing data exists |
+| | | `0 14 * * 1-5` | 19:30 | retry for late or revised provider data |
+| `stocklens-outcome-evaluation.yml` | `OUTCOME_EVALUATION` | `0 11 * * 1-5` | 16:30 | 1/3/5-session outcomes and shadow exit states |
 | | | `30 15 * * 1-5` | 21:00 | retry |
-| `stocklens-tomorrow-eod.yml` | `TOMORROW_EOD` | `0 14 * * 1-5` | 19:30 | next-session snapshot after final daily bars |
-| | | `0 15 * * 1-5` | 20:30 | retry (also covers late provider data) |
-| `stocklens-snapshot-monitor.yml` | `SNAPSHOT_MONITOR` | `15 4 * * 1-5` | 09:45 | checks TODAY_PREOPEN |
-| | | `15 16 * * 1-5` | 21:45 | checks TOMORROW_EOD and outcomes |
+
+**Data readiness at 16:15:** Yahoo's daily bar for today usually exists soon
+after the 15:30 close, but it can still be revised in the following hours.
+The 16:15 run publishes only if today's NIFTY bar exists and at least 50% of
+the universe has validated bars for today; otherwise it is SKIPPED and the
+19:30 run tries again. A revision after publication does not change a
+published snapshot; outcomes are evaluated from final bars.
 
 GitHub starts scheduled runs late under load, often by 5–30 minutes and
 sometimes more. The pre-open triggers start early enough for that. A late
@@ -173,8 +184,10 @@ Each job is safe to repeat; a repeat is a no-op once the slot is COMPLETED.
 
 - **GitHub Actions cost:** the backend repository is public, so standard
   runners are free. If it becomes private, the free tier is 2,000 minutes a
-  month. Estimated use is about 10 runs a trading day, mostly 1–15 minutes
-  each while polling, so about 300–700 minutes a month.
+  month. Estimated use: 17 hourly news runs a day (about 1 minute each) plus
+  about 11 runs a trading day of 1–15 minutes while polling: roughly
+  800–1,300 minutes a month: free on a public repository, and within the
+  2,000-minute free tier if the repository became private.
 - **Timing:** scheduled runs can start late or, rarely, be dropped at busy
   times. GitHub also **disables scheduled workflows after 60 days without
   repository activity** in public repositories. The monitor and the retry

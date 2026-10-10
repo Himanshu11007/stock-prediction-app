@@ -160,11 +160,12 @@ Home cannot say "holiday".
 
 | Job | When | Purpose |
 |---|---|---|
-| `predict_preopen` | 07:45 IST, retry 08:30 | TODAY_PREOPEN snapshot |
-| `predict_confirmed` | 09:50 IST, retry 10:20 | TODAY_CONFIRMED, only with an approved intraday feed (disabled) |
-| `prediction_outcomes` | 18:30 IST, retry 21:00 | 1/3/5-session outcomes and shadow exit states |
-| `predict_eod` | 19:30 IST, retry 20:30 | TOMORROW_EOD for the next trading day |
-| `prediction_monitor` | 09:45 and 21:45 IST | Missed or failed snapshot check; fails the run on a gap |
+| `news_ingestion` | hourly 06:10–22:10 IST, every day | official news feeds (catalysts/) |
+| `predict_preopen` | 08:30 IST, retry 09:00 | TODAY_PREOPEN snapshot |
+| `predict_confirmed` | 09:45 IST, retry 10:15 | TODAY_CONFIRMED, only with an approved intraday feed (disabled) |
+| `prediction_outcomes` | 16:30 IST, retry 21:00 | 1/3/5-session outcomes and shadow exit states |
+| `predict_eod` | 16:15 IST, retry 19:30 | TOMORROW_EOD for the next trading day |
+| `prediction_monitor` | 10:00, 16:45 and 20:45 IST | Missed or failed snapshot check; fails the run on a gap |
 
 They use the same slot ledger, calendar and idempotency as the ranking job.
 The proposed scheduler is **GitHub Actions calling the backend's authenticated

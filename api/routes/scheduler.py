@@ -31,7 +31,7 @@ logger = get_logger(__name__)
 
 router = APIRouter(prefix="/scheduler")
 
-SLOT_PATTERN = r"^\d{4}-\d{2}-\d{2}$"
+SLOT_PATTERN = r"^\d{4}-\d{2}-\d{2}(T\d{2})?$"          # date, or date + IST hour for NEWS_INGESTION
 
 
 def get_engine():

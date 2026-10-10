@@ -11,7 +11,7 @@ name: "StockLens scheduler: OUTCOME_EVALUATION"
 
 on:
   schedule:
-    - cron: "0 13 * * 1-5"   # 18:30 IST, Mon-Fri
+    - cron: "0 11 * * 1-5"   # 16:30 IST, Mon-Fri
     - cron: "30 15 * * 1-5"   # 21:00 IST, retry (no-op if done), Mon-Fri
   workflow_dispatch: {}
 

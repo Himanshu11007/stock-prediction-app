@@ -35,11 +35,13 @@ WORKFLOWS = ROOT / ".github" / "workflows"
 TOKEN = "test-scheduler-token-0123456789abcdef"
 HOLIDAYS_2026 = ["2026-10-02", "2026-10-20", "2026-11-10"]      # dates used by these tests only
 EXPECTED = {   # workflow file -> (job type, UTC crons, IST equivalents)
-    "stocklens-today-preopen.yml": ("TODAY_PREOPEN", ["15 2 * * 1-5", "0 3 * * 1-5"], ["07:45", "08:30"]),
-    "stocklens-today-confirmed.yml": ("TODAY_CONFIRMED", ["20 4 * * 1-5", "50 4 * * 1-5"], ["09:50", "10:20"]),
-    "stocklens-outcome-evaluation.yml": ("OUTCOME_EVALUATION", ["0 13 * * 1-5", "30 15 * * 1-5"], ["18:30", "21:00"]),
-    "stocklens-tomorrow-eod.yml": ("TOMORROW_EOD", ["0 14 * * 1-5", "0 15 * * 1-5"], ["19:30", "20:30"]),
-    "stocklens-snapshot-monitor.yml": ("SNAPSHOT_MONITOR", ["15 4 * * 1-5", "15 16 * * 1-5"], ["09:45", "21:45"]),
+    "stocklens-today-preopen.yml": ("TODAY_PREOPEN", ["0 3 * * 1-5", "30 3 * * 1-5"], ["08:30", "09:00"]),
+    "stocklens-today-confirmed.yml": ("TODAY_CONFIRMED", ["15 4 * * 1-5", "45 4 * * 1-5"], ["09:45", "10:15"]),
+    "stocklens-tomorrow-eod.yml": ("TOMORROW_EOD", ["45 10 * * 1-5", "0 14 * * 1-5"], ["16:15", "19:30"]),
+    "stocklens-outcome-evaluation.yml": ("OUTCOME_EVALUATION", ["0 11 * * 1-5", "30 15 * * 1-5"], ["16:30", "21:00"]),
+    "stocklens-snapshot-monitor.yml": ("SNAPSHOT_MONITOR", ["30 4 * * 1-5", "15 11 * * 1-5", "15 15 * * 1-5"],
+                                       ["10:00", "16:45", "20:45"]),
+    "stocklens-news-ingestion.yml": ("NEWS_INGESTION", ["40 0-16 * * *"], ["06:10"]),     # hourly to 22:10 IST
 }
 
 
@@ -50,7 +52,7 @@ def _wf(name):
 
 
 def _ist(cron: str) -> str:
-    minute, hour = (int(x) for x in cron.split()[:2])
+    minute, hour = int(cron.split()[0]), int(cron.split()[1].split("-")[0])
     t = dt.datetime(2026, 1, 5, hour, minute) + dt.timedelta(hours=5, minutes=30)
     return f"{t:%H:%M}"
 
@@ -63,7 +65,10 @@ def test_workflow_is_inactive_by_default_and_never_runs_on_push(name):
     job_type, crons, ist = EXPECTED[name]
     assert [c["cron"] for c in on["schedule"]] == crons
     assert [_ist(c) for c in crons] == ist                # documented IST equivalents match UTC
-    assert all(c.endswith("* * 1-5") for c in crons)     # weekdays; holidays are checked by the backend
+    if job_type == "NEWS_INGESTION":
+        assert crons == ["40 0-16 * * *"]                # every day: weekend news matters for Monday
+    else:
+        assert all(c.endswith("* * 1-5") for c in crons) # weekdays; holidays are checked by the backend
     assert wf["permissions"] == {"contents": "read"}
     assert wf["concurrency"]["cancel-in-progress"] is False
     (job,) = wf["jobs"].values()
@@ -348,3 +353,57 @@ def test_client_requires_configuration(monkeypatch):
     monkeypatch.setenv("STOCKLENS_SCHEDULER_TOKEN", TOKEN)
     monkeypatch.setenv("STOCKLENS_API_URL", "http://insecure.example")
     assert client_mod.main(["--job", "TOMORROW_EOD"]) == 2
+
+
+# ── news ingestion job ───────────────────────────────────────────────────────
+
+class _OneArticle:
+    name = "testwire"
+
+    def __init__(self, fail=False):
+        self.fail = fail
+
+    def fetch(self, since, until):
+        from catalysts.providers import ProviderError, RawArticle
+        if self.fail:
+            raise ProviderError("feed down")
+        return [RawArticle("x1", "https://www.reuters.com/x1", "RBI unexpectedly cuts repo rate by 50 basis points",
+                           until - dt.timedelta(minutes=20))]
+
+
+def test_news_ingestion_runs_hourly_without_the_trading_calendar(api, db, monkeypatch):
+    monkeypatch.setattr(jobs, "news_providers", lambda: [_OneArticle()])
+    sat = eod(dt.date(2026, 10, 10), 9, 10)                  # Saturday, no holiday calendar configured
+    _at(monkeypatch, sat)
+    monkeypatch.setattr(jobs, "_now", lambda: sat.astimezone(dt.timezone.utc))
+    first = _post(api, "NEWS_INGESTION").json()["data"]
+    assert first["status"] == "ACCEPTED" and first["slot"] == "2026-10-10T09"
+    st = api.get(f"/api/v1/scheduler/jobs/NEWS_INGESTION/runs/{first['slot']}",
+                 headers={"Authorization": f"Bearer {TOKEN}"}).json()["data"]
+    assert st["status"] == "COMPLETED" and st["result"]["providers"][0]["new_events"] == 1
+    again = _post(api, "NEWS_INGESTION").json()["data"]
+    assert again["duplicate"] is True                                        # same hour: no second run
+
+
+def test_news_ingestion_failure_is_reported_failed(api, db, monkeypatch):
+    monkeypatch.setattr(jobs, "news_providers", lambda: [_OneArticle(fail=True)])
+    _at(monkeypatch, eod(FRI, 11, 10))
+    out = _post(api, "NEWS_INGESTION").json()["data"]
+    st = remote.status(db, remote.JobType.NEWS_INGESTION, out["slot"])
+    assert st["status"] == "FAILED" and st["result"]["providers"][0]["status"] == "FAILED"
+
+
+def test_monitor_flags_stale_news_once_ingestion_exists(api, db, monkeypatch):
+    from db.models.news import NewsIngestionRun
+    _calendar(db)
+    with Session(db) as s:
+        s.add(NewsIngestionRun(provider="rss", status="COMPLETED", started_at=eod(MON, 4, 0),
+                               finished_at=eod(MON, 4, 1)))
+        s.commit()
+    out = jobs.prediction_monitor_job(db, eod(MON, 9, 0))
+    assert {"run_type": "NEWS_INGESTION", "problem": "STALE"}.items() <= out["problems"][0].items()
+    with Session(db) as s:
+        s.add(NewsIngestionRun(provider="rss", status="COMPLETED", started_at=eod(MON, 8, 10),
+                               finished_at=eod(MON, 8, 11)))
+        s.commit()
+    assert jobs.prediction_monitor_job(db, eod(MON, 9, 0))["status"] == "OK"

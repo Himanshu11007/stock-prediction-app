@@ -1,5 +1,6 @@
 # StockLens scheduler: TODAY_PREOPEN
-#   v2 pre-open snapshot (shadow). Data cutoff: previous close. Must start before 09:15 IST.
+#   v2 pre-open snapshot (shadow). Data cutoff: previous close plus news ingested by then. Must start
+#   before 09:15 IST (a late start is skipped, never published after the open).
 #
 # Inactive by default. It never runs on push or pull_request. Scheduled runs
 # only happen from the default branch (GitHub rule) AND when the repository
@@ -11,8 +12,8 @@ name: "StockLens scheduler: TODAY_PREOPEN"
 
 on:
   schedule:
-    - cron: "15 2 * * 1-5"   # 07:45 IST, Mon-Fri
-    - cron: "0 3 * * 1-5"   # 08:30 IST, retry (no-op if done), Mon-Fri
+    - cron: "0 3 * * 1-5"   # 08:30 IST, Mon-Fri
+    - cron: "30 3 * * 1-5"   # 09:00 IST, retry (no-op if done), Mon-Fri
   workflow_dispatch: {}
 
 permissions:
