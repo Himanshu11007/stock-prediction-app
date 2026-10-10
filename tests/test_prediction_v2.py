@@ -531,6 +531,55 @@ def test_backtest_is_chronological_embargoed_and_leak_free():
     assert backtest.run(hist, nifty, sectors, seed=3).report() == report  # reproducible
 
 
+def test_backtest_horizon_follows_the_market_calendar_not_the_stocks_own_bars():
+    n = 200
+    days = sessions(dt.date(2026, 9, 30), n)
+    nifty = bars(days, walk(n, 1, vol=0.008, start=20000))
+    full = bars(days, walk(n, 5, vol=0.012), [1e6] * n)
+    gap_day = days[150]
+    holed = full.drop(pd.Timestamp(gap_day))                    # one missing bar
+    for h in (1, 3, 5):
+        res = backtest.run({"A.NS": full, "B.NS": holed}, nifty, {}, horizon=h, embargo=5, seed=1)
+        for t in res.trades:
+            if t.strategy != "always_up":
+                continue
+            k = days.index(t.cutoff)
+            end = days[k + h]
+            df = full                                           # B is A minus one bar, same prices otherwise
+            want = float(df["Close"].loc[pd.Timestamp(end)] / df["Close"].loc[pd.Timestamp(t.cutoff)] - 1)
+            assert t.ret == pytest.approx(want)
+            n_ret = float(nifty["Close"].loc[pd.Timestamp(end)] / nifty["Close"].loc[pd.Timestamp(t.cutoff)] - 1)
+            assert t.excess == pytest.approx(want - n_ret)
+            if t.symbol == "B.NS":                              # no trade whose window starts or ends on the hole
+                assert gap_day not in (t.cutoff, end)
+        b_cutoffs = {t.cutoff for t in res.trades if t.strategy == "always_up" and t.symbol == "B.NS"}
+        a_cutoffs = {t.cutoff for t in res.trades if t.strategy == "always_up" and t.symbol == "A.NS"}
+        assert a_cutoffs - b_cutoffs == {d for d in a_cutoffs if gap_day in (d, days[days.index(d) + h])}
+
+
+def test_backtest_regime_breakdown_and_clustered_interval():
+    n = 260
+    days = sessions(dt.date(2026, 9, 30), n)
+    hist = {f"S{i}.NS": bars(days, walk(n, 30 + i, vol=0.012), [1e6] * n) for i in range(6)}
+    nifty = bars(days, walk(n, 1, vol=0.008, start=20000))
+    res = backtest.run(hist, nifty, {s: "A" for s in hist}, horizon=3, embargo=5, seed=3)
+    rows = res.report(cost_bps=10)["splits"]["holdout"]["strategies"]
+    up = rows["always_up"]
+    assert up["calls"] > 0 and up["mean_net_return"] == pytest.approx(up["mean_gross_return"] - 0.001)
+    lo, hi = up["mean_net_return_ci95_clustered"]
+    assert lo <= up["mean_net_return"] <= hi
+    assert res.report(cost_bps=10) == res.report(cost_bps=10)                # bootstrap is seeded
+    bd = res.breakdown("regime_trend", strategies=("always_up",), cost_bps=10)["always_up"]
+    assert set(bd) <= {"ABOVE_SMA50", "BELOW_SMA50", "UNKNOWN"}
+    assert sum(g["calls"] for g in bd.values()) == up["calls"]
+    # regimes use NIFTY bars <= t only: changing the future leaves past regimes unchanged
+    cut = days[200]
+    shocked = nifty.copy()
+    shocked.loc[shocked.index > pd.Timestamp(cut), "Close"] *= 3
+    a, b = backtest._regimes(nifty), backtest._regimes(shocked)
+    assert all(a[d] == b[d] for d in days if d <= cut)
+
+
 def test_universe_seed_is_a_copy_and_admin_adds_do_not_touch_v1(db):
     with Session(db) as s:
         v1 = sorted(m.symbol for m in s.exec(select(StockUniverseMember)).all())
