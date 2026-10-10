@@ -383,6 +383,30 @@ def test_exit_gap_through_stop_exits_at_the_open():
     assert p.state == "EXIT" and t.reason == "STOP_LOSS" and t.price == 95
 
 
+def test_catalyst_exhaustion_tightens_long_and_short():
+    # a >= 2 ATR run-up into the previous close, then a weak close (bottom 30% of the range)
+    p, t = exits.step(pos(sessions=1, target=None), B(104, 105, 102.5, 102.8, prev_close=104.5))
+    assert (p.state, t.reason, t.price) == ("TIGHTEN", "CATALYST_EXHAUSTION", 102.8)
+    p, t = exits.step(pos(direction="DOWN", stop=103.0, target=None, sessions=1),
+                      B(96, 97.5, 95, 97.2, prev_close=95.5))
+    assert (p.state, t.reason) == ("TIGHTEN", "CATALYST_EXHAUSTION")
+    # the same weak close without the prior extended move is not exhaustion
+    p, t = exits.step(pos(sessions=1, target=None), B(101, 102, 99.6, 99.8, prev_close=101.0))
+    assert t is None or t.reason != "CATALYST_EXHAUSTION"
+
+
+def test_distribution_tightens_only_on_heavy_volume_with_a_weak_close():
+    p, t = exits.step(pos(sessions=2, target=None), B(101, 102, 100, 100.3, volume_ratio=2.5, prev_close=101.0))
+    assert (p.state, t.reason) == ("TIGHTEN", "DISTRIBUTION")
+    again, t2 = exits.step(p, B(100.5, 101.5, 100, 100.2, volume_ratio=2.6, prev_close=100.3))
+    assert t2 is None and again.state == "TIGHTEN"                       # a repeated signal is not a transition
+    p, t = exits.step(pos(sessions=2, target=None), B(101, 102, 100, 100.3, volume_ratio=1.2, prev_close=101.0))
+    assert t is None and p.state == "HOLD"                               # normal volume: no distribution
+    assert set(exits.REASONS) == {"STOP_LOSS", "TRAILING_STOP", "TARGET_REACHED", "SUPPORT_BREAKDOWN",
+                                  "FAILED_BREAKOUT", "DISTRIBUTION", "RELATIVE_STRENGTH_DETERIORATION",
+                                  "CATALYST_EXHAUSTION", "MACRO_REVERSAL", "THESIS_INVALIDATED", "TIME_STOP"}
+
+
 def test_exit_intraday_stop_and_short_mirror():
     p, t = exits.step(pos(), B(99, 100, 96.5, 98))
     assert (p.state, t.reason, t.price) == ("EXIT", "STOP_LOSS", 97.0)
