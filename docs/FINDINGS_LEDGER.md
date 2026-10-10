@@ -1,89 +1,130 @@
-# StockLens findings ledger (October 2026)
+# StockLens findings ledger (October 2026, review edition)
 
-Statuses:
-- VERIFIED: the defect or fact is confirmed;
-- IMPLEMENTED / TESTED: a fix exists and is covered by tests;
-- BLOCKED: needs data, access or a contract;
-- DEFERRED: postponed;
-- REQUIRES_APPROVAL: production, cost or v1 change;
-- NOT_REPRODUCIBLE.
+**Statuses:**
 
-**Branches:** backend `feature/phase0-safety` (P0) and `feature/prediction-v2`
-(stacked on it); web `feature/prediction-v2-ui`. Everything is local and
-**not pushed**.
+| Status | Meaning |
+|---|---|
+| VERIFIED | the defect or fact is confirmed |
+| IMPLEMENTED | code exists |
+| TESTED | automated tests cover it |
+| BLOCKED | needs data, access or a contract that does not exist |
+| DEFERRED | postponed on purpose |
+| REQUIRES_APPROVAL | a production, cost or v1 change, or an owner action |
+| NOT_REPRODUCIBLE | original evidence is unavailable |
 
-Test IDs:
-- backend: `tests/<file>`;
-- web: `StockLens.Web.Tests/<file>`.
+"Interface only" means a schema or extension point exists **without** a
+working end-to-end feature; such items are never marked complete.
+
+**Review branches** (backend):
+- `review/phase0-safety`: Phase 0 only.
+- `review/prediction-v2`: Phase 0 + v2 + scheduler + research.
+- `review/stocklens-integration`: `review/prediction-v2` plus the reconciled
+  auth-hardening commit.
+
+**Web:** `review/prediction-v2-ui`. **Mobile:** unchanged (`master`
+`d24eaf5`). The requirement-by-requirement checklist is
+`docs/REVIEW_CHECKLIST.md`.
 
 ## Data, universe and ranking (v1 is frozen)
 
 | ID | Finding | Evidence | Status | Fix / test | Remaining |
 |---|---|---|---|---|---|
-| F-01 | Companies created in Admin are never ranked in full v1 runs (`admin/service.py create_stock` writes only `companies`; `engine_runs.resolve_universe` needs `stock_universe`) | code | VERIFIED; IMPLEMENTED (visibility, v2 path); TESTED | `GET /admin/universe-health` lists active companies outside v1; v2 universe accepts them (`test_prediction_api::test_v2_universe_admin_changes_never_touch_v1`) | Adding to the **v1** universe changes frozen v1: REQUIRES_APPROVAL |
-| F-02 | CPCL and MRPL are active companies outside the v1 universe; Kanohar and Moneyview are not in the master list | local DB, `data/nse_stocks.csv` | VERIFIED; IMPLEMENTED (v2 add) | as F-01 | NIFTY 500 / F&O constituent lists: BLOCKED (no licensed list source); import via `POST /admin/v2-universe` |
-| F-03 | 18 of 301 v1 universe symbols return no Yahoo data (renamed or delisted: TATAMOTORS, ZOMATO, LTIM, ISEC, GUJGASLTD, …) | yfinance errors; 3 Oct run skipped 17 | VERIFIED; IMPLEMENTED (report); TESTED | `universe-health.v1_without_market_data` | Renaming or removing v1 members: REQUIRES_APPROVAL |
-| F-04 | Two processes could start overlapping RANKING runs (check-then-insert; process-local lock only) | race test: **19/20** overlaps | IMPLEMENTED; TESTED | migration `4e6773a9e7db` + `create_run` mapping; **0/20** in 20 real two-process trials (`test_engine_run_concurrency`), migration clean / duplicate / idempotent (`test_migration_engine_run_guard`) | Production deploy: REQUIRES_APPROVAL; see B-01 |
-| F-05 | No timestamped news or corporate events (`news/api.py` returns headline strings only) | code | IMPLEMENTED (foundation); TESTED | `events/ingest.py`, `market_events`, `event_classifications` (`test_prediction_v2::test_event_*`) | Provider: BLOCKED (licensing) |
-| F-06 | No 1/3/5-day returns, gap, abnormal volume, close location or relative strength | `ranking/technical.py` | IMPLEMENTED; TESTED | `prediction_v2/features.py` (formula, cutoff and missing-data tests) | — |
-| F-07 | `market.holidays` is empty; NSE was closed on 2 Oct 2026 | local DB, prices | VERIFIED; IMPLEMENTED (calendar-aware jobs, flag on every v2 snapshot); TESTED | `test_prediction_jobs::test_configured_holiday_is_respected` | Seeding production config: REQUIRES_APPROVAL (dates from the official NSE circular) |
-| F-08 | Sector outlook unset for every stock (FQVF check 18 NOT_AVAILABLE) | validation CSV | VERIFIED | v1 unchanged (missing is never favourable); v2 uses data-driven sector relative strength instead | Admin data entry: DEFERRED |
-| F-09 | The 3 Oct live v1 run has no `ranking_snapshots` rows in the local DB, so the reference price falls back to market snapshots. Cause not established | local DB | VERIFIED (local); IMPLEMENTED (labelling); TESTED | `reference_price_source` in Top Picks (`test_top_picks_freshness`) | Production state: BLOCKED (no read-only access) |
-| F-10 | Intraday data (Yahoo 1/5/15-minute bars) is delayed and unlicensed | provider | VERIFIED; IMPLEMENTED (gate) | `TODAY_CONFIRMED` SKIPPED unless `PREDICTION_V2_INTRADAY_ENABLED` (`test_confirmed_snapshot_*`) | Licensed feed: BLOCKED |
-| F-11 | FMCG index (`^CNXFMCG`) has no usable Yahoo history | download | VERIFIED; IMPLEMENTED | sector peer baskets (≥3 peers) for `sector_rs_5` and outcome sector returns | — |
-| F-12 | The legacy Streamlit "Top Picks" tab is a different engine (legacy ML scanner) and can be confused with v1 Top Candidates | `app.py` | VERIFIED | — | Relabel: DEFERRED (Streamlit change, needs approval) |
-| F-13 | Production database not inspectable (no read-only credentials) | — | BLOCKED | — | Read-only role or dashboard screenshots |
-| X-01 | FINOPB showed a 242× volume spike (probable data error) | universe scan | VERIFIED; IMPLEMENTED | `SUSPECT_VOLUME_SPIKE` gives NO_CALL (`test_stale_suspect_volume_and_price_band_flags`) | — |
+| F-01 | Companies created in Admin are never ranked in full v1 runs (`admin/service.py create_stock` writes only `companies`; `engine_runs.resolve_universe` needs `stock_universe`) | code | VERIFIED; IMPLEMENTED (visibility, v2 path); TESTED | `GET /admin/universe-health`; v2 universe accepts them (`test_prediction_api::test_v2_universe_admin_changes_never_touch_v1`) | Adding to the **v1** universe changes frozen v1: REQUIRES_APPROVAL |
+| F-02 | CPCL and MRPL are active companies outside the v1 universe; Kanohar and Moneyview are not in the master list | local DB, `data/nse_stocks.csv` | VERIFIED; IMPLEMENTED (v2 add) | as F-01 | Official NIFTY 500 / F&O list: BLOCKED (no licensed source) |
+| F-03 | 17–18 v1 universe symbols return no Yahoo data (renamed or delisted: TATAMOTORS, ZOMATO, LTIM, ISEC, GUJGASLTD, …) | yfinance; `case_evidence_2026_10.json` lists 17 | VERIFIED; IMPLEMENTED (report); TESTED | `universe-health.v1_without_market_data` | Renaming or removing v1 members: REQUIRES_APPROVAL |
+| F-04 | Two processes could start overlapping RANKING runs | race test: 19/20 overlaps before | IMPLEMENTED; TESTED | migration `4e6773a9e7db` + `create_run`; 0/20 in real two-process trials (`test_engine_run_concurrency`); migration clean / duplicate-abort / idempotent (`test_migration_engine_run_guard`) | Production migration: REQUIRES_APPROVAL. PostgreSQL run not done locally (P-01) |
+| F-05 | No timestamped news or corporate events | code | IMPLEMENTED (**foundation only**); TESTED | `events/ingest.py`, `market_events`, `event_classifications` (`test_prediction_v2::test_event_*`) | **No provider connected**: BLOCKED (licensing). Catalyst setups do not exist |
+| F-06 | No 1/3/5-day returns, gap, abnormal volume, close location or relative strength | code | IMPLEMENTED; TESTED | `prediction_v2/features.py` (formula, cutoff, missing-data tests) | Breadth, peer momentum and factor betas: DEFERRED (F-14) |
+| F-07 | `market.holidays` is empty; NSE was closed on 2 Oct 2026 | local DB, prices | VERIFIED; IMPLEMENTED; TESTED | jobs are calendar-aware; the **scheduler refuses to run without the current year's calendar** (`test_scheduler::test_missing_holiday_calendar_fails_instead_of_running`) | Seeding: REQUIRES_APPROVAL (official NSE circular) |
+| F-08 | Sector outlook unset for every stock (FQVF check 18 NOT_AVAILABLE) | validation CSV, live run | VERIFIED | v1 unchanged; v2 uses peer-relative strength | Admin data entry: DEFERRED |
+| F-09 | The 3 Oct live run has 0 `ranking_snapshots` rows locally, so the reference price falls back to market snapshots; cause not established | local DB | VERIFIED (local); IMPLEMENTED (labelling); TESTED | `reference_price_source` (`test_top_picks_freshness`); web note | Production state: BLOCKED (F-13) |
+| F-10 | Intraday data (Yahoo 1/5/15-minute) is delayed and unlicensed; no intraday adapter exists | provider, code | VERIFIED; IMPLEMENTED (gate); TESTED | `TODAY_CONFIRMED` refused unless `PREDICTION_V2_INTRADAY_ENABLED` **and** `vars.STOCKLENS_TODAY_CONFIRMED_ENABLED` (`test_scheduler::test_today_confirmed_*`, `test_confirmed_snapshot_*`) | Licensed feed + adapter: BLOCKED |
+| F-11 | FMCG index (`^CNXFMCG`) has no usable Yahoo history | download | VERIFIED; IMPLEMENTED | sector peer baskets (≥3 peers) | — |
+| F-12 | The legacy Streamlit "Top Picks" tab is a different engine (legacy ML scanner) | `app.py` | VERIFIED | — | Relabel: DEFERRED (Streamlit change) |
+| F-13 | Production database not inspectable (no read-only credentials) | — | BLOCKED | — | Read-only role or dashboard screenshots (owner) |
+| F-14 | Commodity / factor observations (Brent, cracks) have a table (`factor_observations`) but **no writer**; past-only betas not implemented | code | VERIFIED; **interface only** | — | DEFERRED: needs a factor data source decision |
+| F-15 | The v2 universe must be seeded from v1 by an administrator (`POST /admin/v2-universe`, `universe.seed_from_v1`); no automatic seeding | code | VERIFIED; IMPLEMENTED (manual) | `test_universe_seed_is_a_copy_and_admin_adds_do_not_touch_v1` | Production seeding: REQUIRES_APPROVAL |
+| X-01 | FINOPB showed a 242× volume spike (probable data error) | universe scan | VERIFIED; IMPLEMENTED; TESTED | `SUSPECT_VOLUME_SPIKE` → NO_CALL | — |
 
 ## Security and operations
 
-| ID | Finding | Status | Fix / evidence | Remaining |
+| ID | Finding | Status | Fix / evidence | Owner action |
 |---|---|---|---|---|
-| S-01 | PostgreSQL password exposed in a conversation screenshot | REQUIRES_APPROVAL | Rotation procedure: `docs/OPERATIONS_AND_SECURITY.md` §1.1 | Owner action |
-| S-02 | NewsAPI key in public Git history (`bcf4da6`, `c9ca6e2`…) | REQUIRES_APPROVAL | Revoke / replace / untrack / history: §1.2 | Owner revokes; untracking after that, with approval; no history rewrite |
+| S-01 | PostgreSQL password exposed in a conversation screenshot | REQUIRES_APPROVAL (owner) | Rotation procedure: `docs/OPERATIONS_AND_SECURITY.md` §1.1. Never used by this work | **Rotate the database password** (Render dashboard) |
+| S-02 | NewsAPI key in public Git history (`bcf4da6`, `c9ca6e2`, …) | REQUIRES_APPROVAL (owner) | §1.2: revoke → replace → untrack `.streamlit/secrets.toml` → **no history rewrite** | **Revoke the key at newsapi.org**; approve untracking afterwards |
 | S-03 | `/docs`, `/redoc`, `/openapi.json` public in production | IMPLEMENTED; TESTED | `API_DOCS_ENABLED`; 404 in production-mode subprocess tests (`test_api_security`) | Deploy: REQUIRES_APPROVAL |
-| S-04 | No HSTS / nosniff / frame / referrer headers on the API | IMPLEMENTED; TESTED | middleware (`test_api_security`) | Deploy |
-| S-05 | Free PostgreSQL: expires about 30 days after creation, no backups | VERIFIED (blueprint); REQUIRES_APPROVAL | `pg_dump` procedure §2; upgrade advice | Cost decision |
-| O-01 | No scheduler is active (Render Free has no cron; 0 GitHub workflows) | VERIFIED; IMPLEMENTED (templates); TESTED (jobs) | `render.yaml` 9 cron templates; `deploy/github-actions/prediction-jobs.yml` (inactive, actionlint clean) | Activation: REQUIRES_APPROVAL |
-| O-02 | Missed runs were invisible | IMPLEMENTED; TESTED | `prediction_monitor` (exit 1), `GET /admin/prediction-runs` (`test_prediction_jobs::test_monitor_*`) | — |
+| S-04 | No HSTS / nosniff / frame / referrer headers | IMPLEMENTED; TESTED | middleware (`test_api_security`) | Deploy |
+| S-05 | Free PostgreSQL expires about 30 days after creation, no backups | VERIFIED (blueprint); REQUIRES_APPROVAL | `pg_dump` procedure §2; upgrade advice | **Decide plan / cost before expiry**; take a `pg_dump` now |
+| S-06 | The scheduler needs a credential that is not a user login and not the database URL | IMPLEMENTED; TESTED | dedicated bearer token, SHA-256 digest on the server (`SCHEDULER_TOKEN_SHA256`), constant-time compare, user/admin JWTs rejected, 404 when unset, never printed (`test_scheduler::test_authentication_*`, `test_client_never_prints_the_token`) | Create token and secret: REQUIRES_APPROVAL |
+| O-01 | No scheduler is active (Render Free has no cron; 0 registered GitHub workflows) | VERIFIED; IMPLEMENTED; TESTED; **inactive** | GitHub Actions → backend job interface: `.github/workflows/stocklens-*.yml`, `scheduling/remote.py`, `api/routes/scheduler.py`, `scripts/scheduler_client.py`, `docs/SCHEDULER.md` (`test_scheduler`, 34 tests; actionlint clean) | Activation: REQUIRES_APPROVAL (calendar, token, Render env var, merge, repository variable) |
+| O-02 | Missed runs were invisible | IMPLEMENTED; TESTED | `SNAPSHOT_MONITOR` (ALERT = failed run, never success), also flags failed or stale outcome evaluation (`test_prediction_jobs::test_monitor_*`, `test_scheduler::test_monitor_*`) | — |
+| O-03 | The v2 commit had added 5 **paid** Render cron entries to `render.yaml`; a blueprint sync after merge would have created billed services | VERIFIED; fixed | `render.yaml` restored to `main` (commit `c87c431`); superseded `deploy/github-actions/prediction-jobs.yml` removed. Test: every CLI job has exactly one scheduler (`test_cloud_deploy`) | — |
+| O-04 | Free Render instance sleeps (cold start), 512 MB, restarts interrupt jobs | VERIFIED (plan) | client wakes the API, bounded retries; stale-run recovery after 3 h | Paid instance recommended before relying on the scheduler (cost) |
 
 ## Prediction Engine v2 (shadow)
 
-| ID | Item | Status | Tests |
+| ID | Item | Status | Tests / evidence |
 |---|---|---|---|
-| V-01 | Additive v2 schema (10 tables, uniqueness for immutability and idempotency) | IMPLEMENTED; TESTED | upgrade / downgrade / upgrade + `alembic check` clean |
-| V-02 | `TODAY_PREOPEN` / `TODAY_CONFIRMED` / `TOMORROW_EOD` snapshots (cutoff, idempotency, one RUNNING per type, quality gate, immutability, retry after failure) | IMPLEMENTED; TESTED | `test_prediction_v2`, `test_prediction_jobs` |
-| V-03 | Baseline rules (UP/DOWN/NEUTRAL/NO_CALL, levels, confidence null) | IMPLEMENTED; TESTED | `test_rules_*` |
-| V-04 | 1/3/5-session outcomes (direction- and cost-adjusted, MFE/MAE, idempotent, waits for final bars) | IMPLEMENTED; TESTED | `test_outcomes_*` |
-| V-05 | Shadow exit engine (11 reason codes, legal transitions, gaps, missing bars, no notifications) | IMPLEMENTED; TESTED | `test_exit_*` |
-| V-06 | Performance aggregation (Wilson intervals, small-sample suppression, promotion gate) | IMPLEMENTED; TESTED | `test_wilson_*`, web `Performance_hides_statistics_for_small_samples` |
-| V-07 | Chronological backtest (splits, embargo, costs, 5 baselines, leak test) | IMPLEMENTED; TESTED | `test_backtest_*`; real-data run: `docs/research/PREDICTION_V2_BACKTEST_2026-10.md` |
+| V-01 | Additive v2 schema (10 tables, uniqueness for immutability and idempotency) | IMPLEMENTED; TESTED | upgrade / downgrade / upgrade + `alembic check` clean (SQLite) |
+| V-02 | `TODAY_PREOPEN` / `TODAY_CONFIRMED` / `TOMORROW_EOD` snapshots: cutoff, idempotency key, one RUNNING per type, quality gate (≥50% usable), immutability, a FAILED run releases its key | IMPLEMENTED; TESTED | `test_prediction_v2`, `test_prediction_jobs`, `test_scheduler` |
+| V-03 | Baseline rules (UP / DOWN / NEUTRAL / NO_CALL, ATR levels, confidence null) | IMPLEMENTED; TESTED | `test_rules_*` |
+| V-04 | 1/3/5-session outcomes (direction- and cost-adjusted at 15 + 5 bps, NIFTY and sector benchmarks, MFE/MAE, idempotent, waits for final bars) | IMPLEMENTED; TESTED | `test_outcomes_*`, `test_outcomes_job_waits_for_final_bars_and_is_idempotent` |
+| V-05 | Shadow exit engine (11 reason codes, legal transitions, gap and missing-bar handling, no notifications) | IMPLEMENTED; TESTED (**all 11 codes** since `f219acc`; previously 9) | `test_exit_*`, `test_catalyst_exhaustion_*`, `test_distribution_*` |
+| V-06 | Performance aggregation (Wilson intervals, small-sample suppression, promotion gate of 200 events) | IMPLEMENTED; TESTED | `test_wilson_*`; web `Performance_hides_statistics_for_small_samples` |
+| V-07 | Chronological backtest (60/20/20 splits, embargo, costs, 6 baselines, leak test) | IMPLEMENTED; TESTED | `test_backtest_*` |
 | V-08 | v2 API (admin-only shadow, one snapshot per response, freshness) | IMPLEMENTED; TESTED | `test_prediction_api` (32) |
 | V-09 | Web Labs views (Today, Tomorrow, detail, exits, performance) | IMPLEMENTED; TESTED | web `PredictionPagesTests` (15) |
 | V-10 | Event-aware and catalyst setups (re-rating, surprise, business update) | BLOCKED | needs an event provider and historical consensus |
-| V-11 | Calibrated confidence | DEFERRED | after sufficient holdout outcomes |
+| V-11 | Calibrated confidence | DEFERRED | after enough holdout outcomes; `confidence` stays null |
+| V-12 | **Negative backtest** (see P2 below) | VERIFIED; v2 **stays in shadow**; promotion gate not met | `docs/research/PREDICTION_V2_BACKTEST_2026-10.md` |
+| V-13 | Scheduling of v2 jobs | IMPLEMENTED; TESTED; inactive | O-01 |
+
+## Backtest investigation (P2)
+
+| ID | Finding | Status | Evidence |
+|---|---|---|---|
+| P2-01 | **Horizon misalignment:** `fwd()` stepped along each stock's own bars, so a missing bar stretched a "1-session" outcome over 2+ market sessions | VERIFIED; IMPLEMENTED; TESTED | `68640a0`; `test_backtest_horizon_follows_the_market_calendar_not_the_stocks_own_bars`; counts in `backtest_analysis.json` `alignment_audit` |
+| P2-02 | Look-ahead | VERIFIED **absent**: synthetic future-shock test plus a real-data recompute of sampled decisions from truncated data | `test_backtest_is_chronological_embargoed_and_leak_free`; `backtest_analysis.json` `lookahead_check` |
+| P2-03 | Naive intervals treat same-day trades as independent | IMPLEMENTED; TESTED | session-clustered bootstrap (`test_backtest_regime_breakdown_and_clustered_interval`) |
+| P2-04 | Results by setup, direction, sector, regime, liquidity and 1/3/5 horizon, against baselines | IMPLEMENTED | `scripts/research/backtest_v2_analysis.py`, `backtest_analysis.json`, `docs/research/PREDICTION_V2_BACKTEST_2026-10.md` |
+| P2-05 | Conclusion | see the backtest document: **no edge after costs at any horizon; not promoted** | — |
 
 ## Top Candidates consistency
 
 | ID | Finding | Status | Evidence |
 |---|---|---|---|
-| T-01 | Ranking score versus refreshed current price: already separated in `85c7eab` (frozen reference price, separate current price and timestamps) | VERIFIED (no defect) | existing tests |
-| T-02 | No signal when the stored ranking is stale, and no label when the reference price is a fallback | IMPLEMENTED; TESTED | backend `ranking_freshness`, `reference_price_source`, `run_id` (additive; mobile contract still met); web banner + note (`Top_candidates_flags_a_stale_ranking_*`) |
+| T-01 | Ranking score vs refreshed current price: already separated in `85c7eab` | VERIFIED (no defect) | existing tests |
+| T-02 | No signal when the stored ranking is stale; no label for a fallback reference price | IMPLEMENTED; TESTED | backend `ranking_freshness`, `reference_price_source`, `run_id` (additive; mobile fixture still served: `test_mobile_contract_fixture_fields_are_still_served`); web banner and note |
+| T-03 | In the week of 5–9 Oct, Top Candidates served the 1 Oct ranking for 5 sessions (BEHIND, then STALE) with no indication | VERIFIED (local) | `case_evidence_2026_10.json` `audit.sessions` |
 
 ## October 2026 case review (`docs/research/WEEKLY_CASES_2026-10.md`)
 
 | ID | Case | Status |
 |---|---|---|
-| C-01 | Canara Bank: rank 1 of 156, score 78.3 and all components match the 30 Sep reproduction; the live 3 Oct run also ranked it 1 (77.0). Top-10 in **24 of 39** snapshots (not 24/28). No qualifying short-term move within 5 sessions | VERIFIED (data, history); production snapshot BLOCKED |
-| C-02 | ITC, Trent, Titan, CPCL: price and volume moves verified; catalyst publication and ingestion times unavailable | Prices VERIFIED; timing BLOCKED |
-| C-03 | Formal directional false positives and false negatives for the week cannot be computed (no frozen directional predictions existed) | VERIFIED limitation |
+| C-01 | Canara Bank: live run 3 Oct 14:50 IST, rank 1 of 157, score 77.0 (quality 100, valuation 83.3, financial health 100, trend 8.3). Fallback reference ₹118.36. +1.04% in 5 sessions vs Bank Nifty +1.48%; no qualifying move. Class: **coincidental positive outcome**; an early-signal success is impossible for v1. Top 10 in 24 of 39 month-end snapshots | VERIFIED (local DB, Yahoo); production snapshot BLOCKED |
+| C-02 | Trent (gapped in at the 6 Oct open), Titan (7 Oct open), ITC (built during 5 Oct), CPCL (built during 7 Oct; reversal 8 Oct): timing from 5-minute bars | Market timing VERIFIED; publication and ingestion times BLOCKED |
+| C-03 | Formal false positives / negatives for the week | NOT_REPRODUCIBLE: no frozen directional predictions existed. A v2 simulation is reported separately and labelled as such |
+| C-04 | 47 material stock-days across 37 stocks; 1 in v1 top 20; 17 v1-ineligible; 8 outside the universe. Revises the earlier ad-hoc "38 / 33" | VERIFIED (reproducible script) |
+| C-05 | Original 5–9 Oct experiment reports and their exact claims | NOT_REPRODUCIBLE (not available to this review) |
 
 ## Branches and integration
 
 | ID | Finding | Status |
 |---|---|---|
-| B-01 | Remote `origin/claude/stocklens-auth-security-hardening-qczhnr` (d8d3c6e, 5 Oct, 31 files) adds an **equivalent** engine-run guard (`c3f9d8e0a4b2`, after `b7e4c2a91d35`) whose migration **automatically marks duplicate RUNNING runs FAILED** (data change without approval). Integrating both branches gives two Alembic heads | VERIFIED; integration decision REQUIRES_APPROVAL. Recommendation: keep the non-destructive `4e6773a9e7db` (idempotent if the index exists); drop or rewrite `c3f9d8e0a4b2` on that branch; add an Alembic merge revision |
-| B-02 | Local `agents/*` branches (5) are fully contained in `main`; 2 of their worktrees have 1 uncommitted file each | VERIFIED; untouched (no deletion) |
+| B-01 | Remote `origin/claude/stocklens-auth-security-hardening-qczhnr` (`d8d3c6e`) adds an equivalent engine-run guard (`c3f9d8e0a4b2`) that **auto-marks duplicate RUNNING runs FAILED**. Combining it with v2 gave **two Alembic heads**, so `alembic upgrade head` would fail on deploy | VERIFIED; **reconciled on `review/stocklens-integration`**: the auth commit is cherry-picked with `-x` (original author kept); `c3f9d8e0a4b2` is dropped, `b7e4c2a91d35` re-parented onto `b78f20585037`, giving one head; upgrade / downgrade / re-upgrade / `alembic check` clean; full suite passing. The remote branch itself is untouched. Merging: REQUIRES_APPROVAL |
+| B-02 | Local `agents/*` branches (5) are contained in `main`; 2 of their worktrees have 1 uncommitted file each | VERIFIED; untouched |
+| B-03 | The auth commit adds `GOOGLE_ALLOWED_AUDIENCES` and `FRONTEND_BASE_URL` (both `sync: false`, no values) to `render.yaml` | VERIFIED; kept as part of the security fix; takes effect only on blueprint sync after merge: REQUIRES_APPROVAL |
+| B-04 | Commit `c87c431` (test isolation) also contains the `render.yaml` restore and the template removal; both were already staged when it was made | VERIFIED; documented here. Not amended (no history rewrite) |
+| B-05 | The user's draft `.github/workflows/daily-ranking.yml` and `tests/test_github_actions_workflow.py` stay **untracked and uncommitted** | VERIFIED |
+
+## Testing and environment
+
+| ID | Finding | Status |
+|---|---|---|
+| E-1 | `test_branding::test_app_config_and_onboarding_use_the_brand` read the developer's `storage/app.db` (failed on every clean checkout, including `main`) | IMPLEMENTED; TESTED: isolated in-memory database (`c87c431`) |
+| E-2 | Streamlit navigation tests started a real background market scan (prices, news, FinBERT download) in threads outliving the test run | IMPLEMENTED; TESTED: scan starter stubbed (`c87c431`) |
+| E-3 | Mobile contract fixture test skips when the mobile repository is not checked out beside the backend | VERIFIED (by design); it runs in this workspace layout |
+| P-01 | Migrations have not been run on PostgreSQL in this work (Docker Desktop not running; no local server). The auth session reported PostgreSQL 16 verification of its own migrations | BLOCKED locally; the `postgresql_where` and `sqlite_where` clauses are identical. Recommend a PostgreSQL run before any production migration |
 
 ## Discovered and fixed during implementation
 
@@ -93,4 +134,6 @@ Test IDs:
 | D-02 | A FAILED v2 snapshot blocked the same day's retry | The failed run releases its key; attempts capped by the slot |
 | D-03 | Exit engine lacked the event-day levels; `from_state` was stale in replay | Fixed (`exits`, `outcomes`) |
 | D-04 | `summarize()` crashed on empty MFE lists; `sector_rs_5` key missing below 3 peers | Fixed (tests) |
-| D-05 | ORM instance expired after an audit commit, so the API returned `{}` | Serialize before commit (`test_admin_event_review_keeps_the_original`) |
+| D-05 | ORM instance expired after an audit commit, so the API returned `{}` | Serialize before commit |
+| D-06 | Backtest horizon misalignment | P2-01 |
+| D-07 | Two exit reason codes untested | V-05 |
