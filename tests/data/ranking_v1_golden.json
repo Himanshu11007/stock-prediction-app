@@ -1,0 +1,374 @@
+{
+ "fqvf": {
+  "expensive_levered": {
+   "counts": {
+    "FAIL": 1,
+    "NOT_AVAILABLE": 5,
+    "PASS": 10,
+    "WARNING": 2
+   },
+   "coverage": 0.688,
+   "score": 81.8,
+   "statuses": [
+    "PASS",
+    "PASS",
+    "PASS",
+    "PASS",
+    "PASS",
+    "WARNING",
+    "NOT_AVAILABLE",
+    "NOT_AVAILABLE",
+    "NOT_AVAILABLE",
+    "WARNING",
+    "PASS",
+    "PASS",
+    "FAIL",
+    "PASS",
+    "PASS",
+    "PASS",
+    "NOT_AVAILABLE",
+    "NOT_AVAILABLE"
+   ]
+  },
+  "sparse": {
+   "counts": {
+    "FAIL": 0,
+    "NOT_AVAILABLE": 17,
+    "PASS": 0,
+    "WARNING": 1
+   },
+   "coverage": 0.0,
+   "score": null,
+   "statuses": [
+    "NOT_AVAILABLE",
+    "NOT_AVAILABLE",
+    "NOT_AVAILABLE",
+    "WARNING",
+    "NOT_AVAILABLE",
+    "NOT_AVAILABLE",
+    "NOT_AVAILABLE",
+    "NOT_AVAILABLE",
+    "NOT_AVAILABLE",
+    "NOT_AVAILABLE",
+    "NOT_AVAILABLE",
+    "NOT_AVAILABLE",
+    "NOT_AVAILABLE",
+    "NOT_AVAILABLE",
+    "NOT_AVAILABLE",
+    "NOT_AVAILABLE",
+    "NOT_AVAILABLE",
+    "NOT_AVAILABLE"
+   ]
+  },
+  "strong": {
+   "counts": {
+    "FAIL": 0,
+    "NOT_AVAILABLE": 4,
+    "PASS": 14,
+    "WARNING": 0
+   },
+   "coverage": 0.75,
+   "score": 100.0,
+   "statuses": [
+    "PASS",
+    "PASS",
+    "PASS",
+    "PASS",
+    "PASS",
+    "PASS",
+    "NOT_AVAILABLE",
+    "NOT_AVAILABLE",
+    "NOT_AVAILABLE",
+    "PASS",
+    "PASS",
+    "PASS",
+    "PASS",
+    "PASS",
+    "PASS",
+    "PASS",
+    "PASS",
+    "NOT_AVAILABLE"
+   ]
+  }
+ },
+ "ranking": {
+  "G00.NS": {
+   "components": {
+    "financial_health": 100.0,
+    "market_regime": 75.0,
+    "ml_signal": null,
+    "momentum": 0.0,
+    "quality": 100.0,
+    "risk": 100.0,
+    "sector_outlook": null,
+    "technical_trend": 25.0,
+    "valuation": 100.0
+   },
+   "coverage": 0.95,
+   "eligible": true,
+   "ineligible_reasons": [],
+   "rank": 5,
+   "score": 80.3
+  },
+  "G01.NS": {
+   "components": {
+    "financial_health": 50.0,
+    "market_regime": 70.0,
+    "ml_signal": null,
+    "momentum": 7.7,
+    "quality": 100.0,
+    "risk": 92.3,
+    "sector_outlook": null,
+    "technical_trend": 37.5,
+    "valuation": 75.0
+   },
+   "coverage": 0.95,
+   "eligible": true,
+   "ineligible_reasons": [],
+   "rank": 8,
+   "score": 68.2
+  },
+  "G02.NS": {
+   "components": {
+    "financial_health": null,
+    "market_regime": 65.0,
+    "ml_signal": null,
+    "momentum": 15.4,
+    "quality": null,
+    "risk": 84.6,
+    "sector_outlook": null,
+    "technical_trend": 50.0,
+    "valuation": null
+   },
+   "coverage": 0.35,
+   "eligible": false,
+   "ineligible_reasons": [
+    "FQVF coverage 0% below 50%",
+    "score coverage 35% below 60%"
+   ],
+   "rank": null,
+   "score": 52.1
+  },
+  "G03.NS": {
+   "components": {
+    "financial_health": 100.0,
+    "market_regime": 75.0,
+    "ml_signal": null,
+    "momentum": 23.1,
+    "quality": 100.0,
+    "risk": 76.9,
+    "sector_outlook": null,
+    "technical_trend": 62.5,
+    "valuation": 100.0
+   },
+   "coverage": 0.95,
+   "eligible": true,
+   "ineligible_reasons": [],
+   "rank": 2,
+   "score": 84.2
+  },
+  "G04.NS": {
+   "components": {
+    "financial_health": 50.0,
+    "market_regime": 70.0,
+    "ml_signal": null,
+    "momentum": 30.8,
+    "quality": 100.0,
+    "risk": 69.2,
+    "sector_outlook": null,
+    "technical_trend": 75.0,
+    "valuation": 75.0
+   },
+   "coverage": 0.95,
+   "eligible": true,
+   "ineligible_reasons": [],
+   "rank": 6,
+   "score": 72.1
+  },
+  "G05.NS": {
+   "components": {
+    "financial_health": null,
+    "market_regime": 65.0,
+    "ml_signal": null,
+    "momentum": 38.5,
+    "quality": null,
+    "risk": 61.5,
+    "sector_outlook": null,
+    "technical_trend": 25.0,
+    "valuation": null
+   },
+   "coverage": 0.35,
+   "eligible": false,
+   "ineligible_reasons": [
+    "FQVF coverage 0% below 50%",
+    "score coverage 35% below 60%"
+   ],
+   "rank": null,
+   "score": 45.0
+  },
+  "G06.NS": {
+   "components": {
+    "financial_health": 100.0,
+    "market_regime": 75.0,
+    "ml_signal": null,
+    "momentum": 46.2,
+    "quality": 100.0,
+    "risk": 53.8,
+    "sector_outlook": null,
+    "technical_trend": 37.5,
+    "valuation": 100.0
+   },
+   "coverage": 0.95,
+   "eligible": true,
+   "ineligible_reasons": [],
+   "rank": 4,
+   "score": 81.6
+  },
+  "G07.NS": {
+   "components": {
+    "financial_health": 50.0,
+    "market_regime": 70.0,
+    "ml_signal": null,
+    "momentum": 53.8,
+    "quality": 100.0,
+    "risk": 46.2,
+    "sector_outlook": null,
+    "technical_trend": 50.0,
+    "valuation": 75.0
+   },
+   "coverage": 0.95,
+   "eligible": false,
+   "ineligible_reasons": [
+    "20-day average volume below 500,000 (liquidity)"
+   ],
+   "rank": null,
+   "score": 69.5
+  },
+  "G08.NS": {
+   "components": {
+    "financial_health": null,
+    "market_regime": 65.0,
+    "ml_signal": null,
+    "momentum": 61.5,
+    "quality": null,
+    "risk": 38.5,
+    "sector_outlook": null,
+    "technical_trend": 62.5,
+    "valuation": null
+   },
+   "coverage": 0.35,
+   "eligible": false,
+   "ineligible_reasons": [
+    "FQVF coverage 0% below 50%",
+    "score coverage 35% below 60%"
+   ],
+   "rank": null,
+   "score": 55.7
+  },
+  "G09.NS": {
+   "components": {
+    "financial_health": 100.0,
+    "market_regime": 75.0,
+    "ml_signal": null,
+    "momentum": 69.2,
+    "quality": 100.0,
+    "risk": 30.8,
+    "sector_outlook": null,
+    "technical_trend": 75.0,
+    "valuation": 100.0
+   },
+   "coverage": 0.95,
+   "eligible": true,
+   "ineligible_reasons": [],
+   "rank": 1,
+   "score": 85.5
+  },
+  "G10.NS": {
+   "components": {
+    "financial_health": 50.0,
+    "market_regime": 70.0,
+    "ml_signal": null,
+    "momentum": 76.9,
+    "quality": 100.0,
+    "risk": 23.1,
+    "sector_outlook": null,
+    "technical_trend": 25.0,
+    "valuation": 75.0
+   },
+   "coverage": 0.95,
+   "eligible": true,
+   "ineligible_reasons": [],
+   "rank": 9,
+   "score": 66.8
+  },
+  "G11.NS": {
+   "components": {
+    "financial_health": null,
+    "market_regime": 65.0,
+    "ml_signal": null,
+    "momentum": 84.6,
+    "quality": null,
+    "risk": 15.4,
+    "sector_outlook": null,
+    "technical_trend": 37.5,
+    "valuation": null
+   },
+   "coverage": 0.35,
+   "eligible": false,
+   "ineligible_reasons": [
+    "market data stale",
+    "FQVF coverage 0% below 50%",
+    "score coverage 35% below 60%"
+   ],
+   "rank": null,
+   "score": 48.6
+  },
+  "G12.NS": {
+   "components": {
+    "financial_health": 100.0,
+    "market_regime": 75.0,
+    "ml_signal": null,
+    "momentum": 92.3,
+    "quality": 100.0,
+    "risk": 7.7,
+    "sector_outlook": null,
+    "technical_trend": 50.0,
+    "valuation": 100.0
+   },
+   "coverage": 0.95,
+   "eligible": true,
+   "ineligible_reasons": [],
+   "rank": 3,
+   "score": 82.9
+  },
+  "G13.NS": {
+   "components": {
+    "financial_health": 50.0,
+    "market_regime": 70.0,
+    "ml_signal": null,
+    "momentum": 100.0,
+    "quality": 100.0,
+    "risk": 0.0,
+    "sector_outlook": null,
+    "technical_trend": 62.5,
+    "valuation": 75.0
+   },
+   "coverage": 0.95,
+   "eligible": true,
+   "ineligible_reasons": [],
+   "rank": 7,
+   "score": 70.8
+  }
+ },
+ "weights": {
+  "financial_health": 15.0,
+  "market_regime": 5.0,
+  "ml_signal": 0.0,
+  "momentum": 10.0,
+  "quality": 25.0,
+  "risk": 10.0,
+  "sector_outlook": 5.0,
+  "technical_trend": 10.0,
+  "valuation": 20.0
+ }
+}

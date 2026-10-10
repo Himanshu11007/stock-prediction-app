@@ -29,6 +29,8 @@ from concurrent.futures import ThreadPoolExecutor
 from datetime import date, datetime, timedelta, timezone
 from typing import Any, Optional
 
+from sqlalchemy.exc import IntegrityError
+
 from sqlmodel import Session, select
 
 from config import (ENGINE_RUN_ALLOW_ML, ENGINE_RUN_MAX_WORKERS, ENGINE_RUN_MIN_SCORED_RATIO, FQVF_ENGINE_VERSION,
@@ -112,7 +114,15 @@ def create_run(session: Session, *, kind: str, triggered_by: Optional[int], conf
                     triggered_by=triggered_by, engine_version=RANKING_ENGINE_VERSION,
                     fqvf_version=FQVF_ENGINE_VERSION, config=config, errors=[])
     session.add(run)
-    session.commit()
+    try:
+        session.commit()
+    except IntegrityError:
+        # Another process started a RANKING run between the check above and
+        # this insert; the database's partial unique index rejected ours.
+        session.rollback()
+        if kind == "RANKING":
+            raise RunInProgressError("An engine run is already in progress") from None
+        raise
     session.refresh(run)
     return run
 

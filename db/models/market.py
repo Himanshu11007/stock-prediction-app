@@ -18,7 +18,7 @@ status and reason. Snapshots are append-only; "latest" is the newest row.
 from datetime import datetime, timezone
 from typing import Any, Optional
 
-from sqlalchemy import JSON, Column, Index
+from sqlalchemy import JSON, Column, Index, text
 from sqlmodel import Field, SQLModel, UniqueConstraint
 
 
@@ -120,8 +120,21 @@ class MarketRegimeSnapshot(SQLModel, table=True):
 RUN_STATUSES = ("RUNNING", "COMPLETED", "COMPLETED_WITH_ERRORS", "FAILED")
 
 
+# At most one RANKING run may be RUNNING at a time, enforced by the database
+# (two processes - web admin, scheduler, external runner - cannot both start
+# one). SINGLE-stock analyses are not restricted here; they have their own
+# concurrency limit in engine_runs/service.py.
+ONE_RUNNING_RANKING_INDEX = "uq_engine_runs_one_running_ranking"
+ONE_RUNNING_RANKING_WHERE = "status = 'RUNNING' AND kind = 'RANKING'"
+
+
 class EngineRun(SQLModel, table=True):
     __tablename__ = "engine_runs"
+    __table_args__ = (
+        Index(ONE_RUNNING_RANKING_INDEX, "kind", unique=True,
+              sqlite_where=text(ONE_RUNNING_RANKING_WHERE),
+              postgresql_where=text(ONE_RUNNING_RANKING_WHERE)),
+    )
 
     id: Optional[int] = Field(default=None, primary_key=True)
     run_id: str = Field(unique=True, index=True)

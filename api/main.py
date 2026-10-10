@@ -48,8 +48,8 @@ from fastapi.openapi.docs import get_redoc_html, get_swagger_ui_html
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
-from config import (ENABLE_DEBUG_LOGS, IS_PRODUCTION, CORS_ALLOWED_ORIGINS, PRODUCT_DESCRIPTION, PRODUCT_NAME,
-                    PRODUCT_TAGLINE)
+from config import (API_DOCS_ENABLED, ENABLE_DEBUG_LOGS, IS_PRODUCTION, CORS_ALLOWED_ORIGINS, PRODUCT_DESCRIPTION,
+                    PRODUCT_NAME, PRODUCT_TAGLINE)
 
 # ── Logging setup — reuses the existing centralized logger, same config ──────
 configure_logging(debug=ENABLE_DEBUG_LOGS)
@@ -67,6 +67,9 @@ app = FastAPI(
     version="0.1.0",
     docs_url=None,     # served below with the StockLens favicon
     redoc_url=None,
+    # /openapi.json, /docs and /redoc exist only when API_DOCS_ENABLED (off by
+    # default in production: the schema lists every route, admin ones included).
+    openapi_url="/openapi.json" if API_DOCS_ENABLED else None,
 )
 
 # Brand assets (favicon, app icons, social image) generated from the approved
@@ -75,16 +78,16 @@ BRANDING_DIR = Path(__file__).resolve().parents[1] / "branding"
 app.mount("/static/branding", StaticFiles(directory=str(BRANDING_DIR)), name="branding")
 
 
-@app.get("/docs", include_in_schema=False)
-def swagger_docs():
-    return get_swagger_ui_html(openapi_url=app.openapi_url, title=f"{PRODUCT_NAME} API - Docs",
-                               swagger_favicon_url="/static/branding/favicon-32.png")
+if API_DOCS_ENABLED:
+    @app.get("/docs", include_in_schema=False)
+    def swagger_docs():
+        return get_swagger_ui_html(openapi_url=app.openapi_url, title=f"{PRODUCT_NAME} API - Docs",
+                                   swagger_favicon_url="/static/branding/favicon-32.png")
 
-
-@app.get("/redoc", include_in_schema=False)
-def redoc_docs():
-    return get_redoc_html(openapi_url=app.openapi_url, title=f"{PRODUCT_NAME} API - ReDoc",
-                          redoc_favicon_url="/static/branding/favicon-32.png")
+    @app.get("/redoc", include_in_schema=False)
+    def redoc_docs():
+        return get_redoc_html(openapi_url=app.openapi_url, title=f"{PRODUCT_NAME} API - ReDoc",
+                              redoc_favicon_url="/static/branding/favicon-32.png")
 
 
 @app.get("/favicon.ico", include_in_schema=False)
@@ -118,6 +121,26 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+# ── Security headers on every response ───────────────────────────────────────
+# JSON API responses: no framing, no MIME sniffing, HTTPS only (HSTS is
+# ignored by browsers on plain-HTTP development servers). No CSP here: API
+# responses render no HTML; the docs pages (development) load Swagger assets.
+SECURITY_HEADERS = {
+    "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
+    "X-Content-Type-Options": "nosniff",
+    "X-Frame-Options": "DENY",
+    "Referrer-Policy": "strict-origin-when-cross-origin",
+}
+
+
+@app.middleware("http")
+async def security_headers(request: Request, call_next):
+    response = await call_next(request)
+    for name, value in SECURITY_HEADERS.items():
+        response.headers.setdefault(name, value)
+    return response
 
 
 # ── Request/response logging middleware ───────────────────────────────────────

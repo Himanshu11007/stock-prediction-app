@@ -80,6 +80,11 @@ LOG_FILE         = LOG_DIR / "app.log"
 APP_ENV = os.environ.get("APP_ENV", "development").strip().lower()
 IS_PRODUCTION = APP_ENV == "production"
 
+# Interactive API documentation (/docs, /redoc, /openapi.json). Off by default
+# in production (it lists every route, including admin ones); on elsewhere.
+# API_DOCS_ENABLED=true|false overrides.
+API_DOCS_ENABLED = os.environ.get("API_DOCS_ENABLED", "false" if IS_PRODUCTION else "true").strip().lower() == "true"
+
 # Comma-separated list of allowed browser origins. The mobile app is not a
 # browser and is unaffected by CORS; this only matters for web clients.
 # Development default "*"; production must list explicit origins.

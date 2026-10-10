@@ -7,7 +7,7 @@ stocks. Two kinds:
 
 | Kind | Started by | Scope | Concurrency |
 |---|---|---|---|
-| `RANKING` | Admin (`POST /admin/engine-runs`, Engine Runs page) | Large/Mid/Small Cap universe of active, tradable, analysis-enabled stocks (or a symbol list / limit) | one at a time: in-process lock + RUNNING-row check → 409 |
+| `RANKING` | Admin (`POST /admin/engine-runs`, Engine Runs page) | Large/Mid/Small Cap universe of active, tradable, analysis-enabled stocks (or a symbol list / limit) | one at a time, across all processes: RUNNING-row check plus a database partial unique index (`uq_engine_runs_one_running_ranking`) → 409 |
 | `SINGLE` | Any user (`POST /stocks/{symbol}/analysis/refresh`) | one stock, ranked against the latest full run's universe | up to 2 concurrently; not blocked by a RANKING run |
 
 Every run records `run_id`, `kind`, `status` (`RUNNING`, `COMPLETED`,
@@ -27,6 +27,25 @@ continues. A provider batch failure loses only that batch's prices. Only an
 infrastructure failure marks the whole run `FAILED` (with the error).
 Workers compute; all database writes happen sequentially in one session.
 A `RUNNING` row older than 3 hours is marked `FAILED` (abandoned).
+
+### Overlapping runs
+
+The database allows only one `RUNNING` RANKING run at a time (migration
+`4e6773a9e7db`). If two processes start one together, exactly one succeeds;
+the other gets the usual "already in progress" response (HTTP 409 / job
+`SKIPPED`).
+
+If that migration stops with "N RANKING runs are RUNNING", older code has
+left overlapping runs. Nothing was changed. To resolve:
+
+1. List them (read-only):
+   `SELECT run_id, started_at, processed, total FROM engine_runs WHERE status = 'RUNNING' AND kind = 'RANKING' ORDER BY started_at;`
+2. If a run is older than 3 hours, starting any ranking run marks it `FAILED`
+   ("abandoned") automatically. Otherwise wait for the runs to finish.
+3. Only with an administrator's approval: mark the stale ones `FAILED`, with
+   an error note and `finished_at`. Never delete run rows; their results are
+   history.
+4. Run the upgrade again.
 
 Fundamentals younger than `FUNDAMENTALS_TTL_HOURS` (24) are reused unless
 `refresh_fundamentals` is set.
