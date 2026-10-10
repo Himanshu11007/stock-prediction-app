@@ -140,15 +140,22 @@ session, state). **No notification is sent.**
 
 - Chronological development / validation / holdout splits (60/20/20), with
   an embargo of 5 + horizon sessions at each boundary.
-- Entry at the cutoff close, with costs at 10, 15 and 20 bps.
+- Entry at the cutoff close; exit at the close of the h-th **NIFTY** session
+  after it (h = 1, 3, 5). Costs 10, 15 and 20 bps plus 5 bps slippage.
 - **Baselines:**
   - always neutral;
   - previous-session direction;
   - sector direction;
   - volatility-matched random (same number of calls per session, seeded);
-  - v1 top-20 from the month-end validation snapshots.
-- The latest report is `scripts/research/output/prediction_v2/backtest_report.json`;
-  its interpretation is in `docs/research/PREDICTION_V2_BACKTEST_2026-10.md`.
+  - v1 top-20 from the month-end validation snapshots;
+  - always UP (market drift).
+- Session-clustered bootstrap intervals; breakdowns by setup, direction,
+  sector, regime and liquidity.
+- The latest report is `scripts/research/output/prediction_v2/backtest_analysis.json`
+  (`scripts/research/backtest_v2_analysis.py`); the interpretation is in
+  `docs/research/PREDICTION_V2_BACKTEST_2026-10.md`. **Result: no edge after
+  costs at 1, 3 or 5 sessions; not promoted.** `backtest_report.json` is the
+  earlier single-horizon run (superseded).
 - **Limitations:**
   - survivorship bias (today's universe is used for the whole period);
   - Yahoo daily data;
@@ -197,7 +204,7 @@ All routes require ADMIN unless `PREDICTION_V2_PUBLIC=true`.
 
 1. **Enable.** Apply migrations (`alembic upgrade head`), then seed the v2
    universe once (`prediction_v2.universe.seed_from_v1`, or the admin POST),
-   then choose a scheduler (`docs/OPERATIONS_AND_SECURITY.md`).
+   then enable the scheduler (`docs/SCHEDULER.md`; requires approval).
 2. **Flags:**
    - `PREDICTION_V2_PUBLIC` (default false);
    - `PREDICTION_V2_INTRADAY_ENABLED` (default false; only with an approved

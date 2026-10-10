@@ -42,8 +42,9 @@ Rules:
      switch `DATABASE_URL`, then delete the old database.
    Either way this is a planned change with a short write freeze.
 4. Restrict external access (Render → `stocklens-db` → **Access Control**)
-   to the IPs that need it: your laptop, plus GitHub's runners if GitHub
-   Actions becomes the scheduler.
+   to the IPs that need it, such as your laptop. The proposed GitHub Actions
+   scheduler calls the API only and never connects to the database
+   (docs/SCHEDULER.md), so GitHub's runners need no database access.
 
 ### 1.2 NewsAPI key: four separate steps
 
