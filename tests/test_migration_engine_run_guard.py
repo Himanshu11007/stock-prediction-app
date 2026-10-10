@@ -58,7 +58,7 @@ def db_at_previous(tmp_path):
 
 def test_clean_database_upgrade_downgrade_upgrade(tmp_path):
     db = tmp_path / "clean.db"
-    up = alembic(db, "upgrade", "head")
+    up = alembic(db, "upgrade", GUARD)
     assert up.returncode == 0, up.stderr[-2000:]
     assert version(db) == GUARD
     sql = guard_index(db)
@@ -66,8 +66,9 @@ def test_clean_database_upgrade_downgrade_upgrade(tmp_path):
     down = alembic(db, "downgrade", "-1")
     assert down.returncode == 0, down.stderr[-2000:]
     assert version(db) == PREVIOUS and guard_index(db) is None
-    again = alembic(db, "upgrade", "head")
+    again = alembic(db, "upgrade", GUARD)
     assert again.returncode == 0 and guard_index(db)
+    assert alembic(db, "upgrade", "head").returncode == 0 and guard_index(db)    # later migrations keep it
 
 
 def test_models_and_migrations_agree(tmp_path):
@@ -84,7 +85,7 @@ def test_upgrade_with_one_running_run_succeeds_and_keeps_the_run(db_at_previous)
     add_run(db_at_previous, "S-1", kind="SINGLE")
     add_run(db_at_previous, "S-2", kind="SINGLE")
     before = rows(db_at_previous)
-    r = alembic(db_at_previous, "upgrade", "head")
+    r = alembic(db_at_previous, "upgrade", GUARD)
     assert r.returncode == 0, r.stderr[-2000:]
     assert version(db_at_previous) == GUARD and guard_index(db_at_previous)
     assert rows(db_at_previous) == before                              # no data modified
@@ -125,6 +126,6 @@ def test_upgrade_is_a_no_op_when_the_index_already_exists(db_at_previous):
     add_run(db_at_previous, "R-A")
     add_run(db_at_previous, "R-B", status="COMPLETED")
     before = rows(db_at_previous)
-    r = alembic(db_at_previous, "upgrade", "head")
+    r = alembic(db_at_previous, "upgrade", GUARD)
     assert r.returncode == 0, r.stderr[-2000:]
     assert version(db_at_previous) == GUARD and rows(db_at_previous) == before
