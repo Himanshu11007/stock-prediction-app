@@ -321,7 +321,19 @@ def test_assessment_uses_only_what_was_available_before_the_cutoff(news_db):
     assert expired.status == "NO_NEWS"                         # catalyst expired
 
 
-def test_inferred_exposure_alone_with_unvalidated_channel_is_not_decisive(news_db):
+def test_supported_channel_with_a_credible_report_is_decisive(news_db, monkeypatch):
+    monkeypatch.setattr(transmission, "validation_status", lambda: {"H-CRUDE-OMC": {"status": "SUPPORTED"}})
+    _ingest(news_db, [art(1, "Brent crude surges 6% after attack on tankers")], T0 + dt.timedelta(minutes=5))
+    with Session(news_db) as s:
+        a = impact.assess_stock(s, "IOC.NS", T0 + dt.timedelta(hours=1))
+        moved = impact.assess_stock(s, "IOC.NS", T0 + dt.timedelta(hours=1), price_move=lambda since: (-0.05, 0.02))
+    assert a.status == "DIRECTIONAL" and a.direction == "DOWN" and a.evidence[0].hypothesis_id == "H-CRUDE-OMC"
+    assert "[SUPPORTED]" in a.evidence[0].mechanism
+    assert moved.status == "NEUTRAL" and "PRICED_IN" in moved.evidence[0].flags          # already fell 2.5 ATR
+
+
+def test_inferred_exposure_alone_with_unvalidated_channel_is_not_decisive(news_db, monkeypatch):
+    monkeypatch.setattr(transmission, "validation_status", lambda: {})                  # every channel UNVALIDATED
     _ingest(news_db, [art(1, "Brent crude surges 6% after attack on tankers")], T0 + dt.timedelta(minutes=5))
     with Session(news_db) as s:
         a = impact.assess_stock(s, "IOC.NS", T0 + dt.timedelta(hours=1))
