@@ -8,7 +8,7 @@ stored engine output.
 """
 from __future__ import annotations
 
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from typing import Any, Optional
 
 from sqlmodel import Session, select
@@ -228,14 +228,49 @@ def reference_prices(session: Session, results: list[StockAnalysisResult]) -> di
         for r in rs:
             s = snaps.get(r.symbol)
             if s is not None and s.reference_price is not None:
-                out[r.symbol] = {"reference_price": s.reference_price, "reference_price_as_of": s.reference_date}
+                out[r.symbol] = {"reference_price": s.reference_price, "reference_price_as_of": s.reference_date,
+                                 "reference_price_source": "ranking_snapshot"}
                 continue
             m = session.exec(select(MarketSnapshot).where(MarketSnapshot.symbol == r.symbol,
                                                           MarketSnapshot.fetched_at <= r.computed_at)
                              .order_by(MarketSnapshot.fetched_at.desc())).first()
             out[r.symbol] = {"reference_price": m.close if m else None,
-                             "reference_price_as_of": m.as_of_date if m else None}
+                             "reference_price_as_of": m.as_of_date if m else None,
+                             "reference_price_source": "market_snapshot_at_analysis" if m and m.close is not None
+                             else None}
     return out
+
+
+def ranking_freshness(ranking_date: Optional[str], holidays: list[str],
+                      now: Optional[datetime] = None) -> dict:
+    """How far the stored ranking is behind the last completed NSE session.
+
+    CURRENT  ranking of the last completed session
+    BEHIND   one session behind (normal until the day's ranking job has run)
+    STALE    two or more sessions behind (the daily job has been missed)
+    Informational only: the ranking itself is never changed or recalculated."""
+    from utils.market_session import DAILY_BAR_FINAL_AFTER, is_trading_day, now_ist
+    if not ranking_date:
+        return {"status": "UNAVAILABLE", "ranking_date": None, "latest_completed_session": None,
+                "sessions_behind": None, "detail": "No completed ranking yet."}
+    local = now_ist(now)
+    latest = local.date()
+    if not (is_trading_day(latest, holidays) and local.time() >= DAILY_BAR_FINAL_AFTER):
+        latest -= timedelta(days=1)
+        while not is_trading_day(latest, holidays):
+            latest -= timedelta(days=1)
+    ranked = date.fromisoformat(ranking_date)
+    behind, d = 0, ranked
+    while d < latest and behind < 30:
+        d += timedelta(days=1)
+        if is_trading_day(d, holidays):
+            behind += 1
+    status = "CURRENT" if behind == 0 else ("BEHIND" if behind == 1 else "STALE")
+    detail = {"CURRENT": "Ranking of the latest completed session.",
+              "BEHIND": "Ranking is one session old; the next daily ranking has not run yet.",
+              "STALE": f"Ranking is {behind} sessions old; daily ranking runs have been missed."}[status]
+    return {"status": status, "ranking_date": ranking_date, "latest_completed_session": latest.isoformat(),
+            "sessions_behind": behind, "detail": detail}
 
 
 def market_payload(snap: Optional[MarketSnapshot]) -> Optional[dict]:

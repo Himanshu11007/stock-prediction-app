@@ -68,9 +68,11 @@ def top_investment_candidates(
     rdate = presenter.ranking_date(session, run)
     status = nse_market_status(holidays=masters.get_config(session, "market.holidays"))
     data["items"] = [presenter.candidate_payload(r, c, cap, {
-        "ranking_date": rdate, **refs.get(r.symbol, {"reference_price": None, "reference_price_as_of": None}),
+        "ranking_date": rdate, "run_id": r.run_id,
+        **refs.get(r.symbol, {"reference_price": None, "reference_price_as_of": None, "reference_price_source": None}),
         **prices.quote_payload(quotes.get(r.symbol)), "market_status": status["status"]}) for r, c in shown]
     data["ranking_date"] = rdate
+    data["ranking_freshness"] = presenter.ranking_freshness(rdate, masters.get_config(session, "market.holidays"))
     data["market_status"] = status
     data["run"] = {"run_id": run.run_id, "status": run.status, "finished_at": presenter._iso(run.finished_at),
                    "stocks_analysed": run.processed, "engine_version": run.engine_version,
