@@ -51,7 +51,6 @@ from catalysts.transmission import HYPOTHESES  # noqa: E402
 from fundamentals.provider import fetch_price_history  # noqa: E402
 from prediction_v2.performance import mean_ci, wilson  # noqa: E402
 
-DB = Path(r"C:\Python\Git\stock-prediction-app\storage\app.db")
 OUT = ROOT / "scripts" / "research" / "output" / "prediction_v2" / "factor_shock_replay.json"
 Z = 2.0
 LOOKBACK = 60
@@ -98,9 +97,14 @@ def summarize(rows: list[dict], key: str = "ret") -> dict:
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--period", default="3y")
-    ap.add_argument("--db", default=str(DB))
+    ap.add_argument("--db", help="research SQLite database (default: $STOCKLENS_RESEARCH_DB or storage/app.db)")
     args = ap.parse_args()
-    con = sqlite3.connect(f"file:{args.db}?mode=ro", uri=True)
+    from scripts.research import research_db
+    try:
+        con = research_db.connect(research_db.resolve(args.db), research_db.COMPANIES)
+    except research_db.ResearchDataError as e:
+        print(f"error: {e}", file=sys.stderr)
+        raise SystemExit(2)
     comps = list(con.execute("SELECT symbol, sector, industry FROM companies"))
     hyps = [h for h in HYPOTHESES if h.factor]
     targets: dict[str, list[tuple]] = {}

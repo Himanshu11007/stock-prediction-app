@@ -65,11 +65,11 @@ from sqlmodel import Session, SQLModel, create_engine, select  # noqa: E402
 
 from catalysts import adapters as ad, benchmark as bm, entities as ent, pipeline, providers as prov, registry  # noqa: E402
 from db.models.news import NewsArticle  # noqa: E402
+from scripts.research import research_db  # noqa: E402
 
 UTC = dt.timezone.utc
 IST = bm.IST
 OUT = ROOT / "scripts" / "research" / "output" / "prediction_v2" / "news_provider_benchmark.json"
-DB = Path(r"C:\Python\Git\stock-prediction-app\storage\app.db")
 STOP = set("""the of and to in for on a an is with by as at from its it this that are be will has have new
 press release releases statement issues issued announces announced update updates notice regarding under
 about into over amid after before india indian united states government reserve bank federal board securities
@@ -454,12 +454,18 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--out", default=str(OUT))
     ap.add_argument("--max-per-kind", type=int, default=8)
+    ap.add_argument("--db", help=f"research SQLite database for company names (default: ${research_db.ENV} or storage/app.db)")
     ap.add_argument("--resummarize", action="store_true", help="re-derive the metrics of an existing report (no network)")
     ap.add_argument("--events-from", help="reuse the ground truth (identical definitions) of a stored report")
     ap.add_argument("--providers", help="comma list: query only these providers (with --events-from: merge)")
     args = ap.parse_args()
     if args.resummarize:
         return resummarize(args.out)
+    try:
+        con = research_db.connect(research_db.resolve(args.db), research_db.COMPANIES)
+    except research_db.ResearchDataError as e:
+        print(f"error: {e}", file=sys.stderr)
+        raise SystemExit(2)
     now = dt.datetime.now(UTC)
     notes: dict = {}
     base = None
@@ -473,7 +479,6 @@ def main() -> None:
                    + market_events(now, notes, max(3, args.max_per_kind // 2)))
     only = {p.strip() for p in (args.providers or "").split(",") if p.strip()} or None
     holidays = nse_holidays()
-    con = sqlite3.connect(f"file:{DB}?mode=ro", uri=True)
     index = ent.CompanyIndex(list(con.execute("SELECT symbol, name FROM companies")))
     counters = {p: Counter() for p in ("google_news", "gdelt", "marketaux", "alphavantage", "newsapi", "publisher_rss")}
     env = os.environ

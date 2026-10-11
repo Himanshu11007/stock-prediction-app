@@ -367,6 +367,7 @@ backfill in the system temp directory, outside the repository).
 | `NSE_AUTOMATED_ACCESS_PERMISSION`, `BSE_AUTOMATED_ACCESS_PERMISSION` | written permission or licence reference; without it every exchange source refuses |
 | `NEWS_BENCHMARK_REPORT` | optional report path for the dashboard |
 | `PREDICTION_V2_NEWS_ENABLED` | news in v2 snapshots (default true; shadow) |
+| `STOCKLENS_RESEARCH_DB` (or `--db PATH`) | read-only SQLite database for the research scripts (default `storage/app.db`). A missing file, table or column stops the script with exit code 2 before any network request |
 
 ## 9. Unresolved
 

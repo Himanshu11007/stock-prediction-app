@@ -5,7 +5,14 @@ v2 engine stays in shadow; Ranking Engine v1.0 is only read).
 
   python scripts/research/news_signal_backtest.py [--months 12] [--cost 20] [--slippage 10]
                                                   [--providers google_news,gdelt,stocklens_archive]
-                                                  [--cache DIR] [--out PATH]
+                                                  [--cache DIR] [--out PATH] [--db PATH]
+                                                  [--allow-missing-archive]
+
+The research database (company names / sectors, StockLens's own news
+archive) comes from --db, else $STOCKLENS_RESEARCH_DB, else storage/app.db.
+A missing database, table or column stops the run with exit code 2 before
+any network request; --allow-missing-archive records a missing StockLens
+archive as UNAVAILABLE (with the reason) instead.
 
 Universe: the 20 large caps of catalysts.benchmark.INDIAN_ALIASES (chosen in
 advance for unambiguous headline names, not for performance).
@@ -46,11 +53,11 @@ import pandas as pd  # noqa: E402
 
 from catalysts import adapters as ad, benchmark as bm, providers as prov, replay, signal_eval as se  # noqa: E402
 from prediction_v2 import backtest  # noqa: E402
+from scripts.research import research_db  # noqa: E402
 
 UTC = dt.timezone.utc
 IST = dt.timezone(dt.timedelta(hours=5, minutes=30))
 OUT = ROOT / "scripts" / "research" / "output" / "prediction_v2" / "news_signal_backtest.json"
-DB = Path(r"C:\Python\Git\stock-prediction-app\storage\app.db")
 VALIDATION_CSV = ROOT / "scripts" / "research" / "output" / "ranking_validation" / "ranking_snapshots_production.csv"
 MACRO_QUERIES = ("RBI repo rate", "crude oil prices India", "rupee dollar", "India tariff")
 WINDOW_DAYS = 14
@@ -130,19 +137,24 @@ def collect(provider: str, start: dt.datetime, end: dt.datetime, cache: Path) ->
     return out, stats
 
 
-def own_archive() -> tuple[list[replay.ArchivedArticle], dict]:
-    con = sqlite3.connect(f"file:{DB}?mode=ro", uri=True)
+def own_archive(db: Path, allow_missing: bool = False) -> tuple[list[replay.ArchivedArticle], dict]:
+    """StockLens's own point-in-time archive. A missing or incompatible
+    archive is an error (ResearchDataError); with `allow_missing` it is
+    recorded as UNAVAILABLE with the reason - never as zero articles."""
     try:
-        rows = con.execute("SELECT provider_article_id, url, title, published_at, excerpt, source_name, ingested_at, "
-                           "corrected_at, provider FROM news_articles").fetchall()
-    except sqlite3.OperationalError as e:
-        return [], {"status": "UNAVAILABLE", "detail": str(e)[:120]}
+        con = research_db.connect(db, research_db.NEWS_ARCHIVE)
+    except research_db.ResearchDataError as e:
+        if not allow_missing:
+            raise
+        return [], {"status": "UNAVAILABLE", "articles": None, "detail": str(e)[:300]}
+    rows = con.execute("SELECT provider_article_id, url, title, published_at, excerpt, source_name, ingested_at, "
+                       "corrected_at, provider FROM news_articles").fetchall()
     out = []
     for pid, url, title, pub, exc, src, ing, cor, p in rows:
         t = lambda s: dt.datetime.fromisoformat(str(s)).replace(tzinfo=UTC) if s else None  # noqa: E731
         out.append(replay.ArchivedArticle(prov.RawArticle(pid, url, title, t(pub), exc or "", src, corrected_at=t(cor)),
                                           t(ing), p))
-    return out, {"status": "OK", "articles": len(out),
+    return out, {"status": "OK" if out else "EMPTY", "articles": len(out),
                  "first_ingested": min((a.ingested_at for a in out), default=None),
                  "last_ingested": max((a.ingested_at for a in out), default=None)}
 
@@ -155,6 +167,9 @@ def main(argv=None) -> int:
     ap.add_argument("--providers", default="google_news,gdelt,stocklens_archive,marketaux,alphavantage")
     ap.add_argument("--cache", default=str(Path(tempfile.gettempdir()) / "stocklens_news_cache"))
     ap.add_argument("--out", default=str(OUT))
+    ap.add_argument("--db", help=f"research SQLite database (default: ${research_db.ENV} or storage/app.db)")
+    ap.add_argument("--allow-missing-archive", action="store_true",
+                    help="record a missing StockLens archive as UNAVAILABLE instead of failing")
     ap.add_argument("--skip-note", action="append", default=[], metavar="PROVIDER=REASON",
                     help="why a provider was not run (recorded in the report)")
     args = ap.parse_args(argv)
@@ -162,7 +177,14 @@ def main(argv=None) -> int:
     t0 = time.time()
     cache = Path(args.cache)
     cache.mkdir(parents=True, exist_ok=True)
-    con = sqlite3.connect(f"file:{DB}?mode=ro", uri=True)
+    db = research_db.resolve(args.db)
+    try:
+        con = research_db.connect(db, research_db.COMPANIES)
+        if "stocklens_archive" in args.providers.split(",") and not args.allow_missing_archive:
+            research_db.connect(db, research_db.NEWS_ARCHIVE).close()      # fail before any network work
+    except research_db.ResearchDataError as e:
+        print(f"error: {e}", file=sys.stderr)
+        return 2
     syms = [f"{s}.NS" for s in bm.INDIAN_ALIASES]
     meta = {r[0]: r[1:] for r in con.execute("SELECT symbol, name, sector, industry FROM companies") if r[0] in syms}
     companies = [(s, *meta.get(s, (s, None, None))) for s in syms]
@@ -205,7 +227,7 @@ def main(argv=None) -> int:
                                "point_in_time": "NO (published time; headlines may be revised; ranked results)"
                                if p == "google_news" else "first-seen times (GDELT); ~3 months only"}
         elif p == "stocklens_archive":
-            arch, st = own_archive()
+            arch, st = own_archive(db, args.allow_missing_archive)
             archives[p] = [a for a in arch if start <= a.ingested_at <= end]
             archive_info[p] = {**st, "in_window": len(archives[p]), "point_in_time": "YES (recorded ingestion times)"}
         elif p in ("marketaux", "alphavantage"):
@@ -247,7 +269,7 @@ def main(argv=None) -> int:
                 for b in ("v2", "always_up", "random_matched") if a != b]
     report = {
         "generated_at": dt.datetime.now(UTC).isoformat(), "research_only": True,
-        "universe": syms, "universe_with_prices": sorted(hist), "window": {"start": start.isoformat(), "end": end.isoformat()},
+        "research_db": db.name, "universe": syms, "universe_with_prices": sorted(hist), "window": {"start": start.isoformat(), "end": end.isoformat()},
         "costs_bps": {"cost": args.cost, "slippage": args.slippage, "total_round_trip": total},
         "archives": archive_info, "comparison": cmp, "cost_sensitivity": sens, "verdicts": verdicts,
         "limitations": [
