@@ -89,3 +89,16 @@ def test_admin_ingest_is_audited(client, db, monkeypatch):
     assert r.status_code == 202
     with Session(db) as s:
         assert s.exec(select(AdminAuditLog).where(AdminAuditLog.action == "NEWS_INGESTION_TRIGGERED")).first()
+
+
+def test_prediction_detail_keeps_current_price_separate_from_the_reference(client, db):
+    from tests.test_prediction_api import _run
+    from db.models.market import PriceQuote
+    with Session(db) as s:
+        _run(s, "R-T", "TOMORROW_EOD", dt.date(2026, 10, 12))
+        s.add(PriceQuote(symbol="AAA.NS", price=104.5, bar_date=dt.datetime.now(dt.timezone.utc).date().isoformat(),
+                         as_of=dt.datetime.now(dt.timezone.utc), status="DELAYED_INTRADAY"))
+        s.commit()
+    d = client.get("/api/v1/predictions/R-T-AAA.NS", headers=ADMIN()).json()["data"]
+    assert d["prediction"]["reference_price"] == 100.0 and d["current_price"]["current_price"] == 104.5
+    assert d["current_price"]["current_price_as_of"] and "not recalculated" in d["current_price"]["note"]

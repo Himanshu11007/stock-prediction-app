@@ -169,9 +169,15 @@ def get_prediction(prediction_id: str, session: Session = Depends(get_session)):
     transitions = session.exec(select(ExitTransition).where(ExitTransition.prediction_id == prediction_id)
                                .order_by(ExitTransition.session_date)).all()
     events = session.exec(select(MarketEvent).where(MarketEvent.id.in_(p.event_ids or [-1]))).all()
+    from prices.service import get_quotes, quote_payload
+    current = quote_payload(get_quotes(session, [p.symbol]).get(p.symbol))
     return success_envelope(to_jsonable({
         "shadow": True, "notice": SHADOW_NOTICE, "run": run_payload(run),
         "prediction": prediction_payload(p, session.get(Company, p.symbol), full=True),
+        # Today's market price, separate from the frozen reference price: the
+        # prediction was NOT recalculated from it.
+        "current_price": {**current, "note": "current market price; the prediction used the reference price at "
+                                             "its cutoff and is not recalculated"},
         "outcomes": [o.model_dump() for o in outs],
         "exit": {"state": exit_state.model_dump() if exit_state else None,
                  "transitions": [t.model_dump() for t in transitions], "mode": "SHADOW (non-actionable)"},
