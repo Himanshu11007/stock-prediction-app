@@ -14,6 +14,7 @@ from __future__ import annotations
 
 TIERS: dict[str, tuple[str, ...]] = {
     "PRIMARY": ("rbi.org.in", "sebi.gov.in", "federalreserve.gov", "pib.gov.in", "finmin.nic.in", "mospi.gov.in",
+                "federalregister.gov",
                 "nseindia.com", "bseindia.com", "ustr.gov", "whitehouse.gov", "treasury.gov", "bls.gov", "ecb.europa.eu",
                 "stats.gov.cn", "mofcom.gov.cn", "commerce.gov.in", "dgft.gov.in", "irdai.gov.in", "pfrda.org.in"),
     "TIER1": ("reuters.com", "bloomberg.com", "apnews.com", "ptinews.com", "afp.com", "ft.com", "wsj.com",

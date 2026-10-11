@@ -102,3 +102,17 @@ def test_prediction_detail_keeps_current_price_separate_from_the_reference(clien
     d = client.get("/api/v1/predictions/R-T-AAA.NS", headers=ADMIN()).json()["data"]
     assert d["prediction"]["reference_price"] == 100.0 and d["current_price"]["current_price"] == 104.5
     assert d["current_price"]["current_price_as_of"] and "not recalculated" in d["current_price"]["note"]
+
+
+def test_provider_registry_endpoints(client, db, monkeypatch):
+    from catalysts import registry
+    monkeypatch.setenv("NEWS_PROVIDERS", "official_rss,google_news")
+    d = client.get("/api/v1/admin/news/providers", headers=ADMIN()).json()["data"]
+    rows = {r["provider"]: r for r in d["providers"]}
+    assert rows["official_rss"]["enabled"] is True and rows["google_news"]["enabled"] is False
+    assert "research-only" in rows["google_news"]["refused_reason"] and rows["nse_announcements"]["archive"] == "FULL"
+    assert client.get("/api/v1/admin/news/providers", headers=H()).status_code == 403
+    monkeypatch.setattr(registry, "health", lambda name: {"provider": name, "status": "OK"})
+    r = client.post("/api/v1/admin/news/providers/official_rss/health", headers=ADMIN())
+    assert r.status_code == 200 and r.json()["data"]["status"] == "OK"
+    assert client.post("/api/v1/admin/news/providers/nope/health", headers=ADMIN()).status_code == 404

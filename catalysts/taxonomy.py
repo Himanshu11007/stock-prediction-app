@@ -22,16 +22,18 @@ CATEGORIES: list[tuple[str, str, str, int, float, str]] = [
      r"\b(upgrades?|downgrades?|upgraded|downgraded|target price|price target|initiates? coverage|overweight|"
      r"underweight|outperform|underperform|buy rating|sell rating)\b"),
     ("BUSINESS_UPDATE", "BUSINESS_UPDATE", "COMPANY", 3, 0.7,
-     r"\b(business update|sales update|monthly sales|deliveries|volume growth|store additions|operational update)\b"),
+     r"\b(business update|sales update|monthly sales|deliveries|volume growth|store additions|operational update|"
+     r"update for q[1-4] ?fy ?\d{2}|quarterly update)\b"),
     ("EARNINGS", "BUSINESS_UPDATE", "COMPANY", 3, 0.8,
      r"\b(q[1-4] (results|earnings|profit)|quarterly (results|earnings)|net profit|profit (rises|falls|jumps|drops|"
      r"surges|slumps)|ebitda|revenue (rises|falls|grows|declines)|beats? (estimates|expectations)|"
-     r"miss(es)? (estimates|expectations)|earnings)\b"),
+     r"miss(es)? (estimates|expectations)|earnings|financial results?|outcome of board meeting.{0,40}results?)\b"),
     ("GUIDANCE", "GUIDANCE_CHANGE", "COMPANY", 3, 0.7,
      r"\b(guidance|raises? (its )?(outlook|forecast)|cuts? (its )?(outlook|forecast)|lowers? (its )?forecast)\b"),
     ("ORDER_CONTRACT", "BUSINESS_UPDATE", "COMPANY", 3, 0.6,
      r"\b(bags? (an? )?order|order win|wins? (an? )?(order|contract)|order inflow|contract worth|letter of award|"
-     r"contract (cancelled|terminated)|order (cancelled|cancellation))\b"),
+     r"contract (cancelled|terminated)|order (cancelled|cancellation)|receipt of (an? )?order|award of (an? )?order|"
+     r"bagging/receiving)\b"),
     ("CORPORATE_ACTION", "CORPORATE_ACTION", "COMPANY", 5, 0.6,
      r"\b(acquisition|acquires?|merger|demerger|stake sale|buyback|bonus issue|stock split|open offer|delisting)\b"),
     ("FUNDRAISING", "CORPORATE_ACTION", "COMPANY", 2, 0.4,

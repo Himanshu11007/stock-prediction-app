@@ -100,11 +100,19 @@ def assess(session: Session, event: MarketEvent, holidays: list[str],
 
 
 def _link_entities(session: Session, event: MarketEvent, art: NewsArticle, category: str, scope: str,
-                   index: ent.CompanyIndex, universe: list[Company], now: dt.datetime) -> None:
+                   index: ent.CompanyIndex, universe: list[Company], now: dt.datetime,
+                   provider_symbols: tuple[str, ...] = ()) -> None:
     body = f"{art.title}. {art.excerpt or ''}"
     found = ent.extract(body, index)
     title_companies = {e.symbol for e in index.find(art.title)}
+    known = {c.symbol for c in universe}
     rows: list[EventEntity] = []
+    for sym in provider_symbols:                    # e.g. the company that filed with the exchange: a fact
+        if sym in known:
+            rows.append(EventEntity(event_id=event.id, entity_type="COMPANY", entity_key=sym, symbol=sym,
+                                    relation="SUBJECT", method="PROVIDER", confidence=1.0))
+            title_companies.add(sym)
+            scope = "COMPANY"
     for e in found:
         relation = "SUBJECT" if e.symbol and e.symbol in title_companies and scope == "COMPANY" else "MENTIONED"
         rows.append(EventEntity(event_id=event.id, entity_type=e.entity_type, entity_key=e.entity_key, symbol=e.symbol,
@@ -194,7 +202,7 @@ def ingest(session: Session, provider, since: dt.datetime, until: dt.datetime,
             run.rejected += 1                               # future-dated: provider clock or data error
             continue
         excerpt = tx.sanitize(a.excerpt)
-        dom = tx.domain(a.url)
+        dom = a.source_domain or tx.domain(a.url)      # the publisher, not an aggregator's redirect link
         tier = sources.tier(dom)
         lang = tx.language(f"{title}. {excerpt}")
         art = NewsArticle(provider=provider.name, provider_article_id=a.provider_article_id[:300], url=a.url[:1000],
@@ -202,7 +210,9 @@ def ingest(session: Session, provider, since: dt.datetime, until: dt.datetime,
                           source_name=(a.source_name or "")[:200] or None, source_domain=dom or None,
                           source_tier=tier, is_primary_source=tier == "PRIMARY", published_at=published,
                           ingested_at=now, corrected_at=_utc(a.corrected_at) if a.corrected_at else None,
-                          effective_available_at=max(published, now), fingerprint=tx.fingerprint(title))
+                          effective_available_at=max(published, now), fingerprint=tx.fingerprint(title),
+                          raw={"time_precision": a.time_precision, "provider_symbols": list(a.symbols),
+                               **{k: v for k, v in (a.raw or {}).items() if isinstance(v, (str, int, float, bool))}})
         try:
             with session.begin_nested():                    # savepoint: a concurrent duplicate only undoes this one
                 session.add(art)
@@ -214,6 +224,7 @@ def ingest(session: Session, provider, since: dt.datetime, until: dt.datetime,
             continue
         c = taxonomy.classify(title, excerpt)
         subjects = {e.symbol for e in index.find(title)} if c.scope == "COMPANY" else set()
+        subjects |= {s for s in a.symbols if s in {u.symbol for u in universe}}
         event = _cluster(session, art, c.category, subjects)
         if event is None:
             event = MarketEvent(source=NEWS_SOURCE, source_event_id=f"news:{art.fingerprint}:{published:%Y%m%d%H%M}",
@@ -228,7 +239,7 @@ def ingest(session: Session, provider, since: dt.datetime, until: dt.datetime,
             session.add(event)
         art.event_id = event.id
         session.add(art)
-        _link_entities(session, event, art, c.category, c.scope, index, universe, now)
+        _link_entities(session, event, art, c.category, c.scope, index, universe, now, tuple(a.symbols))
         touched.add(event.id)
     for eid in touched:
         assess(session, session.get(MarketEvent, eid), holidays, now)

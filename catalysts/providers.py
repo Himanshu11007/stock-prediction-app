@@ -54,6 +54,12 @@ class RawArticle:
     source_name: Optional[str] = None
     corrected_at: Optional[dt.datetime] = None
     raw: dict[str, Any] = field(default_factory=dict)
+    # "exact" (time of day reliable) or "date" (only the day is reliable; the
+    # provider then sets published_at to the END of that day, so a date-only
+    # item can never look available earlier than it was).
+    time_precision: str = "exact"
+    symbols: tuple[str, ...] = ()               # provider-supplied tickers (e.g. the NSE symbol of a filing)
+    source_domain: Optional[str] = None         # the original publisher when the URL is an aggregator link
 
 
 class ProviderError(RuntimeError):
@@ -94,6 +100,8 @@ def fetch(url: str, get: HttpGet = http_get, attempts: int = 3, backoff: float =
                 return body
             if status in (429, 503):
                 last = RateLimited(f"HTTP {status} from {tx.domain(url)}")
+            elif status == 403:
+                raise ProviderError(f"HTTP 403 from {tx.domain(url)} (access refused / anti-bot)")
             else:
                 raise ProviderError(f"HTTP {status} from {tx.domain(url)}")
         if i + 1 < attempts:
@@ -139,6 +147,10 @@ FEEDS: dict[str, tuple[str, str]] = {
     "rbi_notifications": ("https://www.rbi.org.in/notifications_rss.xml", "Reserve Bank of India"),
     "sebi": ("https://www.sebi.gov.in/sebirss.xml", "Securities and Exchange Board of India"),
     "fed_press": ("https://www.federalreserve.gov/feeds/press_all.xml", "US Federal Reserve"),
+    # added after the 11 Oct 2026 provider audit (all verified reachable, exact times):
+    "pib": ("https://pib.gov.in/RssMain.aspx?ModId=6&Lang=1&Regid=3", "Press Information Bureau (Government of India)"),
+    "whitehouse_news": ("https://www.whitehouse.gov/news/feed/", "The White House"),
+    "whitehouse_actions": ("https://www.whitehouse.gov/presidential-actions/feed/", "The White House (presidential actions)"),
 }
 
 

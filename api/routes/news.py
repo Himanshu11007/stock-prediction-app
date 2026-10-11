@@ -174,6 +174,39 @@ def hypotheses():
         for h in transmission.HYPOTHESES]}, message="Transmission hypotheses")
 
 
+@admin_router.get("/providers")
+def providers_status(session: Session = Depends(get_session)):
+    """Provider registry: specification (coverage, archive, precision, quota,
+    licence, cost), whether it is enabled or refused (and why), the request
+    budget check, and the latest run. No network call; never any secret."""
+    from catalysts import registry
+    sel = registry.select()
+    rows = []
+    for name, s in registry.SPECS.items():
+        last = session.exec(select(NewsIngestionRun).where(NewsIngestionRun.provider == name)
+                            .order_by(NewsIngestionRun.started_at.desc())).first()
+        rows.append({"provider": name, "kind": s.kind, "coverage": s.coverage, "research_only": s.research_only,
+                     "credential_env": s.needs_env, "archive": s.archive, "archive_note": s.archive_note,
+                     "time_precision": s.time_precision, "daily_limit": s.daily_limit, "licence": s.licence,
+                     "cost": s.cost, "enabled": name in sel.enabled, "refused_reason": sel.refused.get(name),
+                     "last_run": None if last is None else {"status": last.status, "finished_at": last.finished_at,
+                                                            "fetched": last.fetched, "error": last.error}})
+    return success_envelope(to_jsonable({"providers": rows, "budget_problems": registry.budget_problems(sel.enabled)}),
+                            message="News providers")
+
+
+@admin_router.post("/providers/{name}/health")
+def provider_health(name: str, current_admin: User = Depends(require_admin), session: Session = Depends(get_session)):
+    """Live health check of one provider (network call; audited)."""
+    from catalysts import registry
+    if name not in registry.SPECS:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Unknown provider")
+    out = registry.health(name)
+    log_action(session, current_admin, "NEWS_PROVIDER_HEALTH_CHECK", "news_provider", name, {"status": out["status"]})
+    session.commit()
+    return success_envelope(to_jsonable(out), message=f"{name}: {out['status']}")
+
+
 @admin_router.get("/ingestion-runs")
 def ingestion_runs(limit: int = Query(50, ge=1, le=500), session: Session = Depends(get_session)):
     rows = session.exec(select(NewsIngestionRun).order_by(NewsIngestionRun.started_at.desc()).limit(limit)).all()

@@ -275,14 +275,18 @@ NEWS_STALE_AFTER = dt.timedelta(hours=3)
 
 
 def news_providers() -> list:
-    """Configured providers (NEWS_PROVIDERS, comma-separated; default 'rss').
-    newsapi needs NEWSAPI_KEY; gdelt is research-only and unreliable."""
-    import os
+    """Configured providers via catalysts.registry (NEWS_PROVIDERS; default
+    'official_rss'). Research-only providers and providers without their
+    credential are refused, never silently used; see news_selection()."""
+    from catalysts import registry
+    provs, _ = registry.configured_providers()
+    return provs
 
-    from catalysts import providers as p
-    names = [n.strip().lower() for n in os.environ.get("NEWS_PROVIDERS", "rss").split(",") if n.strip()]
-    factory = {"rss": p.RssProvider, "newsapi": p.NewsApiProvider, "gdelt": p.GdeltProvider}
-    return [factory[n]() for n in names if n in factory]
+
+def news_selection() -> dict:
+    from catalysts import registry
+    sel = registry.select()
+    return {"enabled": sel.enabled, "refused": sel.refused, "budget_problems": registry.budget_problems(sel.enabled)}
 
 
 def news_ingestion_job(engine, now: Optional[dt.datetime] = None, providers: Optional[list] = None) -> dict:
@@ -317,6 +321,8 @@ def news_ingestion_job(engine, now: Optional[dt.datetime] = None, providers: Opt
         else:
             status, out = "COMPLETED", {"status": "DONE", "providers": results,
                                         "degraded": ok < len(results)}
+        if providers is None:                    # report configuration problems instead of hiding them
+            out["selection"] = news_selection()
     except Exception as e:
         logger.exception("NEWS_INGESTION_FAILED | %s", slot)
         status, out = "FAILED", {"status": "FAILED", "error": f"{type(e).__name__}: {e}"[:500], "providers": results}
