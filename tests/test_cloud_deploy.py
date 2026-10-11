@@ -71,7 +71,10 @@ def test_postgres_scheme_is_normalised(monkeypatch):
     monkeypatch.setenv("DATABASE_URL", "postgres://u:p@host:5432/db")
     try:
         importlib.reload(config)
-        assert config.DATABASE_URL == "postgresql://u:p@host:5432/db"
+        # explicit driver: a bare "postgresql://" means psycopg (v3) from SQLAlchemy 2.1, which is not installed
+        assert config.DATABASE_URL == "postgresql+psycopg2://u:p@host:5432/db"
+        from sqlalchemy.engine import make_url
+        assert make_url(config.DATABASE_URL).get_dialect().driver == "psycopg2"
     finally:
         monkeypatch.delenv("DATABASE_URL")
         importlib.reload(config)
