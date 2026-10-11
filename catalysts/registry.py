@@ -83,6 +83,12 @@ SPECS: dict[str, ProviderSpec] = {s.name: s for s in (
                  True, "ALPHAVANTAGE_API_KEY", "LIMITED",
                  "time_from/time_to supported; depth and Indian coverage NOT verified (demo key serves AAPL only)",
                  "exact", 12.0, 25, 1, "terms not reviewed", "free key (signup) / paid tiers"),
+    ProviderSpec("marketaux", a.MarketauxProvider, "API",
+                 "financial news with entity tags (symbols, exchanges, countries); country filter 'in'", True,
+                 "MARKETAUX_API_TOKEN", "LIMITED",
+                 "published_after / published_before supported per documentation; depth, Indian coverage and "
+                 "timestamp quality NOT verified (no token)", "exact", 1.0, 100, 3,
+                 "plan terms not reviewed", "free plan (signup) / paid tiers"),
     ProviderSpec("gdelt", p.GdeltProvider, "AGGREGATOR", "global news, first-seen times", True, None, "LIMITED",
                  "DOC API: about 3 months, first-seen 'seendate' would be point-in-time, but refused from this "
                  "network (shared carrier IP); raw event files lack headlines", "exact", 6.0, None, 1,

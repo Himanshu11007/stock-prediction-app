@@ -224,8 +224,11 @@ class AlphaVantageNewsProvider:
             params["topics"] = ",".join(self.TOPICS)
         data = json.loads(fetch(f"{self.URL}?{urllib.parse.urlencode(params)}", self.get, sleep=self.sleep) or b"{}")
         for k in ("Information", "Note"):
-            if k in data:                                    # quota or plan messages arrive as HTTP 200
-                raise RateLimited(f"Alpha Vantage: {str(data[k])[:120]}")
+            if k in data:                                    # quota, plan and key messages arrive as HTTP 200
+                msg = str(data[k])
+                if re.search(r"api ?key|apikey", msg, re.I) and not re.search(r"rate limit|per day|per minute", msg, re.I):
+                    raise NotConfigured("Alpha Vantage rejected the API key")
+                raise RateLimited(f"Alpha Vantage: {msg[:120]}")
         if "Error Message" in data:
             raise ProviderError(f"Alpha Vantage: {str(data['Error Message'])[:120]}")
         for a in data.get("feed", []):
@@ -233,9 +236,102 @@ class AlphaVantageNewsProvider:
                 pub = dt.datetime.strptime(a["time_published"], "%Y%m%dT%H%M%S").replace(tzinfo=dt.timezone.utc)
             except (KeyError, ValueError):
                 continue
+            tags = tuple({"symbol": t.get("ticker"), "relevance": t.get("relevance_score")}
+                         for t in a.get("ticker_sentiment") or [] if t.get("ticker"))
             yield RawArticle(provider_article_id=a.get("url", "")[:300], url=a.get("url", ""),
                              title=tx.sanitize(a.get("title"), tx.MAX_TITLE), published_at=pub,
                              excerpt=tx.sanitize(a.get("summary")), source_name=a.get("source"),
                              source_domain=a.get("source_domain"),
-                             symbols=tuple(t.get("ticker") for t in a.get("ticker_sentiment") or [] if t.get("ticker")),
-                             raw={"topics": [t.get("topic") for t in a.get("topics") or []]})
+                             symbols=tuple(s for s in (to_nse_symbol(t["symbol"]) for t in tags) if s),
+                             provider_entities=tags,
+                             raw={"topics": ",".join(t.get("topic") or "" for t in a.get("topics") or [])})
+
+
+def to_nse_symbol(symbol: Optional[str], exchange: Optional[str] = None) -> Optional[str]:
+    """Provider ticker -> StockLens NSE symbol ('TCS.NS'), or None when the
+    ticker is not an Indian listing. 'RELIANCE.BSE' / 'RELIANCE.BO' and
+    exchange NSE/BSE map to 'RELIANCE.NS' (NSE and BSE symbols coincide for
+    most large caps; mismatches are measured in the benchmark, not assumed)."""
+    if not symbol:
+        return None
+    s = symbol.strip().upper()
+    for suffix in (".NS", ".NSE"):
+        if s.endswith(suffix):
+            return s[: -len(suffix)] + ".NS"
+    for suffix in (".BSE", ".BO"):
+        if s.endswith(suffix):
+            base = s[: -len(suffix)]
+            return None if base.isdigit() else base + ".NS"     # numeric BSE codes cannot be mapped
+    ex = (exchange or "").upper()
+    if "." not in s and ex in ("NSE", "BSE", "NSEI", "BOM", "NATIONAL STOCK EXCHANGE OF INDIA", "BOMBAY STOCK EXCHANGE"):
+        return None if s.isdigit() else s + ".NS"
+    return None
+
+
+class MarketauxProvider:
+    """Marketaux /v1/news/all (https://www.marketaux.com/documentation).
+    Needs MARKETAUX_API_TOKEN; the token is a query parameter by the API's
+    design, so URLs are never logged (errors carry status and domain only).
+    Research-only: plan terms not reviewed. Free-plan limits are reported by
+    Marketaux as about 100 requests a day and a few articles per request
+    (UNVERIFIED here - no token)."""
+    name = "marketaux"
+    research_only = True
+    URL = "https://api.marketaux.com/v1/news/all"
+
+    def __init__(self, api_token: Optional[str] = None, countries: str = "in", search: Optional[str] = None,
+                 symbols: Optional[Iterable[str]] = None, get: HttpGet = http_get,
+                 sleep: Callable[[float], None] = time.sleep, max_pages: int = 3):
+        self.token = api_token if api_token is not None else os.environ.get("MARKETAUX_API_TOKEN", "")
+        self.countries, self.search, self.max_pages = countries, search, max_pages
+        self.symbols, self.get, self.sleep = tuple(symbols or ()), get, sleep
+
+    def fetch(self, since: dt.datetime, until: dt.datetime) -> Iterable[RawArticle]:
+        if not self.token:
+            raise NotConfigured("MARKETAUX_API_TOKEN is not set")
+        for page in range(1, self.max_pages + 1):
+            params = {"api_token": self.token, "language": "en", "page": page,
+                      "published_after": f"{since.astimezone(dt.timezone.utc):%Y-%m-%dT%H:%M:%S}",
+                      "published_before": f"{until.astimezone(dt.timezone.utc):%Y-%m-%dT%H:%M:%S}"}
+            if self.countries:
+                params["countries"] = self.countries
+            if self.search:
+                params["search"] = self.search
+            if self.symbols:
+                params["symbols"] = ",".join(self.symbols)
+            try:
+                status, body = self.get(f"{self.URL}?{urllib.parse.urlencode(params)}", 20.0)
+            except OSError as e:                        # never surface the URL (it carries the token)
+                raise ProviderError(f"Marketaux connection error: {type(e).__name__}") from None
+            if status == 401:
+                raise NotConfigured("Marketaux rejected the API token (invalid_api_token)")
+            if status in (402, 429):
+                raise RateLimited(f"Marketaux HTTP {status} (usage limit)")
+            if status != 200:
+                raise ProviderError(f"Marketaux HTTP {status}")
+            try:
+                data = json.loads(body or b"{}")
+            except ValueError as e:
+                raise ProviderError("Marketaux returned non-JSON") from e
+            if "error" in data:
+                raise ProviderError(f"Marketaux error {data['error'].get('code')}")
+            for a in data.get("data", []):
+                try:
+                    pub = dt.datetime.fromisoformat(str(a["published_at"]).replace("Z", "+00:00"))
+                except (KeyError, ValueError):
+                    continue
+                pub = pub if pub.tzinfo else pub.replace(tzinfo=dt.timezone.utc)
+                tags = tuple({"symbol": e.get("symbol"), "name": e.get("name"), "exchange": e.get("exchange"),
+                              "country": e.get("country"), "type": e.get("type"), "match_score": e.get("match_score")}
+                             for e in a.get("entities") or [])
+                yield RawArticle(provider_article_id=str(a.get("uuid") or a.get("url", ""))[:300], url=a.get("url", ""),
+                                 title=tx.sanitize(a.get("title"), tx.MAX_TITLE), published_at=pub.astimezone(dt.timezone.utc),
+                                 excerpt=tx.sanitize(a.get("description") or a.get("snippet")),
+                                 source_name=a.get("source"), source_domain=a.get("source") if "." in str(a.get("source") or "") else None,
+                                 symbols=tuple(s for s in (to_nse_symbol(t["symbol"], t.get("exchange")) for t in tags) if s),
+                                 provider_entities=tags)
+            meta = data.get("meta") or {}
+            returned, found = int(meta.get("returned") or 0), int(meta.get("found") or 0)
+            if not returned or page * max(returned, 1) >= found:
+                break
+            self.sleep(1.0)

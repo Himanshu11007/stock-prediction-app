@@ -128,7 +128,8 @@ def test_alphavantage_needs_a_real_key_and_reports_quota_messages():
     feed = {"feed": [{"title": "Oil jumps", "url": "https://x.com/a", "time_published": "20261009T120000",
                       "summary": "s", "source": "X", "source_domain": "x.com", "ticker_sentiment": [{"ticker": "RELIANCE.BSE"}]}]}
     (a,) = list(ad.AlphaVantageNewsProvider(api_key="k", get=fake(feed), sleep=lambda s: None).fetch(NOW, NOW))
-    assert a.symbols == ("RELIANCE.BSE",) and a.published_at == dt.datetime(2026, 10, 9, 12, 0, tzinfo=UTC)
+    assert a.symbols == ("RELIANCE.NS",) and a.provider_entities[0]["symbol"] == "RELIANCE.BSE"   # mapped + raw tag kept
+    assert a.published_at == dt.datetime(2026, 10, 9, 12, 0, tzinfo=UTC)
 
 
 def test_health_states():

@@ -60,6 +60,34 @@ def _direction(sentiment: float) -> str:
     return "POSITIVE" if sentiment >= 0.2 else "NEGATIVE" if sentiment <= -0.2 else "UNKNOWN"
 
 
+LATE_INGESTION = dt.timedelta(hours=6)
+
+
+def quality_flags(a: RawArticle, published: dt.datetime, ingested: dt.datetime, lang: str, excerpt: str,
+                  domain: str, universe: set[str]) -> list[str]:
+    """Data-quality facts about one article (stored with it; never used to
+    invent values)."""
+    flags = []
+    if a.time_precision == "date":
+        flags.append("DATE_ONLY_TIMESTAMP")
+    if (a.raw or {}).get("published_is_first_seen"):
+        flags.append("PUBLISHED_TIME_IS_FIRST_SEEN")
+    link = tx.domain(a.url)
+    if domain and link and not (link == domain or link.endswith("." + domain) or domain.endswith("." + link)):
+        flags.append("AGGREGATOR_LINK")
+    if ingested - published > LATE_INGESTION:
+        flags.append("LATE_INGESTION")
+    if lang != "en":
+        flags.append("NON_ENGLISH")
+    if not excerpt:
+        flags.append("NO_EXCERPT")
+    if not (a.source_name or domain):
+        flags.append("MISSING_SOURCE")
+    if a.provider_entities and not any(s in universe for s in a.symbols):
+        flags.append("PROVIDER_ENTITIES_UNMAPPED")
+    return flags
+
+
 def _expires(effective: dt.datetime, sessions: int, holidays: list[str]) -> dt.datetime:
     day = calendar.add_trading_days(now_ist(effective).date(), sessions, holidays)
     return dt.datetime.combine(day, dt.time(10, 0), tzinfo=dt.timezone.utc)      # 15:30 IST on that session
@@ -239,7 +267,11 @@ def ingest(session: Session, provider, since: dt.datetime, until: dt.datetime,
                           ingested_at=now, corrected_at=_utc(a.corrected_at) if a.corrected_at else None,
                           effective_available_at=max(published, now), fingerprint=tx.fingerprint(title),
                           raw={"time_precision": a.time_precision, "provider_symbols": list(a.symbols),
-                               **{k: v for k, v in (a.raw or {}).items() if isinstance(v, (str, int, float, bool))}})
+                               **{k: v for k, v in (a.raw or {}).items() if isinstance(v, (str, int, float, bool))}},
+                          first_seen_at=_utc(a.first_seen_at) if a.first_seen_at else None,
+                          provider_entities=[dict(e) for e in a.provider_entities][:20] or None,
+                          quality_flags=quality_flags(a, published, now, lang, excerpt, dom,
+                                                      {u.symbol for u in universe}))
         try:
             with session.begin_nested():                    # savepoint: a concurrent duplicate only undoes this one
                 session.add(art)
@@ -250,6 +282,7 @@ def ingest(session: Session, provider, since: dt.datetime, until: dt.datetime,
         if lang != "en":
             continue
         c = taxonomy.classify(title, excerpt)
+        art.category = c.category
         subjects = {e.symbol for e in index.find(title)} if c.scope == "COMPANY" else set()
         subjects |= {s for s in a.symbols if s in {u.symbol for u in universe}}
         keys = cluster_keys(c.category, c.scope, ent.extract(f"{title}. {excerpt}", index), subjects)

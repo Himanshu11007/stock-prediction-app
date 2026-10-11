@@ -60,6 +60,8 @@ class RawArticle:
     time_precision: str = "exact"
     symbols: tuple[str, ...] = ()               # provider-supplied tickers (e.g. the NSE symbol of a filing)
     source_domain: Optional[str] = None         # the original publisher when the URL is an aggregator link
+    first_seen_at: Optional[dt.datetime] = None  # when the PROVIDER first saw it (e.g. GDELT seendate), if known
+    provider_entities: tuple[dict, ...] = ()     # the provider's own entity tags, verbatim (symbol, name, exchange, score)
 
 
 class ProviderError(RuntimeError):
@@ -241,10 +243,13 @@ class GdeltProvider:
                 published = dt.datetime.strptime(seen, "%Y%m%dT%H%M%SZ").replace(tzinfo=dt.timezone.utc)
             except (TypeError, ValueError):
                 continue
+            # GDELT gives no publication time: seendate is when GDELT first saw the article.
             yield RawArticle(provider_article_id=a.get("url", "")[:300], url=a.get("url", ""),
                              title=tx.sanitize(a.get("title"), tx.MAX_TITLE), published_at=published,
-                             source_name=a.get("domain"), raw={"language": a.get("language"),
-                                                               "sourcecountry": a.get("sourcecountry")})
+                             source_name=a.get("domain"), first_seen_at=published,
+                             source_domain=a.get("domain") or None,
+                             raw={"language": a.get("language"), "sourcecountry": a.get("sourcecountry"),
+                                  "published_is_first_seen": True})
 
 
 class FixtureProvider:

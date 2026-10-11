@@ -66,6 +66,11 @@ class NewsArticle(SQLModel, table=True):
     event_id: Optional[int] = Field(default=None, foreign_key="market_events.id")
     duplicate_of_id: Optional[int] = Field(default=None)   # same story syndicated (another article id)
     raw: Optional[dict[str, Any]] = Field(default=None, sa_column=Column(JSON))
+    # Benchmark-grade provenance (all nullable, additive):
+    first_seen_at: Optional[datetime] = Field(default=None)   # provider's first-seen time (e.g. GDELT), if any
+    category: Optional[str] = Field(default=None)             # article-level classification (taxonomy category)
+    quality_flags: Optional[list[str]] = Field(default=None, sa_column=Column(JSON))   # see catalysts.pipeline.quality_flags
+    provider_entities: Optional[list[dict[str, Any]]] = Field(default=None, sa_column=Column(JSON))  # provider's own tags
 
 
 class EventEntity(SQLModel, table=True):

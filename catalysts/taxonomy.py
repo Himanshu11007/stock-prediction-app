@@ -23,7 +23,7 @@ CATEGORIES: list[tuple[str, str, str, int, float, str]] = [
      r"underweight|outperform|underperform|buy rating|sell rating)\b"),
     ("BUSINESS_UPDATE", "BUSINESS_UPDATE", "COMPANY", 3, 0.7,
      r"\b(business update|sales update|monthly sales|deliveries|volume growth|store additions|operational update|"
-     r"update for q[1-4] ?fy ?\d{2}|quarterly update)\b"),
+     r"update for q[1-4] ?fy ?\d{2}|quarterly update|q[1-4] (business )?update)\b"),
     ("EARNINGS", "BUSINESS_UPDATE", "COMPANY", 3, 0.8,
      r"\b(q[1-4] (results|earnings|profit)|quarterly (results|earnings)|net profit|profit (rises|falls|jumps|drops|"
      r"surges|slumps)|ebitda|revenue (rises|falls|grows|declines)|beats? (estimates|expectations)|"
