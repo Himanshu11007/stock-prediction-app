@@ -137,3 +137,30 @@ working end-to-end feature; such items are never marked complete.
 | D-05 | ORM instance expired after an audit commit, so the API returned `{}` | Serialize before commit |
 | D-06 | Backtest horizon misalignment | P2-01 |
 | D-07 | Two exit reason codes untested | V-05 |
+
+## News-first engine, FQVF and Phase 2 (`review/stocklens-complete`)
+
+| ID | Item | Status | Evidence |
+|---|---|---|---|
+| N-01 | News reception | Official RBI / SEBI / Fed RSS **verified live** (29 articles → 24 events, 10 Oct). **Not running automatically**: scheduler inactive, migration not applied in production (REQUIRES_APPROVAL) | `docs/NEWS_ENGINE.md` §1–2 |
+| N-02 | International, geopolitical, tariff, commodity-news and company-filings coverage | **BLOCKED**: NewsAPI key revoked or not configured (new key: owner decision); GDELT refused from this network; NSE/BSE automated access restricted; licensed wires, broker ratings and consensus need contracts | §2 |
+| N-03 | Dedup, syndication, canonical ids, credibility, timestamps (published / ingested / corrected / effective), classification, materiality, entities, contradiction, expiry, untrusted text, failure states | IMPLEMENTED AND TESTED | `catalysts/`, `tests/test_catalysts.py` |
+| N-04 | Defects found by the live run: sign-0 exposure noise; RBI feed encoding | IMPLEMENTED AND TESTED (`9401771`) | — |
+| N-05 | Classification and entity links were dated by wall clock (would break replays) | IMPLEMENTED AND TESTED: ingestion clock | `test_assessment_uses_only_what_was_available_before_the_cutoff` |
+| N-06 | Transmission hypotheses (13) with mechanism, sign, validation status; facts vs inference stored separately | IMPLEMENTED AND TESTED | `catalysts/transmission.py`, `event_entities.inferred` |
+| N-07 | Price-based validation of factor hypotheses | IMPLEMENTED AND TESTED: 3 SUPPORTED, 6 INCONCLUSIVE, 4 UNVALIDATED (event history) | `catalysts/transmission_validation.json` |
+| N-08 | News is primary in v2 snapshots (`NEWS_CATALYST`, `NEWS_CONFLICT`); sentiment / surprise / novelty / direction / confidence (null, uncalibrated) / data completeness kept separate | IMPLEMENTED AND TESTED | `test_snapshot_uses_news_and_freezes_the_evidence` |
+| N-09 | Historical news replay engine (point-in-time, late ingestion, corrections, costs, baselines, unscored) | IMPLEMENTED AND TESTED | `catalysts/replay.py`, `tests/test_news_replay.py` |
+| N-10 | Historical news replay **results** | **BLOCKED**: no accessible point-in-time archive; StockLens' own archive is 29 articles (`INSUFFICIENT_SAMPLE`). Next: approve scheduled ingestion (archive grows about 5 sessions a week) or license a provider with history | `scripts/research/news_replay.py` |
+| N-11 | Factor-shock replay of the macro channels | IMPLEMENTED AND TESTED: **no tradable edge after the open** (holdout +0.02% net, CI includes 0); effect is in the overnight gap | `factor_shock_replay.json` |
+| N-12 | Event-category analysis (tariffs, earnings vs expectations, broker actions, absorption speed) | Macro absorption: answered (gap). Others **BLOCKED** (no dated event history or consensus) | §6 |
+| N-13 | Daily prediction-quality report (outcomes, missed news, false-positive catalysts, mapping errors, latency, provider failures; advisory recommendations) | IMPLEMENTED AND TESTED; runs with OUTCOME_EVALUATION once the scheduler is active | `prediction_v2/feedback.py`, `test_prediction_feedback.py` |
+| N-14 | Stock-selection combination with market, sector, volume and fundamentals; position sizing | DEFERRED: requires a validated news signal first (N-10); exits stay shadow | — |
+| N-15 | Calibrated confidence | DEFERRED: no validated probability model; `confidence` stays null | — |
+| N-16 | NEWS_INGESTION job: hourly, every day, resumable windows, stale-news monitoring; scheduler throttling of failed auth and triggers; audit log | IMPLEMENTED AND TESTED; activation REQUIRES_APPROVAL | `test_scheduler.py` (40) |
+| N-17 | News API, market-catalyst summary, current vs reference price | IMPLEMENTED AND TESTED | `test_news_api.py`; web `NewsUiTests` |
+| N-18 | NLP quality (precision / recall of categories, sentiment, entities on real news) | NOT measured: needs a labelled sample (DEFERRED) | — |
+| Q-01 | FQVF verified: **Fundamental Quality & Value Framework** (`fqvf-v1.0`, 18 fixed checks; score = 100 × (pass + ½ warning) / evaluated; with coverage). Display name **"Fundamental Quality & Value Score"** | IMPLEMENTED AND TESTED (web: `TerminologyTests`; backend: `test_terminology.py`) | `docs/FQVF.md`; web `971f843`; backend `ecc35c5` |
+| Q-02 | Mobile app shows bare "FQVF" (Stock detail metric and tab, Top Picks, Watchlist, Welcome, Notification settings) | REQUIRES_APPROVAL: mobile is out of scope under the standing "do not modify mobile" instruction | mobile `Components/Pages/*.razor` |
+| Q-03 | Frozen Ranking v1 explanation strings contain "FQVF" (component basis, risks, ineligible reasons) | Unchanged (golden test); the web rewords them for display only | `QualityValue.Plain` |
+| Q-04 | Stored admin overrides of notification templates or onboarding in a database keep their old text | REQUIRES_APPROVAL (admin edit in production) | — |

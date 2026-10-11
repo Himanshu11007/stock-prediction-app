@@ -170,3 +170,29 @@ statuses can apply, for example *TESTED; activation REQUIRES_APPROVAL*.
 | Formal FP / FN for 5–9 Oct; original experiment reports | no frozen predictions; reports unavailable | NOT_REPRODUCIBLE |
 | v2 promotion | negative backtest; gate not met | not promoted (by evidence) |
 | Mobile v2 screens; legacy Streamlit tab relabel; sector outlook data | out of scope or approval needed | DEFERRED |
+
+## K. News-first backlog and Phase 2
+
+| # | Requirement | Status | Evidence |
+|---|---|---|---|
+| K1 | Inspect branches, workflows, Render; dedicated review branch | IMPLEMENTED | `review/stocklens-complete` (backend, web); push check in section J |
+| K2 | Preserve v1 (golden), v2 separate and additive | TESTED | `test_ranking_v1_golden`; additive migration `8d7b9e6c90dd` |
+| K3 | News-first chain (event → verification → surprise and context → transmission → exposure → direction → risk → outcome) | IMPLEMENTED AND TESTED (shadow); surprise vs consensus BLOCKED | `docs/NEWS_ENGINE.md` §3–4 |
+| K4 | Global, domestic, geopolitical, company coverage | PARTLY: Indian monetary and regulatory and US Fed, from primary sources (working). Everything else BLOCKED (providers) | N-01, N-02 |
+| K5 | Ingestion capabilities (dedup, ids, provenance, timestamps, language, entities, classification, novelty, materiality, sentiment, surprise, contradiction, links, expiry, failures, untrusted text) | IMPLEMENTED AND TESTED | N-03 |
+| K6 | Transmission engine with testable relationships; facts vs inference | IMPLEMENTED AND TESTED; validated where price data allows | N-06, N-07 |
+| K7 | TODAY / TOMORROW snapshots with news ids and availability, immutable | IMPLEMENTED AND TESTED | N-08 |
+| K8 | Scheduling via GitHub Actions + authenticated backend (incl. news) | IMPLEMENTED AND TESTED; **not operational** (REQUIRES_APPROVAL) | N-16, `docs/SCHEDULER.md` |
+| K9 | Data model and APIs | IMPLEMENTED AND TESTED | N-17 |
+| K10 | Outcomes 1/3/5, baselines, chronological splits, embargo, costs; review the 47.3% / −0.12% claim | IMPLEMENTED AND TESTED. The claim **reproduces exactly**: 1,604 calls, hit 47.3%, −0.12% at 10 bps. Unchanged by the alignment fix (P2-01) | `docs/research/PREDICTION_V2_BACKTEST_2026-10.md` |
+| K11 | Exit engine shadow, 11 codes; exit vs hold backtest | 11 codes TESTED. Exit-vs-hold DEFERRED (live shadow outcomes) | V-05 |
+| K12 | FQVF terminology | IMPLEMENTED AND TESTED (web, backend). Mobile REQUIRES_APPROVAL | Q-01..Q-04 |
+| K13 | Frontend explanation (direction, horizon, news, sources, times, mechanism, conflicts, confidence meaning, current vs reference price, risks, coverage) and a daily market summary | IMPLEMENTED AND TESTED (web Labs) | N-17 |
+| K14 | Diagnostic cases (Canara, ITC, Trent, CPCL, Titan, HCL, Kanohar, Moneyview) | TESTED / VERIFIED; formal classification NOT_REPRODUCIBLE (no frozen predictions) | `docs/research/WEEKLY_CASES_2026-10.md` |
+| K15 | Security: job endpoint auth, throttling, audit; secrets; RUNNING recovery; branch conflicts; Alembic heads; backups; deterministic tests | IMPLEMENTED AND TESTED; credential rotation and backups REQUIRES_APPROVAL (owner) | S-01..S-06, B-01, E-1, E-2 |
+| K16 | Historical event replay with point-in-time availability | Engine TESTED; news results BLOCKED (archive); macro factor replay TESTED (no edge) | N-09..N-11 |
+| K17 | Daily prediction-quality feedback loop | IMPLEMENTED AND TESTED | N-13 |
+| K18 | Event-specific performance analysis | PARTLY (macro: absorbed at the open); the rest BLOCKED | N-12 |
+| K19 | Stock selection and risk controls after news validation | DEFERRED | N-14 |
+| K20 | Calibrated confidence | DEFERRED | N-15 |
+| K21 | Production readiness (schedules, calendar, idempotency, retries, alerts, backups, migrations, security, regression) | Code IMPLEMENTED AND TESTED. **Not operational**: scheduler, migrations, holiday calendar, credentials, database plan all REQUIRE APPROVAL; PostgreSQL run BLOCKED locally (P-01) | sections B, C, I |
