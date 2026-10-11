@@ -520,6 +520,7 @@ def main() -> None:
     outcomes: list[bm.Outcome] = []
     if base is not None and only:
         outcomes = [bm.Outcome(**o) for o in base["outcomes"] if o["provider"] not in only]
+    refused: dict[str, str] = {}
     for ev in events:
         for pname, cap in caps.items():
             if only and pname not in only:
@@ -529,8 +530,15 @@ def main() -> None:
                 outcomes.append(bm.Outcome(pname, ev.id, ev.kind, st or bm.NO_HISTORY,
                                            detail=None if st else "live feed: official items only"))
                 continue
+            if pname in refused:                 # plan / permission refusal: never re-asked this run
+                outcomes.append(bm.Outcome(pname, ev.id, ev.kind, bm.NOT_CONFIGURED, detail=refused[pname]))
+                continue
             try:
                 items = query(pname, ev)
+            except prov.NotPermitted as e:
+                refused[pname] = str(e)[:120]
+                outcomes.append(bm.Outcome(pname, ev.id, ev.kind, bm.NOT_CONFIGURED, detail=refused[pname]))
+                continue
             except prov.NotConfigured as e:
                 outcomes.append(bm.Outcome(pname, ev.id, ev.kind, bm.NOT_CONFIGURED, detail=str(e)[:120]))
                 continue

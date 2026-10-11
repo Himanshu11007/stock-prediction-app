@@ -10,6 +10,7 @@ Vantage 5, inside both free daily quotas):
   connectivity   a recent-window request returns HTTP 200
   authentication the provider accepts the key (401 / key messages -> REJECTED)
   rate_limit     402 / 429 / quota messages observed (-> RATE_LIMITED)
+  plan           the key works but the endpoint needs a paid plan (-> PLAN_RESTRICTED)
   schema         required fields present in the raw JSON
   timestamps     parse rate, stated zone, future-dated items, placeholder
                  times (00:00:00), share with an exact time of day
@@ -28,7 +29,7 @@ import os
 from typing import Any, Callable, Optional
 
 from catalysts import adapters as ad
-from catalysts.providers import NotConfigured, ProviderError, RateLimited, RawArticle, http_get
+from catalysts.providers import NotConfigured, NotPermitted, ProviderError, RateLimited, RawArticle, http_get
 
 UTC = dt.timezone.utc
 REQUIRED = {
@@ -93,6 +94,8 @@ def timestamp_check(arts: list[RawArticle], now: dt.datetime) -> dict[str, Any]:
 def _call(fn: Callable[[], list[RawArticle]]) -> tuple[str, list[RawArticle], Optional[str]]:
     try:
         return "OK", fn(), None
+    except NotPermitted as e:
+        return "PLAN_RESTRICTED", [], str(e)[:160]
     except NotConfigured as e:
         return "REJECTED", [], str(e)[:160]
     except RateLimited as e:
@@ -125,7 +128,7 @@ def probe(provider: str, now: Optional[dt.datetime] = None, get=http_get, env: O
     checks: dict[str, Any] = {
         "connectivity": {"status": "PASS" if rec.statuses and rec.statuses[-1] == 200 else "FAIL",
                          "http_statuses": rec.statuses[:], "detail": err},
-        "authentication": {"status": "FAIL" if status == "REJECTED" else "PASS" if status in ("OK", "RATE_LIMITED")
+        "authentication": {"status": "FAIL" if status == "REJECTED" else "PASS" if status in ("OK", "RATE_LIMITED", "PLAN_RESTRICTED")
                            else "NOT_TESTED", "detail": err if status == "REJECTED" else None},
     }
     checks["schema"] = schema_check(provider, rec.last_body) if status == "OK" else {"status": "NOT_TESTED", "detail": status}
@@ -155,5 +158,6 @@ def probe(provider: str, now: Optional[dt.datetime] = None, get=http_get, env: O
                             "http_statuses": rec.statuses}
     out["checks"] = checks
     out["status"] = "REJECTED" if status == "REJECTED" else "RATE_LIMITED" if status == "RATE_LIMITED" else \
+        "PLAN_RESTRICTED" if status == "PLAN_RESTRICTED" else \
         "OK" if all(checks[k].get("status") in ("PASS", None) for k in ("connectivity", "authentication", "schema")) else "DEGRADED"
     return out

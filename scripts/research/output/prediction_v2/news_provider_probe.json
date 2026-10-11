@@ -3,77 +3,140 @@
  "providers": {
   "marketaux": {
    "provider": "marketaux",
-   "probed_at": "2026-10-11T08:51:58.571126+00:00",
+   "probed_at": "2026-10-11T12:11:03.616223+00:00",
    "credential_variable": "MARKETAUX_API_TOKEN",
-   "configured": false,
-   "status": "NOT_CONFIGURED",
+   "configured": true,
    "checks": {
     "connectivity": {
-     "status": "NOT_TESTED",
-     "detail": "MARKETAUX_API_TOKEN is not set"
+     "status": "PASS",
+     "http_statuses": [
+      200
+     ],
+     "detail": null
     },
     "authentication": {
-     "status": "NOT_TESTED",
-     "detail": "MARKETAUX_API_TOKEN is not set"
-    },
-    "rate_limit": {
-     "status": "NOT_TESTED",
-     "detail": "MARKETAUX_API_TOKEN is not set"
+     "status": "PASS",
+     "detail": null
     },
     "schema": {
-     "status": "NOT_TESTED",
-     "detail": "MARKETAUX_API_TOKEN is not set"
+     "status": "PASS",
+     "items_checked": 3,
+     "missing_item_fields": [],
+     "missing_entity_fields": []
     },
     "timestamps": {
-     "status": "NOT_TESTED",
-     "detail": "MARKETAUX_API_TOKEN is not set"
+     "status": "PASS",
+     "articles": 3,
+     "stated_zones": [
+      "Z"
+     ],
+     "future_dated": 0,
+     "midnight_placeholder_share": 0.0,
+     "seconds_resolution_share": 1.0,
+     "note": null
     },
     "history": {
-     "status": "NOT_TESTED",
-     "detail": "MARKETAUX_API_TOKEN is not set"
+     "30d_ago": {
+      "status": "OK",
+      "articles": 3,
+      "detail": null
+     },
+     "365d_ago": {
+      "status": "OK",
+      "articles": 3,
+      "detail": null
+     },
+     "730d_ago": {
+      "status": "OK",
+      "articles": 3,
+      "detail": null
+     }
     },
     "india": {
-     "status": "NOT_TESTED",
-     "detail": "MARKETAUX_API_TOKEN is not set"
+     "tagged_indian_share_recent": 1.0,
+     "status": "OK",
+     "symbols_requested": [
+      "RELIANCE.NS",
+      "TCS.NS",
+      "HDFCBANK.NS",
+      "INFY.NS",
+      "ICICIBANK.NS"
+     ],
+     "articles": 3,
+     "symbols_found": [
+      "CANBK.NS",
+      "HCLTECH-BL.NS",
+      "HCLTECH.NS",
+      "HDFCAMC.NS",
+      "HDFCBANK.NS",
+      "INFY.NS",
+      "ISEC.NS",
+      "ITC.NS",
+      "LT.NS",
+      "MOTILALOFS.NS",
+      "RELIANCE.NS",
+      "RELIANCEPP.NS",
+      "TCS.NS",
+      "TECHM.NS",
+      "WIPRO.NS"
+     ],
+     "detail": null
+    },
+    "rate_limit": {
+     "status": "NOT_REACHED",
+     "requests": 5,
+     "http_statuses": [
+      200,
+      200,
+      200,
+      200,
+      200
+     ]
     }
-   }
+   },
+   "status": "OK"
   },
   "alphavantage": {
    "provider": "alphavantage",
-   "probed_at": "2026-10-11T08:51:58.571126+00:00",
+   "probed_at": "2026-10-11T12:11:11.450806+00:00",
    "credential_variable": "ALPHAVANTAGE_API_KEY",
-   "configured": false,
-   "status": "NOT_CONFIGURED",
+   "configured": true,
    "checks": {
     "connectivity": {
-     "status": "NOT_TESTED",
-     "detail": "ALPHAVANTAGE_API_KEY is not set"
+     "status": "PASS",
+     "http_statuses": [
+      200
+     ],
+     "detail": "Alpha Vantage: NEWS_SENTIMENT is a premium endpoint for this key (plan restriction; a paid plan is needed)"
     },
     "authentication": {
-     "status": "NOT_TESTED",
-     "detail": "ALPHAVANTAGE_API_KEY is not set"
-    },
-    "rate_limit": {
-     "status": "NOT_TESTED",
-     "detail": "ALPHAVANTAGE_API_KEY is not set"
+     "status": "PASS",
+     "detail": null
     },
     "schema": {
      "status": "NOT_TESTED",
-     "detail": "ALPHAVANTAGE_API_KEY is not set"
+     "detail": "PLAN_RESTRICTED"
     },
     "timestamps": {
      "status": "NOT_TESTED",
-     "detail": "ALPHAVANTAGE_API_KEY is not set"
+     "detail": "no articles"
     },
     "history": {
      "status": "NOT_TESTED",
-     "detail": "ALPHAVANTAGE_API_KEY is not set"
+     "detail": "PLAN_RESTRICTED"
     },
     "india": {
-     "status": "NOT_TESTED",
-     "detail": "ALPHAVANTAGE_API_KEY is not set"
+     "tagged_indian_share_recent": null
+    },
+    "rate_limit": {
+     "status": "NOT_REACHED",
+     "requests": 1,
+     "http_statuses": [
+      200
+     ]
     }
-   }
+   },
+   "status": "PLAN_RESTRICTED"
   }
  }
 }

@@ -184,7 +184,7 @@ working end-to-end feature; such items are never marked complete.
 |---|---|---|---|
 | NP-01 | Benchmark reproduced offline and on identical events (Google: same 54 detected / 12 missed; 3 reclassified AMBIGUOUS) | VERIFIED | `--resummarize`, `--events-from` |
 | NP-02 | AMBIGUOUS status, strict / lenient recall, article precision, segments, audit trail | IMPLEMENTED AND TESTED | `test_roundups_and_day_late_reports_are_ambiguous_not_detections` |
-| NP-03 | Marketaux / Alpha Vantage live validation | **PENDING (no keys)**: probe implemented and tested offline; never reported as failed | `catalysts/probe.py`, `tests/test_news_probe.py` |
+| NP-03 | Marketaux / Alpha Vantage live validation | VERIFIED live: Marketaux OK on the free plan (3 articles per request), recall 0.39 vs Google 0.78 on identical events, p50 +235 min, no unique detections. Alpha Vantage NEWS_SENTIMENT premium-only (PLAN_RESTRICTED), not testable without a paid plan | `catalysts/probe.py`, `tests/test_news_probe.py` |
 | NP-04 | Original timestamp and zone, provider availability, ingestion, correction, mapping evidence | IMPLEMENTED AND TESTED; migration `3c1f2a9d7e44` not applied in production | `test_original_timestamp_and_zone_are_kept_without_inventing_one`, e2e |
 | NP-05 | Corrected article unusable before its correction in replays | IMPLEMENTED AND TESTED | `test_corrected_article_is_not_used_before_its_correction_arrived` |
 | NP-06 | NSE terms prohibit automated collection without written permission | VERIFIED (terms quoted); every NSE source gated by `NSE_AUTOMATED_ACCESS_PERMISSION` | `test_nse_sources_refuse_without_recorded_permission_and_classify_filings` |

@@ -64,3 +64,11 @@ def test_alpha_vantage_unstated_zone_is_flagged():
     assert r["status"] == "OK" and r["checks"]["timestamps"]["stated_zones"] == ["NONE->UTC (unverified)"]
     assert "UTC is assumed" in r["checks"]["timestamps"]["note"]
     assert r["checks"]["india"]["symbols_found"] == ["RELIANCE.NS"]
+
+
+def test_alpha_vantage_premium_endpoint_is_a_plan_restriction_not_a_rate_limit():
+    premium = json.dumps({"Information": "Thank you for using Alpha Vantage! This is a premium endpoint. You may subscribe "
+                                         "to any of the premium plans at https://www.alphavantage.co/premium/"}).encode()
+    r = probe.probe("alphavantage", NOW, get=lambda *a, **k: (200, premium), env={"ALPHAVANTAGE_API_KEY": SECRET})
+    assert r["status"] == "PLAN_RESTRICTED" and r["checks"]["authentication"]["status"] == "PASS"
+    assert "premium endpoint" in r["checks"]["connectivity"]["detail"] and SECRET not in json.dumps(r)

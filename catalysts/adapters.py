@@ -289,6 +289,9 @@ class AlphaVantageNewsProvider:
         for k in ("Information", "Note"):
             if k in data:                                    # quota, plan and key messages arrive as HTTP 200
                 msg = str(data[k])
+                if re.search(r"premium endpoint|premium plan", msg, re.I):
+                    raise NotPermitted("Alpha Vantage: NEWS_SENTIMENT is a premium endpoint for this key "
+                                       "(plan restriction; a paid plan is needed)")
                 if re.search(r"api ?key|apikey", msg, re.I) and not re.search(r"rate limit|per day|per minute", msg, re.I):
                     raise NotConfigured("Alpha Vantage rejected the API key")
                 raise RateLimited(f"Alpha Vantage: {msg[:120]}")

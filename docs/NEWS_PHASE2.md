@@ -88,40 +88,62 @@
 - NSE ground truth was collected before the terms review (§4); it is not
   re-collected.
 
-## 2. Marketaux and Alpha Vantage: live validation (PENDING: no keys)
+## 2. Marketaux and Alpha Vantage: live validation (keys set 11 Oct 2026)
 
 `scripts/research/news_provider_probe.py` (logic in `catalysts/probe.py`)
 checks:
-- connectivity and authentication (rejected key → REJECTED);
-- rate limits (402 / 429 / quota messages);
-- the raw response schema (required item and entity fields);
-- timestamps: stated zone, future-dated items, midnight placeholders,
-  seconds resolution;
-- history: windows 30, 365 and 730 days back;
-- Indian coverage: tagged Indian listings, and large-cap symbol queries.
+- connectivity and authentication;
+- rate limits;
+- plan restrictions;
+- the raw schema;
+- timestamps;
+- history at 30, 365 and 730 days back;
+- Indian coverage.
 
-Budget per run: Marketaux 6 requests, Alpha Vantage 5. Keys are never read
-into the report, printed or logged.
+Keys are read from the user environment and are never stored, printed or
+logged.
 
-| Provider | Status (11 Oct 2026) |
-|---|---|
-| Marketaux | **NOT_CONFIGURED: not tested.** `MARKETAUX_API_TOKEN` is not set |
-| Alpha Vantage | **NOT_CONFIGURED: not tested.** `ALPHAVANTAGE_API_KEY` is not set |
+| Check | Marketaux (free plan) | Alpha Vantage (free key) |
+|---|---|---|
+| Connectivity / authentication | PASS / PASS | PASS / PASS (key accepted) |
+| Plan | OK, but **3 articles per request** | **PLAN_RESTRICTED: NEWS_SENTIMENT is a premium endpoint** ("This is a premium endpoint", for both a ticker and a topic query) |
+| Schema | PASS (uuid, title, url, published_at, source, entities with symbol / exchange / country / match_score) | not testable |
+| Timestamps | PASS: ISO with `Z`, seconds resolution, none future-dated, no midnight placeholders | not testable |
+| History | articles returned for windows 30, 365 and 730 days back | not testable |
+| Indian coverage | NSE symbols in its entity tags (RELIANCE.NS, TCS.NS, HDFCBANK.NS, INFY.NS ...); also block-deal / partly-paid tickers (`-BL`, `PP`) | not testable |
 
-Once keys are set in the shell, never in a file in the repository:
+**Benchmark on the identical 69 events** (`--events-from ... --providers marketaux,alphavantage`):
+- 69 Marketaux requests and 1 Alpha Vantage request. After the premium
+  refusal, the runner stops asking Alpha Vantage.
 
-```bash
-python scripts/research/news_provider_probe.py
-python scripts/research/news_provider_benchmark.py --events-from scripts/research/output/prediction_v2/news_provider_benchmark.json --providers marketaux,alphavantage
-```
+| Measure | Marketaux | Google News (same events) |
+|---|---|---|
+| Detected / ambiguous / missed | 27 / 5 / 37 | 54 / 3 / 12 |
+| Recall strict (95% CI) / lenient | **0.39 (0.28–0.51)** / 0.46 | 0.78 (0.67–0.86) / 0.83 |
+| Article precision | 0.43 | 0.45 |
+| Median delay (n) / p90 | **235 min (10)** / 916 min | 42 min (13) / 276 min |
+| Before market reaction | 0.50 (0.24–0.76) | 1.00 (0.77–1.00) |
+| Exact timestamps | 100% | 20% |
+| Mapping: provider tags / StockLens | 0.89 / 1.00 (n=9) | - / 0.84 |
+| By segment | Indian company 9/28, Indian macro 0/7, international policy 9/22, commodity / currency 9/12 | 19/28, 5/7, 18/22, 12/12 |
 
-The second command uses the **same event definitions and cutoff rules**.
-Only the listed providers are re-queried; every other provider's stored
-outcomes are kept.
+- **No unique events:** Marketaux detected **no event that Google News
+  missed** (27 jointly detected, 23 detected only by Google, 0 only by
+  Marketaux).
+- **Free-plan cap:** at 3 articles per request, a query about a busy company
+  often returns only its 3 most relevant stories, which may not be the
+  event. That caps recall.
+- **Date-only events:** some "detections" of the date-only Fed and commodity
+  events are previews or market wraps ("Fed rate decision looms"). This is
+  the known limit of date-only ground truth: no timing is claimed for them.
 
-Alpha Vantage does not state a timezone. UTC is assumed and flagged
-`NONE->UTC (unverified)` until the probe compares it with a known release
-time.
+**Verdict:** neither provider meets the bar.
+- **Marketaux** fails recall, delay, actionability and the "new events"
+  criterion (4 < 5), and its licence is not reviewed.
+- **Alpha Vantage** news cannot be evaluated without a paid plan. Not
+  purchased.
+- A paid Marketaux plan (more articles per request) is the only way to
+  measure its real recall. Do this only if you approve the cost.
 
 ## 3. Event-time accuracy
 
@@ -348,7 +370,7 @@ backfill in the system temp directory, outside the repository).
 
 ## 9. Unresolved
 
-- **Live Marketaux / Alpha Vantage results:** pending keys.
+- **Alpha Vantage news:** needs a paid plan to be tested. Marketaux was tested on the free plan only (3 articles per request).
 - **NSE / BSE:** permission or licence needed. This is the decision with the
   most measured value.
 - **StockLens's own news archive does not exist yet.** The local database

@@ -216,7 +216,7 @@ statuses can apply, for example *TESTED; activation REQUIRES_APPROVAL*.
 | # | Requirement | Status | Evidence |
 |---|---|---|---|
 | M1 | Baseline reproduced, weak matches / timezone / timing issues identified, segments, CIs, no predictive claim | IMPLEMENTED AND TESTED | NP-01, NP-02 |
-| M2 | Marketaux / Alpha Vantage live validation on identical events | Code DONE; **live run PENDING (no keys)** | NP-03 |
+| M2 | Marketaux / Alpha Vantage live validation on identical events | Marketaux TESTED (free plan); Alpha Vantage BLOCKED (premium endpoint) | NP-03 |
 | M3 | Publication (raw + zone), UTC, provider availability, ingestion, correction, URL, canonical id, mapping evidence; post-cutoff exclusion | IMPLEMENTED AND TESTED | NP-04, NP-05 |
 | M4 | NSE / BSE terms checked before automation; materiality; official feeds retained | VERIFIED; gated (REQUIRES_APPROVAL: permission / licence) | NP-06, NP-07 |
 | M5 | Event intelligence and explainable UP / DOWN / NEUTRAL / NO_CALL screen | IMPLEMENTED AND TESTED (shadow) | NP-08 |
