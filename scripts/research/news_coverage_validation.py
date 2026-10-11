@@ -58,13 +58,7 @@ COMPANIES = ["TRENT", "TITAN", "ITC", "CANBK", "HCLTECH", "TCS", "INFY", "RELIAN
              "SBIN", "BAJFINANCE", "MARUTI", "ASIANPAINT", "TATASTEEL", "SUNPHARMA", "BHARTIARTL", "AXISBANK", "WIPRO"]
 WINDOWS = {"recent": (dt.date(2026, 9, 25), dt.date(2026, 10, 9)), "2025_q1_results": (dt.date(2025, 7, 10), dt.date(2025, 7, 31))}
 RESULT_WORDS = re.compile(r"result|profit|revenue|earning|quarter|\bq[1-4]\b|update|sales|board|dividend", re.I)
-ALIASES = {  # unambiguous names used in headlines (regex alternatives)
-    "TRENT": "Trent", "TITAN": "Titan Company|Titan Q[1-4]|Titan's", "ITC": "ITC", "CANBK": "Canara Bank",
-    "HCLTECH": "HCL Tech|HCLTech|HCL Technologies", "TCS": "TCS|Tata Consultancy", "INFY": "Infosys",
-    "RELIANCE": "Reliance Industries|RIL", "HDFCBANK": "HDFC Bank", "ICICIBANK": "ICICI Bank", "LT": "Larsen|L&T",
-    "SBIN": "SBI|State Bank of India", "BAJFINANCE": "Bajaj Finance", "MARUTI": "Maruti", "ASIANPAINT": "Asian Paints",
-    "TATASTEEL": "Tata Steel", "SUNPHARMA": "Sun Pharma", "BHARTIARTL": "Bharti Airtel|Airtel", "AXISBANK": "Axis Bank",
-    "WIPRO": "Wipro"}
+from catalysts.benchmark import INDIAN_ALIASES as ALIASES  # noqa: E402
 NOT_PREVIEW = re.compile(r"^(?!.*\b(preview|expect(ed|s)?|likely|ahead of|estimates for|what to watch|may report)\b)", re.I)
 MATERIAL = re.compile(r"financial result|outcome of board meeting|press release|business update|update for q", re.I)
 SUFFIX = re.compile(r"\b(limited|ltd\.?|company|industries|corporation|of india|india)\b", re.I)

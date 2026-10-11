@@ -40,7 +40,9 @@ from typing import Any, Callable, Iterable, Optional
 
 from catalysts import text as tx
 
-USER_AGENT = "StockLens-research/0.1 (+https://github.com/Himanshu11007/stock-prediction-app)"
+# Plain product token: pib.gov.in answers 403 to user agents that contain a
+# URL (measured 11 Oct 2026), so none is included.
+USER_AGENT = "StockLens-research/0.1"
 MAX_BYTES = 2_000_000
 
 
@@ -115,6 +117,26 @@ def _utc(t: dt.datetime) -> dt.datetime:
     return t if t.tzinfo else t.replace(tzinfo=dt.timezone.utc)
 
 
+DATE_ONLY_FORMATS = ("%d %b, %Y %z", "%d %b %Y %z", "%d %b, %Y", "%d %b %Y", "%Y-%m-%d")
+
+
+def parse_pub_date(s: Optional[str]) -> tuple[Optional[dt.datetime], str]:
+    """(UTC time, precision). Date-only values (SEBI writes '09 Oct, 2026
+    +0530') become the END of that day in their own zone (IST if none), so
+    they never look available early."""
+    if not s:
+        return None, "exact"
+    s = s.strip()
+    for fmt in DATE_ONLY_FORMATS:
+        try:
+            d = dt.datetime.strptime(s, fmt)
+        except ValueError:
+            continue
+        tz = d.tzinfo or dt.timezone(dt.timedelta(hours=5, minutes=30))
+        return dt.datetime.combine(d.date(), dt.time(23, 59), tzinfo=tz).astimezone(dt.timezone.utc), "date"
+    return _rfc822(s), "exact"
+
+
 def _rfc822(s: Optional[str]) -> Optional[dt.datetime]:
     if not s:
         return None
@@ -143,6 +165,9 @@ def _as_utf8(body: bytes) -> bytes:
         return text.encode("utf-8")
 
 
+UNDATED_FEEDS = {"pib"}          # feeds whose items have no publication time: availability = first sight
+
+
 FEEDS: dict[str, tuple[str, str]] = {
     # key: (url, source name)
     "rbi_press": ("https://www.rbi.org.in/pressreleases_rss.xml", "Reserve Bank of India"),
@@ -150,7 +175,9 @@ FEEDS: dict[str, tuple[str, str]] = {
     "sebi": ("https://www.sebi.gov.in/sebirss.xml", "Securities and Exchange Board of India"),
     "fed_press": ("https://www.federalreserve.gov/feeds/press_all.xml", "US Federal Reserve"),
     # added after the 11 Oct 2026 provider audit (all verified reachable, exact times):
-    "pib": ("https://pib.gov.in/RssMain.aspx?ModId=6&Lang=1&Regid=3", "Press Information Bureau (Government of India)"),
+    # English feed needs reg=3 (without it PIB redirects to the Hindi feed). Its items carry NO pubDate:
+    # they are recorded at first sight (see UNDATED_FEEDS), never backdated.
+    "pib": ("https://pib.gov.in/RssMain.aspx?ModId=6&Lang=1&Regid=3&reg=3", "Press Information Bureau (Government of India)"),
     "whitehouse_news": ("https://www.whitehouse.gov/news/feed/", "The White House"),
     "whitehouse_actions": ("https://www.whitehouse.gov/presidential-actions/feed/", "The White House (presidential actions)"),
 }
@@ -177,13 +204,17 @@ class RssProvider:
             for item in root.iter("item"):
                 title = tx.sanitize(item.findtext("title"), tx.MAX_TITLE)
                 link = (item.findtext("link") or "").strip()
-                published = _rfc822(item.findtext("pubDate"))
+                published, precision = parse_pub_date(item.findtext("pubDate"))
+                first_seen = False
+                if published is None and key in UNDATED_FEEDS:
+                    published, first_seen = min(until, dt.datetime.now(dt.timezone.utc)), True   # first sight
                 if not title or not link or published is None or not (since <= published <= until):
                     continue
                 guid = (item.findtext("guid") or link).strip()
                 yield RawArticle(provider_article_id=f"{key}:{guid}"[:300], url=link, title=title,
                                  published_at=published, excerpt=tx.sanitize(item.findtext("description")),
-                                 source_name=source, raw={"feed": key})
+                                 source_name=source, raw={"feed": key, **({"published_is_first_seen": True} if first_seen else {})},
+                                 time_precision=precision, first_seen_at=published if first_seen else None)
         if ok == 0 and self.feeds:
             raise ProviderError("every feed failed: " + "; ".join(self.errors)[:400])
 

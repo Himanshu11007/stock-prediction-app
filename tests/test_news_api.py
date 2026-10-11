@@ -4,6 +4,7 @@ inference separation, market summary, hypotheses, stock-linked events, and
 the audited admin ingestion trigger.
 """
 import datetime as dt
+import json
 
 from sqlmodel import Session, select
 
@@ -116,3 +117,18 @@ def test_provider_registry_endpoints(client, db, monkeypatch):
     r = client.post("/api/v1/admin/news/providers/official_rss/health", headers=ADMIN())
     assert r.status_code == 200 and r.json()["data"]["status"] == "OK"
     assert client.post("/api/v1/admin/news/providers/nope/health", headers=ADMIN()).status_code == 404
+
+
+def test_benchmark_report_endpoint(client, tmp_path, monkeypatch):
+    path = tmp_path / "bench.json"
+    monkeypatch.setenv("NEWS_BENCHMARK_REPORT", str(path))
+    assert client.get("/api/v1/admin/news/benchmark", headers=ADMIN()).status_code == 404
+    path.write_text(json.dumps({"research_only": True, "providers": {"google_news": {"recall": 0.5}},
+                                "outcomes": [{"provider": "google_news"}]}), encoding="utf-8")
+    d = client.get("/api/v1/admin/news/benchmark", headers=ADMIN()).json()["data"]
+    assert d["providers"]["google_news"]["recall"] == 0.5 and "outcomes" not in d
+    full = client.get("/api/v1/admin/news/benchmark?include_outcomes=true", headers=ADMIN()).json()["data"]
+    assert full["outcomes"]
+    assert client.get("/api/v1/admin/news/benchmark", headers=H()).status_code == 403
+    path.write_text("{not json", encoding="utf-8")
+    assert client.get("/api/v1/admin/news/benchmark", headers=ADMIN()).status_code == 500

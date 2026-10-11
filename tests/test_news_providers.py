@@ -178,3 +178,18 @@ def test_news_job_uses_the_registry_and_reports_refusals(monkeypatch):
     provs = jobs.news_providers()
     assert [p.name for p in provs] == ["official_rss"]
     assert "google_news" in jobs.news_selection()["refused"]
+
+
+def test_official_feed_quirks_sebi_date_only_pib_undated_and_plain_user_agent():
+    assert "http" not in prov.USER_AGENT                       # pib.gov.in refuses user agents containing a URL
+    t, precision = prov.parse_pub_date("09 Oct, 2026 +0530")   # SEBI's format
+    assert precision == "date" and t == dt.datetime(2026, 10, 9, 23, 59, tzinfo=IST).astimezone(UTC)
+    assert prov.parse_pub_date("Fri, 09 Oct 2026 12:30:00 +0530")[1] == "exact"
+    pib = (b'<?xml version="1.0"?><rss><channel><item><title>Cabinet approves new export scheme</title>'
+           b'<link>https://pib.gov.in/PressReleaseIframePage.aspx?PRID=1</link></item></channel></rss>')
+    (a,) = list(prov.RssProvider({"pib": ("https://pib.gov.in/x", "PIB")}, get=fake(pib), sleep=lambda s: None)
+                .fetch(NOW - dt.timedelta(hours=1), NOW))
+    assert a.published_at == NOW and a.first_seen_at == NOW and a.raw["published_is_first_seen"] is True
+    undated_elsewhere = list(prov.RssProvider({"rbi_press": ("https://www.rbi.org.in/x", "RBI")}, get=fake(pib),
+                                              sleep=lambda s: None).fetch(NOW - dt.timedelta(hours=1), NOW))
+    assert undated_elsewhere == []                             # only declared feeds may be first-seen dated

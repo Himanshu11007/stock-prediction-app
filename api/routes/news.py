@@ -207,6 +207,31 @@ def provider_health(name: str, current_admin: User = Depends(require_admin), ses
     return success_envelope(to_jsonable(out), message=f"{name}: {out['status']}")
 
 
+BENCHMARK_REPORT_ENV = "NEWS_BENCHMARK_REPORT"
+
+
+@admin_router.get("/benchmark")
+def news_benchmark(include_outcomes: bool = False):
+    """Latest news-provider benchmark report (research only), produced by
+    scripts/research/news_provider_benchmark.py. Path: NEWS_BENCHMARK_REPORT
+    or the repository's research output."""
+    import json
+    import os
+    from pathlib import Path
+    default = Path(__file__).resolve().parents[2] / "scripts" / "research" / "output" / "prediction_v2" / \
+        "news_provider_benchmark.json"
+    path = Path(os.environ.get(BENCHMARK_REPORT_ENV) or default)
+    if not path.exists():
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "No benchmark report has been produced yet")
+    try:
+        report = json.loads(path.read_text(encoding="utf-8"))
+    except ValueError as e:
+        raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, "Benchmark report is not valid JSON") from e
+    if not include_outcomes:
+        report.pop("outcomes", None)
+    return success_envelope(report, message="News provider benchmark (research only)")
+
+
 @admin_router.get("/ingestion-runs")
 def ingestion_runs(limit: int = Query(50, ge=1, le=500), session: Session = Depends(get_session)):
     rows = session.exec(select(NewsIngestionRun).order_by(NewsIngestionRun.started_at.desc()).limit(limit)).all()

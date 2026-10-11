@@ -50,6 +50,13 @@ IST = dt.timezone(dt.timedelta(hours=5, minutes=30))
 OPEN, CLOSE = dt.time(9, 15), dt.time(15, 30)
 GRACE = dt.timedelta(minutes=15)
 PREVIEW = re.compile(r"\b(preview|expect(ed|s)?|likely to|ahead of|estimates for|what to watch|may report|to announce)\b", re.I)
+INDIAN_ALIASES = {  # unambiguous names used in headlines (regex alternatives)
+    "TRENT": "Trent", "TITAN": "Titan Company|Titan Q[1-4]|Titan's", "ITC": "ITC", "CANBK": "Canara Bank",
+    "HCLTECH": "HCL Tech|HCLTech|HCL Technologies", "TCS": "TCS|Tata Consultancy", "INFY": "Infosys",
+    "RELIANCE": "Reliance Industries|RIL", "HDFCBANK": "HDFC Bank", "ICICIBANK": "ICICI Bank", "LT": "Larsen|L&T",
+    "SBIN": "SBI|State Bank of India", "BAJFINANCE": "Bajaj Finance", "MARUTI": "Maruti", "ASIANPAINT": "Asian Paints",
+    "TATASTEEL": "Tata Steel", "SUNPHARMA": "Sun Pharma", "BHARTIARTL": "Bharti Airtel|Airtel", "AXISBANK": "Axis Bank",
+    "WIPRO": "Wipro"}
 DETECTED, MISSED = "DETECTED", "MISSED"
 NO_HISTORY, NOT_CONFIGURED, OF_RECORD = "UNTESTABLE_NO_HISTORY", "UNTESTABLE_NOT_CONFIGURED", "SOURCE_OF_RECORD"
 OUTAGE, RATE_LIMITED = "OUTAGE", "RATE_LIMITED"
