@@ -254,6 +254,25 @@ def test_duplicates_syndication_and_clustering(news_db):
         assert sebi.is_primary_source and sebi.source_tier == "PRIMARY"
 
 
+def test_multi_publisher_coverage_merges_by_entity_not_only_by_wording(news_db):
+    items = [art(1, "Brent crude surges 6% after attack on tankers"),
+             art(2, "Oil prices spike as Gulf tanker attack stokes supply fears", minutes=40,
+                 url="https://economictimes.indiatimes.com/oil"),
+             art(3, "Gold prices climb to a record on safe-haven demand", minutes=50, url="https://www.livemint.com/gold"),
+             art(4, "Indian Oil quarterly results: net profit jumps", minutes=60, url="https://www.reuters.com/ioc1"),
+             art(5, "IOC Q2 earnings beat estimates as refining margins improve", minutes=90,
+                 url="https://www.business-standard.com/ioc2"),
+             art(6, "ONGC quarterly results: net profit jumps", minutes=95, url="https://www.reuters.com/ongc")]
+    r = _ingest(news_db, items, T0 + dt.timedelta(hours=3))
+    assert r.new_events == 4                       # crude (2 articles), gold, IOC results (2), ONGC results
+    with Session(news_db) as s:
+        by_event = {}
+        for a in s.exec(select(NewsArticle)).all():
+            by_event.setdefault(a.event_id, set()).add(a.provider_article_id)
+        assert {"a1", "a2"} in by_event.values() and {"a4", "a5"} in by_event.values()
+        assert {"a3"} in by_event.values() and {"a6"} in by_event.values()
+
+
 def test_late_ingestion_is_never_backdated(news_db):
     late = art(1, "ONGC wins large offshore contract, order inflow rises", minutes=0)
     _ingest(news_db, [late], T0 + dt.timedelta(hours=30))

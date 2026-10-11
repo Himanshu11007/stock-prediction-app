@@ -145,24 +145,51 @@ def _link_entities(session: Session, event: MarketEvent, art: NewsArticle, categ
         session.add(event)
 
 
-SAME_SUBJECT_WINDOW = dt.timedelta(hours=6)
+ENTITY_WINDOW = dt.timedelta(hours=24)
+# Which factual entities identify "the same story" for each category. Different
+# publishers word the same event differently, so titles alone under-merge
+# (measured: about 53 events per real event before this rule).
+CLUSTER_KEYS: dict[str, tuple[str, ...]] = {
+    "COMMODITY": ("COMMODITY",), "MONETARY_POLICY": ("INSTITUTION",), "FLOWS_CURRENCY": ("CURRENCY",),
+    "ECONOMIC_DATA": ("COUNTRY", "INSTITUTION"), "TRADE_TARIFF": ("COUNTRY",), "GEOPOLITICAL": ("COUNTRY",),
+    "FISCAL_POLICY": ("COUNTRY", "INSTITUTION"), "REGULATORY": ("INSTITUTION",),
+}
+BROAD_KEYS = {"COUNTRY:IN", "COUNTRY:US"}       # too common on their own to identify a story
 
 
-def _cluster(session: Session, art: NewsArticle, category: str, subjects: set[str]) -> Optional[MarketEvent]:
-    """Same story: similar title within 48 h, or - for company news - the same
-    single subject company and category within 6 h (contradictory reports of
-    one event rarely share their wording)."""
+def cluster_keys(category: str, scope: str, entities: list, subjects: set[str]) -> list[str]:
+    if scope == "COMPANY" and subjects:
+        return sorted(f"COMPANY:{s}" for s in subjects)
+    types = CLUSTER_KEYS.get(category, ())
+    keys = {f"{e.entity_type}:{e.entity_key}" for e in entities if e.entity_type in types}
+    specific = keys - BROAD_KEYS
+    return sorted(specific or keys)
+
+
+def _cluster(session: Session, art: NewsArticle, category: str, subjects: set[str],
+             keys: Optional[list[str]] = None) -> Optional[MarketEvent]:
+    """Same story when, in the same category: the titles are similar (Jaccard
+    >= CLUSTER_SIMILARITY) within 48 h, or the identifying entities overlap
+    (same subject company; same commodity / institution / currency / country)
+    within 24 h. Contradictory reports therefore join one event, where the
+    contradiction is detected."""
     lo, hi = art.published_at - CLUSTER_WINDOW, art.published_at + CLUSTER_WINDOW
     cands = session.exec(select(MarketEvent).where(MarketEvent.source == NEWS_SOURCE, MarketEvent.published_at >= lo,
                                                    MarketEvent.published_at <= hi)).all()
+    mine = set(keys or []) | {f"COMPANY:{s}" for s in subjects}
     best, score = None, 0.0
     for ev in cands:
         same_cat = (ev.raw or {}).get("category") in (category, None)
+        if not same_cat:
+            continue
         s = tx.similarity(ev.title, art.title)
-        if same_cat and len(subjects) == 1 and ev.symbol in subjects and \
-                abs(_utc(ev.published_at) - art.published_at) <= SAME_SUBJECT_WINDOW:
+        theirs = set((ev.raw or {}).get("keys") or []) | ({f"COMPANY:{ev.symbol}"} if ev.symbol else set())
+        mine_co, theirs_co = {k for k in mine if k.startswith("COMPANY:")}, {k for k in theirs if k.startswith("COMPANY:")}
+        if mine_co and theirs_co and not (mine_co & theirs_co):
+            continue                              # different subject companies are never one story
+        if mine and theirs and (mine & theirs) and abs(_utc(ev.published_at) - art.published_at) <= ENTITY_WINDOW:
             s = max(s, CLUSTER_SIMILARITY)
-        if s > score and same_cat:
+        if s > score:
             best, score = ev, s
     return best if score >= CLUSTER_SIMILARITY else None
 
@@ -225,12 +252,14 @@ def ingest(session: Session, provider, since: dt.datetime, until: dt.datetime,
         c = taxonomy.classify(title, excerpt)
         subjects = {e.symbol for e in index.find(title)} if c.scope == "COMPANY" else set()
         subjects |= {s for s in a.symbols if s in {u.symbol for u in universe}}
-        event = _cluster(session, art, c.category, subjects)
+        keys = cluster_keys(c.category, c.scope, ent.extract(f"{title}. {excerpt}", index), subjects)
+        event = _cluster(session, art, c.category, subjects, keys)
         if event is None:
             event = MarketEvent(source=NEWS_SOURCE, source_event_id=f"news:{art.fingerprint}:{published:%Y%m%d%H%M}",
                                 symbol=None, event_type=c.event_type, title=title, published_at=published,
                                 ingested_at=now, effective_available_at=max(published, now),
-                                source_reference=a.url[:1000], raw={"category": c.category, "scope": c.scope})
+                                source_reference=a.url[:1000], raw={"category": c.category, "scope": c.scope,
+                                                                    "keys": keys})
             session.add(event)
             session.flush()
             run.new_events += 1
