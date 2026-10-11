@@ -50,9 +50,9 @@ Rules:
 
 | Step | What it means | Status |
 |---|---|---|
-| a. Revocation | Regenerate or revoke the key at newsapi.org. **This is the only step that removes the risk**, because the key stays in public history | **Owner action, open.** Current code does not use the key (news comes from Google News RSS) |
-| b. Replacement configuration | Not needed: no code reads `API_KEY`. If news is ever re-enabled, the key goes in Streamlit Cloud → app → Settings → Secrets, never in the repository | Nothing to do |
-| c. Local tracked-file cleanup | `git rm --cached .streamlit/secrets.toml`. The file is already in `.gitignore` and stays on the laptop | Prepared; **after (a)**, with approval |
+| a. Revocation | Sign in at newsapi.org, open the account page and regenerate (or delete) the key; regenerating invalidates the old one. **This is the only step that removes the risk.** Then run `python scripts/security/check_exposed_newsapi_key.py`, which must print `REVOKED`; it never prints the key | **Owner action, OPEN AND URGENT.** Verified 11 Oct 2026: the key **is still active** (HTTP 200). It is not only in history: it is in the **current** tracked `.streamlit/secrets.toml` on public `main`, and so on every branch based on it. An earlier note said "history only"; that was wrong, because a Git Bash path conversion made the check miss the file |
+| b. Replacement configuration | The prediction engine does not use this key. If NewsAPI is adopted (`docs/NEWS_PROVIDERS.md`), create a NEW key and store it only in the API service's secret store as `NEWSAPI_KEY`; for the Streamlit app, use Streamlit Cloud → app → Settings → Secrets. Never in the repository | After (a); decision on NewsAPI first |
+| c. Local tracked-file cleanup | `git rm --cached .streamlit/secrets.toml` on a review branch. The file is already matched by `.gitignore` (line 39); it is tracked only because it was committed before the rule existed, and it stays on the laptop | Prepared; **after (a)**, as you instructed earlier |
 | d. History cleanup | The key is in commits `bcf4da6` (news/api.py) and `c9ca6e2` onwards (`.streamlit/secrets.toml`). Removing it needs a history rewrite (git filter-repo) **and a force-push**, which invalidates every clone | **Not done.** After (a) it isn't necessary; only on explicit request |
 
 ## 2. Database persistence, backup and recovery
