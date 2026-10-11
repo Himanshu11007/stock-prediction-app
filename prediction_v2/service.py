@@ -250,6 +250,8 @@ def run_predictions(engine, run_type: str, now: Optional[dt.datetime] = None,
                     target=decision["target"], trailing_stop_rule=decision["trailing_stop_rule"],
                     invalidation_condition=decision["invalidation_condition"],
                     features={**feats[sym], **({"intraday": extra} if extra else {}),
+                              "data_completeness": round(sum(feats[sym].get(k) is not None for k in rules.REQUIRED)
+                                                         / len(rules.REQUIRED), 3),
                               **({"news": news.as_dict()} if news is not None else {})},
                     reasons=decision["reasons"], quality_flags=sorted(set(flags[sym] + decision["quality_flags"])),
                     event_ids=sorted({e.id for e in events} | {x.event_id for x in (news.evidence if news else [])}),

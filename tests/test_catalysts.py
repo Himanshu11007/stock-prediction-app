@@ -395,5 +395,9 @@ def test_snapshot_uses_news_and_freezes_the_evidence(news_db):
         assert p.direction == "UP" and p.setup_type == "NEWS_CATALYST"
         assert p.features["news"]["evidence"][0]["sources"] == ["reuters.com"]
         assert p.event_ids and p.features["news"]["rule_version"] == "news-v0.1"
+        n = p.features["news"]
+        assert n["news_sentiment"] > 0 and n["surprise"] == "UNEXPECTED" and n["novelty"] == "NEW"
+        assert n["confidence"] is None and "not calibrated" in n["confidence_note"]
+        assert p.features["data_completeness"] == 1.0 and p.confidence is None
         other = s.exec(select(Prediction).where(Prediction.symbol == "S2.NS")).one()
         assert other.features["news"]["status"] == "NO_NEWS"

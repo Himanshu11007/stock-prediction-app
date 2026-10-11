@@ -64,6 +64,9 @@ class Evidence:
     hypothesis_id: str = ""
     mechanism: Optional[str] = None
     flags: list[str] = field(default_factory=list)
+    sentiment: Optional[float] = None          # text sentiment of the event (-1..1); not a price forecast
+    novelty: Optional[str] = None              # NEW | FOLLOW_UP | REPEAT
+    expectedness: Optional[str] = None         # UNEXPECTED | EXPECTED | UNKNOWN (stated by the source text)
 
     def as_dict(self) -> dict[str, Any]:
         return {k: v for k, v in self.__dict__.items()}
@@ -80,8 +83,17 @@ class Assessment:
     evidence: list[Evidence] = field(default_factory=list)
 
     def as_dict(self) -> dict[str, Any]:
+        ev = [e for e in self.evidence if e.weight > 0]
+        w = sum(e.weight for e in ev)
         return {"symbol": self.symbol, "as_of": self.as_of, "score": round(self.score, 3), "direction": self.direction,
                 "status": self.status, "reasons": self.reasons, "evidence": [e.as_dict() for e in self.evidence],
+                # kept separate on purpose: sentiment of the text != surprise != predicted price direction
+                "news_sentiment": round(sum((e.sentiment or 0) * e.weight for e in ev) / w, 3) if w else None,
+                "surprise": "UNEXPECTED" if any(e.expectedness == "UNEXPECTED" for e in ev) else
+                            "EXPECTED" if ev and all(e.expectedness == "EXPECTED" for e in ev) else
+                            ("UNKNOWN" if ev else None),
+                "novelty": "NEW" if any(e.novelty == "NEW" for e in ev) else (ev[0].novelty if ev else None),
+                "confidence": None, "confidence_note": "not calibrated: the score is evidence strength, not a probability",
                 "rule_version": NEWS_RULE_VERSION, "classifier_version": CLASSIFIER_VERSION,
                 "transmission_version": TRANSMISSION_VERSION}
 
@@ -153,7 +165,8 @@ def assess_stock(session: Session, symbol: str, as_of: dt.datetime,
                                      inferred=link.inferred, sign=sign, weight=round(weight, 3),
                                      available_at=_utc(ev.effective_available_at).isoformat(), source_tier=tier,
                                      sources=sorted({a.source_domain or a.provider for a in arts}),
-                                     hypothesis_id=link.hypothesis_id, mechanism=link.mechanism, flags=flags))
+                                     hypothesis_id=link.hypothesis_id, mechanism=link.mechanism, flags=flags,
+                                     sentiment=cls.sentiment, novelty=cls.novelty, expectedness=cls.expectedness))
     if not out.evidence:
         out.reasons = ["no material news captured for this stock before the cutoff"]
         return out
