@@ -49,6 +49,7 @@ class ProviderSpec:
     requests_per_run: int               # upper bound of requests one ingestion run makes
     licence: str
     cost: str
+    enable_env: Optional[str] = None     # if set, the provider is refused unless this variable is 'true'
 
 
 SPECS: dict[str, ProviderSpec] = {s.name: s for s in (
@@ -88,7 +89,7 @@ SPECS: dict[str, ProviderSpec] = {s.name: s for s in (
     ProviderSpec("newsapi", p.NewsApiProvider, "API", "aggregated news search", True, "NEWSAPI_KEY", "LIMITED",
                  "free plan: last 31 days only (verified 11 Oct 2026), publishedAt only, no first-seen time", "exact",
                  1.0, 100, 1, "developer plan is non-commercial and delayed; business plan paid",
-                 "free (developer) / paid (business)"),
+                 "free (developer) / paid (business)", enable_env="NEWSAPI_ENABLED"),
     ProviderSpec("alphavantage", a.AlphaVantageNewsProvider, "API", "NEWS_SENTIMENT with tickers and topics",
                  True, "ALPHAVANTAGE_API_KEY", "LIMITED",
                  "time_from/time_to supported; depth and Indian coverage NOT verified (demo key serves AAPL only)",
@@ -123,6 +124,8 @@ def select(env: Optional[dict[str, str]] = None) -> Selection:
         spec = SPECS.get(n)
         if spec is None:
             out.refused[n] = "unknown provider"
+        elif spec.enable_env and (env.get(spec.enable_env) or "").strip().lower() != "true":
+            out.refused[n] = f"disabled by default; requires {spec.enable_env}=true and a new {spec.needs_env}"
         elif spec.research_only and not allow_research:
             out.refused[n] = "research-only (licence not reviewed); set NEWS_ALLOW_RESEARCH_PROVIDERS=true only for research"
         elif spec.needs_env and not env.get(spec.needs_env):
@@ -185,6 +188,8 @@ def health(name: str, get: p.HttpGet = p.http_get, now: Optional[dt.datetime] = 
     now = now or dt.datetime.now(dt.timezone.utc)
     out: dict[str, Any] = {"provider": name, "kind": spec.kind, "research_only": spec.research_only,
                            "archive": spec.archive, "time_precision": spec.time_precision}
+    if spec.enable_env and (env.get(spec.enable_env) or "").strip().lower() != "true":
+        return {**out, "status": "DISABLED", "detail": f"disabled by default ({spec.enable_env} is not 'true')"}
     if spec.needs_env and not env.get(spec.needs_env):
         return {**out, "status": "NOT_CONFIGURED", "detail": f"{spec.needs_env} is not set"}
     t0 = time.monotonic()

@@ -201,7 +201,8 @@ def test_rss_failures_are_bounded_recorded_and_partial():
         list(allbad.fetch(T0, T0))
 
 
-def test_newsapi_needs_its_own_key_and_sends_it_as_a_header():
+def test_newsapi_needs_its_own_key_and_sends_it_as_a_header(monkeypatch):
+    monkeypatch.setenv("NEWSAPI_ENABLED", "true")               # explicitly enabled for this test only
     with pytest.raises(prov.NotConfigured):
         list(prov.NewsApiProvider(api_key="").fetch(T0, T0))
     seen = {}

@@ -42,7 +42,15 @@ def test_default_selection_is_the_official_feeds_and_research_providers_are_refu
     research = registry.select({"NEWS_PROVIDERS": "google_news,newsapi,federal_register",
                                 "NEWS_ALLOW_RESEARCH_PROVIDERS": "true"})
     assert research.enabled == ["google_news", "federal_register"]
-    assert research.refused["newsapi"] == "NEWSAPI_KEY is not set"
+    assert research.refused["newsapi"] == "disabled by default; requires NEWSAPI_ENABLED=true and a new NEWSAPI_KEY"
+    keyed = registry.select({"NEWS_PROVIDERS": "newsapi", "NEWS_ALLOW_RESEARCH_PROVIDERS": "true",
+                             "NEWSAPI_KEY": "a-new-key-0000"})
+    assert keyed.enabled == [] and "disabled by default" in keyed.refused["newsapi"]   # a key alone never enables it
+    flagged = registry.select({"NEWS_PROVIDERS": "newsapi", "NEWS_ALLOW_RESEARCH_PROVIDERS": "true",
+                               "NEWSAPI_ENABLED": "true"})
+    assert flagged.refused["newsapi"] == "NEWSAPI_KEY is not set"
+    assert registry.select({"NEWS_PROVIDERS": "newsapi", "NEWS_ALLOW_RESEARCH_PROVIDERS": "true",
+                            "NEWSAPI_ENABLED": "true", "NEWSAPI_KEY": "a-new-key-0000"}).enabled == ["newsapi"]
 
 
 def test_request_budgets_fit_provider_quotas():
@@ -140,7 +148,9 @@ def test_health_states():
     assert ok["status"] == "OK" and ok["items"] == 7 and ok["newest_item_age_hours"] == 7.5   # 7 feeds, 04:30 UTC item
     down = registry.health("federal_register", get=fake(b"", status=500), now=NOW)
     assert down["status"] == "DOWN" and "HTTP 500" in down["detail"]
-    assert registry.health("newsapi", env={}, now=NOW)["status"] == "NOT_CONFIGURED"
+    assert registry.health("newsapi", env={}, now=NOW)["status"] == "DISABLED"
+    assert registry.health("newsapi", env={"NEWSAPI_KEY": "k"}, now=NOW)["status"] == "DISABLED"
+    assert registry.health("newsapi", env={"NEWSAPI_ENABLED": "true"}, now=NOW)["status"] == "NOT_CONFIGURED"
     secret = "AV-SECRET-123456"
     res = registry.health("alphavantage", env={"ALPHAVANTAGE_API_KEY": secret}, now=NOW,
                           get=fake({"Information": "Thank you for using Alpha Vantage! rate limit"}))

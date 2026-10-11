@@ -363,6 +363,7 @@ backfill in the system temp directory, outside the repository).
 |---|---|
 | `MARKETAUX_API_TOKEN`, `ALPHAVANTAGE_API_KEY` | keyed providers (free: ~100 and 25 requests a day). Not set |
 | `NEWS_PROVIDERS` | providers for NEWS_INGESTION (default `official_rss`) |
+| `NEWSAPI_ENABLED`, `NEWSAPI_KEY` | NewsAPI is disabled by default. It needs `NEWSAPI_ENABLED=true` **and** a NEW key; the key exposed in Git history is refused by fingerprint |
 | `NEWS_ALLOW_RESEARCH_PROVIDERS` | must be `true` before any research-only provider is selected |
 | `NSE_AUTOMATED_ACCESS_PERMISSION`, `BSE_AUTOMATED_ACCESS_PERMISSION` | written permission or licence reference; without it every exchange source refuses |
 | `NEWS_BENCHMARK_REPORT` | optional report path for the dashboard |

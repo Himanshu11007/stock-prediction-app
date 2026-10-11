@@ -1,81 +1,107 @@
-# Exposed NewsAPI key: status and remediation plan (11 Oct 2026)
+# Exposed NewsAPI key: status and remediation plan (updated 11 Oct 2026)
 
 This file never contains the key. It is identified by its length (32
-characters) and a fingerprint (`sha256` prefix `c5d151c4f231`).
+characters) and its SHA-256 fingerprint, `c5d151c4f231…`; the full digest is
+in `catalysts/providers.py` as `EXPOSED_NEWSAPI_KEY_SHA256`. A one-way hash of
+a random 32-character key cannot be turned back into the key.
 
-## 1. Status, verified 11 Oct 2026
+## 1. Status
 
 | Item | Status |
 |---|---|
-| Key validity | **STILL ACTIVE.** `python scripts/security/check_exposed_newsapi_key.py` returned `STILL ACTIVE (HTTP 200)`, exit 1. **Not revoked** |
-| Repository | `Himanshu11007/stock-prediction-app` is **public**: assume the key is compromised |
-| Where it is tracked today | `.streamlit/secrets.toml` (single entry `API_KEY`) on `origin/main` and every review branch. No code reads it: the NewsAPI adapter uses `NEWSAPI_KEY` from the environment |
-| First introduced | `bcf4da6` (2026-05-10), hardcoded in `news/api.py`; moved to `.streamlit/secrets.toml` in `c9ca6e2` (2026-05-17) |
-| Commits that add or remove it (`git log --all -S`) | `bcf4da6`, `c9ca6e2`, `1981816`, `9970acd`, `261f8f0`, `96051e6`, `f11e31b` |
-| Remote branches whose history contains it | `main` and every branch on GitHub: `claude/stocklens-auth-security-hardening-qczhnr` and the four `review/*` branches |
+| Key validity | **NOT REVOKED.** Last verified **STILL ACTIVE** (HTTP 200) on 11 Oct 2026. The owner cannot revoke it through the NewsAPI account (no self-service option available). Until NewsAPI support disables it, assume anyone can use it |
+| Repository | `Himanshu11007/stock-prediction-app` is **public**; assume the key is compromised |
+| Where it is | 7 commits (`bcf4da6` hardcoded in `news/api.py`; `c9ca6e2` onwards in `.streamlit/secrets.toml`) on every remote branch, and in the tracked `.streamlit/secrets.toml` on `main` and the pushed review branches |
+| Does StockLens use it? | **No.** Verified 11 Oct 2026: no application code reads `.streamlit/secrets.toml` or an `API_KEY` entry. The legacy Streamlit news (`news/api.py`) uses Google News RSS; the news pipeline uses official RSS feeds by default |
 
-## 2. Done on the local branch `review/independent-review-prep` (not pushed)
+## 2. Done on `review/independent-review-prep` (local, not pushed)
 
-- `.streamlit/secrets.toml` is **untracked** (`git rm --cached`). The local
-  copy remains on disk and is ignored by Git.
-- `.gitignore` additionally ignores `.env`, `.env.*` (except
-  `.env.example`), `*.pem`, `*.p12`, `*.pfx` and `client_secret*.json`.
-- `scripts/security/scan_secrets.py` fails if any tracked file is a secret
-  file or contains a credential. It runs in the test suite
-  (`tests/test_secret_scan.py`) and in CI (`.github/workflows/ci.yml`).
-  - It prints the file, line and rule only, never a value.
-  - `--history` also scans every commit reachable from HEAD.
+| Change | Effect |
+|---|---|
+| NewsAPI **disabled by default** | `NewsApiProvider` refuses to run unless `NEWSAPI_ENABLED=true` **and** a new key is set in `NEWSAPI_KEY`. A key alone never enables it, and the registry and health check report it as `DISABLED`. Every refusal happens before any network request |
+| **The exposed key is refused** | Even when enabled, a key whose SHA-256 matches the exposed key is rejected. There is no fallback to any file, `secrets.toml` entry or default |
+| Benchmark runner | Queries NewsAPI only with the same flag and a new key |
+| Manual checker (`scripts/security/check_exposed_newsapi_key.py`) | The only code that reads the exposed key. Without `--confirm-read-exposed-key` it reads nothing and contacts nothing (exit 3). Never run from CI, schedulers or tests |
+| `.streamlit/secrets.toml` | **Untracked** (`git rm --cached`) and ignored by `.gitignore`. The local copy is kept |
+| Secret scanning | `scripts/security/scan_secrets.py` (tests and CI) fails on tracked secret files or credentials. `tests/test_newsapi_disabled.py` also checks every tracked file for the exposed key **by fingerprint**, so the test never contains the key |
 
-**Untracking does not make the key safe.** It is still in every commit
-listed above, and anyone who cloned or forked the public repository has it.
+### Keeping your local copy of `.streamlit/secrets.toml`
 
-## 3. Required order (owner)
+When a branch that *untracks* the file is checked out or merged into a
+working copy where the file is still tracked (for example `main` or
+`feature/prediction-v2`), **Git deletes the working file**. If you want to
+keep it, copy it outside the repository before switching or merging, and
+copy it back afterwards; it is then ignored. Nothing in StockLens needs this
+file.
 
-1. **Revoke or regenerate the key** at newsapi.org (account > API key).
-   This is the only step that removes the risk.
-2. **Verify:** `python scripts/security/check_exposed_newsapi_key.py` must
-   print `REVOKED (HTTP 401 apiKeyInvalid)` and exit 0. Until then, no
-   document may call the key revoked.
-3. If NewsAPI is still wanted, create a **new** key and keep it only in the
-   environment (`NEWSAPI_KEY`), never in a file in the repository.
-4. Approve the push of this branch, so the untracking and the scanner reach
-   GitHub.
-5. Optional: rewrite history (step 4 below). Only after revocation, and
-   only with explicit approval.
+## 3. Getting the key revoked (owner)
 
-## 4. History rewrite: prepared, NOT executed (needs separate approval)
+Self-service revocation is not available to you. Options, most effective
+first:
 
-A rewrite changes every commit hash from `bcf4da6` onwards on all branches.
-It needs a force-push and invalidates every existing clone, open review and
-commit link. Because the repository is public, it reduces future exposure
-but cannot undo past exposure. Revocation is mandatory either way.
+1. **Recover the account, then regenerate the key.** Use the password reset
+   on newsapi.org's login page with the e-mail address the key was
+   registered with. Logged-in users see their key in the documentation; the
+   account page is where a new key can be generated, if your plan offers it.
+2. **E-mail NewsAPI support** at `support@newsapi.org` (listed on
+   newsapi.org; paid plans advertise e-mail support):
+   - send it **from the e-mail address the account was registered with**;
+   - ask them to **disable or regenerate** the key, or close the account;
+   - identify the key **without sending it again**: the account e-mail, and
+     the public commit URLs where it is exposed (for example
+     `https://github.com/Himanshu11007/stock-prediction-app/blob/c9ca6e2/.streamlit/secrets.toml`),
+     which they can read themselves;
+   - say it was exposed in a public repository and that you cannot revoke
+     it yourself;
+   - keep the reply. NewsAPI documents an `apiKeyDisabled` error, so it can
+     disable keys on its side.
+3. **If support does not respond:**
+   - ask NewsAPI to **delete the account**, which invalidates its keys;
+   - do not use that account for anything again. StockLens never needs it.
+4. **Verify** once support confirms:
+   `python scripts/security/check_exposed_newsapi_key.py --confirm-read-exposed-key`
+   must print `REVOKED (HTTP 401 …)` and exit 0. Until then, no document may
+   call the key revoked.
 
-```bash
-# on a fresh mirror clone, never the working copy
-git clone --mirror https://github.com/Himanshu11007/stock-prediction-app.git sp-mirror.git
-cd sp-mirror.git
-# 1) drop the secrets file from every commit
-git filter-repo --invert-paths --path .streamlit/secrets.toml
-# 2) replace the hardcoded value in news/api.py (bcf4da6..c9ca6e2) with a placeholder:
-#    put ONE line "<the revoked key>==>REMOVED_NEWSAPI_KEY" in a file outside the repository,
-#    then (delete that file afterwards):
-git filter-repo --replace-text ../replacements.txt
-# 3) verify: no commit contains it any more (expect no output)
-git log --all -S "<the revoked key>" --oneline
-python scripts/security/scan_secrets.py --history     # run from a checkout of the rewritten mirror
-# 4) ONLY with approval: git push --force --mirror
-```
+**Until it is revoked:**
+- the risk is to the **NewsAPI account**: quota use, or use that breaches
+  NewsAPI's terms in your name;
+- it is not a risk to StockLens's data or users, because StockLens does not
+  use the key.
 
-After an approved force-push:
-- every collaborator re-clones;
-- open pull requests are recreated;
-- GitHub support can be asked to purge cached views of the old commits;
-- forks keep the old history and cannot be cleaned by the owner.
+## 4. Git history: prepared, NOT executed (needs separate approval)
+
+Rewriting history changes every commit hash from `bcf4da6` onwards on all
+branches, needs a force-push, and invalidates every clone, open review and
+commit link.
+
+Because the repository is public and the key cannot be revoked yet, a
+rewrite **reduces further exposure but does not remove copies already made**
+(clones, forks, caches, scrapers). It is worth considering **because**
+revocation is unavailable, but only with your explicit approval.
+
+Options, least to most invasive:
+1. **Make the repository private** (owner, GitHub settings). This stops new
+   viewers immediately, with no history change. Existing copies remain.
+2. **Rewrite history** on a fresh mirror clone, never the working copy:
+   ```bash
+   git clone --mirror https://github.com/Himanshu11007/stock-prediction-app.git sp-mirror.git
+   cd sp-mirror.git
+   git filter-repo --invert-paths --path .streamlit/secrets.toml
+   # replacements.txt OUTSIDE the repository, one line "<the key>==>REMOVED_NEWSAPI_KEY", deleted afterwards:
+   git filter-repo --replace-text ../replacements.txt
+   git log --all -S "<the key>" --oneline       # expect no output
+   # ONLY with approval:
+   git push --force --mirror
+   ```
+   Afterwards:
+   - every collaborator re-clones;
+   - open pull requests are recreated;
+   - ask GitHub Support to purge cached views of the old commits;
+   - forks keep the old history.
 
 ## 5. Related credentials (owner)
 
-- **Production database password:** it was exposed in an earlier session;
-  rotation is still pending.
-- **Marketaux and Alpha Vantage keys:** stored only as Windows user
-  environment variables on the owner's PC. A scan of both repositories
-  (11 Oct 2026) found neither key value in any file.
+- **Production database password:** rotation still pending.
+- **Marketaux and Alpha Vantage keys:** Windows user environment variables
+  only; not present in any repository file (scan of 11 Oct 2026).

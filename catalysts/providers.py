@@ -5,10 +5,11 @@ catalysts/providers.py — news providers (no paid subscription is used).
                     notifications, SEBI, US Federal Reserve. Public, free,
                     with publication times. Titles, links and a short excerpt
                     only (the feeds' copyright notices apply).
-  NewsApiProvider   newsapi.org "everything" search. Needs NEWSAPI_KEY (a NEW
-                    key: the old one is in public Git history and must be
-                    revoked). The free plan is delayed and non-commercial, so it
-                    is research-only; disabled unless the key is set.
+  NewsApiProvider   newsapi.org "everything" search. DISABLED by default: it
+                    needs NEWSAPI_ENABLED=true AND a NEW key in NEWSAPI_KEY. The
+                    key that was exposed in public Git history is refused by
+                    fingerprint, and no file or secrets.toml entry is ever read.
+                    The free plan is delayed and non-commercial: research-only.
   GdeltProvider     GDELT DOC 2.0 (free, global, keyless; "seendate" = when
                     GDELT first saw the article). Rate-limited to one request
                     per 5 s; from this network it frequently refuses, so it is
@@ -263,7 +264,30 @@ class RssProvider:
             raise ProviderError("every feed failed: " + "; ".join(self.errors)[:400])
 
 
+# NewsAPI is DISABLED by default. A key committed to the public repository
+# (2026) is exposed and could not be revoked by self-service; it must never
+# be used. The provider runs only when BOTH are set: NEWSAPI_ENABLED=true and
+# a NEW key in NEWSAPI_KEY. The exposed key is recognised by its SHA-256
+# fingerprint (a one-way hash of a random 32-character key reveals nothing
+# usable) and refused. No file, secrets.toml entry or default is ever read.
+NEWSAPI_ENABLED_ENV = "NEWSAPI_ENABLED"
+NEWSAPI_KEY_ENV = "NEWSAPI_KEY"
+EXPOSED_NEWSAPI_KEY_SHA256 = "c5d151c4f231a56c08241dc9f47c77c06e66c8bc478de60589fa2092fa94600d"
+
+
+def newsapi_enabled(env: Optional[dict] = None) -> bool:
+    env = os.environ if env is None else env
+    return (env.get(NEWSAPI_ENABLED_ENV) or "").strip().lower() == "true"
+
+
+def is_exposed_newsapi_key(key: Optional[str]) -> bool:
+    import hashlib
+    return bool(key) and hashlib.sha256(key.strip().encode()).hexdigest() == EXPOSED_NEWSAPI_KEY_SHA256
+
+
 class NewsApiProvider:
+    """Disabled by default (see NEWSAPI_ENABLED_ENV above). Every refusal
+    happens before any network request."""
     name = "newsapi"
     URL = "https://newsapi.org/v2/everything"
 
@@ -271,11 +295,17 @@ class NewsApiProvider:
                                     'economy OR shares OR tariff OR crude OR rupee)',
                  api_key: Optional[str] = None, get: HttpGet = http_get, sleep: Callable[[float], None] = time.sleep):
         self.query, self.get, self.sleep = query, get, sleep
-        self.api_key = api_key if api_key is not None else os.environ.get("NEWSAPI_KEY", "")
+        self.api_key = api_key if api_key is not None else os.environ.get(NEWSAPI_KEY_ENV, "")
 
     def fetch(self, since: dt.datetime, until: dt.datetime) -> Iterable[RawArticle]:
+        if not newsapi_enabled():
+            raise NotPermitted(f"NewsAPI is disabled by default; it needs {NEWSAPI_ENABLED_ENV}=true and a new "
+                               f"{NEWSAPI_KEY_ENV}")
         if not self.api_key:
-            raise NotConfigured("NEWSAPI_KEY is not set (and the previously committed key must not be reused)")
+            raise NotConfigured(f"{NEWSAPI_KEY_ENV} is not set (a NEW key is required)")
+        if is_exposed_newsapi_key(self.api_key):
+            raise NotPermitted("refusing the NewsAPI key that was exposed in the public repository; "
+                               f"configure a new key in {NEWSAPI_KEY_ENV}")
         q = urllib.parse.urlencode({"q": self.query, "from": since.isoformat(), "to": until.isoformat(),
                                     "language": "en", "sortBy": "publishedAt", "pageSize": 100})
         # The key is sent as a header, never in the URL, and never logged.

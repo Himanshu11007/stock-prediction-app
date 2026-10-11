@@ -136,21 +136,15 @@ archive for the future; it says nothing about the past.
 
 ## 6. NewsAPI credential (owner action)
 
-1. **Revoke now.**
-   - Sign in at newsapi.org, open the account page and regenerate the key.
-     Regenerating invalidates the old one.
-   - Run `python scripts/security/check_exposed_newsapi_key.py`. It must
-     print `REVOKED`; it never prints the key.
-   - No StockLens code reads this key, so revoking it breaks nothing.
-2. **Only if NewsAPI is adopted:** store a new key as `NEWSAPI_KEY` in the
-   API service's secret store, never in the repository.
-3. **After revocation:** untrack the file with
-   `git rm --cached .streamlit/secrets.toml` on a review branch. It is
-   already matched by `.gitignore`; it is tracked only because it was
-   committed before the rule existed.
-4. **History rewrite:** not needed once the key is revoked.
-
-See `docs/OPERATIONS_AND_SECURITY.md` §1.2.
+- **The exposed key is not revoked.** The owner cannot revoke it through
+  the account; follow `docs/SECRET_REMEDIATION.md` §3 (account recovery,
+  NewsAPI support, account deletion).
+- **StockLens does not use NewsAPI.** It is disabled by default and needs
+  `NEWSAPI_ENABLED=true` **and** a NEW key in `NEWSAPI_KEY`; the exposed key
+  is refused by fingerprint. Nothing reads `.streamlit/secrets.toml`, which
+  is untracked on the review branch.
+- **History rewrite:** prepared, not executed; separate approval
+  (`docs/SECRET_REMEDIATION.md` §4).
 
 ## 7. Recommendation
 

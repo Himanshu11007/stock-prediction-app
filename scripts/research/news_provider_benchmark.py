@@ -488,7 +488,8 @@ def main() -> None:
         "marketaux": bm.Capability("marketaux", bool(env.get("MARKETAUX_API_TOKEN"))),
         "alphavantage": bm.Capability("alphavantage", bool(env.get("ALPHAVANTAGE_API_KEY")),
                                       max_age=now - dt.datetime(2022, 3, 1, tzinfo=UTC)),
-        "newsapi": bm.Capability("newsapi", bool(env.get("NEWSAPI_KEY")), max_age=dt.timedelta(days=30)),
+        "newsapi": bm.Capability("newsapi", prov.newsapi_enabled(env) and bool(env.get(prov.NEWSAPI_KEY_ENV)),
+                                 max_age=dt.timedelta(days=30)),          # disabled by default
     }
     pub_items: list[prov.RawArticle] = []
     try:

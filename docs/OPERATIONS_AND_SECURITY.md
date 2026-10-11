@@ -46,14 +46,14 @@ Rules:
    scheduler calls the API only and never connects to the database
    (docs/SCHEDULER.md), so GitHub's runners need no database access.
 
-### 1.2 NewsAPI key: four separate steps
+### 1.2 NewsAPI key (updated 11 Oct 2026)
 
-| Step | What it means | Status |
-|---|---|---|
-| a. Revocation | Sign in at newsapi.org, open the account page and regenerate (or delete) the key; regenerating invalidates the old one. **This is the only step that removes the risk.** Then run `python scripts/security/check_exposed_newsapi_key.py`, which must print `REVOKED`; it never prints the key | **Owner action, OPEN AND URGENT.** Verified 11 Oct 2026: the key **is still active** (HTTP 200). It is not only in history: it is in the **current** tracked `.streamlit/secrets.toml` on public `main`, and so on every branch based on it. An earlier note said "history only"; that was wrong, because a Git Bash path conversion made the check miss the file |
-| b. Replacement configuration | The prediction engine does not use this key. If NewsAPI is adopted (`docs/NEWS_PROVIDERS.md`), create a NEW key and store it only in the API service's secret store as `NEWSAPI_KEY`; for the Streamlit app, use Streamlit Cloud → app → Settings → Secrets. Never in the repository | After (a); decision on NewsAPI first |
-| c. Local tracked-file cleanup | `git rm --cached .streamlit/secrets.toml` on a review branch. The file is already matched by `.gitignore` (line 39); it is tracked only because it was committed before the rule existed, and it stays on the laptop | Prepared; **after (a)**, as you instructed earlier |
-| d. History cleanup | The key is in commits `bcf4da6` (news/api.py) and `c9ca6e2` onwards (`.streamlit/secrets.toml`). Removing it needs a history rewrite (git filter-repo) **and a force-push**, which invalidates every clone | **Not done.** After (a) it isn't necessary; only on explicit request |
+| Step | Status |
+|---|---|
+| a. Revocation | **NOT REVOKED.** Still active (HTTP 200) when last checked on 11 Oct 2026; the owner cannot revoke it through the account. Path: account recovery, NewsAPI support (`support@newsapi.org`) or account deletion (`docs/SECRET_REMEDIATION.md` §3). Verify with `python scripts/security/check_exposed_newsapi_key.py --confirm-read-exposed-key` |
+| b. StockLens no longer depends on it | **Done on the review branch.** NewsAPI is disabled by default and needs `NEWSAPI_ENABLED=true` and a new `NEWSAPI_KEY`; the exposed key is refused by fingerprint; no code reads `.streamlit/secrets.toml` (`tests/test_newsapi_disabled.py`) |
+| c. Untracking `.streamlit/secrets.toml` | **Done on the review branch** (local copy kept, ignored). Merging it into a working copy that still tracks the file deletes the working file: copy it aside first |
+| d. History cleanup | **Prepared, not executed.** Needs separate approval (force-push of a public repository); `docs/SECRET_REMEDIATION.md` §4 |
 
 ## 2. Database persistence, backup and recovery
 

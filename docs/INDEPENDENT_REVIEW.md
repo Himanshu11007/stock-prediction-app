@@ -60,6 +60,10 @@ The base review branch itself is 39 commits ahead of `main` (merge base
 | `tests/test_news_providers.py`, `tests/test_news_api.py` | Previously untested error paths: network retries, HTTP error status, GDELT parsing and non-JSON, invalid companion report, filter, ingestion runs |
 | `tests/test_news_e2e.py`, `tests/contracts/*.json`, `scripts/export_web_news_fixtures.py` | The v2 snapshot and detail responses are also contract fixtures shared with the web |
 | `docs/PREDICTION_EVIDENCE.md` (new) | Coverage vs directional accuracy; chronological results after costs; safeguards; no-edge conclusion |
+| `catalysts/providers.py`, `catalysts/registry.py`, `scripts/research/news_provider_benchmark.py` | NewsAPI disabled by default: it needs `NEWSAPI_ENABLED=true` **and** a new `NEWSAPI_KEY`. The exposed key is refused by SHA-256 fingerprint before any request; the registry reports `DISABLED` |
+| `scripts/security/check_exposed_newsapi_key.py` | The only reader of the exposed key; it does nothing without `--confirm-read-exposed-key` |
+| `tests/test_newsapi_disabled.py` (new), `tests/test_news_providers.py`, `tests/test_catalysts.py` | Disabled by default; a key alone never enables it; exposed key refused; no tracked file contains the key (fingerprint scan); no app code reads the secrets file; default ingestion unaffected; NewsAPI alone fails loudly; checker inert without confirmation |
+| `docs/SECRET_REMEDIATION.md`, `OPERATIONS_AND_SECURITY.md`, `NEWS_PROVIDERS.md`, `NEWS_ENGINE.md`, `NEWS_PHASE2.md` | Not revoked; no self-service revocation; support path; history plan (not executed) |
 
 ### Web
 
@@ -125,10 +129,15 @@ The base review branch itself is 39 commits ahead of `main` (merge base
 
 ## 5. Remaining security and integration risks
 
-1. **The exposed NewsAPI key is still active** (HTTP 200 on 11 Oct 2026).
+1. **The exposed NewsAPI key is NOT revoked** (still active, HTTP 200, last
+   checked 11 Oct 2026) and the owner cannot revoke it through the account.
    - It is in 7 commits and in the history of every remote branch of a
      public repository.
-   - Untracking does not fix this; only revocation does.
+   - StockLens no longer depends on it. NewsAPI is disabled by default and
+     needs `NEWSAPI_ENABLED=true` and a new `NEWSAPI_KEY`; the exposed key
+     is refused by fingerprint; nothing reads `.streamlit/secrets.toml`.
+   - The remaining risk is misuse of the NewsAPI account. Revocation goes
+     through NewsAPI support (`SECRET_REMEDIATION.md` §3).
 2. **Production database password rotation** is still pending.
 3. **Third-party headlines in a public repository:** the committed research
    reports and web test fixtures contain news headlines and links from
@@ -157,11 +166,13 @@ The base review branch itself is 39 commits ahead of `main` (merge base
 
 1. **Push** the two local branches (`review/independent-review-prep`) to
    GitHub, after which CI runs.
-2. **Revoke or regenerate the NewsAPI key** at newsapi.org, then verify
-   with `python scripts/security/check_exposed_newsapi_key.py`, which must
-   exit 0.
-3. **History rewrite** to remove the key from all commits: a force-push to
-   a public repository, only after revocation (`SECRET_REMEDIATION.md` §4).
+2. **Get the NewsAPI key revoked** through account recovery, NewsAPI support
+   or account deletion (`SECRET_REMEDIATION.md` §3). Then verify with
+   `python scripts/security/check_exposed_newsapi_key.py --confirm-read-exposed-key`,
+   which must exit 0.
+3. **Reduce exposure** (`SECRET_REMEDIATION.md` §4): optionally make the
+   repository private, and/or rewrite history to remove the key from all
+   commits (a force-push of a public repository; separate approval).
 4. **Rotate the production database password.**
 5. **Merging into `main`** (backend and web) and the resulting Render
    deploys.

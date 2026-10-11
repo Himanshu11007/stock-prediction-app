@@ -25,7 +25,7 @@ the migration are approved.
 | **RBI** press releases and notifications (RSS) | Indian monetary policy, liquidity, FX, regulation | none, free; "All rights reserved", so titles, links and short excerpts only | `pubDate` (IST offset) | **Working** (live run) |
 | **SEBI** (RSS) | Indian market regulation | none, free | `pubDate` | **Working** |
 | **US Federal Reserve** (RSS, all press releases) | FOMC decisions, US monetary policy | none, free | `pubDate` | **Working** |
-| NewsAPI (`newsapi.org`) | international and Indian news search | needs `NEWSAPI_KEY`; the key sits in an HTTP header and is never in URLs or logs. The free plan is delayed and non-commercial; paid plans cost money | `publishedAt` | **Not configured.** The old key is in public Git history and must be **revoked**; a new key requires your decision (and cost if commercial) |
+| NewsAPI (`newsapi.org`) | international and Indian news search | **disabled by default**: needs `NEWSAPI_ENABLED=true` and a NEW `NEWSAPI_KEY` (the exposed key is refused); the key sits in an HTTP header and is never in URLs or logs. The free plan is delayed and non-commercial; paid plans cost money | `publishedAt` | **Not configured.** The old key is in public Git history and must be **revoked**; a new key requires your decision (and cost if commercial) |
 | GDELT DOC 2.0 | global news, history up to about 3 months, first-seen times | none, free; one request per 5 s | `seendate` | **Refused from this network**: every request is rate-limited, even when spaced out. Research only |
 | GDELT raw 15-minute files | global events (coded actors, no headlines) and the knowledge graph | free | `DATEADDED` | reachable, but events lack company or headline information, and the knowledge graph is about 4.4 MB per 15 minutes. Not used |
 | NSE / BSE corporate announcements | filings, results, orders, corporate actions | automated access is restricted by the exchanges' terms; the NSE feed timed out (anti-bot) | — | **BLOCKED**: needs a licensed feed or an exchange data agreement |
@@ -48,7 +48,7 @@ the migration are approved.
 
 **Configuration** (on the API service; production change: approval):
 - `NEWS_PROVIDERS=rss` (default) or `rss,newsapi`;
-- `NEWSAPI_KEY` (secret store only);
+- `NEWSAPI_ENABLED=true` **and** a NEW `NEWSAPI_KEY` (secret store only): NewsAPI is disabled by default and the exposed key is refused;
 - `PREDICTION_V2_NEWS_ENABLED` (default `true`; with no events it changes
   nothing).
 
