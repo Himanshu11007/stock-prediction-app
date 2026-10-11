@@ -197,3 +197,24 @@ def test_value_is_measured_on_events_stocklens_does_not_already_receive():
     reasons = bm.recommend(summary, {"p": True}, value={"p": v})["verdicts"]["p"]["reasons"]
     assert any("own sources do not deliver" in r for r in reasons)
     assert not any("own sources" in r for r in bm.recommend(summary, {"p": True})["verdicts"]["p"]["reasons"])
+
+
+def test_roundups_and_day_late_reports_are_ambiguous_not_detections():
+    ev = trent_event()
+    index = ent.CompanyIndex([("TRENT.NS", "Trent Limited"), ("TITAN.NS", "Titan Company Limited"),
+                              ("ITC.NS", "ITC Limited")])
+    roundup = art("Stocks to watch: Trent Q2 update, Titan, ITC", 15)
+    late = art("Trent Q2 update: what it means for investors", 26 * 60)
+    out = bm.evaluate("p", ev, [roundup, late], index=index)
+    assert out.status == bm.AMBIGUOUS and out.ambiguous_reason == "roundup / multi-company headline"
+    assert out.delay_minutes is None and out.actionable is None              # no timing claimed from a weak match
+    good = art("Trent Q2 update: revenue up 23%", 30)
+    out2 = bm.evaluate("p", ev, [roundup, late, good], index=index)
+    assert out2.status == bm.DETECTED and out2.delay_minutes == 30.0 and out2.verified == 1
+    s = bm.summarize([out, out2, bm.Outcome("p", "m", "nse_filing", bm.MISSED)])["p"]
+    assert (s["tested"], s["detected"], s["ambiguous"], s["recall"], s["recall_lenient"]) == (3, 1, 1, 0.333, 0.667)
+    assert s["article_precision"] == round(1 / 5, 3)                          # 1 strong of 5 candidate articles
+    seg = bm.by_segment([out, out2])
+    assert seg["indian_company"]["p"]["tested"] == 2 and seg["commodity_currency"] == {}
+    rows = bm.audit([out, out2], {ev.id: {"title": ev.title, "precision": "exact"}})
+    assert "WEAK_MATCH" in rows[0]["flags"] and rows[1]["status"] == bm.DETECTED

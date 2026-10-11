@@ -1,0 +1,104 @@
+{
+ "data": {
+  "as_of": "2026-10-11T09:07:05.093035+00:00",
+  "coverage": {
+   "universe": 8,
+   "window_hours": 72.0,
+   "with_news": 1,
+   "without_news": [
+    "S0.NS",
+    "S2.NS",
+    "S3.NS",
+    "S4.NS",
+    "S5.NS",
+    "S6.NS",
+    "S7.NS"
+   ]
+  },
+  "data_basis": "REAL",
+  "detail": "news ingested recently from at least one approved provider",
+  "newest_article": {
+   "ingested_at": "2026-10-09T08:30:00+00:00",
+   "provider": "official_rss",
+   "published_at": "2026-10-09T07:35:00+00:00",
+   "title": "RBI announces special window for public sector oil marketing companies"
+  },
+  "providers": [
+   {
+    "enabled": true,
+    "health": "OK",
+    "last_run": {
+     "error": null,
+     "fetched": 1,
+     "finished_at": "2026-10-11T09:07:04.701976+00:00",
+     "inserted": 1,
+     "new_events": 1,
+     "started_at": "2026-10-09T08:30:00+00:00",
+     "status": "COMPLETED"
+    },
+    "last_success_age_hours": 0.0,
+    "last_success_at": "2026-10-11T09:07:04.701976+00:00",
+    "provider": "official_rss",
+    "refused_reason": null,
+    "selected": true
+   },
+   {
+    "enabled": false,
+    "health": "OK",
+    "last_run": {
+     "error": null,
+     "fetched": 2,
+     "finished_at": "2026-10-11T09:07:04.718595+00:00",
+     "inserted": 2,
+     "new_events": 1,
+     "started_at": "2026-10-09T08:30:00+00:00",
+     "status": "COMPLETED"
+    },
+    "last_success_age_hours": 0.0,
+    "last_success_at": "2026-10-11T09:07:04.718595+00:00",
+    "provider": "marketaux",
+    "refused_reason": null,
+    "selected": false
+   },
+   {
+    "enabled": false,
+    "health": "FAILING",
+    "last_run": {
+     "error": "HTTP 429 from api.gdeltproject.org",
+     "fetched": 0,
+     "finished_at": "2026-10-11T09:07:04.721594+00:00",
+     "inserted": 0,
+     "new_events": 0,
+     "started_at": "2026-10-09T08:30:00+00:00",
+     "status": "RATE_LIMITED"
+    },
+    "last_success_age_hours": null,
+    "last_success_at": null,
+    "provider": "gdelt",
+    "refused_reason": null,
+    "selected": false
+   },
+   {
+    "enabled": false,
+    "health": "NOT_CONFIGURED",
+    "last_run": {
+     "error": "ALPHAVANTAGE_API_KEY is not set (the demo key only serves documented examples)",
+     "fetched": 0,
+     "finished_at": "2026-10-11T09:07:04.723712+00:00",
+     "inserted": 0,
+     "new_events": 0,
+     "started_at": "2026-10-09T08:30:00+00:00",
+     "status": "NOT_CONFIGURED"
+    },
+    "last_success_age_hours": null,
+    "last_success_at": null,
+    "provider": "alphavantage",
+    "refused_reason": null,
+    "selected": false
+   }
+  ],
+  "stale_after_hours": 3.0
+ },
+ "message": "News input status",
+ "success": true
+}

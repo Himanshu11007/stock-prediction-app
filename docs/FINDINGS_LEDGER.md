@@ -177,3 +177,20 @@ working end-to-end feature; such items are never marked complete.
 | NB-06 | Recommendation | **None meets the bar.** Google News: recall 0.83, p50 +47 min, but unlicensed, and its only new value is NSE filings, which NSE itself delivers earlier | report `recommendation`, `value_over_existing_sources` |
 | NB-07 | Timing of commodity, currency and US tariff events | BLOCKED: date-only ground truth | §6.4 |
 | NB-08 | Dashboard and admin endpoint | IMPLEMENTED AND TESTED | web `NewsBenchmarkTests`; `test_news_api.py` |
+
+## News Phase 2 and end-to-end integration (`docs/NEWS_PHASE2.md`)
+
+| ID | Item | Status | Evidence |
+|---|---|---|---|
+| NP-01 | Benchmark reproduced offline and on identical events (Google: same 54 detected / 12 missed; 3 reclassified AMBIGUOUS) | VERIFIED | `--resummarize`, `--events-from` |
+| NP-02 | AMBIGUOUS status, strict / lenient recall, article precision, segments, audit trail | IMPLEMENTED AND TESTED | `test_roundups_and_day_late_reports_are_ambiguous_not_detections` |
+| NP-03 | Marketaux / Alpha Vantage live validation | **PENDING (no keys)**: probe implemented and tested offline; never reported as failed | `catalysts/probe.py`, `tests/test_news_probe.py` |
+| NP-04 | Original timestamp and zone, provider availability, ingestion, correction, mapping evidence | IMPLEMENTED AND TESTED; migration `3c1f2a9d7e44` not applied in production | `test_original_timestamp_and_zone_are_kept_without_inventing_one`, e2e |
+| NP-05 | Corrected article unusable before its correction in replays | IMPLEMENTED AND TESTED | `test_corrected_article_is_not_used_before_its_correction_arrived` |
+| NP-06 | NSE terms prohibit automated collection without written permission | VERIFIED (terms quoted); every NSE source gated by `NSE_AUTOMATED_ACCESS_PERMISSION` | `test_nse_sources_refuse_without_recorded_permission_and_classify_filings` |
+| NP-07 | Filings materiality (HIGH / MEDIUM / EXCLUDED / UNKNOWN) | IMPLEMENTED AND TESTED | `catalysts/filings.py` |
+| NP-08 | Explainable news screen (scores, horizon, sectors, risks, exclusion reasons, links, times) | IMPLEMENTED AND TESTED (shadow) | `catalysts/candidates.py`, `tests/test_news_candidates.py` |
+| NP-09 | News input status (provider health, coverage, staleness, data basis) | IMPLEMENTED AND TESTED | `catalysts/status.py`, `/admin/news/status` |
+| NP-10 | End-to-end ingestion → pipeline → v2 snapshot → API → web, with shared contract fixtures | IMPLEMENTED AND TESTED | `tests/test_news_e2e.py`; web `NewsCandidatesTests` |
+| NP-11 | Point-in-time backtest of news arms vs v1 / v2 / baselines | IMPLEMENTED AND TESTED (logic); results in `news_signal_backtest.json` | `catalysts/signal_eval.py`, `tests/test_signal_eval.py` |
+| NP-12 | StockLens's own news archive | **BLOCKED**: local DB has no news tables; production ingestion not scheduled (REQUIRES_APPROVAL) | `news_signal_backtest.json` archives |

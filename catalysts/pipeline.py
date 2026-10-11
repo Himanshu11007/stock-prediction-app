@@ -138,17 +138,23 @@ def _link_entities(session: Session, event: MarketEvent, art: NewsArticle, categ
     for sym in provider_symbols:                    # e.g. the company that filed with the exchange: a fact
         if sym in known:
             rows.append(EventEntity(event_id=event.id, entity_type="COMPANY", entity_key=sym, symbol=sym,
-                                    relation="SUBJECT", method="PROVIDER", confidence=1.0))
+                                    relation="SUBJECT", method="PROVIDER", confidence=1.0,
+                                    evidence={"source": "provider_tag", "matched": sym, "article_id": art.id}))
             title_companies.add(sym)
             scope = "COMPANY"
     for e in found:
         relation = "SUBJECT" if e.symbol and e.symbol in title_companies and scope == "COMPANY" else "MENTIONED"
+        in_title = bool(e.matched) and e.matched.lower() in art.title.lower()
         rows.append(EventEntity(event_id=event.id, entity_type=e.entity_type, entity_key=e.entity_key, symbol=e.symbol,
-                                relation=relation, method="DICTIONARY", confidence=1.0))
+                                relation=relation, method="DICTIONARY", confidence=1.0,
+                                evidence={"source": "title" if in_title else "excerpt", "matched": e.matched[:80],
+                                          "article_id": art.id}))
     for x in transmission.exposures(category, body, [(c.symbol, c.sector, c.industry) for c in universe]):
         rows.append(EventEntity(event_id=event.id, entity_type="COMPANY", entity_key=x.symbol, symbol=x.symbol,
                                 relation="EXPOSED", inferred=True, method="HYPOTHESIS", hypothesis_id=x.hypothesis_id,
-                                sign=x.sign, mechanism=f"{x.mechanism} [{x.status}]", confidence=x.weight))
+                                sign=x.sign, mechanism=f"{x.mechanism} [{x.status}]", confidence=x.weight,
+                                evidence={"source": "hypothesis", "hypothesis_id": x.hypothesis_id,
+                                          "status": x.status, "article_id": art.id}))
     subjects = {r.symbol for r in rows if r.relation == "SUBJECT"}
     if scope == "COMPANY" and subjects:
         industry = {c.symbol: c.industry for c in universe}
@@ -159,7 +165,9 @@ def _link_entities(session: Session, event: MarketEvent, art: NewsArticle, categ
                                             symbol=c.symbol, relation="EXPOSED", inferred=True, method="HYPOTHESIS",
                                             hypothesis_id="H-PEER-READTHROUGH", sign=None,
                                             mechanism=f"same industry as {s} ({c.industry}); read-through "
-                                                      f"[UNVALIDATED]", confidence=PEER_SIGN * 0.5))
+                                                      f"[UNVALIDATED]", confidence=PEER_SIGN * 0.5,
+                                            evidence={"source": "industry", "peer_of": s, "industry": c.industry,
+                                                      "article_id": art.id}))
     for r in rows:
         exists = session.exec(select(EventEntity.id).where(
             EventEntity.event_id == r.event_id, EventEntity.entity_type == r.entity_type,
@@ -270,6 +278,8 @@ def ingest(session: Session, provider, since: dt.datetime, until: dt.datetime,
                                **{k: v for k, v in (a.raw or {}).items() if isinstance(v, (str, int, float, bool))}},
                           first_seen_at=_utc(a.first_seen_at) if a.first_seen_at else None,
                           provider_entities=[dict(e) for e in a.provider_entities][:20] or None,
+                          published_raw=(a.published_raw or None) and a.published_raw[:80],
+                          published_tz=(a.published_tz or None) and a.published_tz[:40],
                           quality_flags=quality_flags(a, published, now, lang, excerpt, dom,
                                                       {u.symbol for u in universe}))
         try:

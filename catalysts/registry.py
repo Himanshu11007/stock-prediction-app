@@ -62,11 +62,21 @@ SPECS: dict[str, ProviderSpec] = {s.name: s for s in (
                  "API back to 1994; availability = end of publication date (date-only, conservative)", "date",
                  1.0, None, 27, "US government works (public domain)", "free"),
     ProviderSpec("nse_announcements", a.NseAnnouncementsProvider, "EXCHANGE",
-                 "NSE corporate filings (results, business updates, orders, board outcomes, ...)", True, None, "FULL",
+                 "NSE corporate filings (results, business updates, orders, board outcomes, ...)", True,
+                 "NSE_AUTOMATED_ACCESS_PERMISSION", "FULL",
                  "API returns filings by date range and symbol with the exchange dissemination time to the second "
                  "(verified back to 2024)", "exact", 2.0, None, 1,
-                 "exchange website terms for automated use / redistribution NOT reviewed; licensed data via NSE "
-                 "Data & Analytics", "free website API; licensed feed: paid (quote needed)"),
+                 "NSE Terms of Use PROHIBIT systematic or automated data collection and storing content without "
+                 "NSE's prior written permission (read 11 Oct 2026); commercial use is licensed by NSE Data. "
+                 "Refuses to run until a permission / licence reference is recorded",
+                 "licensed feed via NSE Data: paid (quote needed)"),
+    ProviderSpec("nse_rss", a.NseAnnouncementsRssProvider, "EXCHANGE",
+                 "NSE official 'Online announcements' RSS (all listed companies; routine notices excluded)", True,
+                 "NSE_AUTOMATED_ACCESS_PERMISSION", "NONE",
+                 "live feed: latest ~35 filings, exact IST dissemination times; no history", "exact", 1.0, None, 1,
+                 "official NSE feed, but NSE's Terms of Use still require written permission for automated "
+                 "collection and storage; refuses to run until a permission reference is recorded",
+                 "free feed; licensed feed via NSE Data: paid"),
     ProviderSpec("google_news", a.GoogleNewsProvider, "AGGREGATOR",
                  "international and Indian news across publishers (search queries)", True, None, "LIMITED",
                  "historical search windows work, but results are capped (about 100 per query), ranked by Google, "

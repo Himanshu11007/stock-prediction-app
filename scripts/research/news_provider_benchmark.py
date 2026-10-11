@@ -4,6 +4,16 @@ benchmark on independently verified, timestamped market events (RESEARCH
 ONLY; network; read-only on StockLens data).
 
   python scripts/research/news_provider_benchmark.py [--out PATH] [--max-per-kind N]
+  python scripts/research/news_provider_benchmark.py --events-from REPORT --providers marketaux,alphavantage
+  python scripts/research/news_provider_benchmark.py --resummarize          (no network)
+
+--events-from reuses the stored ground truth with IDENTICAL event
+definitions (query, candidate and verification patterns, windows); only the
+listed providers are queried and their outcomes replace the stored ones,
+every other provider's stored outcomes are kept. NSE / BSE ground truth is
+only rebuilt live when the exchange's written permission is recorded
+(NSE_AUTOMATED_ACCESS_PERMISSION / BSE_AUTOMATED_ACCESS_PERMISSION): their
+terms prohibit automated collection otherwise.
 
 Ground truth (built at run time from authoritative records; evidence URL and
 official time stored with every event):
@@ -44,6 +54,7 @@ import sys
 import time
 import xml.etree.ElementTree as ET
 from pathlib import Path
+from typing import Optional
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
@@ -120,6 +131,10 @@ def rss_items(url: str) -> tuple[list[tuple[str, str, dt.datetime, str]], int]:
 
 
 def nse_events(now: dt.datetime, notes: dict) -> list[bm.Event]:
+    if not os.environ.get(ad.NSE_PERMISSION_ENV, "").strip():
+        notes["nse_filing"] = {"status": "NOT_PERMITTED", "events": 0,
+                               "detail": f"NSE Terms of Use prohibit automated collection; {ad.NSE_PERMISSION_ENV} not set"}
+        return []
     nse = ad.NseAnnouncementsProvider(sleep=lambda s: None)
     material = re.compile(r"financial result|outcome of board meeting|press release|business update|update for q", re.I)
     windows = {"recent": (now - dt.timedelta(days=25), now - dt.timedelta(days=2)),
@@ -133,7 +148,8 @@ def nse_events(now: dt.datetime, notes: dict) -> list[bm.Event]:
                 errors += 1
                 continue
             time.sleep(1.2)
-            mat = [r for r in rows if material.search(f"{r.get('desc')} {r.get('attchmntText')}")]
+            mat = [r for r in rows if material.search(f"{r.get('desc')} {r.get('attchmntText')}")
+                   and ad.filings.classify(r.get("desc"), r.get("attchmntText")).keep]
             if not mat:
                 continue
             r = sorted(mat, key=lambda r: dt.datetime.strptime(r["exchdisstime"], "%d-%b-%Y %H:%M:%S"))[0]
@@ -155,6 +171,10 @@ BSE_NOT_MATERIAL = re.compile(r"audio|recording|transcript|newspaper|publication
 
 
 def bse_events(now: dt.datetime, notes: dict) -> list[bm.Event]:
+    if not os.environ.get(ad.BSE_PERMISSION_ENV, "").strip():
+        notes["bse_filing"] = {"status": "NOT_PERMITTED", "events": 0,
+                               "detail": f"BSE website terms: personal, non-commercial use; {ad.BSE_PERMISSION_ENV} not set"}
+        return []
     day = (now - dt.timedelta(days=3)).astimezone(IST)
     url = ("https://api.bseindia.com/BseIndiaAPI/api/AnnSubCategoryGetData/w?pageno=1&strCat=-1"
            f"&strPrevDate={day:%Y%m%d}&strScrip=&strSearch=P&strToDate={day:%Y%m%d}&strType=C&subcategory=-1")
@@ -329,6 +349,60 @@ def canonical_count(items: list[prov.RawArticle]) -> int:
         return len({a.event_id for a in s.exec(select(NewsArticle)).all() if a.event_id})
 
 
+def event_to_dict(e: bm.Event) -> dict:
+    return {"id": e.id, "kind": e.kind, "title": e.title, "official_time": e.official_time.isoformat(),
+            "precision": e.precision, "source": e.source, "evidence_url": e.evidence_url,
+            "expected_symbols": list(e.expected_symbols), "segment": bm.SEGMENT_OF.get(e.kind),
+            "definition": {"query": e.query, "candidate": e.candidate, "must": list(e.must),
+                           "window_before_s": e.window_before.total_seconds(),
+                           "window_after_s": e.window_after.total_seconds()}}
+
+
+NSE_MUST = r"result|profit|revenue|earning|quarter|\bq[1-4]\b|update|sales|board|dividend|order|fund"
+BSE_MUST = r"result|profit|revenue|quarter|update|board|order|dividend"
+MOVE = r"surge|jump|rise|rises|rose|fall|falls|fell|drop|plunge|slump|spike|tumble|soar|gain|record|slide|climb|weak|strong"
+MARKET_SPEC = {"crude": ("crude oil price", r"\boil\b|crude|brent"), "gold": ("gold price", r"\bgold\b"),
+               "currency": ("rupee dollar", r"rupee|\bINR\b")}
+
+
+def legacy_definition(d: dict) -> dict:
+    """Definition of an event stored before definitions were saved (report
+    of 11 Oct 2026), rebuilt with the rules that created it. Federal Register
+    documents record no search term: tariff when the title names tariffs,
+    duties or imports, else sanctions."""
+    kind, title, eid = d["kind"], d["title"], d["id"]
+    dflt = {"window_before_s": 6 * 3600.0, "window_after_s": 2 * 86400.0}
+    if kind in ("nse_filing", "bse_filing"):
+        sym = eid.split(":")[1] if kind == "nse_filing" else d["expected_symbols"][0].split(".")[0]
+        alias = bm.INDIAN_ALIASES[sym]
+        return {**dflt, "query": f'"{alias.split("|")[0]}"', "candidate": r"\b(" + alias + r")\b",
+                "must": [NSE_MUST if kind == "nse_filing" else BSE_MUST]}
+    if eid.startswith("fed_rate:"):
+        return {**dflt, "window_before_s": 2 * 86400.0, "query": "Federal Reserve interest rate decision",
+                "candidate": r"\bFed\b|Federal Reserve|FOMC|Powell", "must": [r"rate|cut|hike|hold|basis points|bps"]}
+    if kind in MARKET_SPEC:
+        q, cand = MARKET_SPEC[kind]
+        return {**dflt, "query": q, "candidate": cand, "must": [MOVE] + ([OTHER_RUPEES] if kind == "currency" else [])}
+    keys = salient(title)
+    if kind == "us_policy_federal_register":
+        term = "tariff" if re.search(r"tariff|dut(y|ies)|import", title, re.I) else "sanctions"
+        return {**dflt, "window_before_s": 10 * 86400.0, "query": f"{term} {keys[0]}",
+                "candidate": r"tariff|dut(y|ies)" if term == "tariff" else r"sanction",
+                "must": ["|".join(re.escape(k) for k in keys)]}
+    cand = OFFICIAL[kind][2]
+    return {**dflt, "query": " ".join(keys + ([cand.split('|')[0].strip('\\b')] if kind in ("rbi", "sebi", "fed") else [])),
+            "candidate": cand, "must": [re.escape(keys[0])]}
+
+
+def event_from_dict(d: dict) -> bm.Event:
+    df = d.get("definition") or legacy_definition(d)
+    return bm.Event(id=d["id"], kind=d["kind"], title=d["title"], official_time=dt.datetime.fromisoformat(d["official_time"]),
+                    precision=d["precision"], source=d["source"], evidence_url=d.get("evidence_url"), query=df["query"],
+                    candidate=df["candidate"], must=list(df["must"]), expected_symbols=tuple(d.get("expected_symbols") or ()),
+                    window_before=dt.timedelta(seconds=df["window_before_s"]),
+                    window_after=dt.timedelta(seconds=df["window_after_s"]))
+
+
 INDIAN_KINDS = {"nse_filing", "bse_filing", "rbi", "sebi", "india_policy"}
 # kinds StockLens already receives at the official time from its own active
 # source (official_rss). NSE filings are NOT included: the NSE adapter is
@@ -336,22 +410,40 @@ INDIAN_KINDS = {"nse_filing", "bse_filing", "rbi", "sebi", "india_policy"}
 COVERED_BY_OWN_SOURCES = tuple(OFFICIAL)
 
 
-def derive(outcomes: list[bm.Outcome]) -> dict:
+def derive(outcomes: list[bm.Outcome], events: Optional[list[dict]] = None) -> dict:
     """Every evidence section computed from the outcomes alone, so a stored
     report can be re-derived (--resummarize) without re-querying providers."""
     summary = bm.summarize(outcomes)
     rated = [o for o in outcomes if o.provider != "official_rss"]
     value = bm.value_over_sources(rated, COVERED_BY_OWN_SOURCES)
+    ev_by_id = {e["id"]: e for e in events or []}
     return {"providers": summary, "providers_indian_events": bm.summarize([o for o in outcomes if o.kind in INDIAN_KINDS]),
+            "segments": bm.by_segment(outcomes), "audit": bm.audit(outcomes, ev_by_id),
             "value_over_existing_sources": value,
             "recommendation": bm.recommend({k: v for k, v in summary.items() if k != "official_rss"},
                                            {"official_rss": True}, value=value)}
 
 
+def examples(outcomes: list[bm.Outcome], ev_by_id: dict[str, bm.Event]) -> dict:
+    missed = [{"provider": o.provider, "event_id": o.event_id, "kind": o.kind, "segment": bm.SEGMENT_OF.get(o.kind),
+               "title": ev_by_id[o.event_id].title, "official_time": ev_by_id[o.event_id].official_time.isoformat(),
+               "candidates": o.candidates, "false_matches": o.false_matches} for o in outcomes if o.status == bm.MISSED]
+    ambiguous = [{"provider": o.provider, "event_id": o.event_id, "kind": o.kind, "title": ev_by_id[o.event_id].title,
+                  "first_title": o.first_title, "reason": o.ambiguous_reason} for o in outcomes if o.status == bm.AMBIGUOUS]
+    false_matches = [{"provider": o.provider, "event": ev_by_id[o.event_id].title, "kind": o.kind, "example": fm}
+                     for o in outcomes for fm in o.false_matches[:1]][:40]
+    wrong_maps = [{"provider": o.provider, "event": ev_by_id[o.event_id].title,
+                   "expected": list(ev_by_id[o.event_id].expected_symbols), "also_tagged": o.wrong_symbols}
+                  for o in outcomes if o.wrong_symbols][:30]
+    return {"missed_events": missed, "ambiguous_events": ambiguous, "false_match_examples": false_matches,
+            "wrong_mappings": wrong_maps}
+
+
 def resummarize(path: str) -> None:
     report = json.loads(Path(path).read_text(encoding="utf-8"))
     outcomes = [bm.Outcome(**o) for o in report["outcomes"]]
-    report.update(derive(outcomes))
+    report.update(derive(outcomes, report["events"]))
+    report.update(examples(outcomes, {e["id"]: event_from_dict(e) for e in report["events"]}))
     report["resummarized_at"] = dt.datetime.now(UTC).isoformat()
     Path(path).write_text(json.dumps(report, indent=1, default=str), encoding="utf-8")
     print(json.dumps({"recommended": report["recommendation"]["recommended"],
@@ -363,13 +455,23 @@ def main() -> None:
     ap.add_argument("--out", default=str(OUT))
     ap.add_argument("--max-per-kind", type=int, default=8)
     ap.add_argument("--resummarize", action="store_true", help="re-derive the metrics of an existing report (no network)")
+    ap.add_argument("--events-from", help="reuse the ground truth (identical definitions) of a stored report")
+    ap.add_argument("--providers", help="comma list: query only these providers (with --events-from: merge)")
     args = ap.parse_args()
     if args.resummarize:
         return resummarize(args.out)
     now = dt.datetime.now(UTC)
     notes: dict = {}
-    events = nse_events(now, notes) + bse_events(now, notes) + official_events(now, notes, args.max_per_kind)
-    events += federal_register_events(notes, max(3, args.max_per_kind // 2)) + market_events(now, notes, max(3, args.max_per_kind // 2))
+    base = None
+    if args.events_from:
+        base = json.loads(Path(args.events_from).read_text(encoding="utf-8"))
+        events = [event_from_dict(e) for e in base["events"]]
+        notes = base["ground_truth"]["sources"]
+    else:
+        events = nse_events(now, notes) + bse_events(now, notes) + official_events(now, notes, args.max_per_kind)
+        events += (federal_register_events(notes, max(3, args.max_per_kind // 2))
+                   + market_events(now, notes, max(3, args.max_per_kind // 2)))
+    only = {p.strip() for p in (args.providers or "").split(",") if p.strip()} or None
     holidays = nse_holidays()
     con = sqlite3.connect(f"file:{DB}?mode=ro", uri=True)
     index = ent.CompanyIndex(list(con.execute("SELECT symbol, name FROM companies")))
@@ -416,8 +518,12 @@ def main() -> None:
         return []
 
     outcomes: list[bm.Outcome] = []
+    if base is not None and only:
+        outcomes = [bm.Outcome(**o) for o in base["outcomes"] if o["provider"] not in only]
     for ev in events:
         for pname, cap in caps.items():
+            if only and pname not in only:
+                continue
             st = bm.testability(cap, ev, now)
             if st or pname == "official_rss":
                 outcomes.append(bm.Outcome(pname, ev.id, ev.kind, st or bm.NO_HISTORY,
@@ -435,37 +541,34 @@ def main() -> None:
                 outcomes.append(bm.Outcome(pname, ev.id, ev.kind, bm.OUTAGE, detail=str(e)[:120]))
                 continue
             outcomes.append(bm.evaluate(pname, ev, items, index=index, holidays=holidays, canonical=canonical_count))
-    derived = derive(outcomes)
+    ev_dicts = [event_to_dict(e) for e in events]
+    derived = derive(outcomes, ev_dicts)
     summary, rec = derived["providers"], derived["recommendation"]
     health = {}
-    for name in ("official_rss", "federal_register", "nse_announcements", "google_news", "publisher_rss", "gdelt",
-                 "marketaux", "alphavantage", "newsapi"):
+    for name in ("official_rss", "federal_register", "nse_announcements", "nse_rss", "google_news", "publisher_rss",
+                 "gdelt", "marketaux", "alphavantage", "newsapi"):
         try:
             health[name] = registry.health(name)
         except Exception as e:  # noqa: BLE001 - report, never crash the benchmark on a health probe
             health[name] = {"provider": name, "status": "ERROR", "detail": type(e).__name__}
-    ev_by_id = {e.id: e for e in events}
-    missed = [{"provider": o.provider, "event_id": o.event_id, "kind": o.kind, "title": ev_by_id[o.event_id].title,
-               "official_time": ev_by_id[o.event_id].official_time.isoformat(), "candidates": o.candidates,
-               "false_matches": o.false_matches} for o in outcomes if o.status == bm.MISSED]
-    false_matches = [{"provider": o.provider, "event": ev_by_id[o.event_id].title, "kind": o.kind, "example": fm}
-                     for o in outcomes for fm in o.false_matches[:1]][:40]
-    wrong_maps = [{"provider": o.provider, "event": ev_by_id[o.event_id].title, "expected": ev_by_id[o.event_id].expected_symbols,
-                   "also_tagged": o.wrong_symbols} for o in outcomes if o.wrong_symbols][:30]
+    stats = {k: v.stats for k, v in counters.items() if not only or k in only}
+    if base is not None and only:
+        stats = {**{k: v for k, v in (base.get("request_stats") or {}).items() if k not in only}, **stats}
     costs = {n: {"cost": s.cost, "licence": s.licence, "daily_limit": s.daily_limit,
-                 "requests_this_run": counters[n].stats["requests"] if n in counters else None}
-             for n, s in registry.SPECS.items() if n in caps or n in ("federal_register", "nse_announcements")}
+                 "requests_this_run": stats[n]["requests"] if n in stats else None}
+             for n, s in registry.SPECS.items() if n in caps or n in ("federal_register", "nse_announcements", "nse_rss")}
     report = {
         "generated_at": now.isoformat(), "research_only": True,
+        "ground_truth_from": args.events_from and Path(args.events_from).name,
+        "ground_truth_generated_at": base["generated_at"] if base else now.isoformat(),
+        "providers_queried_this_run": sorted(only) if only else sorted(caps),
         "method": __doc__.split("Ground truth")[1].split("Output:")[0].strip(),
         "status_definitions": bm.__doc__.split("Matching,")[0].split("the outcome is exactly one of:")[1].strip(),
         "ground_truth": {"events": len(events), "by_kind": {k: sum(1 for e in events if e.kind == k) for k in sorted({e.kind for e in events})},
                          "sources": notes, "nse_holidays_inferred": len(holidays)},
-        "events": [{"id": e.id, "kind": e.kind, "title": e.title, "official_time": e.official_time.isoformat(),
-                    "precision": e.precision, "source": e.source, "evidence_url": e.evidence_url,
-                    "expected_symbols": list(e.expected_symbols)} for e in events],
-        **derived, "missed_events": missed, "false_match_examples": false_matches,
-        "wrong_mappings": wrong_maps, "source_health": health, "request_stats": {k: v.stats for k, v in counters.items()},
+        "events": ev_dicts,
+        **derived, **examples(outcomes, {e.id: e for e in events}),
+        "source_health": health, "request_stats": stats,
         "costs": costs,
         "outcomes": [o.__dict__ for o in outcomes],
     }

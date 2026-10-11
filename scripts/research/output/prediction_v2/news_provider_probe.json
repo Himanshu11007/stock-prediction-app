@@ -1,0 +1,79 @@
+{
+ "research_only": true,
+ "providers": {
+  "marketaux": {
+   "provider": "marketaux",
+   "probed_at": "2026-10-11T08:51:58.571126+00:00",
+   "credential_variable": "MARKETAUX_API_TOKEN",
+   "configured": false,
+   "status": "NOT_CONFIGURED",
+   "checks": {
+    "connectivity": {
+     "status": "NOT_TESTED",
+     "detail": "MARKETAUX_API_TOKEN is not set"
+    },
+    "authentication": {
+     "status": "NOT_TESTED",
+     "detail": "MARKETAUX_API_TOKEN is not set"
+    },
+    "rate_limit": {
+     "status": "NOT_TESTED",
+     "detail": "MARKETAUX_API_TOKEN is not set"
+    },
+    "schema": {
+     "status": "NOT_TESTED",
+     "detail": "MARKETAUX_API_TOKEN is not set"
+    },
+    "timestamps": {
+     "status": "NOT_TESTED",
+     "detail": "MARKETAUX_API_TOKEN is not set"
+    },
+    "history": {
+     "status": "NOT_TESTED",
+     "detail": "MARKETAUX_API_TOKEN is not set"
+    },
+    "india": {
+     "status": "NOT_TESTED",
+     "detail": "MARKETAUX_API_TOKEN is not set"
+    }
+   }
+  },
+  "alphavantage": {
+   "provider": "alphavantage",
+   "probed_at": "2026-10-11T08:51:58.571126+00:00",
+   "credential_variable": "ALPHAVANTAGE_API_KEY",
+   "configured": false,
+   "status": "NOT_CONFIGURED",
+   "checks": {
+    "connectivity": {
+     "status": "NOT_TESTED",
+     "detail": "ALPHAVANTAGE_API_KEY is not set"
+    },
+    "authentication": {
+     "status": "NOT_TESTED",
+     "detail": "ALPHAVANTAGE_API_KEY is not set"
+    },
+    "rate_limit": {
+     "status": "NOT_TESTED",
+     "detail": "ALPHAVANTAGE_API_KEY is not set"
+    },
+    "schema": {
+     "status": "NOT_TESTED",
+     "detail": "ALPHAVANTAGE_API_KEY is not set"
+    },
+    "timestamps": {
+     "status": "NOT_TESTED",
+     "detail": "ALPHAVANTAGE_API_KEY is not set"
+    },
+    "history": {
+     "status": "NOT_TESTED",
+     "detail": "ALPHAVANTAGE_API_KEY is not set"
+    },
+    "india": {
+     "status": "NOT_TESTED",
+     "detail": "ALPHAVANTAGE_API_KEY is not set"
+    }
+   }
+  }
+ }
+}

@@ -132,3 +132,25 @@ def test_benchmark_report_endpoint(client, tmp_path, monkeypatch):
     assert client.get("/api/v1/admin/news/benchmark", headers=H()).status_code == 403
     path.write_text("{not json", encoding="utf-8")
     assert client.get("/api/v1/admin/news/benchmark", headers=ADMIN()).status_code == 500
+
+
+def test_benchmark_audit_companions_and_candidates(client, db, tmp_path, monkeypatch):
+    path = tmp_path / "bench.json"
+    monkeypatch.setenv("NEWS_BENCHMARK_REPORT", str(path))
+    path.write_text(json.dumps({"research_only": True, "audit": [
+        {"provider": "google_news", "status": "AMBIGUOUS", "segment": "indian_company"},
+        {"provider": "gdelt", "status": "MISSED", "segment": "indian_macro"}]}), encoding="utf-8")
+    (tmp_path / "news_provider_probe.json").write_text(json.dumps({"providers": {"marketaux": {"status": "NOT_CONFIGURED"}}}),
+                                                       encoding="utf-8")
+    d = client.get("/api/v1/admin/news/benchmark", headers=ADMIN()).json()["data"]
+    assert "audit" not in d and d["probe"]["providers"]["marketaux"]["status"] == "NOT_CONFIGURED"
+    a = client.get("/api/v1/admin/news/benchmark/audit?status=AMBIGUOUS", headers=ADMIN()).json()["data"]
+    assert a["total"] == 1 and a["rows"][0]["provider"] == "google_news"
+    assert client.get("/api/v1/admin/news/benchmark/audit", headers=H()).status_code == 403
+    _seed(db)
+    c = client.get("/api/v1/admin/news/candidates", headers=ADMIN())
+    assert c.status_code == 200
+    body = c.json()["data"]
+    assert body["mode"] == "SHADOW" and set(body["counts"]) == {"UP", "DOWN", "NEUTRAL", "NO_CALL"}
+    assert all(r["call"] in ("UP", "DOWN", "NEUTRAL", "NO_CALL") for r in body["candidates"])
+    assert client.get("/api/v1/admin/news/candidates", headers=H()).status_code == 403

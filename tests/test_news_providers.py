@@ -86,7 +86,8 @@ NSE = [{"seq_id": "106813731", "symbol": "TRENT", "sm_name": "Trent Limited", "d
        {"seq_id": "2", "symbol": "BAD", "sm_name": "Bad", "desc": "x", "exchdisstime": "not a time"}]
 
 
-def test_nse_filings_use_the_exchange_dissemination_time():
+def test_nse_filings_use_the_exchange_dissemination_time(monkeypatch):
+    monkeypatch.setenv(ad.NSE_PERMISSION_ENV, "TEST-PERMISSION-REF")      # parsing only; the gate is tested below
     calls = []
     p = ad.NseAnnouncementsProvider(get=fake(NSE, calls=calls), sleep=lambda s: None)
     items = list(p.fetch(dt.datetime(2026, 10, 1, tzinfo=UTC), NOW))
@@ -148,7 +149,8 @@ def test_health_states():
 
 # ── pipeline uses provider metadata ─────────────────────────────────────────
 
-def test_filing_symbol_is_the_subject_and_publisher_domain_sets_the_tier(db):
+def test_filing_symbol_is_the_subject_and_publisher_domain_sets_the_tier(db, monkeypatch):
+    monkeypatch.setenv(ad.NSE_PERMISSION_ENV, "TEST-PERMISSION-REF")
     with Session(db) as s:
         s.add(Company(symbol="TRENT.NS", name="Trent Limited", sector="Consumer Cyclical", industry="Apparel Retail"))
         s.commit()
@@ -207,3 +209,44 @@ def test_rbi_zone_less_pub_dates_are_ist_not_utc():
     (a,) = list(prov.RssProvider({"rbi_press": ("https://www.rbi.org.in/x", "RBI")}, get=fake(feed), sleep=lambda s: None)
                 .fetch(dt.datetime(2026, 10, 9, tzinfo=UTC), dt.datetime(2026, 10, 11, tzinfo=UTC)))
     assert a.published_at == dt.datetime(2026, 10, 9, 19, 55, tzinfo=UTC)
+
+
+def test_original_timestamp_and_zone_are_kept_without_inventing_one():
+    assert prov.zone_of("Fri, 09 Oct 2026 12:30:00 +0530") == "+0530"
+    assert prov.zone_of("Fri, 9 Oct 2026 14:00:00 GMT") == "GMT"
+    assert prov.zone_of("2026-10-09T12:30:00Z") == "Z"
+    assert prov.zone_of("Sat, 10 Oct 2026 01:25:00", "IST") == "NONE->IST"
+    assert prov.zone_of(None) is None
+    feed = (b'<?xml version="1.0"?><rss><channel><item><title>RBI announces special window</title>'
+            b'<link>https://www.rbi.org.in/p?id=1</link><pubDate>Sat, 10 Oct 2026 01:25:00</pubDate></item>'
+            b'<item><title>Fed statement</title><link>https://www.federalreserve.gov/x</link></item></channel></rss>')
+    (a,) = list(prov.RssProvider({"rbi_press": ("https://www.rbi.org.in/x", "RBI")}, get=fake(feed), sleep=lambda s: None)
+                .fetch(dt.datetime(2026, 10, 9, tzinfo=UTC), dt.datetime(2026, 10, 11, tzinfo=UTC)))
+    assert (a.published_raw, a.published_tz) == ("Sat, 10 Oct 2026 01:25:00", "NONE->IST")
+
+
+def test_nse_sources_refuse_without_recorded_permission_and_classify_filings(monkeypatch):
+    from catalysts import filings
+    monkeypatch.delenv(ad.NSE_PERMISSION_ENV, raising=False)
+    calls = []
+    for p in (ad.NseAnnouncementsProvider(get=fake(NSE, calls=calls), sleep=lambda s: None),
+              ad.NseAnnouncementsRssProvider(get=fake(b"<rss/>", calls=calls), sleep=lambda s: None)):
+        with pytest.raises(prov.NotPermitted):
+            list(p.fetch(dt.datetime(2026, 10, 1, tzinfo=UTC), NOW))
+    assert calls == []                                       # nothing was requested from NSE
+    monkeypatch.setenv(ad.NSE_PERMISSION_ENV, "TEST-PERMISSION-REF")
+    feed = ('<?xml version="1.0"?><rss><channel>'
+            '<item><title>Trent Limited</title><link>https://nsearchives.nseindia.com/a.xml</link><pubDate>11-Oct-2026 13:37:50</pubDate>'
+            '<description>Trent Limited has informed the Exchange regarding Acquisition |SUBJECT: Acquisition</description></item>'
+            '<item><title>Fedbank Limited</title><link>https://nsearchives.nseindia.com/b.xml</link><pubDate>11-Oct-2026 13:37:41</pubDate>'
+            '<description>Fedbank has informed the Exchange about Schedule of Analysts or Institutional Investors Meet '
+            '|SUBJECT: Schedule of Analysts or Institutional Investors Meet</description></item></channel></rss>').encode()
+    p = ad.NseAnnouncementsRssProvider(get=fake(feed), sleep=lambda s: None)
+    (a,) = list(p.fetch(dt.datetime(2026, 10, 11, tzinfo=UTC), dt.datetime(2026, 10, 12, tzinfo=UTC)))
+    assert a.published_at == dt.datetime(2026, 10, 11, 8, 7, 50, tzinfo=UTC) and a.published_tz == "NONE->IST"
+    assert a.raw["materiality"] == "HIGH" and p.excluded == ["Fedbank Limited: ANALYST_MEET"]
+    assert filings.classify("Financial Results for the quarter ended 30-Sep-2026").materiality == "HIGH"
+    assert filings.classify("Intimation of board meeting to consider financial results").category == "PRIOR_INTIMATION"
+    assert filings.classify("Copy of newspaper publication").keep is False
+    assert filings.classify("Creation of pledge by promoter").category == "PLEDGE"
+    assert filings.classify("Something else entirely").materiality == "UNKNOWN"

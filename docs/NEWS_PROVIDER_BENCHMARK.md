@@ -1,5 +1,8 @@
 # News provider benchmark (research only, 11 Oct 2026)
 
+> Phase 2 update (identical-event rerun, AMBIGUOUS status, strict recall 0.78 for Google News,
+> NSE terms, live-validation probe, backtest): `docs/NEWS_PHASE2.md`.
+
 This benchmark answers one question: **would any provider let StockLens detect
 material events before the relevant market move, beyond what StockLens's own
 official sources already deliver?**

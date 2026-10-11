@@ -64,6 +64,11 @@ class RawArticle:
     source_domain: Optional[str] = None         # the original publisher when the URL is an aggregator link
     first_seen_at: Optional[dt.datetime] = None  # when the PROVIDER first saw it (e.g. GDELT seendate), if known
     provider_entities: tuple[dict, ...] = ()     # the provider's own entity tags, verbatim (symbol, name, exchange, score)
+    # the publication time exactly as the source wrote it, and its zone as
+    # stated by the source ('+0530', 'GMT', 'Z'), or 'NONE' with the zone the
+    # adapter assumed ('NONE->IST'). Never invented: None when the source gave nothing.
+    published_raw: Optional[str] = None
+    published_tz: Optional[str] = None
 
 
 class ProviderError(RuntimeError):
@@ -76,6 +81,11 @@ class RateLimited(ProviderError):
 
 class NotConfigured(ProviderError):
     pass
+
+
+class NotPermitted(NotConfigured):
+    """The source's terms do not allow this automated use without written
+    permission or a licence, and none is recorded."""
 
 
 HttpGet = Callable[..., tuple[int, bytes]]
@@ -124,6 +134,18 @@ IST_TZ = dt.timezone(dt.timedelta(hours=5, minutes=30))
 # Feeds whose pubDate carries no zone although it is local time. RBI writes
 # 'Sat, 10 Oct 2026 01:25:00' meaning IST; read as UTC it is 5.5 hours late.
 NAIVE_TZ_DOMAINS = {"rbi.org.in": IST_TZ}
+
+
+_ZONE = re.compile(r"(?:[+-]\d{2}:?\d{2}|\bGMT|\bUTC|\bUT|Z|\b[ECMP][SD]T|\bIST)\s*$")
+
+
+def zone_of(s: Optional[str], assumed: Optional[str] = None) -> Optional[str]:
+    """The zone a timestamp string states, else 'NONE' (with the zone the
+    reader assumed, e.g. 'NONE->IST'). None for a missing string."""
+    if not s:
+        return None
+    m = _ZONE.search(s.strip())
+    return m.group(0).strip() if m else (f"NONE->{assumed}" if assumed else "NONE->UTC")
 
 
 def naive_tz_for(url: str) -> Optional[dt.tzinfo]:
@@ -223,7 +245,8 @@ class RssProvider:
             for item in root.iter("item"):
                 title = tx.sanitize(item.findtext("title"), tx.MAX_TITLE)
                 link = (item.findtext("link") or "").strip()
-                published, precision = parse_pub_date(item.findtext("pubDate"), naive_tz_for(url))
+                pub_raw = (item.findtext("pubDate") or "").strip() or None
+                published, precision = parse_pub_date(pub_raw, naive_tz_for(url))
                 first_seen = False
                 if published is None and key in UNDATED_FEEDS:
                     published, first_seen = min(until, dt.datetime.now(dt.timezone.utc)), True   # first sight
@@ -233,7 +256,9 @@ class RssProvider:
                 yield RawArticle(provider_article_id=f"{key}:{guid}"[:300], url=link, title=title,
                                  published_at=published, excerpt=tx.sanitize(item.findtext("description")),
                                  source_name=source, raw={"feed": key, **({"published_is_first_seen": True} if first_seen else {})},
-                                 time_precision=precision, first_seen_at=published if first_seen else None)
+                                 time_precision=precision, first_seen_at=published if first_seen else None,
+                                 published_raw=pub_raw,
+                                 published_tz=zone_of(pub_raw, "IST" if naive_tz_for(url) else None))
         if ok == 0 and self.feeds:
             raise ProviderError("every feed failed: " + "; ".join(self.errors)[:400])
 
@@ -265,7 +290,8 @@ class NewsApiProvider:
                 continue
             yield RawArticle(provider_article_id=a["url"][:300], url=a["url"], title=tx.sanitize(a["title"], tx.MAX_TITLE),
                              published_at=published, excerpt=tx.sanitize(a.get("description")),
-                             source_name=(a.get("source") or {}).get("name"))
+                             source_name=(a.get("source") or {}).get("name"),
+                             published_raw=a.get("publishedAt"), published_tz=zone_of(a.get("publishedAt")))
 
 
 class GdeltProvider:
@@ -297,6 +323,7 @@ class GdeltProvider:
             yield RawArticle(provider_article_id=a.get("url", "")[:300], url=a.get("url", ""),
                              title=tx.sanitize(a.get("title"), tx.MAX_TITLE), published_at=published,
                              source_name=a.get("domain"), first_seen_at=published,
+                             published_raw=seen, published_tz="Z",
                              source_domain=a.get("domain") or None,
                              raw={"language": a.get("language"), "sourcecountry": a.get("sourcecountry"),
                                   "published_is_first_seen": True})

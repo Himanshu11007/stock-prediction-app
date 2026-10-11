@@ -1,0 +1,531 @@
+{
+ "data": {
+  "as_of": "2026-10-09T19:30:00+05:30",
+  "candidates": [
+   {
+    "affected_sectors": [
+     "Energy"
+    ],
+    "call": "UP",
+    "confidence": null,
+    "evidence": [
+     {
+      "articles": [
+       {
+        "available_at": "2026-10-09T08:30:00+00:00",
+        "corrected_at": null,
+        "ingested_at": "2026-10-09T08:30:00+00:00",
+        "provider": "marketaux",
+        "provider_first_seen_at": null,
+        "published_at": "2026-10-09T08:00:00+00:00",
+        "published_raw": "2026-10-09T08:00:00.000000Z",
+        "published_tz": "Z",
+        "quality_flags": [],
+        "source": "reuters.com",
+        "source_tier": "TIER1",
+        "title": "Sone Steelworks quarterly results: net profit jumps to a record, beats estimates",
+        "url": "https://www.reuters.com/sone-results"
+       },
+       {
+        "available_at": "2026-10-09T08:30:00+00:00",
+        "corrected_at": null,
+        "ingested_at": "2026-10-09T08:30:00+00:00",
+        "provider": "marketaux",
+        "provider_first_seen_at": null,
+        "published_at": "2026-10-09T08:00:00+00:00",
+        "published_raw": "2026-10-09T08:00:00.000000Z",
+        "published_tz": "Z",
+        "quality_flags": [
+         "AGGREGATOR_LINK"
+        ],
+        "source": "reuters.com",
+        "source_tier": "TIER1",
+        "title": "Sone Steelworks quarterly results: net profit jumps to a record, beats estimates",
+        "url": "https://www.livemint.com/sone-results-syndicated"
+       }
+      ],
+      "available_at": "2026-10-09T08:30:00+00:00",
+      "category": "EARNINGS",
+      "event_id": 2,
+      "flags": [],
+      "inferred": false,
+      "mapping": {
+       "confidence": 1.0,
+       "evidence": {
+        "article_id": 2,
+        "matched": "S1.NS",
+        "source": "provider_tag"
+       },
+       "method": "PROVIDER",
+       "relation": "SUBJECT"
+      },
+      "mechanism": null,
+      "relation": "SUBJECT",
+      "sign": 1,
+      "source_tier": "TIER1",
+      "title": "Sone Steelworks quarterly results: net profit jumps to a record, beats estimates",
+      "weight": 0.535
+     }
+    ],
+    "exclusion_reasons": [],
+    "expected_return_direction": "UP",
+    "horizon_sessions": 3,
+    "inputs": {
+     "prices": "V2_SNAPSHOT"
+    },
+    "name": "Sone Steelworks Limited",
+    "news_sentiment": 0.857,
+    "risks": [
+     "priced-in check not performed (no price data supplied)"
+    ],
+    "score": 0.535,
+    "scores": {
+     "credibility": 0.9,
+     "freshness": 0.924,
+     "materiality": 0.765,
+     "novelty": 0.7
+    },
+    "sector": "Energy",
+    "surprise": "UNEXPECTED",
+    "symbol": "S1.NS",
+    "uncertainty": [
+     "priced-in check not performed (no price data supplied)"
+    ],
+    "v2": {
+     "confidence": null,
+     "direction": "UP",
+     "prediction_id": "6c2cf46103684c39aa6f31ee3557d9f7",
+     "quality_flags": [
+      "NEWS_DRIVEN"
+     ],
+     "reasons": [
+      "news evidence +0.54 from 1 event(s); strongest: Sone Steelworks quarterly results: net profit jumps to a record, beats estimates",
+      "no technical setup"
+     ],
+     "reference_date": "2026-10-09",
+     "reference_price": 102.51734117398313,
+     "setup_type": "NEWS_CATALYST"
+    }
+   },
+   {
+    "affected_sectors": [],
+    "call": "NO_CALL",
+    "confidence": null,
+    "evidence": [],
+    "exclusion_reasons": [
+     "no material news captured for this stock before the cutoff"
+    ],
+    "expected_return_direction": null,
+    "horizon_sessions": null,
+    "inputs": {
+     "prices": "V2_SNAPSHOT"
+    },
+    "name": "S0.NS",
+    "news_sentiment": null,
+    "risks": [],
+    "score": 0.0,
+    "scores": {
+     "credibility": null,
+     "freshness": null,
+     "materiality": null,
+     "novelty": null
+    },
+    "sector": "Energy",
+    "surprise": null,
+    "symbol": "S0.NS",
+    "uncertainty": [
+     "no material news captured for this stock before the cutoff"
+    ],
+    "v2": {
+     "confidence": null,
+     "direction": "NEUTRAL",
+     "prediction_id": "3474b8cb501d49eaa521ef5697ab46e0",
+     "quality_flags": [],
+     "reasons": [
+      "no setup matched"
+     ],
+     "reference_date": "2026-10-09",
+     "reference_price": 90.29992803441745,
+     "setup_type": "NONE"
+    }
+   },
+   {
+    "affected_sectors": [],
+    "call": "NO_CALL",
+    "confidence": null,
+    "evidence": [],
+    "exclusion_reasons": [
+     "no material news captured for this stock before the cutoff"
+    ],
+    "expected_return_direction": null,
+    "horizon_sessions": null,
+    "inputs": {
+     "prices": "V2_SNAPSHOT"
+    },
+    "name": "Stwo Pharma Limited",
+    "news_sentiment": null,
+    "risks": [],
+    "score": 0.0,
+    "scores": {
+     "credibility": null,
+     "freshness": null,
+     "materiality": null,
+     "novelty": null
+    },
+    "sector": "Energy",
+    "surprise": null,
+    "symbol": "S2.NS",
+    "uncertainty": [
+     "no material news captured for this stock before the cutoff"
+    ],
+    "v2": {
+     "confidence": null,
+     "direction": "NEUTRAL",
+     "prediction_id": "729c8a49ae3542dba5f206f641e921cb",
+     "quality_flags": [],
+     "reasons": [
+      "no setup matched"
+     ],
+     "reference_date": "2026-10-09",
+     "reference_price": 102.74929603037994,
+     "setup_type": "NONE"
+    }
+   },
+   {
+    "affected_sectors": [],
+    "call": "NO_CALL",
+    "confidence": null,
+    "evidence": [],
+    "exclusion_reasons": [
+     "no material news captured for this stock before the cutoff"
+    ],
+    "expected_return_direction": null,
+    "horizon_sessions": null,
+    "inputs": {
+     "prices": "V2_SNAPSHOT"
+    },
+    "name": "S3.NS",
+    "news_sentiment": null,
+    "risks": [],
+    "score": 0.0,
+    "scores": {
+     "credibility": null,
+     "freshness": null,
+     "materiality": null,
+     "novelty": null
+    },
+    "sector": "Energy",
+    "surprise": null,
+    "symbol": "S3.NS",
+    "uncertainty": [
+     "no material news captured for this stock before the cutoff"
+    ],
+    "v2": {
+     "confidence": null,
+     "direction": "NEUTRAL",
+     "prediction_id": "bb0a1ce8ad92434eb6f882f130b733fe",
+     "quality_flags": [],
+     "reasons": [
+      "no setup matched"
+     ],
+     "reference_date": "2026-10-09",
+     "reference_price": 105.52799161398025,
+     "setup_type": "NONE"
+    }
+   },
+   {
+    "affected_sectors": [],
+    "call": "NO_CALL",
+    "confidence": null,
+    "evidence": [],
+    "exclusion_reasons": [
+     "no material news captured for this stock before the cutoff"
+    ],
+    "expected_return_direction": null,
+    "horizon_sessions": null,
+    "inputs": {
+     "prices": "V2_SNAPSHOT"
+    },
+    "name": "S4.NS",
+    "news_sentiment": null,
+    "risks": [],
+    "score": 0.0,
+    "scores": {
+     "credibility": null,
+     "freshness": null,
+     "materiality": null,
+     "novelty": null
+    },
+    "sector": "Energy",
+    "surprise": null,
+    "symbol": "S4.NS",
+    "uncertainty": [
+     "no material news captured for this stock before the cutoff"
+    ],
+    "v2": {
+     "confidence": null,
+     "direction": "NEUTRAL",
+     "prediction_id": "33a3e3bb79df47efaf1ac37874def684",
+     "quality_flags": [],
+     "reasons": [
+      "no setup matched"
+     ],
+     "reference_date": "2026-10-09",
+     "reference_price": 98.18878811066027,
+     "setup_type": "NONE"
+    }
+   },
+   {
+    "affected_sectors": [],
+    "call": "NO_CALL",
+    "confidence": null,
+    "evidence": [],
+    "exclusion_reasons": [
+     "no material news captured for this stock before the cutoff"
+    ],
+    "expected_return_direction": null,
+    "horizon_sessions": null,
+    "inputs": {
+     "prices": "V2_SNAPSHOT"
+    },
+    "name": "S5.NS",
+    "news_sentiment": null,
+    "risks": [],
+    "score": 0.0,
+    "scores": {
+     "credibility": null,
+     "freshness": null,
+     "materiality": null,
+     "novelty": null
+    },
+    "sector": "IT",
+    "surprise": null,
+    "symbol": "S5.NS",
+    "uncertainty": [
+     "no material news captured for this stock before the cutoff"
+    ],
+    "v2": {
+     "confidence": null,
+     "direction": "NEUTRAL",
+     "prediction_id": "2f97e28f63354038bc13cd3b4242e8f8",
+     "quality_flags": [],
+     "reasons": [
+      "no setup matched"
+     ],
+     "reference_date": "2026-10-09",
+     "reference_price": 110.19364045385149,
+     "setup_type": "NONE"
+    }
+   },
+   {
+    "affected_sectors": [],
+    "call": "NO_CALL",
+    "confidence": null,
+    "evidence": [],
+    "exclusion_reasons": [
+     "no material news captured for this stock before the cutoff"
+    ],
+    "expected_return_direction": null,
+    "horizon_sessions": null,
+    "inputs": {
+     "prices": "V2_SNAPSHOT"
+    },
+    "name": "S6.NS",
+    "news_sentiment": null,
+    "risks": [],
+    "score": 0.0,
+    "scores": {
+     "credibility": null,
+     "freshness": null,
+     "materiality": null,
+     "novelty": null
+    },
+    "sector": "IT",
+    "surprise": null,
+    "symbol": "S6.NS",
+    "uncertainty": [
+     "no material news captured for this stock before the cutoff"
+    ],
+    "v2": {
+     "confidence": null,
+     "direction": "NEUTRAL",
+     "prediction_id": "eda6537a951745e4b2a73302b9f341fe",
+     "quality_flags": [],
+     "reasons": [
+      "no setup matched"
+     ],
+     "reference_date": "2026-10-09",
+     "reference_price": 106.33062284541982,
+     "setup_type": "NONE"
+    }
+   },
+   {
+    "affected_sectors": [],
+    "call": "NO_CALL",
+    "confidence": null,
+    "evidence": [],
+    "exclusion_reasons": [
+     "no material news captured for this stock before the cutoff"
+    ],
+    "expected_return_direction": null,
+    "horizon_sessions": null,
+    "inputs": {
+     "prices": "V2_SNAPSHOT"
+    },
+    "name": "S7.NS",
+    "news_sentiment": null,
+    "risks": [],
+    "score": 0.0,
+    "scores": {
+     "credibility": null,
+     "freshness": null,
+     "materiality": null,
+     "novelty": null
+    },
+    "sector": "IT",
+    "surprise": null,
+    "symbol": "S7.NS",
+    "uncertainty": [
+     "no material news captured for this stock before the cutoff"
+    ],
+    "v2": {
+     "confidence": null,
+     "direction": "NEUTRAL",
+     "prediction_id": "e5282b9d10b94ae3aa7373276a566628",
+     "quality_flags": [],
+     "reasons": [
+      "no setup matched"
+     ],
+     "reference_date": "2026-10-09",
+     "reference_price": 94.0173021304099,
+     "setup_type": "NONE"
+    }
+   }
+  ],
+  "confidence_note": "no confidence is shown: scores are evidence strength, not calibrated probabilities",
+  "counts": {
+   "DOWN": 0,
+   "NEUTRAL": 0,
+   "NO_CALL": 7,
+   "UP": 1
+  },
+  "mode": "SHADOW",
+  "news_status": {
+   "as_of": "2026-10-11T09:07:05.063804+00:00",
+   "coverage": {
+    "universe": 8,
+    "window_hours": 72.0,
+    "with_news": 1,
+    "without_news": [
+     "S0.NS",
+     "S2.NS",
+     "S3.NS",
+     "S4.NS",
+     "S5.NS",
+     "S6.NS",
+     "S7.NS"
+    ]
+   },
+   "data_basis": "REAL",
+   "detail": "news ingested recently from at least one approved provider",
+   "newest_article": {
+    "ingested_at": "2026-10-09T08:30:00+00:00",
+    "provider": "official_rss",
+    "published_at": "2026-10-09T07:35:00+00:00",
+    "title": "RBI announces special window for public sector oil marketing companies"
+   },
+   "providers": [
+    {
+     "enabled": true,
+     "health": "OK",
+     "last_run": {
+      "error": null,
+      "fetched": 1,
+      "finished_at": "2026-10-11T09:07:04.701976+00:00",
+      "inserted": 1,
+      "new_events": 1,
+      "started_at": "2026-10-09T08:30:00+00:00",
+      "status": "COMPLETED"
+     },
+     "last_success_age_hours": 0.0,
+     "last_success_at": "2026-10-11T09:07:04.701976+00:00",
+     "provider": "official_rss",
+     "refused_reason": null,
+     "selected": true
+    },
+    {
+     "enabled": false,
+     "health": "OK",
+     "last_run": {
+      "error": null,
+      "fetched": 2,
+      "finished_at": "2026-10-11T09:07:04.718595+00:00",
+      "inserted": 2,
+      "new_events": 1,
+      "started_at": "2026-10-09T08:30:00+00:00",
+      "status": "COMPLETED"
+     },
+     "last_success_age_hours": 0.0,
+     "last_success_at": "2026-10-11T09:07:04.718595+00:00",
+     "provider": "marketaux",
+     "refused_reason": null,
+     "selected": false
+    },
+    {
+     "enabled": false,
+     "health": "FAILING",
+     "last_run": {
+      "error": "HTTP 429 from api.gdeltproject.org",
+      "fetched": 0,
+      "finished_at": "2026-10-11T09:07:04.721594+00:00",
+      "inserted": 0,
+      "new_events": 0,
+      "started_at": "2026-10-09T08:30:00+00:00",
+      "status": "RATE_LIMITED"
+     },
+     "last_success_age_hours": null,
+     "last_success_at": null,
+     "provider": "gdelt",
+     "refused_reason": null,
+     "selected": false
+    },
+    {
+     "enabled": false,
+     "health": "NOT_CONFIGURED",
+     "last_run": {
+      "error": "ALPHAVANTAGE_API_KEY is not set (the demo key only serves documented examples)",
+      "fetched": 0,
+      "finished_at": "2026-10-11T09:07:04.723712+00:00",
+      "inserted": 0,
+      "new_events": 0,
+      "started_at": "2026-10-09T08:30:00+00:00",
+      "status": "NOT_CONFIGURED"
+     },
+     "last_success_age_hours": null,
+     "last_success_at": null,
+     "provider": "alphavantage",
+     "refused_reason": null,
+     "selected": false
+    }
+   ],
+   "stale_after_hours": 3.0
+  },
+  "note": "evidence strength, not a probability; research / shadow only, never a live alert",
+  "session": "tomorrow",
+  "snapshot": {
+   "completed_at": "2026-10-11T09:07:04.804212+00:00",
+   "data_cutoff_at": "2026-10-09T14:00:00+00:00",
+   "run_id": "PRED-TOMORROW_EOD-20261009-46413c",
+   "run_type": "TOMORROW_EOD",
+   "target_session_date": "2026-10-12"
+  },
+  "snapshot_freshness": {
+   "detail": "Forecast for the next trading session (2026-10-12).",
+   "status": "FRESH",
+   "target_session_date": "2026-10-12"
+  },
+  "version": "candidates-v0.1"
+ },
+ "message": "News candidates (shadow)",
+ "success": true
+}

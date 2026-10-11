@@ -12,6 +12,10 @@ PREDICTION_V2_PUBLIC is true.
   GET  /news/hypotheses                  the transmission hypotheses and their validation status
   GET  /admin/news/ingestion-runs        provider runs (admin)
   POST /admin/news/ingest                run the hourly ingestion job now (admin, audited; same slot lock)
+  GET  /admin/news/benchmark            provider benchmark report (+ probe and signal backtest when produced)
+  GET  /admin/news/benchmark/audit      event-level audit trail of the benchmark
+  GET  /admin/news/candidates           explainable news screen for today / tomorrow (shadow) with v2 calls
+  GET  /admin/news/status               provider health, coverage, staleness, data basis (database only)
 
 Every response separates FACTS (what the source said, when it was published
 and when StockLens ingested it) from INFERENCE (hypothesis-based exposures),
@@ -32,6 +36,7 @@ from api.routes.predictions import prediction_reader
 from api.schemas import success_envelope
 from auth.dependencies import require_admin
 from catalysts import CLASSIFIER_VERSION, transmission
+import masters.service as masters
 from db.models.news import EventEntity, NewsArticle, NewsIngestionRun
 from db.models.prediction import EventClassification, MarketEvent
 from db.models.user import User
@@ -49,6 +54,10 @@ MACRO_CATEGORIES = ("MONETARY_POLICY", "TRADE_TARIFF", "GEOPOLITICAL", "FISCAL_P
 
 def _utc(t: Optional[dt.datetime]) -> Optional[dt.datetime]:
     return None if t is None else (t if t.tzinfo else t.replace(tzinfo=dt.timezone.utc))
+
+
+def _iso(t: Optional[dt.datetime]) -> Optional[str]:
+    return _utc(t).isoformat() if t else None
 
 
 def _latest_classification(session: Session, event_id: int) -> Optional[EventClassification]:
@@ -229,7 +238,83 @@ def news_benchmark(include_outcomes: bool = False):
         raise HTTPException(status.HTTP_500_INTERNAL_SERVER_ERROR, "Benchmark report is not valid JSON") from e
     if not include_outcomes:
         report.pop("outcomes", None)
+        report.pop("audit", None)
+    for key, name in (("probe", "news_provider_probe.json"), ("signal_backtest", "news_signal_backtest.json")):
+        extra = path.parent / name                    # companion research outputs, when produced
+        if extra.exists():
+            try:
+                report[key] = json.loads(extra.read_text(encoding="utf-8"))
+            except ValueError:
+                report[key] = {"status": "INVALID_JSON"}
     return success_envelope(report, message="News provider benchmark (research only)")
+
+
+@admin_router.get("/benchmark/audit")
+def news_benchmark_audit(provider: Optional[str] = None, status_: Optional[str] = Query(None, alias="status"),
+                         segment: Optional[str] = None, limit: int = Query(500, ge=1, le=5000)):
+    """Event-level audit trail of the benchmark (one row per provider-event)."""
+    rows = news_benchmark(include_outcomes=True)["data"].get("audit") or []
+    rows = [r for r in rows if (provider is None or r["provider"] == provider)
+            and (status_ is None or r["status"] == status_) and (segment is None or r.get("segment") == segment)]
+    return success_envelope({"rows": rows[:limit], "total": len(rows)}, message="Benchmark audit trail")
+
+
+def _news_status(session: Session, now: dt.datetime) -> dict:
+    from catalysts import status as news_status_mod
+    from prediction_v2 import universe
+    from scheduling.jobs import news_selection
+    return news_status_mod.news_status(session, now, news_selection(), [c.symbol for c in universe.members(session)])
+
+
+@admin_router.get("/status")
+def news_status(session: Session = Depends(get_session)):
+    """Provider health, missing coverage, staleness and the data basis
+    (REAL / STALE / UNAVAILABLE) of the news inputs. Database only."""
+    return success_envelope(_news_status(session, dt.datetime.now(dt.timezone.utc)), message="News input status")
+
+
+@admin_router.get("/candidates")
+def news_candidates(session_kind: str = Query("today", alias="session", pattern="^(today|tomorrow)$"),
+                    as_of: Optional[dt.datetime] = None, symbol: Optional[str] = None,
+                    include_excluded: bool = True, session: Session = Depends(get_session)):
+    """Explainable news screen of the v2 universe for today's or tomorrow's
+    session: UP / DOWN / NEUTRAL / NO_CALL with evidence, links, publication
+    and ingestion times, risks and inclusion / exclusion reasons, next to the
+    latest v2 snapshot call for the same session. SHADOW: never an alert.
+    Nothing is filled in when an input is missing: the response states the
+    news data basis and whether price inputs came from a v2 snapshot."""
+    from api.routes.predictions import _select_run, freshness
+    from catalysts import candidates
+    from db.models.prediction import Prediction
+    from prediction_v2 import universe
+    now = dt.datetime.now(dt.timezone.utc)
+    t = _utc(as_of) if as_of else now
+    run = _select_run(session, session_kind)
+    preds = {p.symbol: p for p in session.exec(select(Prediction).where(Prediction.run_id == run.run_id)).all()} if run else {}
+    comps = [(c.symbol, c.sector) for c in universe.members(session) if symbol is None or c.symbol == symbol.upper()]
+    names = {c.symbol: c.name for c in universe.members(session)}
+    # a v2 NO_CALL is a data-quality outcome (missing / insufficient bars): no news call either
+    out = candidates.screen(session, t, comps,
+                            has_prices=lambda sym: preds[sym].direction != "NO_CALL" if sym in preds else True)
+    for r in out["candidates"]:
+        p = preds.get(r["symbol"])
+        r["name"] = names.get(r["symbol"])
+        r["inputs"] = {"prices": "V2_SNAPSHOT" if p else "UNAVAILABLE"}
+        if p is None:
+            r["risks"] = r["risks"] + ["no v2 snapshot for this session: price inputs unavailable"]
+        r["v2"] = None if p is None else {"prediction_id": p.prediction_id, "direction": p.direction,
+                                          "setup_type": p.setup_type, "reference_price": p.reference_price,
+                                          "reference_date": p.reference_date, "reasons": (p.reasons or [])[:3],
+                                          "quality_flags": p.quality_flags or [], "confidence": p.confidence}
+    if not include_excluded:
+        out["candidates"] = [r for r in out["candidates"] if r["call"] in ("UP", "DOWN")]
+    holidays = masters.get_config(session, "market.holidays") or []
+    out.update(session=session_kind, snapshot=None if run is None else {
+        "run_id": run.run_id, "run_type": run.run_type, "target_session_date": run.target_session_date,
+        "data_cutoff_at": _iso(run.data_cutoff_at), "completed_at": _iso(run.completed_at)},
+        snapshot_freshness=freshness(run, session_kind, holidays), news_status=_news_status(session, now),
+        confidence_note="no confidence is shown: scores are evidence strength, not calibrated probabilities")
+    return success_envelope(to_jsonable(out), message="News candidates (shadow)")
 
 
 @admin_router.get("/ingestion-runs")

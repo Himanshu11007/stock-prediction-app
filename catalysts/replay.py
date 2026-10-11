@@ -4,7 +4,8 @@ catalysts/replay.py — point-in-time historical replay of the news engine.
 Input: an archive of articles that records, for each, when StockLens (or the
 archive's collector) actually received it (`ingested_at`), plus optional
 corrections received later. The replay never uses an article before its
-ingestion time:
+ingestion time, nor a corrected article before its correction time (the
+archive holds the corrected text):
 
   for each cutoff T (chronological):
       ingest every not-yet-ingested article with ingested_at <= T, in
@@ -46,6 +47,14 @@ class ArchivedArticle:
     ingested_at: dt.datetime
     provider: str = "archive"
 
+    @property
+    def usable_at(self) -> dt.datetime:
+        """The archive keeps the latest text of an article, so a corrected
+        article is unusable until its correction was received: otherwise a
+        replay could read a revised headline or time before it existed."""
+        c = self.article.corrected_at
+        return max(self.ingested_at, c) if c is not None else self.ingested_at
+
 
 @dataclass
 class ReplayCall:
@@ -57,6 +66,7 @@ class ReplayCall:
     score: float
     events: list[int] = field(default_factory=list)
     reason: str = ""
+    category: str = ""                   # category of the strongest piece of evidence
 
 
 @dataclass
@@ -106,7 +116,7 @@ def run(archive: Iterable[ArchivedArticle], cutoffs: list[dt.datetime], companie
         for sym, name, sec, ind in companies:
             s.add(Company(symbol=sym, name=name, sector=sec, industry=ind))
         s.commit()
-    pending = sorted(archive, key=lambda a: a.ingested_at)
+    pending = sorted(archive, key=lambda a: a.usable_at)
     cal = [d.date() for d in nifty.index]
     res = ReplayResult(baselines={"previous_day": [], "random_matched": []})
     rng = random.Random(seed)
@@ -116,10 +126,10 @@ def run(archive: Iterable[ArchivedArticle], cutoffs: list[dt.datetime], companie
         if day not in cal or cal.index(day) + 1 >= len(cal):
             continue
         nxt = cal[cal.index(day) + 1]
-        while k < len(pending) and pending[k].ingested_at <= cutoff:          # never before ingestion
-            batch_time = pending[k].ingested_at
+        while k < len(pending) and pending[k].usable_at <= cutoff:            # never before ingestion / correction
+            batch_time = pending[k].usable_at
             batch = []
-            while k < len(pending) and pending[k].ingested_at == batch_time:
+            while k < len(pending) and pending[k].usable_at == batch_time:
                 batch.append(pending[k])
                 k += 1
             with Session(eng) as s:
@@ -157,7 +167,8 @@ def run(archive: Iterable[ArchivedArticle], cutoffs: list[dt.datetime], companie
                     res.unscored += 1
                 res.calls.append(ReplayCall(day, sym, a.direction, None if r is None else sign * r,
                                             None if r is None or nret is None else sign * (r - nret), a.score,
-                                            [e.event_id for e in a.evidence], a.reasons[0] if a.reasons else ""))
+                                            [e.event_id for e in a.evidence], a.reasons[0] if a.reasons else "",
+                                            max(a.evidence, key=lambda e: e.weight).category or ""))
         for r in rng.sample(pool, min(news_calls, len(pool))):
             res.baselines["random_matched"].append(rng.choice((1, -1)) * r)
     return res

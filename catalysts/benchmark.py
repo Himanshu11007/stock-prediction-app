@@ -6,15 +6,27 @@ event: an NSE filing, an RBI / SEBI / PIB / White House / Fed release, a
 Federal Register document, a Fed rate change, a crude / gold / rupee shock)
 and every provider, the outcome is exactly one of:
 
-  DETECTED                    a VERIFIED article exists in the event window
+  DETECTED                    a VERIFIED, unambiguous article exists in the event window
+  AMBIGUOUS                   only weak verified articles: market roundups / multi-company
+                              headlines, or a first report more than 24 h after an exact
+                              official time (probably a different story). Counted as tested;
+                              strict recall treats it as not detected, lenient as detected
   MISSED                      the provider was queried successfully and has none
   UNTESTABLE_NO_HISTORY       the event is older than the provider's history
   UNTESTABLE_NOT_CONFIGURED   no credential: the provider was not queried
   SOURCE_OF_RECORD            the provider is the event's own official source
   OUTAGE / RATE_LIMITED       the query failed: not a miss, reported separately
 
-Only DETECTED and MISSED count towards recall. Missing history is never a
-pass.
+Only DETECTED, AMBIGUOUS and MISSED count as tested. Missing history is
+never a pass.
+
+Precision (article level): unambiguous verified articles / candidate
+articles the provider returned for the event's subject. Low precision means
+much of what a provider returns about a company is not about the event.
+
+Segments: indian_company (NSE / BSE filings), indian_macro (RBI, SEBI,
+Government of India), international_policy (Fed, White House, Federal
+Register), commodity_currency (crude, gold, USD/INR).
 
 Matching, per article title (and excerpt):
   candidate   the event's search pattern matches (e.g. the company alias)
@@ -62,10 +74,19 @@ INDIAN_ALIASES = {  # unambiguous names used in headlines (regex alternatives)
     "SBIN": "SBI|State Bank of India", "BAJFINANCE": "Bajaj Finance", "MARUTI": "Maruti", "ASIANPAINT": "Asian Paints",
     "TATASTEEL": "Tata Steel", "SUNPHARMA": "Sun Pharma", "BHARTIARTL": "Bharti Airtel|Airtel", "AXISBANK": "Axis Bank",
     "WIPRO": "Wipro"}
-DETECTED, MISSED = "DETECTED", "MISSED"
+DETECTED, MISSED, AMBIGUOUS = "DETECTED", "MISSED", "AMBIGUOUS"
 NO_HISTORY, NOT_CONFIGURED, OF_RECORD = "UNTESTABLE_NO_HISTORY", "UNTESTABLE_NOT_CONFIGURED", "SOURCE_OF_RECORD"
 OUTAGE, RATE_LIMITED = "OUTAGE", "RATE_LIMITED"
-TESTED = (DETECTED, MISSED)
+TESTED = (DETECTED, AMBIGUOUS, MISSED)
+SEGMENTS = {"indian_company": ("nse_filing", "bse_filing"), "indian_macro": ("rbi", "sebi", "india_policy"),
+            "international_policy": ("fed", "us_policy_whitehouse", "us_policy_federal_register"),
+            "commodity_currency": ("crude", "gold", "currency")}
+SEGMENT_OF = {k: seg for seg, kinds in SEGMENTS.items() for k in kinds}
+# headlines that list several stocks (market wraps) do not report one company's event
+ROUNDUP = re.compile(r"stocks? to (watch|buy)|buzzing stocks|stocks in (news|focus)|buy,? sell or hold|top (gainers|losers)|"
+                     r"corporate updates|market (wrap|live|today)|stock market (today|live)|share market (today|live)|"
+                     r"\bstocks? like\b|(sensex|nifty) (today|live)|hot stocks|trade setup", re.I)
+LATE_MATCH = dt.timedelta(hours=24)
 
 
 @dataclass
@@ -139,6 +160,7 @@ class Outcome:
     candidates: int = 0
     verified: int = 0
     exact_share: Optional[float] = None
+    ambiguous_reason: Optional[str] = None
     delay_minutes: Optional[float] = None
     actionable: Optional[bool] = None
     first_title: Optional[str] = None
@@ -168,13 +190,26 @@ def evaluate(provider: str, ev: Event, items: list[RawArticle], index: Optional[
     # the subject must be in the headline (excerpt-only mentions are roundups / other stories)
     verified = [a for a in candidates if cand_re.search(a.title) and all(m.search(_text(a)) for m in must_re)
                 and not PREVIEW.search(a.title) and not pre_release(a)]
-    out = Outcome(provider, ev.id, ev.kind, DETECTED if verified else MISSED, candidates=len(candidates),
-                  verified=len(verified))
+
+    def weak(a: RawArticle) -> Optional[str]:
+        if ROUNDUP.search(a.title) or (index is not None and len(index.find(a.title)) >= 3):
+            return "roundup / multi-company headline"
+        if ev.precision == "exact" and a.published_at - ev.official_time > LATE_MATCH:
+            return "first report more than 24 h after the official time"
+        return None
+    strong = [a for a in verified if weak(a) is None]
+    status = DETECTED if strong else AMBIGUOUS if verified else MISSED
+    out = Outcome(provider, ev.id, ev.kind, status, candidates=len(candidates), verified=len(strong))
     out.false_matches = [a.title[:140] for a in candidates if a not in verified][:3]
     urls = [a.url for a in verified if a.url]
     out.url_duplicates = len(urls) - len(set(urls))
+    if status == AMBIGUOUS:
+        first = min(verified, key=lambda a: a.published_at)
+        out.first_title, out.ambiguous_reason = first.title[:140], weak(first)
+        return out
     if not verified:
         return out
+    verified = strong
     exact = [a for a in verified if a.time_precision == "exact"]
     out.exact_share = round(len(exact) / len(verified), 3)
     first = min(verified, key=lambda a: a.published_at)
@@ -213,6 +248,8 @@ def summarize(outcomes: list[Outcome]) -> dict[str, Any]:
     for prov, rows in sorted(by_provider.items()):
         tested = [o for o in rows if o.status in TESTED]
         det = [o for o in tested if o.status == DETECTED]
+        amb = [o for o in tested if o.status == AMBIGUOUS]
+        cand = sum(o.candidates for o in tested)
         delays = [o.delay_minutes for o in det if o.delay_minutes is not None]
         act = [o.actionable for o in det if o.actionable is not None]
         mp = [o.mapping_provider for o in det if o.mapping_provider is not None]
@@ -230,9 +267,14 @@ def summarize(outcomes: list[Outcome]) -> dict[str, Any]:
             "missed": len(tested) - len(det),
             "recall": round(len(det) / len(tested), 3) if tested else None,
             "recall_ci95": wilson(len(det), len(tested)) if tested else None,
+            "ambiguous": len(amb),
+            "recall_lenient": round((len(det) + len(amb)) / len(tested), 3) if tested else None,
+            "article_precision": round(sum(o.verified for o in tested) / cand, 3) if cand else None,
+            "candidate_articles": cand,
             "latency_minutes": {"n": len(delays), "p10": percentile(delays, 0.1), "p50": percentile(delays, 0.5),
                                 "p90": percentile(delays, 0.9), "max": max(delays) if delays else None},
-            "actionable_before_market_reaction": {"n": len(act), "share": round(sum(act) / len(act), 3) if act else None},
+            "actionable_before_market_reaction": {"n": len(act), "share": round(sum(act) / len(act), 3) if act else None,
+                                                  "ci95": wilson(sum(act), len(act)) if act else None},
             "exact_timestamp_share": round(sum(o.exact_share or 0 for o in det) / len(det), 3) if det else None,
             "mapping_accuracy_provider_tags": {"n": len(mp), "share": round(sum(mp) / len(mp), 3) if mp else None},
             "mapping_accuracy_stocklens": {"n": len(ms), "share": round(sum(ms) / len(ms), 3) if ms else None},
@@ -242,6 +284,38 @@ def summarize(outcomes: list[Outcome]) -> dict[str, Any]:
             "by_kind": kinds,
         }
     return out
+
+
+def by_segment(outcomes: list[Outcome]) -> dict[str, Any]:
+    return {seg: summarize([o for o in outcomes if SEGMENT_OF.get(o.kind) == seg]) for seg in SEGMENTS}
+
+
+def audit(outcomes: list[Outcome], events: dict[str, dict]) -> list[dict[str, Any]]:
+    """Event-level audit trail: one row per tested (or failed) provider-event
+    with the quality flags a reviewer needs."""
+    rows = []
+    for o in outcomes:
+        if o.status in (OF_RECORD, NOT_CONFIGURED):
+            continue
+        e = events.get(o.event_id, {})
+        flags = []
+        if o.status == AMBIGUOUS:
+            flags.append("WEAK_MATCH")
+        if o.status == DETECTED and o.delay_minutes is None:
+            flags.append("NO_TIMING_DATE_ONLY_EVENT" if e.get("precision") == "date" else "NO_TIMING_PLACEHOLDER_TIME")
+        if o.delay_minutes is not None and o.delay_minutes < -float(PRE_RELEASE_TOLERANCE.total_seconds() / 60):
+            flags.append("TIMEZONE_SUSPECT")
+        if o.wrong_symbols:
+            flags.append("OTHER_COMPANIES_TAGGED")
+        if o.false_matches:
+            flags.append("FALSE_CANDIDATES")
+        rows.append({"provider": o.provider, "event_id": o.event_id, "kind": o.kind, "segment": SEGMENT_OF.get(o.kind),
+                     "event": e.get("title"), "official_time": e.get("official_time"), "precision": e.get("precision"),
+                     "status": o.status, "delay_minutes": o.delay_minutes, "actionable": o.actionable,
+                     "first_title": o.first_title, "ambiguous_reason": o.ambiguous_reason,
+                     "candidates": o.candidates, "verified": o.verified, "wrong_symbols": o.wrong_symbols,
+                     "false_candidates": o.false_matches[:2], "detail": o.detail, "flags": flags})
+    return rows
 
 
 def value_over_sources(outcomes: list[Outcome], covered_kinds: Iterable[str]) -> dict[str, Any]:

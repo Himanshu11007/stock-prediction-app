@@ -83,3 +83,14 @@ def test_summary_costs_baselines_unscored_and_reproducibility():
     assert s["no_news"] > 0 and s["baseline_previous_day"]["calls"] > 0
     assert s["sessions"] == 2                                                  # D3 skipped: no next session
     assert abs(r1.summary(cost_bps=0)["mean_net"] - s["mean_net"] - 0.0025) < 1e-12
+
+
+def test_corrected_article_is_not_used_before_its_correction_arrived():
+    import dataclasses
+    good1 = _archive()[0].article
+    corrected = dataclasses.replace(good1, corrected_at=at(D2, 10, 0).astimezone(dt.timezone.utc))
+    arch = [replay.ArchivedArticle(corrected, at(D1, 16, 30))]               # archive holds the corrected text
+    assert arch[0].usable_at == at(D2, 10, 0)
+    res = replay.run(arch, [at(D1, 19, 30), at(D2, 19, 30)], COMPANIES, _prices(), NIFTY)
+    cut = {c.cutoff for c in res.calls if c.symbol == "S1.NS"}
+    assert D1 not in cut                       # the D1 cutoff could not have seen the corrected version

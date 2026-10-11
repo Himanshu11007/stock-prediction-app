@@ -71,6 +71,13 @@ class NewsArticle(SQLModel, table=True):
     category: Optional[str] = Field(default=None)             # article-level classification (taxonomy category)
     quality_flags: Optional[list[str]] = Field(default=None, sa_column=Column(JSON))   # see catalysts.pipeline.quality_flags
     provider_entities: Optional[list[dict[str, Any]]] = Field(default=None, sa_column=Column(JSON))  # provider's own tags
+    # The publication time exactly as the source wrote it and the zone it
+    # stated ('+0530', 'GMT', 'Z') or 'NONE->IST' when the reader assumed one.
+    # published_at is the normalised UTC value; first_seen_at the provider's
+    # availability; ingested_at StockLens's own first sight; corrected_at a
+    # later correction. None is never filled in with a guess.
+    published_raw: Optional[str] = Field(default=None)
+    published_tz: Optional[str] = Field(default=None)
 
 
 class EventEntity(SQLModel, table=True):
@@ -91,6 +98,9 @@ class EventEntity(SQLModel, table=True):
     sign: Optional[int] = Field(default=None)         # inferred direction for this entity: +1 / -1 / 0 (ambiguous)
     mechanism: Optional[str] = Field(default=None)
     confidence: Optional[float] = Field(default=None)
+    # why this stock is linked: {'source': 'provider_tag'|'title'|'excerpt'|'hypothesis'|'industry',
+    # 'matched': the text that matched, 'article_id': ..., ...}
+    evidence: Optional[dict[str, Any]] = Field(default=None, sa_column=Column(JSON))
     created_at: datetime = Field(default_factory=utcnow)
 
 

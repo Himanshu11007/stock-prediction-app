@@ -35,8 +35,10 @@ import urllib.parse
 import xml.etree.ElementTree as ET
 from typing import Callable, Iterable, Optional
 
+from catalysts import filings
 from catalysts import text as tx
-from catalysts.providers import HttpGet, NotConfigured, ProviderError, RateLimited, RawArticle, _as_utf8, fetch, http_get
+from catalysts.providers import (HttpGet, NotConfigured, NotPermitted, ProviderError, RateLimited, RawArticle, _as_utf8,
+                                 fetch, http_get, zone_of)
 
 IST = dt.timezone(dt.timedelta(hours=5, minutes=30))
 BROWSER_UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) StockLens-research/0.1"
@@ -82,9 +84,26 @@ class FederalRegisterProvider:
                     yield RawArticle(provider_article_id=num, url=d.get("html_url") or "", title=tx.sanitize(d.get("title"), tx.MAX_TITLE),
                                      published_at=pub, excerpt=tx.sanitize(d.get("abstract")), source_name=agencies or "Federal Register",
                                      raw={"type": d.get("type"), "term": term}, time_precision="date",
+                                     published_raw=d["publication_date"], published_tz="NONE->ET (date only)",
                                      source_domain="federalregister.gov")
                 if page >= int(data.get("total_pages") or 1):
                     break
+
+
+# NSE Terms of Use (read 11 Oct 2026, https://www.nseindia.com/static/nse-terms-of-use):
+#   "User is prohibited to conduct any systematic or automated data collection activities
+#    (including scraping, data mining, data extraction and data harvesting) on or in relation
+#    to our Website" and content may not be "stored ... without prior written permission of NSE".
+# Commercial use of market data is licensed by NSE Data. Every automated NSE source therefore
+# refuses to run unless the reference of NSE's written permission or licence is recorded here:
+NSE_PERMISSION_ENV = "NSE_AUTOMATED_ACCESS_PERMISSION"
+BSE_PERMISSION_ENV = "BSE_AUTOMATED_ACCESS_PERMISSION"
+
+
+def require_permission(env_name: str, source: str) -> None:
+    if not os.environ.get(env_name, "").strip():
+        raise NotPermitted(f"{source}: automated collection needs the exchange's written permission or a licence; "
+                           f"record its reference in {env_name} (not set)")
 
 
 class NseAnnouncementsProvider:
@@ -97,6 +116,7 @@ class NseAnnouncementsProvider:
         self.symbols, self.get, self.sleep = tuple(s.split(".")[0].upper() for s in symbols or ()), get, sleep
 
     def _rows(self, since: dt.datetime, until: dt.datetime, symbol: Optional[str]) -> list[dict]:
+        require_permission(NSE_PERMISSION_ENV, "NSE corporate announcements")
         params = {"index": "equities", "from_date": f"{since.astimezone(IST):%d-%m-%Y}",
                   "to_date": f"{until.astimezone(IST):%d-%m-%Y}"}
         if symbol:
@@ -126,7 +146,48 @@ class NseAnnouncementsProvider:
                              url=r.get("attchmntFile") or f"https://www.nseindia.com/companies-listing/corporate-filings-announcements#{sym}",
                              title=title, published_at=pub, excerpt=tx.sanitize(r.get("attchmntText")),
                              source_name="National Stock Exchange of India (filing)", symbols=(f"{sym}.NS",) if sym else (),
-                             source_domain="nseindia.com", raw={"filed_at": r.get("an_dt"), "category": r.get("desc")})
+                             source_domain="nseindia.com", raw={"filed_at": r.get("an_dt"), "category": r.get("desc")},
+                             published_raw=stamp, published_tz="NONE->IST")
+
+
+class NseAnnouncementsRssProvider:
+    """NSE's official 'Online announcements' RSS feed (live: the latest ~35
+    filings; no history). pubDate is IST without a zone ('11-Oct-2026
+    13:37:50'). Routine notices are dropped by catalysts.filings. Gated by
+    the same written-permission requirement as every automated NSE source."""
+    name = "nse_rss"
+    research_only = True
+    URL = "https://nsearchives.nseindia.com/content/RSS/Online_announcements.xml"
+
+    def __init__(self, get: HttpGet = http_get, sleep: Callable[[float], None] = time.sleep, keep_routine: bool = False):
+        self.get, self.sleep, self.keep_routine = get, sleep, keep_routine
+        self.excluded: list[str] = []
+
+    def fetch(self, since: dt.datetime, until: dt.datetime) -> Iterable[RawArticle]:
+        require_permission(NSE_PERMISSION_ENV, "NSE announcements RSS")
+        root = ET.fromstring(_as_utf8(fetch(self.URL, self.get, sleep=self.sleep)))
+        for item in root.iter("item"):
+            stamp = (item.findtext("pubDate") or "").strip()
+            try:
+                pub = dt.datetime.strptime(stamp, "%d-%b-%Y %H:%M:%S").replace(tzinfo=IST).astimezone(dt.timezone.utc)
+            except ValueError:
+                continue
+            if not (since <= pub <= until):
+                continue
+            company = tx.sanitize(item.findtext("title"), 200)
+            desc = tx.sanitize(item.findtext("description"))
+            subject = desc.split("|SUBJECT:", 1)[1].strip() if "|SUBJECT:" in desc else desc
+            fc = filings.classify(subject, desc)
+            if not fc.keep and not self.keep_routine:
+                self.excluded.append(f"{company}: {fc.category}")
+                continue
+            link = (item.findtext("link") or "").strip()
+            yield RawArticle(provider_article_id=f"nse_rss:{link or company + stamp}"[:300], url=link or self.URL,
+                             title=tx.sanitize(f"{company}: {subject}", tx.MAX_TITLE), published_at=pub,
+                             excerpt=desc, source_name="National Stock Exchange of India (filing)",
+                             source_domain="nseindia.com", published_raw=stamp, published_tz="NONE->IST",
+                             raw={"filing_category": fc.category, "materiality": fc.materiality,
+                                  "filings_version": filings.FILINGS_VERSION})
 
 
 PLACEHOLDER_TIMES = {"07:00:00", "08:00:00", "00:00:00"}
@@ -162,7 +223,8 @@ class GoogleNewsProvider:
                 src_url = src.get("url") if src is not None else None
                 title = raw_title[: -(len(src_name) + 3)] if src_name and raw_title.endswith(f" - {src_name}") else raw_title
                 try:
-                    pub = email.utils.parsedate_to_datetime(item.findtext("pubDate") or "")
+                    pub_raw = item.findtext("pubDate") or ""
+                    pub = email.utils.parsedate_to_datetime(pub_raw)
                 except (TypeError, ValueError):
                     continue
                 precision = "date" if pub.strftime("%H:%M:%S") in PLACEHOLDER_TIMES else "exact"
@@ -174,7 +236,8 @@ class GoogleNewsProvider:
                 link = (item.findtext("link") or "").strip()
                 yield RawArticle(provider_article_id=(item.findtext("guid") or link)[:300], url=link, title=title,
                                  published_at=pub, source_name=src_name, time_precision=precision,
-                                 source_domain=tx.domain(src_url) if src_url else None, raw={"query": query})
+                                 source_domain=tx.domain(src_url) if src_url else None, raw={"query": query},
+                                 published_raw=pub_raw, published_tz=zone_of(pub_raw))
 
 
 PUBLISHER_FEEDS = {
@@ -244,7 +307,8 @@ class AlphaVantageNewsProvider:
                              source_domain=a.get("source_domain"),
                              symbols=tuple(s for s in (to_nse_symbol(t["symbol"]) for t in tags) if s),
                              provider_entities=tags,
-                             raw={"topics": ",".join(t.get("topic") or "" for t in a.get("topics") or [])})
+                             raw={"topics": ",".join(t.get("topic") or "" for t in a.get("topics") or [])},
+                             published_raw=a.get("time_published"), published_tz="NONE->UTC (unverified)")
 
 
 def to_nse_symbol(symbol: Optional[str], exchange: Optional[str] = None) -> Optional[str]:
@@ -329,7 +393,8 @@ class MarketauxProvider:
                                  excerpt=tx.sanitize(a.get("description") or a.get("snippet")),
                                  source_name=a.get("source"), source_domain=a.get("source") if "." in str(a.get("source") or "") else None,
                                  symbols=tuple(s for s in (to_nse_symbol(t["symbol"], t.get("exchange")) for t in tags) if s),
-                                 provider_entities=tags)
+                                 provider_entities=tags, published_raw=str(a.get("published_at")),
+                                 published_tz=zone_of(str(a.get("published_at"))))
             meta = data.get("meta") or {}
             returned, found = int(meta.get("returned") or 0), int(meta.get("found") or 0)
             if not returned or page * max(returned, 1) >= found:

@@ -210,3 +210,23 @@ statuses can apply, for example *TESTED; activation REQUIRES_APPROVAL*.
 | L7 | Dashboard and machine-readable report | IMPLEMENTED AND TESTED | NB-08 |
 | L8 | Research-only: no scheduling, alerts, prediction changes, production migrations or deploy | Respected | — |
 | L9 | Tests, files, configuration, licensing, recommendation | See `docs/NEWS_PROVIDER_BENCHMARK.md` §4–6 | NB-06 |
+
+## M. News Phase 2 (items 1–7) and end-to-end integration (items 1–8)
+
+| # | Requirement | Status | Evidence |
+|---|---|---|---|
+| M1 | Baseline reproduced, weak matches / timezone / timing issues identified, segments, CIs, no predictive claim | IMPLEMENTED AND TESTED | NP-01, NP-02 |
+| M2 | Marketaux / Alpha Vantage live validation on identical events | Code DONE; **live run PENDING (no keys)** | NP-03 |
+| M3 | Publication (raw + zone), UTC, provider availability, ingestion, correction, URL, canonical id, mapping evidence; post-cutoff exclusion | IMPLEMENTED AND TESTED | NP-04, NP-05 |
+| M4 | NSE / BSE terms checked before automation; materiality; official feeds retained | VERIFIED; gated (REQUIRES_APPROVAL: permission / licence) | NP-06, NP-07 |
+| M5 | Event intelligence and explainable UP / DOWN / NEUTRAL / NO_CALL screen | IMPLEMENTED AND TESTED (shadow) | NP-08 |
+| M6 | Chronological point-in-time comparison v1 / v2 / per provider / combined, costs, slippage, drawdown, categories | IMPLEMENTED; see `docs/NEWS_PHASE2.md` §6 for results and limits | NP-11 |
+| M7 | Dashboard, report, audit trail, docs, tests, push after trigger check | IMPLEMENTED AND TESTED | web `NewsBenchmarkRealReportTests` |
+| E1 | Collect from all configured and approved providers; normalise, deduplicate, map | Already implemented (`NEWS_INGESTION` + `registry.select`); verified end to end | NP-10 |
+| E2 | Combined news feeds the screen and v2 | Already implemented for v2; screen added | NP-08, NP-10 |
+| E3 | Web: today / tomorrow candidates with evidence, links, times, confidence, risks, reasons | IMPLEMENTED AND TESTED | `/predictions/candidates/*` |
+| E4 | Web: provider health, missing coverage, stale data, real vs unavailable | IMPLEMENTED AND TESTED | `NewsInputStatusPanel` |
+| E5 | Benchmark dashboard shows actual backend results | IMPLEMENTED AND TESTED (real API export) | `news_benchmark.json` fixture |
+| E6 | Contracts, models, auth (admin-only), loading / error states, responsive tables | IMPLEMENTED AND TESTED | contract fixtures, 403 / 500 tests |
+| E7 | Missing credentials / failing providers handled; nothing fabricated | IMPLEMENTED AND TESTED | e2e: RATE_LIMITED, NOT_CONFIGURED; UNAVAILABLE test |
+| E8 | Integration tests across the full flow | IMPLEMENTED AND TESTED (backend flow + shared contract fixtures rendered by the web; no live-browser E2E) | `tests/test_news_e2e.py` |

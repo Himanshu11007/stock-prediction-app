@@ -33,11 +33,12 @@ from typing import Any, Callable, Optional
 
 from sqlmodel import Session, select
 
-from catalysts import CLASSIFIER_VERSION, NEWS_RULE_VERSION
+from catalysts import CLASSIFIER_VERSION, NEWS_RULE_VERSION, taxonomy
 from catalysts.transmission import TRANSMISSION_VERSION
 from db.models.news import EventEntity, NewsArticle
 from db.models.prediction import EventClassification, MarketEvent
 
+IMPACT_SESSIONS = {c[0]: c[3] for c in taxonomy.CATEGORIES}     # category -> typical absorption, sessions
 MIN_SCORE = 0.35
 MIN_SINGLE = 0.25
 PRICED_IN_ATR = 1.5
@@ -67,6 +68,10 @@ class Evidence:
     sentiment: Optional[float] = None          # text sentiment of the event (-1..1); not a price forecast
     novelty: Optional[str] = None              # NEW | FOLLOW_UP | REPEAT
     expectedness: Optional[str] = None         # UNEXPECTED | EXPECTED | UNKNOWN (stated by the source text)
+    materiality: Optional[float] = None        # classification materiality (0..1), before novelty / relation weights
+    impact_sessions: Optional[int] = None      # the category's typical absorption horizon (taxonomy)
+    mapping: Optional[dict] = None             # why the stock is linked: relation, method, evidence
+    articles: list[dict] = field(default_factory=list)   # links with publication / availability / ingestion times
 
     def as_dict(self) -> dict[str, Any]:
         return {k: v for k, v in self.__dict__.items()}
@@ -96,6 +101,15 @@ class Assessment:
                 "confidence": None, "confidence_note": "not calibrated: the score is evidence strength, not a probability",
                 "rule_version": NEWS_RULE_VERSION, "classifier_version": CLASSIFIER_VERSION,
                 "transmission_version": TRANSMISSION_VERSION}
+
+
+def _article_ref(a: NewsArticle) -> dict[str, Any]:
+    iso = lambda t: _utc(t).isoformat() if t else None  # noqa: E731
+    return {"url": a.url, "title": a.title, "provider": a.provider, "source": a.source_domain or a.source_name,
+            "source_tier": a.source_tier, "published_at": iso(a.published_at), "published_raw": a.published_raw,
+            "published_tz": a.published_tz, "provider_first_seen_at": iso(a.first_seen_at),
+            "ingested_at": iso(a.ingested_at), "available_at": iso(a.effective_available_at),
+            "corrected_at": iso(a.corrected_at), "quality_flags": a.quality_flags or []}
 
 
 def _classification(session: Session, event_id: int, as_of: dt.datetime) -> Optional[EventClassification]:
@@ -166,7 +180,11 @@ def assess_stock(session: Session, symbol: str, as_of: dt.datetime,
                                      available_at=_utc(ev.effective_available_at).isoformat(), source_tier=tier,
                                      sources=sorted({a.source_domain or a.provider for a in arts}),
                                      hypothesis_id=link.hypothesis_id, mechanism=link.mechanism, flags=flags,
-                                     sentiment=cls.sentiment, novelty=cls.novelty, expectedness=cls.expectedness))
+                                     sentiment=cls.sentiment, novelty=cls.novelty, expectedness=cls.expectedness,
+                                     materiality=mat, impact_sessions=IMPACT_SESSIONS.get(cls.category or ""),
+                                     mapping={"relation": link.relation, "method": link.method,
+                                              "confidence": link.confidence, "evidence": link.evidence},
+                                     articles=[_article_ref(a) for a in sorted(arts, key=lambda a: _utc(a.published_at))[:5]]))
     if not out.evidence:
         out.reasons = ["no material news captured for this stock before the cutoff"]
         return out

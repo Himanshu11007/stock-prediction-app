@@ -154,7 +154,10 @@ See `docs/OPERATIONS_AND_SECURITY.md` §1.2.
 
 ## 7. Recommendation
 
-> **Superseded by measured evidence:** see `docs/NEWS_PROVIDER_BENCHMARK.md`
+> **NSE terms (11 Oct 2026):** automated collection is prohibited without NSE's written permission;
+> every NSE source is now gated (`docs/NEWS_PHASE2.md` §4).
+>
+> **Superseded by measured evidence:** see `docs/NEWS_PROVIDER_BENCHMARK.md` and `docs/NEWS_PHASE2.md`
 > (69 verified events, 11 Oct 2026). No provider meets the bar. The RBI feed's
 > zone-less times were found to be IST and are now read as such.
 
