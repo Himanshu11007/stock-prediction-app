@@ -50,3 +50,12 @@ scripts/research/.cache/
 # Local database backups
 storage/*.bak*
 storage/e2e_app.db
+
+# Local secrets: never tracked (scripts/security/scan_secrets.py enforces it)
+.env
+.env.*
+!.env.example
+*.pem
+*.p12
+*.pfx
+client_secret*.json
