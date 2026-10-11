@@ -196,3 +196,17 @@ statuses can apply, for example *TESTED; activation REQUIRES_APPROVAL*.
 | K19 | Stock selection and risk controls after news validation | DEFERRED | N-14 |
 | K20 | Calibrated confidence | DEFERRED | N-15 |
 | K21 | Production readiness (schedules, calendar, idempotency, retries, alerts, backups, migrations, security, regression) | Code IMPLEMENTED AND TESTED. **Not operational**: scheduler, migrations, holiday calendar, credentials, database plan all REQUIRE APPROVAL; PostgreSQL run BLOCKED locally (P-01) | sections B, C, I |
+
+## L. News provider benchmark request (items 1–9)
+
+| # | Requirement | Status | Evidence |
+|---|---|---|---|
+| L1 | Marketaux and Alpha Vantage adapters with environment secrets | IMPLEMENTED AND TESTED (offline); live run untestable (no keys) | NB-01 |
+| L2 | Reuse the existing ingestion, grouping and storage | IMPLEMENTED: same `RawArticle`, `pipeline`, `news_articles` / events; no second pipeline | NB-02 |
+| L3 | Published, first-seen and ingestion times, provider, canonical id, URL, entities, category, flags stored separately | IMPLEMENTED AND TESTED | NB-02 |
+| L4 | Reproducible benchmark: recall, delay, timestamp quality, mapping, duplicates, outages, rate limits, cost | IMPLEMENTED AND TESTED; run 11 Oct 2026 | NB-03 |
+| L5 | NSE/BSE, RBI, SEBI, Government of India, US tariffs and sanctions, Fed, crude, gold, currency, corporate | Included. BSE: 0 material filings in the window. PIB: no timestamps (reported unavailable) | report `ground_truth.sources` |
+| L6 | Missing vs untestable | IMPLEMENTED AND TESTED: only DETECTED / MISSED count | `test_untestable_is_never_a_miss` |
+| L7 | Dashboard and machine-readable report | IMPLEMENTED AND TESTED | NB-08 |
+| L8 | Research-only: no scheduling, alerts, prediction changes, production migrations or deploy | Respected | — |
+| L9 | Tests, files, configuration, licensing, recommendation | See `docs/NEWS_PROVIDER_BENCHMARK.md` §4–6 | NB-06 |

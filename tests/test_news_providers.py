@@ -193,3 +193,17 @@ def test_official_feed_quirks_sebi_date_only_pib_undated_and_plain_user_agent():
     undated_elsewhere = list(prov.RssProvider({"rbi_press": ("https://www.rbi.org.in/x", "RBI")}, get=fake(pib),
                                               sleep=lambda s: None).fetch(NOW - dt.timedelta(hours=1), NOW))
     assert undated_elsewhere == []                             # only declared feeds may be first-seen dated
+
+
+def test_rbi_zone_less_pub_dates_are_ist_not_utc():
+    # RBI writes 'Sat, 10 Oct 2026 01:25:00' (IST, no zone); read as UTC it would be 5.5 hours late.
+    assert prov.naive_tz_for("https://www.rbi.org.in/pressreleases_rss.xml") is not None
+    assert prov.naive_tz_for("https://www.federalreserve.gov/feeds/press_all.xml") is None
+    t, precision = prov.parse_pub_date("Sat, 10 Oct 2026 01:25:00", prov.naive_tz_for("https://www.rbi.org.in/x"))
+    assert precision == "exact" and t == dt.datetime(2026, 10, 9, 19, 55, tzinfo=UTC)
+    assert prov.parse_pub_date("Fri, 9 Oct 2026 14:00:00 GMT", prov.IST_TZ)[0] == dt.datetime(2026, 10, 9, 14, 0, tzinfo=UTC)
+    feed = (b'<?xml version="1.0"?><rss><channel><item><title>RBI announces special window</title>'
+            b'<link>https://www.rbi.org.in/p?id=1</link><pubDate>Sat, 10 Oct 2026 01:25:00</pubDate></item></channel></rss>')
+    (a,) = list(prov.RssProvider({"rbi_press": ("https://www.rbi.org.in/x", "RBI")}, get=fake(feed), sleep=lambda s: None)
+                .fetch(dt.datetime(2026, 10, 9, tzinfo=UTC), dt.datetime(2026, 10, 11, tzinfo=UTC)))
+    assert a.published_at == dt.datetime(2026, 10, 9, 19, 55, tzinfo=UTC)

@@ -18,7 +18,9 @@ pass.
 
 Matching, per article title (and excerpt):
   candidate   the event's search pattern matches (e.g. the company alias)
-  verified    every `must` pattern matches and the text is not a preview
+  verified    the candidate pattern is in the HEADLINE, every `must` pattern
+              matches, the title is not a preview, and (exact times) it is not
+              published more than 30 min before the official release
   false match a candidate that is not verified (examples are reported)
 
 Timing (exact-time events only; date-only events get no latency):
@@ -50,6 +52,9 @@ IST = dt.timezone(dt.timedelta(hours=5, minutes=30))
 OPEN, CLOSE = dt.time(9, 15), dt.time(15, 30)
 GRACE = dt.timedelta(minutes=15)
 PREVIEW = re.compile(r"\b(preview|expect(ed|s)?|likely to|ahead of|estimates for|what to watch|may report|to announce)\b", re.I)
+# An exact-time article this much earlier than an exact official release
+# cannot be reporting it (it is a preview, a leak or a different story).
+PRE_RELEASE_TOLERANCE = dt.timedelta(minutes=30)
 INDIAN_ALIASES = {  # unambiguous names used in headlines (regex alternatives)
     "TRENT": "Trent", "TITAN": "Titan Company|Titan Q[1-4]|Titan's", "ITC": "ITC", "CANBK": "Canara Bank",
     "HCLTECH": "HCL Tech|HCLTech|HCL Technologies", "TCS": "TCS|Tata Consultancy", "INFY": "Infosys",
@@ -155,7 +160,14 @@ def evaluate(provider: str, ev: Event, items: list[RawArticle], index: Optional[
     inside = [a for a in items if lo <= a.published_at <= hi]
     cand_re, must_re = re.compile(ev.candidate, re.I), [re.compile(m, re.I) for m in ev.must]
     candidates = [a for a in inside if cand_re.search(_text(a))]
-    verified = [a for a in candidates if all(m.search(_text(a)) for m in must_re) and not PREVIEW.search(a.title)]
+
+    def pre_release(a: RawArticle) -> bool:
+        return (ev.precision == "exact" and a.time_precision == "exact"
+                and a.published_at < ev.official_time - PRE_RELEASE_TOLERANCE)
+
+    # the subject must be in the headline (excerpt-only mentions are roundups / other stories)
+    verified = [a for a in candidates if cand_re.search(a.title) and all(m.search(_text(a)) for m in must_re)
+                and not PREVIEW.search(a.title) and not pre_release(a)]
     out = Outcome(provider, ev.id, ev.kind, DETECTED if verified else MISSED, candidates=len(candidates),
                   verified=len(verified))
     out.false_matches = [a.title[:140] for a in candidates if a not in verified][:3]
@@ -232,14 +244,44 @@ def summarize(outcomes: list[Outcome]) -> dict[str, Any]:
     return out
 
 
+def value_over_sources(outcomes: list[Outcome], covered_kinds: Iterable[str]) -> dict[str, Any]:
+    """What a provider adds to sources StockLens already reads at the official
+    time. On covered kinds it can only lag (reported as the lag); value is
+    measured on the other kinds: detections with an exact time that arrive
+    before the market reaction."""
+    covered = set(covered_kinds)
+    out: dict[str, Any] = {}
+    for prov in sorted({o.provider for o in outcomes}):
+        rows = [o for o in outcomes if o.provider == prov and o.status in TESTED]
+        lag = [o.delay_minutes for o in rows if o.kind in covered and o.delay_minutes is not None]
+        new = [o for o in rows if o.kind not in covered]
+        det = [o for o in new if o.status == DETECTED]
+        timed = [o for o in det if o.actionable is not None]
+        out[prov] = {
+            "covered_kinds": sorted(covered),
+            "lag_behind_existing_sources_minutes": {"n": len(lag), "p50": percentile(lag, 0.5)},
+            "other_events_tested": len(new), "other_events_detected": len(det),
+            "other_events_timed": len(timed), "other_events_actionable": sum(1 for o in timed if o.actionable),
+        }
+    return out
+
+
 def recommend(summary: dict[str, Any], licence_ok: dict[str, bool], min_tested: int = 20, min_recall: float = 0.8,
-              max_p50_minutes: float = 60.0, min_actionable: float = 0.7) -> dict[str, Any]:
+              max_p50_minutes: float = 60.0, min_actionable: float = 0.7,
+              value: Optional[dict[str, Any]] = None, min_new_actionable: int = 5) -> dict[str, Any]:
     """A provider is recommended only if, on tested events, it detects most of
     them, early enough to act before the market reacts, with exact times, and
-    its licence permits use. Volume and sentiment are not criteria."""
+    its licence permits use. With `value`, it must also deliver at least
+    `min_new_actionable` timed, actionable detections of events StockLens's
+    existing sources do not already deliver. Volume and sentiment are not
+    criteria."""
     verdicts = {}
     for prov, s in summary.items():
         reasons = []
+        v = (value or {}).get(prov)
+        if value is not None and (v is None or v["other_events_actionable"] < min_new_actionable):
+            reasons.append(f"{v['other_events_actionable'] if v else 0} timed detections before the market reaction of events "
+                           f"StockLens's own sources do not deliver (< {min_new_actionable})")
         if s["tested"] < min_tested:
             reasons.append(f"only {s['tested']} tested events (< {min_tested})")
         if s["recall"] is None or s["recall"] < min_recall:
@@ -255,5 +297,6 @@ def recommend(summary: dict[str, Any], licence_ok: dict[str, bool], min_tested: 
         verdicts[prov] = {"meets_bar": not reasons, "reasons": reasons}
     chosen = [p for p, v in verdicts.items() if v["meets_bar"]]
     return {"criteria": {"min_tested": min_tested, "min_recall": min_recall, "max_p50_minutes": max_p50_minutes,
-                         "min_actionable_share": min_actionable, "licence_required": True},
+                         "min_actionable_share": min_actionable, "licence_required": True,
+                         "min_new_actionable_detections": min_new_actionable if value is not None else None},
             "recommended": chosen, "verdicts": verdicts}

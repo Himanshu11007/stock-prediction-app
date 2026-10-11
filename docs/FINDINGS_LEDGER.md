@@ -164,3 +164,16 @@ working end-to-end feature; such items are never marked complete.
 | Q-02 | Mobile app shows bare "FQVF" (Stock detail metric and tab, Top Picks, Watchlist, Welcome, Notification settings) | REQUIRES_APPROVAL: mobile is out of scope under the standing "do not modify mobile" instruction | mobile `Components/Pages/*.razor` |
 | Q-03 | Frozen Ranking v1 explanation strings contain "FQVF" (component basis, risks, ineligible reasons) | Unchanged (golden test); the web rewords them for display only | `QualityValue.Plain` |
 | Q-04 | Stored admin overrides of notification templates or onboarding in a database keep their old text | REQUIRES_APPROVAL (admin edit in production) | — |
+
+## News provider benchmark (`docs/NEWS_PROVIDER_BENCHMARK.md`)
+
+| ID | Item | Status | Evidence |
+|---|---|---|---|
+| NB-01 | Marketaux and Alpha Vantage adapters (environment secrets, never printed; 401 → not configured, 402/429 → rate limited; provider entity tags mapped to NSE symbols) | IMPLEMENTED AND TESTED (offline); research-only; **untestable live: no keys** | `catalysts/adapters.py`, `tests/test_news_benchmark.py` |
+| NB-02 | Separate provenance per article: published, first-seen, ingested, provider, canonical event, URL, entity matches, category, quality flags | IMPLEMENTED AND TESTED; additive migration `806b95b85360` (not applied in production) | `db/models/news.py` |
+| NB-03 | Reproducible benchmark on 69 verified, timestamped events; untestable kept apart from missed | IMPLEMENTED AND TESTED | `catalysts/benchmark.py`, report JSON |
+| NB-04 | RBI zone-less pubDates read as UTC (5.5 h late) in ingestion | FIXED AND TESTED | `test_rbi_zone_less_pub_dates_are_ist_not_utc` |
+| NB-05 | Benchmark verification accepted pre-release and excerpt-only articles | FIXED AND TESTED | `test_pre_release_articles_and_excerpt_only_mentions_are_not_detections` |
+| NB-06 | Recommendation | **None meets the bar.** Google News: recall 0.83, p50 +47 min, but unlicensed, and its only new value is NSE filings, which NSE itself delivers earlier | report `recommendation`, `value_over_existing_sources` |
+| NB-07 | Timing of commodity, currency and US tariff events | BLOCKED: date-only ground truth | §6.4 |
+| NB-08 | Dashboard and admin endpoint | IMPLEMENTED AND TESTED | web `NewsBenchmarkTests`; `test_news_api.py` |

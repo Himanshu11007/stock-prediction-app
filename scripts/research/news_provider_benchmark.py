@@ -111,7 +111,7 @@ def rss_items(url: str) -> tuple[list[tuple[str, str, dt.datetime, str]], int]:
     body = prov._as_utf8(prov.fetch(url, prov.http_get, sleep=lambda s: None))
     out, undated = [], 0
     for it in ET.fromstring(body).iter("item"):
-        t, precision = prov.parse_pub_date(it.findtext("pubDate"))
+        t, precision = prov.parse_pub_date(it.findtext("pubDate"), prov.naive_tz_for(url))
         if t is None:
             undated += 1
             continue
@@ -148,6 +148,12 @@ def nse_events(now: dt.datetime, notes: dict) -> list[bm.Event]:
     return events
 
 
+# BSE rows carry every filing (audio recordings, transcripts, newspaper copies...): keep material ones only
+BSE_MATERIAL = re.compile(r"financial result|outcome of board meeting|press release|business update|update for q|"
+                          r"dividend|order|acquisition|fund raising", re.I)
+BSE_NOT_MATERIAL = re.compile(r"audio|recording|transcript|newspaper|publication|intimation of (analyst|investor) meet", re.I)
+
+
 def bse_events(now: dt.datetime, notes: dict) -> list[bm.Event]:
     day = (now - dt.timedelta(days=3)).astimezone(IST)
     url = ("https://api.bseindia.com/BseIndiaAPI/api/AnnSubCategoryGetData/w?pageno=1&strCat=-1"
@@ -162,7 +168,8 @@ def bse_events(now: dt.datetime, notes: dict) -> list[bm.Event]:
     for r in rows:
         name = r.get("SLONGNAME") or ""
         hit = next(((s, al) for s, al in bm.INDIAN_ALIASES.items() if re.search(r"\b(" + al + r")\b", name, re.I)), None)
-        if not hit or not r.get("DT_TM"):
+        subject = r.get("NEWSSUB") or ""
+        if not hit or not r.get("DT_TM") or not BSE_MATERIAL.search(subject) or BSE_NOT_MATERIAL.search(subject):
             continue
         try:
             t = dt.datetime.fromisoformat(r["DT_TM"][:19]).replace(tzinfo=IST).astimezone(UTC)
@@ -261,6 +268,9 @@ def fred_series(series: str) -> pd.Series:
     return df.set_index(pd.to_datetime(df["date"]))["value"]
 
 
+OTHER_RUPEES = r"^(?!.*\b(pakistan|pakistani|sri lanka|sri lankan|nepal|nepalese|indonesia|indonesian|mauritius|mauritian)\b)"
+
+
 def market_events(now: dt.datetime, notes: dict, max_per_kind: int) -> list[bm.Event]:
     from fundamentals.provider import fetch_price_history
     events = []
@@ -287,7 +297,8 @@ def market_events(now: dt.datetime, notes: dict, max_per_kind: int) -> list[bm.E
             events.append(bm.Event(id=f"{kind}:{d.date()}", kind=kind, title=f"{sym} daily move {x:+.2%}",
                                    official_time=dt.datetime.combine(d.date(), dt.time(12), tzinfo=UTC), precision="date",
                                    source=f"Yahoo Finance {sym} close-to-close (>= 2 sd of prior 60 days)", evidence_url=None,
-                                   query=query, candidate=cand, must=[move]))
+                                   query=query, candidate=cand,
+                                   must=[move] + ([OTHER_RUPEES] if kind == "currency" else [])))
         notes[kind] = {"status": "OK", "events": sum(1 for e in events if e.kind == kind)}
     notes["fed"] = {**notes.get("fed", {}), "fred_rate_changes": int((ch.index >= "2024-06-01").sum())}
     return events
@@ -318,11 +329,43 @@ def canonical_count(items: list[prov.RawArticle]) -> int:
         return len({a.event_id for a in s.exec(select(NewsArticle)).all() if a.event_id})
 
 
+INDIAN_KINDS = {"nse_filing", "bse_filing", "rbi", "sebi", "india_policy"}
+# kinds StockLens already receives at the official time from its own active
+# source (official_rss). NSE filings are NOT included: the NSE adapter is
+# research-only until its licence is decided.
+COVERED_BY_OWN_SOURCES = tuple(OFFICIAL)
+
+
+def derive(outcomes: list[bm.Outcome]) -> dict:
+    """Every evidence section computed from the outcomes alone, so a stored
+    report can be re-derived (--resummarize) without re-querying providers."""
+    summary = bm.summarize(outcomes)
+    rated = [o for o in outcomes if o.provider != "official_rss"]
+    value = bm.value_over_sources(rated, COVERED_BY_OWN_SOURCES)
+    return {"providers": summary, "providers_indian_events": bm.summarize([o for o in outcomes if o.kind in INDIAN_KINDS]),
+            "value_over_existing_sources": value,
+            "recommendation": bm.recommend({k: v for k, v in summary.items() if k != "official_rss"},
+                                           {"official_rss": True}, value=value)}
+
+
+def resummarize(path: str) -> None:
+    report = json.loads(Path(path).read_text(encoding="utf-8"))
+    outcomes = [bm.Outcome(**o) for o in report["outcomes"]]
+    report.update(derive(outcomes))
+    report["resummarized_at"] = dt.datetime.now(UTC).isoformat()
+    Path(path).write_text(json.dumps(report, indent=1, default=str), encoding="utf-8")
+    print(json.dumps({"recommended": report["recommendation"]["recommended"],
+                      "value": report["value_over_existing_sources"]}, indent=1, default=str))
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--out", default=str(OUT))
     ap.add_argument("--max-per-kind", type=int, default=8)
+    ap.add_argument("--resummarize", action="store_true", help="re-derive the metrics of an existing report (no network)")
     args = ap.parse_args()
+    if args.resummarize:
+        return resummarize(args.out)
     now = dt.datetime.now(UTC)
     notes: dict = {}
     events = nse_events(now, notes) + bse_events(now, notes) + official_events(now, notes, args.max_per_kind)
@@ -392,11 +435,8 @@ def main() -> None:
                 outcomes.append(bm.Outcome(pname, ev.id, ev.kind, bm.OUTAGE, detail=str(e)[:120]))
                 continue
             outcomes.append(bm.evaluate(pname, ev, items, index=index, holidays=holidays, canonical=canonical_count))
-    summary = bm.summarize(outcomes)
-    indian_kinds = {"nse_filing", "bse_filing", "rbi", "sebi", "india_policy"}
-    summary_indian = bm.summarize([o for o in outcomes if o.kind in indian_kinds])
-    licence_ok = {"official_rss": True}
-    rec = bm.recommend({k: v for k, v in summary.items() if k != "official_rss"}, licence_ok)
+    derived = derive(outcomes)
+    summary, rec = derived["providers"], derived["recommendation"]
     health = {}
     for name in ("official_rss", "federal_register", "nse_announcements", "google_news", "publisher_rss", "gdelt",
                  "marketaux", "alphavantage", "newsapi"):
@@ -424,7 +464,7 @@ def main() -> None:
         "events": [{"id": e.id, "kind": e.kind, "title": e.title, "official_time": e.official_time.isoformat(),
                     "precision": e.precision, "source": e.source, "evidence_url": e.evidence_url,
                     "expected_symbols": list(e.expected_symbols)} for e in events],
-        "providers": summary, "providers_indian_events": summary_indian, "recommendation": rec, "missed_events": missed, "false_match_examples": false_matches,
+        **derived, "missed_events": missed, "false_match_examples": false_matches,
         "wrong_mappings": wrong_maps, "source_health": health, "request_stats": {k: v.stats for k, v in counters.items()},
         "costs": costs,
         "outcomes": [o.__dict__ for o in outcomes],

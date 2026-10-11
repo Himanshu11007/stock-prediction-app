@@ -120,10 +120,22 @@ def _utc(t: dt.datetime) -> dt.datetime:
 DATE_ONLY_FORMATS = ("%d %b, %Y %z", "%d %b %Y %z", "%d %b, %Y", "%d %b %Y", "%Y-%m-%d")
 
 
-def parse_pub_date(s: Optional[str]) -> tuple[Optional[dt.datetime], str]:
+IST_TZ = dt.timezone(dt.timedelta(hours=5, minutes=30))
+# Feeds whose pubDate carries no zone although it is local time. RBI writes
+# 'Sat, 10 Oct 2026 01:25:00' meaning IST; read as UTC it is 5.5 hours late.
+NAIVE_TZ_DOMAINS = {"rbi.org.in": IST_TZ}
+
+
+def naive_tz_for(url: str) -> Optional[dt.tzinfo]:
+    host = (urllib.parse.urlsplit(url).hostname or "").lower()
+    return next((tz for d, tz in NAIVE_TZ_DOMAINS.items() if host == d or host.endswith("." + d)), None)
+
+
+def parse_pub_date(s: Optional[str], naive_tz: Optional[dt.tzinfo] = None) -> tuple[Optional[dt.datetime], str]:
     """(UTC time, precision). Date-only values (SEBI writes '09 Oct, 2026
     +0530') become the END of that day in their own zone (IST if none), so
-    they never look available early."""
+    they never look available early. Zone-less exact times are read in
+    `naive_tz` when given (the feed's local zone), else as UTC."""
     if not s:
         return None, "exact"
     s = s.strip()
@@ -132,8 +144,15 @@ def parse_pub_date(s: Optional[str]) -> tuple[Optional[dt.datetime], str]:
             d = dt.datetime.strptime(s, fmt)
         except ValueError:
             continue
-        tz = d.tzinfo or dt.timezone(dt.timedelta(hours=5, minutes=30))
+        tz = d.tzinfo or naive_tz or IST_TZ
         return dt.datetime.combine(d.date(), dt.time(23, 59), tzinfo=tz).astimezone(dt.timezone.utc), "date"
+    if naive_tz is not None:
+        try:
+            d = email.utils.parsedate_to_datetime(s)
+        except (TypeError, ValueError):
+            d = None
+        if d is not None and d.tzinfo is None:
+            return d.replace(tzinfo=naive_tz).astimezone(dt.timezone.utc), "exact"
     return _rfc822(s), "exact"
 
 
@@ -204,7 +223,7 @@ class RssProvider:
             for item in root.iter("item"):
                 title = tx.sanitize(item.findtext("title"), tx.MAX_TITLE)
                 link = (item.findtext("link") or "").strip()
-                published, precision = parse_pub_date(item.findtext("pubDate"))
+                published, precision = parse_pub_date(item.findtext("pubDate"), naive_tz_for(url))
                 first_seen = False
                 if published is None and key in UNDATED_FEEDS:
                     published, first_seen = min(until, dt.datetime.now(dt.timezone.utc)), True   # first sight

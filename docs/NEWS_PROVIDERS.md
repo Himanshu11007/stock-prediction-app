@@ -154,6 +154,10 @@ See `docs/OPERATIONS_AND_SECURITY.md` §1.2.
 
 ## 7. Recommendation
 
+> **Superseded by measured evidence:** see `docs/NEWS_PROVIDER_BENCHMARK.md`
+> (69 verified events, 11 Oct 2026). No provider meets the bar. The RBI feed's
+> zone-less times were found to be IST and are now read as such.
+
 1. **Enable now, on approval of the scheduler:** `official_rss`, which is
    RBI, SEBI, Fed, PIB and the White House. Free, primary sources with
    exact times and no licence concern. It covers Indian monetary,

@@ -166,3 +166,34 @@ def test_articles_store_first_seen_category_flags_and_provider_entities(db):
     assert {"DATE_ONLY_TIMESTAMP", "AGGREGATOR_LINK", "LATE_INGESTION", "NO_EXCERPT"} <= set(g.quality_flags)
     assert d.first_seen_at is not None and "PUBLISHED_TIME_IS_FIRST_SEEN" in d.quality_flags
     assert "PROVIDER_ENTITIES_UNMAPPED" in d.quality_flags and d.provider_entities[0]["symbol"] == "AAPL"
+
+
+def test_pre_release_articles_and_excerpt_only_mentions_are_not_detections():
+    ev = trent_event()
+    items = [art("Trent Q2 revenue update from yesterday", -6 * 60),            # 6 h before the filing: not this event
+             prov.RawArticle("r1", "https://x.com/roundup", "Stocks to watch today: Modern Engineering, Zudio",
+                             FILED + dt.timedelta(minutes=5), excerpt="Trent Q2 update also in focus",
+                             time_precision="exact"),                         # subject only in the excerpt
+             art("Trent Q2 update: revenue up 23%", 20)]
+    out = bm.evaluate("p", ev, items)
+    assert out.status == bm.DETECTED and out.verified == 1 and out.delay_minutes == 20.0
+    assert len(out.false_matches) == 2
+    assert bm.evaluate("p", ev, items[:2]).status == bm.MISSED
+    assert bm.evaluate("p", ev, [art("Trent Q2 update filed", -10)]).status == bm.DETECTED   # within the 30 min tolerance
+
+
+def test_value_is_measured_on_events_stocklens_does_not_already_receive():
+    def o(kind, delay, actionable):
+        x = bm.Outcome("p", f"{kind}-{delay}", kind, bm.DETECTED)
+        x.delay_minutes, x.actionable = delay, actionable
+        return x
+    rows = [o("rbi", 30.0, True), o("rbi", 50.0, True), o("nse_filing", 20.0, True), o("nse_filing", 900.0, False),
+            bm.Outcome("p", "g", "gold", bm.DETECTED), bm.Outcome("p", "m", "nse_filing", bm.MISSED),
+            bm.Outcome("p", "u", "nse_filing", bm.NO_HISTORY)]
+    v = bm.value_over_sources(rows, ["rbi"])["p"]
+    assert v["lag_behind_existing_sources_minutes"] == {"n": 2, "p50": 40.0}      # RBI is already read at the official time
+    assert (v["other_events_tested"], v["other_events_detected"], v["other_events_timed"], v["other_events_actionable"]) == (4, 3, 2, 1)
+    summary = bm.summarize(rows)
+    reasons = bm.recommend(summary, {"p": True}, value={"p": v})["verdicts"]["p"]["reasons"]
+    assert any("own sources do not deliver" in r for r in reasons)
+    assert not any("own sources" in r for r in bm.recommend(summary, {"p": True})["verdicts"]["p"]["reasons"])
