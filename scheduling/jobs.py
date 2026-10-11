@@ -223,6 +223,20 @@ def prediction_job(engine, run_type: str, now: Optional[dt.datetime] = None, fet
     return out
 
 
+def _quality_report(engine, now: dt.datetime) -> dict:
+    """Today's prediction-quality report (prediction_v2/feedback.py), stored
+    with the outcome job's result; a failure here never fails the job."""
+    from prediction_v2 import feedback
+    try:
+        with Session(engine) as s:
+            r = feedback.daily_report(s, now_ist(now).date())
+        return {k: r[k] for k in ("target_session", "outcomes", "missed_news", "false_positive_catalysts",
+                                  "mapping_errors", "data", "recommendations")}
+    except Exception as e:                       # noqa: BLE001 - report is advisory
+        logger.exception("QUALITY_REPORT_FAILED")
+        return {"error": f"{type(e).__name__}: {e}"[:300]}
+
+
 def prediction_outcomes_job(engine, now: Optional[dt.datetime] = None, fetch: Optional[Callable] = None) -> dict:
     """Daily after the close: 1/3/5-session outcomes and shadow exit states.
     Both steps are idempotent, so a retry is safe."""
@@ -239,6 +253,7 @@ def prediction_outcomes_job(engine, now: Optional[dt.datetime] = None, fetch: Op
     try:
         out = {"status": "DONE", "outcomes": outcomes.evaluate_due(engine, now, fetch),
                "exits": outcomes.update_exit_states(engine, now, fetch)}
+        out["quality_report"] = _quality_report(engine, now)
         status = "COMPLETED"
     except Exception as e:
         logger.exception("PREDICTION_OUTCOMES_FAILED | %s", slot)

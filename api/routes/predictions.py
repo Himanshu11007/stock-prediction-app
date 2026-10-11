@@ -259,6 +259,15 @@ def admin_start_prediction_run(body: RunRequest, current_admin: User = Depends(r
     return {"status": "STARTED", "detail": "See GET /admin/prediction-runs for the result."}
 
 
+@admin_router.get("/prediction-quality")
+def admin_prediction_quality(date: Optional[str] = Query(None, pattern=r"^\d{4}-\d{2}-\d{2}$"),
+                             session: Session = Depends(get_session)):
+    """Daily prediction-quality report for a target session (default: today, IST)."""
+    from prediction_v2 import feedback
+    day = dt.date.fromisoformat(date) if date else now_ist().date()
+    return success_envelope(to_jsonable(feedback.daily_report(session, day)), message="Prediction quality report")
+
+
 @admin_router.get("/events")
 def admin_events(symbol: Optional[str] = None, event_type: Optional[str] = None,
                  limit: int = Query(100, ge=1, le=1000), session: Session = Depends(get_session)):
