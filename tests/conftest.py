@@ -33,8 +33,10 @@ def _in_memory_engines_on_postgres(monkeypatch):
     database whose data matters."""
     import os
     url = os.environ.get("TEST_DATABASE_URL", "")
-    if os.environ.get("STOCKLENS_TEST_ON_POSTGRES") != "1" or not url.startswith("postgresql"):
+    if os.environ.get("STOCKLENS_TEST_ON_POSTGRES") != "1" or not url.startswith("postgres"):
         return
+    from config import normalize_database_url
+    url = normalize_database_url(url)
     import sqlalchemy
 
     real = sqlalchemy.create_engine
@@ -96,7 +98,8 @@ def concurrent_engine(request, tmp_path):
         engine = create_engine(f"sqlite:///{tmp_path / 'concurrency.db'}",
                                connect_args={"check_same_thread": False, "timeout": 30})
     else:
-        engine = create_engine(os.environ["TEST_DATABASE_URL"], pool_size=20, max_overflow=20)
+        from config import normalize_database_url
+        engine = create_engine(normalize_database_url(os.environ["TEST_DATABASE_URL"]), pool_size=20, max_overflow=20)
         SQLModel.metadata.drop_all(engine)
     SQLModel.metadata.create_all(engine)
     yield engine

@@ -25,7 +25,9 @@ from alembic.script import ScriptDirectory
 
 ROOT = Path(__file__).resolve().parents[1]
 PRODUCTION_HEAD = "66e61a7dffc5"          # origin/main's Alembic head (11 Oct 2026)
-URL = os.environ.get("TEST_DATABASE_URL", "")
+from config import normalize_database_url  # noqa: E402
+
+URL = normalize_database_url(os.environ.get("TEST_DATABASE_URL", ""))
 needs_pg = pytest.mark.skipif(not URL.startswith("postgresql"), reason="TEST_DATABASE_URL (disposable PostgreSQL) not set")
 
 

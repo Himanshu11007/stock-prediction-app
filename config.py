@@ -66,10 +66,22 @@ W_MOMENTUM  = 0.10
 DATABASE_URL = os.environ.get(
     "DATABASE_URL", f"sqlite:///{(STORAGE_DIR / 'app.db').as_posix()}"
 )
-# Hosting providers (Render, Heroku) hand out "postgres://" URLs; SQLAlchemy
-# requires "postgresql://".
-if DATABASE_URL.startswith("postgres://"):
-    DATABASE_URL = "postgresql://" + DATABASE_URL[len("postgres://"):]
+
+
+def normalize_database_url(url: str) -> str:
+    """Name the PostgreSQL driver explicitly. Hosting providers (Render,
+    Heroku) hand out "postgres://" URLs, and a bare "postgresql://" means a
+    different default driver per SQLAlchemy version: psycopg2 up to 2.0,
+    psycopg (v3) from 2.1. Only psycopg2-binary is installed
+    (requirements*.txt), so the driver is pinned to psycopg2 here; a URL that
+    already names a driver is left alone."""
+    for prefix in ("postgres://", "postgresql://"):
+        if url.startswith(prefix):
+            return "postgresql+psycopg2://" + url[len(prefix):]
+    return url
+
+
+DATABASE_URL = normalize_database_url(DATABASE_URL)
 
 # ── Logging ────────────────────────────────────────────────────────────────────
 LOG_DIR          = STORAGE_DIR / "logs"
