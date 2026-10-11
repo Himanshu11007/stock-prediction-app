@@ -36,6 +36,7 @@ def db():
         auth_service.create_user(s, "user@example.com", "UserPass1!", roles=[auth_service.USER_ROLE])
         for sym in ("AAA.NS", "BBB.NS", "DEAD.NS", "OUT.NS"):
             s.add(Company(symbol=sym, name=sym[:3], sector="Energy"))
+        s.flush()       # parents first: PostgreSQL enforces the foreign keys SQLite ignores
         for sym in ("AAA.NS", "BBB.NS", "DEAD.NS"):
             s.add(StockUniverseMember(symbol=sym, category="Large Cap"))
         s.add(MarketSnapshot(symbol="DEAD.NS", status="UNAVAILABLE", error="provider returned no price history"))
@@ -51,6 +52,7 @@ def _run(s, run_id, run_type, target, completed_minutes_ago=10, status="COMPLETE
                         rule_version="baseline-v0.1", feature_set_version="v2-features-0.1", run_type=run_type,
                         trading_date=target.isoformat(), target_session_date=target.isoformat(), data_cutoff_at=t,
                         status=status, config_hash="h", started_at=t, completed_at=t, counts={"UP": 1}))
+    s.flush()           # the run row first: PostgreSQL enforces predictions.run_id
     for sym, d in (("AAA.NS", "UP"), ("BBB.NS", "NO_CALL")):
         s.add(Prediction(prediction_id=f"{run_id}-{sym}", run_id=run_id, symbol=sym, direction=d,
                          setup_type="MOMENTUM_CONTINUATION" if d == "UP" else "INSUFFICIENT_DATA",

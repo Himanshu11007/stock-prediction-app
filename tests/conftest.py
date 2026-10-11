@@ -20,6 +20,44 @@ if str(PROJECT_ROOT) not in sys.path:
 import pytest  # noqa: E402
 
 
+_PG_ENGINES: list = []
+
+
+@pytest.fixture(autouse=True)
+def _in_memory_engines_on_postgres(monkeypatch):
+    """Opt-in: STOCKLENS_TEST_ON_POSTGRES=1 with TEST_DATABASE_URL pointing at
+    a DISPOSABLE PostgreSQL database runs the unchanged tests on PostgreSQL.
+    Every in-memory SQLite engine a test module creates ("sqlite://") is
+    replaced by an engine on that database, whose public schema is dropped
+    and recreated first (one clean schema per engine). Never point it at a
+    database whose data matters."""
+    import os
+    url = os.environ.get("TEST_DATABASE_URL", "")
+    if os.environ.get("STOCKLENS_TEST_ON_POSTGRES") != "1" or not url.startswith("postgresql"):
+        return
+    import sqlalchemy
+
+    real = sqlalchemy.create_engine
+
+    def engine_for(u, *args, **kwargs):
+        if str(u) != "sqlite://":
+            return real(u, *args, **kwargs)
+        while _PG_ENGINES:
+            _PG_ENGINES.pop().dispose()
+        eng = real(url, pool_pre_ping=True, pool_size=10, max_overflow=20)
+        with eng.begin() as c:
+            c.exec_driver_sql("SET lock_timeout = '10s'")
+            c.exec_driver_sql("DROP SCHEMA public CASCADE")
+            c.exec_driver_sql("CREATE SCHEMA public")
+        _PG_ENGINES.append(eng)
+        return eng
+
+    for name, mod in list(sys.modules.items()):
+        if name.startswith("tests.") or name.startswith("test_"):
+            if getattr(mod, "create_engine", None) is not None:
+                monkeypatch.setattr(mod, "create_engine", engine_for)
+
+
 @pytest.fixture(autouse=True)
 def _no_network_price_provider(monkeypatch):
     """Current-price refreshes (prices/service.py) must never reach the real

@@ -1,0 +1,85 @@
+# Continuous integration: tests and checks only. It never deploys, never
+# uses repository secrets, and never touches a real database: PostgreSQL is a
+# disposable service container that exists only for the job.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: ["main", "review/**"]
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  secrets:
+    name: Secret scan (tracked files)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: python scripts/security/scan_secrets.py
+
+  tests-sqlite:
+    name: Test suite (SQLite)
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - run: pip install --extra-index-url https://download.pytorch.org/whl/cpu -r requirements.txt
+      - run: python -m pytest -q -p no:warnings
+
+  tests-postgres:
+    name: Migrations and API tests (PostgreSQL 16)
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: stocklens
+          POSTGRES_PASSWORD: ci-disposable-only      # throwaway container, not a credential
+          POSTGRES_DB: stocklens_test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U stocklens" --health-interval 5s --health-timeout 5s --health-retries 20
+    env:
+      TEST_DATABASE_URL: postgresql://stocklens:ci-disposable-only@localhost:5432/stocklens_test
+      STOCKLENS_TEST_ON_POSTGRES: "1"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - run: pip install --extra-index-url https://download.pytorch.org/whl/cpu -r requirements.txt
+      - name: Alembic on PostgreSQL (single head, empty -> head, upgrade from the production schema, rollback)
+        run: python -m pytest -q -p no:warnings tests/test_postgres_migrations.py
+      - name: Authentication, password reset, news, predictions and scheduler on PostgreSQL
+        run: >-
+          python -m pytest -q -p no:warnings
+          tests/test_auth.py tests/test_auth_routes.py tests/test_auth_otp_routes.py tests/test_auth_sso_routes.py
+          tests/test_authorization_security.py tests/test_business_endpoint_auth.py tests/test_google_id_token_security.py
+          tests/test_password_reset.py tests/test_set_admin_password.py tests/test_auth_concurrency.py
+          tests/test_engine_run_concurrency.py tests/test_migration_engine_run_guard.py
+          tests/test_news_api.py tests/test_news_e2e.py tests/test_news_candidates.py tests/test_catalysts.py
+          tests/test_news_replay.py tests/test_prediction_api.py tests/test_prediction_v2.py tests/test_prediction_jobs.py
+          tests/test_prediction_feedback.py tests/test_scheduler.py

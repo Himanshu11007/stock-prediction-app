@@ -177,6 +177,7 @@ def db():
         s.add(Company(symbol="NEW.NS", name="New listing", sector="IT"))
         s.add(EngineRun(run_id="V1RUN", kind="RANKING", status="COMPLETED", engine_version="ranking-v1.0",
                         fqvf_version="fqvf-v1.0"))
+        s.flush()       # parents first: PostgreSQL enforces the foreign keys SQLite ignores
         s.add(StockAnalysisResult(run_id="V1RUN", symbol="S0.NS", computed_at=dt.datetime.now(UTC),
                                   stockai_score=70.0, rank=1, eligible=True, engine_version="ranking-v1.0",
                                   fqvf_version="fqvf-v1.0"))

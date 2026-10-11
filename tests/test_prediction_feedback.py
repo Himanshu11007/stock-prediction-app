@@ -26,6 +26,7 @@ def _pred(s, pid, sym, direction, setup, news, hit=None, net=None, excess=None):
     s.add(Prediction(prediction_id=pid, run_id="RQ", symbol=sym, direction=direction, setup_type=setup,
                      horizon_sessions=1, reference_price=100.0, reference_date="2026-10-09",
                      features={"news": news}))
+    s.flush()           # the prediction first: PostgreSQL enforces the outcome's foreign key
     s.add(PredictionOutcome(prediction_id=pid, horizon_sessions=1, evaluator_version="outcomes-v0.1",
                             outcome_status="EVALUATED", hit=hit, cost_adjusted_return=net, excess_return_nifty=excess,
                             stock_return=excess))
