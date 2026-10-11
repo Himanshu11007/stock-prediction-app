@@ -250,3 +250,50 @@ def test_nse_sources_refuse_without_recorded_permission_and_classify_filings(mon
     assert filings.classify("Copy of newspaper publication").keep is False
     assert filings.classify("Creation of pledge by promoter").category == "PLEDGE"
     assert filings.classify("Something else entirely").materiality == "UNKNOWN"
+
+
+def test_network_errors_are_retried_then_reported_and_http_errors_keep_their_status(monkeypatch):
+    import urllib.error
+    import urllib.request
+    calls, slept = [], []
+
+    def down(url, timeout=20.0):
+        calls.append(url)
+        raise urllib.error.URLError("connection refused")
+    with pytest.raises(prov.ProviderError, match="URLError"):
+        prov.fetch("https://feed.example.org/rss", get=down, attempts=3, sleep=slept.append)
+    assert len(calls) == 3 and slept == [5.0, 10.0]            # bounded retries with backoff
+
+    class Resp:
+        status = 200
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            return False
+
+        def read(self, n):
+            return b"ok"
+    monkeypatch.setattr(urllib.request, "urlopen", lambda req, timeout: Resp())
+    assert prov.http_get("https://x.org") == (200, b"ok")
+
+    def refuse(req, timeout):
+        raise urllib.error.HTTPError(req.full_url, 503, "busy", {}, None)
+    monkeypatch.setattr(urllib.request, "urlopen", refuse)
+    assert prov.http_get("https://x.org") == (503, b"")         # an HTTP error is a status, not an exception
+
+
+def test_gdelt_parses_first_seen_times_and_rejects_non_json():
+    body = json.dumps({"articles": [
+        {"url": "https://www.reuters.com/a", "title": "RBI keeps repo rate unchanged", "seendate": "20261009T081500Z",
+         "domain": "reuters.com", "language": "English", "sourcecountry": "India"},
+        {"url": "https://x.com/b", "title": "bad time", "seendate": "yesterday"}]}).encode()
+    (a,) = list(prov.GdeltProvider(get=fake(body), sleep=lambda s: None).fetch(NOW - dt.timedelta(days=3), NOW))
+    assert a.published_at == dt.datetime(2026, 10, 9, 8, 15, tzinfo=UTC) == a.first_seen_at
+    assert (a.published_raw, a.published_tz, a.raw["published_is_first_seen"]) == ("20261009T081500Z", "Z", True)
+    with pytest.raises(prov.ProviderError, match="non-JSON"):
+        list(prov.GdeltProvider(get=fake(b"<html>error</html>"), sleep=lambda s: None).fetch(NOW, NOW))
+    with pytest.raises(prov.RateLimited):
+        list(prov.GdeltProvider(get=fake(b"Please limit requests to one every 5 seconds"), sleep=lambda s: None)
+             .fetch(NOW, NOW))

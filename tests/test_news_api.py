@@ -154,3 +154,18 @@ def test_benchmark_audit_companions_and_candidates(client, db, tmp_path, monkeyp
     assert body["mode"] == "SHADOW" and set(body["counts"]) == {"UP", "DOWN", "NEUTRAL", "NO_CALL"}
     assert all(r["call"] in ("UP", "DOWN", "NEUTRAL", "NO_CALL") for r in body["candidates"])
     assert client.get("/api/v1/admin/news/candidates", headers=H()).status_code == 403
+
+
+def test_invalid_companion_report_included_only_filter_and_ingestion_runs(client, db, tmp_path, monkeypatch):
+    path = tmp_path / "bench.json"
+    monkeypatch.setenv("NEWS_BENCHMARK_REPORT", str(path))
+    path.write_text(json.dumps({"research_only": True}), encoding="utf-8")
+    (tmp_path / "news_signal_backtest.json").write_text("{broken", encoding="utf-8")
+    d = client.get("/api/v1/admin/news/benchmark", headers=ADMIN()).json()["data"]
+    assert d["signal_backtest"] == {"status": "INVALID_JSON"}          # reported, never silently dropped
+    _seed(db)
+    c = client.get("/api/v1/admin/news/candidates?include_excluded=false", headers=ADMIN()).json()["data"]
+    assert all(r["call"] in ("UP", "DOWN") for r in c["candidates"])
+    runs = client.get("/api/v1/admin/news/ingestion-runs?limit=5", headers=ADMIN()).json()["data"]["runs"]
+    assert runs and runs[0]["provider"] == "testwire" and runs[0]["status"] in ("COMPLETED", "PARTIAL")
+    assert client.get("/api/v1/admin/news/ingestion-runs", headers=H()).status_code == 403
