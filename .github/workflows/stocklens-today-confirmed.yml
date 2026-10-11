@@ -2,9 +2,11 @@
 #   v2 intraday-confirmed snapshot (shadow). DISABLED until an approved intraday feed exists: needs
 #   vars.STOCKLENS_TODAY_CONFIRMED_ENABLED == 'true' here AND PREDICTION_V2_INTRADAY_ENABLED=true on the API.
 #
-# Inactive by default. It never runs on push or pull_request. Scheduled runs
-# only happen from the default branch (GitHub rule) AND when the repository
-# variable STOCKLENS_SCHEDULER_ENABLED is 'true'. Times are UTC; IST = UTC+05:30.
+# Inactive by default. It never runs on push or pull_request. Scheduled AND
+# manual (workflow_dispatch) runs both need the repository variable
+# STOCKLENS_SCHEDULER_ENABLED == 'true': a manual run cannot bypass the switch.
+# Scheduled runs also only happen from the default branch (GitHub rule).
+# Times are UTC; IST = UTC+05:30.
 # Weekends are excluded here; NSE holidays and data readiness are checked by
 # the backend (SKIPPED, exit 0). The backend does all calculations: this
 # workflow only calls the authenticated job interface (docs/SCHEDULER.md).
@@ -25,7 +27,7 @@ concurrency:
 
 jobs:
   trigger:
-    if: (github.event_name == 'workflow_dispatch' || vars.STOCKLENS_SCHEDULER_ENABLED == 'true') && vars.STOCKLENS_TODAY_CONFIRMED_ENABLED == 'true'
+    if: vars.STOCKLENS_SCHEDULER_ENABLED == 'true' && vars.STOCKLENS_TODAY_CONFIRMED_ENABLED == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 25
     environment: stocklens-scheduler

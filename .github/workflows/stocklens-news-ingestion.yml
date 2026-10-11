@@ -2,9 +2,11 @@
 #   hourly news ingestion from the configured providers (NEWS_PROVIDERS on the API; default: official
 #   RBI / SEBI / US Federal Reserve feeds). Every day: weekend news matters for the next pre-open.
 #
-# Inactive by default. It never runs on push or pull_request. Scheduled runs
-# only happen from the default branch (GitHub rule) AND when the repository
-# variable STOCKLENS_SCHEDULER_ENABLED is 'true'. Times are UTC; IST = UTC+05:30.
+# Inactive by default. It never runs on push or pull_request. Scheduled AND
+# manual (workflow_dispatch) runs both need the repository variable
+# STOCKLENS_SCHEDULER_ENABLED == 'true': a manual run cannot bypass the switch.
+# Scheduled runs also only happen from the default branch (GitHub rule).
+# Times are UTC; IST = UTC+05:30.
 # Runs every day; the backend deduplicates and resumes each provider's window. The backend does all calculations: this
 # workflow only calls the authenticated job interface (docs/SCHEDULER.md).
 name: "StockLens scheduler: NEWS_INGESTION"
@@ -23,7 +25,7 @@ concurrency:
 
 jobs:
   trigger:
-    if: github.event_name == 'workflow_dispatch' || vars.STOCKLENS_SCHEDULER_ENABLED == 'true'
+    if: vars.STOCKLENS_SCHEDULER_ENABLED == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     environment: stocklens-scheduler

@@ -119,7 +119,7 @@ snapshot after the open.
 |---|---|
 | Workflow triggers | `schedule` and `workflow_dispatch` only, so a push or pull request never runs them |
 | Scheduled runs | GitHub runs `schedule` workflows **only from the default branch** (`main`). Review branches never run on a schedule |
-| Repository gate | scheduled runs also need the repository variable `STOCKLENS_SCHEDULER_ENABLED = true`, which is not set. TODAY_CONFIRMED also needs `STOCKLENS_TODAY_CONFIRMED_ENABLED = true` |
+| Repository gate | **every** run, scheduled or manual (`workflow_dispatch`), needs the repository variable `STOCKLENS_SCHEDULER_ENABLED = true`, which is not set. A manual run cannot bypass it (fixed 11 Oct 2026: the job condition used to accept any manual run). TODAY_CONFIRMED also needs `STOCKLENS_TODAY_CONFIRMED_ENABLED = true` |
 | Workflows registered on GitHub | 0 (public API; the backend repository is public) |
 | Render | both blueprints (`render.yaml`, `deploy/render-free/render.yaml`) deploy `branch: main` only; no `previews:` section. The review branch does **not** change either blueprint, and the earlier v2 Render cron templates were removed |
 | Backend credential | `SCHEDULER_TOKEN_SHA256` is not set in production, so the interface returns 404 even if it is deployed |
@@ -148,10 +148,14 @@ snapshot after the open.
    - add the repository variable `STOCKLENS_API_URL`, for example
      `https://stocklens-api.onrender.com`.
 5. Merge the reviewed branch into `main`.
-6. **Dry run:** start each workflow manually (Actions > workflow > Run
-   workflow) and check the job summary.
+6. **Dry run without GitHub:** from a trusted machine, call each job once
+   with `python scripts/scheduler_client.py --job <JOB>` (it reads
+   `STOCKLENS_API_URL` and `STOCKLENS_SCHEDULER_TOKEN` from the
+   environment) and check the result. Manual GitHub runs are refused while
+   the switch is off.
 7. **Enable:** set the repository variable `STOCKLENS_SCHEDULER_ENABLED`
-   to `true`.
+   to `true`. From then on scheduled runs start, and *Run workflow* works
+   for recovery. Setting it back to anything else stops both.
 
 **TODAY_CONFIRMED** stays off until an approved intraday feed exists. Then
 set both `PREDICTION_V2_INTRADAY_ENABLED=true` on the API and

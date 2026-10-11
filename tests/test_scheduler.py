@@ -9,6 +9,7 @@ recovery and the monitor reporting failures as failures. No network.
 """
 import datetime as dt
 import hashlib
+import os
 import re
 from pathlib import Path
 
@@ -426,3 +427,59 @@ def test_triggers_are_rate_limited_per_job_type(api, db, monkeypatch):
     codes = [_post(api, "SNAPSHOT_MONITOR").status_code for _ in range(4)]
     assert codes == [200, 200, 200, 429]
     assert _post(api, "OUTCOME_EVALUATION").status_code == 200          # other job types are separate
+
+
+# ── switches: default off, manual dispatch cannot bypass them ────────────────
+
+def _gh_if(expr: str, event: str, variables: dict) -> bool:
+    """Evaluate the subset of GitHub expression syntax the workflows use:
+    `vars.X == 'v'`, `github.event_name == 'v'`, `&&`, `||`, `!`, parentheses.
+    An unset repository variable is the empty string (GitHub semantics)."""
+    import re as _re
+    allowed = _re.fullmatch(r"[\w.\s'()=!&|-]+", expr)
+    assert allowed, f"unexpected syntax in job condition: {expr}"
+    py = _re.sub(r"vars\.(\w+)", lambda m: repr(variables.get(m.group(1), "")), expr)
+    py = py.replace("github.event_name", repr(event)).replace("&&", " and ").replace("||", " or ")
+    py = _re.sub(r"!(?!=)", " not ", py)
+    assert "github." not in py and "vars." not in py, py
+    return bool(eval(py, {"__builtins__": {}}, {}))             # noqa: S307 - test-only, validated above
+
+
+SWITCH_VALUES = ({}, {"STOCKLENS_SCHEDULER_ENABLED": "false"}, {"STOCKLENS_SCHEDULER_ENABLED": "TRUE "},
+                 {"STOCKLENS_SCHEDULER_ENABLED": "1"}, {"STOCKLENS_SCHEDULER_ENABLED": "true"})
+
+
+@pytest.mark.parametrize("name", sorted(EXPECTED))
+@pytest.mark.parametrize("event", ["schedule", "workflow_dispatch"])
+def test_every_run_needs_the_global_switch_and_manual_dispatch_cannot_bypass_it(name, event):
+    (job,) = _wf(name)["jobs"].values()
+    assert "event_name" not in job["if"]                       # no event-based exception at all
+    for v in SWITCH_VALUES:
+        for confirmed in ({}, {"STOCKLENS_TODAY_CONFIRMED_ENABLED": "true"}):
+            env = {**v, **confirmed}
+            runs = _gh_if(job["if"], event, env)
+            expected = env.get("STOCKLENS_SCHEDULER_ENABLED") == "true" and (
+                name != "stocklens-today-confirmed.yml" or env.get("STOCKLENS_TODAY_CONFIRMED_ENABLED") == "true")
+            assert runs is expected, (name, event, env)
+
+
+def test_switches_default_to_disabled():
+    for name in EXPECTED:                                       # no repository variables set -> nothing runs
+        (job,) = _wf(name)["jobs"].values()
+        assert _gh_if(job["if"], "schedule", {}) is False and _gh_if(job["if"], "workflow_dispatch", {}) is False
+    (job,) = _wf("stocklens-today-confirmed.yml")["jobs"].values()   # the global switch alone is not enough
+    assert _gh_if(job["if"], "workflow_dispatch", {"STOCKLENS_SCHEDULER_ENABLED": "true"}) is False
+    import subprocess
+    import sys
+    clean = {k: v for k, v in os.environ.items()
+             if k not in ("PREDICTION_V2_INTRADAY_ENABLED", "SCHEDULER_TOKEN_SHA256")}
+    out = subprocess.run([sys.executable, "-c", "import config; print(config.PREDICTION_V2_INTRADAY_ENABLED, "
+                          "repr(config.SCHEDULER_TOKEN_SHA256))"], cwd=ROOT, env=clean, capture_output=True,
+                         text=True, check=True).stdout.strip().splitlines()[-1]
+    assert out == "False ''"                                    # backend: intraday off, job interface unconfigured
+
+
+def test_evaluator_reproduces_the_old_bypass():
+    old = "github.event_name == 'workflow_dispatch' || vars.STOCKLENS_SCHEDULER_ENABLED == 'true'"
+    assert _gh_if(old, "workflow_dispatch", {}) is True        # the defect this suite now prevents
+    assert _gh_if(old, "schedule", {}) is False
