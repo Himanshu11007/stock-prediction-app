@@ -155,7 +155,10 @@ def main(argv=None) -> int:
     ap.add_argument("--providers", default="google_news,gdelt,stocklens_archive,marketaux,alphavantage")
     ap.add_argument("--cache", default=str(Path(tempfile.gettempdir()) / "stocklens_news_cache"))
     ap.add_argument("--out", default=str(OUT))
+    ap.add_argument("--skip-note", action="append", default=[], metavar="PROVIDER=REASON",
+                    help="why a provider was not run (recorded in the report)")
     args = ap.parse_args(argv)
+    args.skip_note = dict(x.split("=", 1) for x in args.skip_note)
     t0 = time.time()
     cache = Path(args.cache)
     cache.mkdir(parents=True, exist_ok=True)
@@ -211,11 +214,14 @@ def main(argv=None) -> int:
                                "detail": f"{var} is not set: arm not tested" if not os.environ.get(var) else
                                "free quotas (100 / 25 requests a day) cannot backfill 20 stocks x 12 months in one run; "
                                "collect over several days or use a paid plan"}
+    for p in ("google_news", "gdelt", "stocklens_archive", "marketaux", "alphavantage"):
+        archive_info.setdefault(p, {"status": "NOT_RUN", "detail": args.skip_note.get(p, "not requested in this run")})
     cutoffs = [dt.datetime.combine(d, dt.time(19, 30), tzinfo=IST) for d in days]
     news_arms = []
-    for p, arch in list(archives.items()) + [("combined", [a for v in archives.values() for a in v])]:
-        if not arch:
-            continue
+    available = {p: a for p, a in archives.items() if a}
+    runs = list(available.items()) + ([("combined", [a for v in available.values() for a in v])] if len(available) > 1 else [])
+    for p, arch in runs:
+        print(f"replaying {p}: {len(arch)} articles", flush=True)
         r0 = time.time()
         res = replay.run(arch, cutoffs, companies, hist, nifty)
         arm = f"news_{p}"
@@ -224,6 +230,11 @@ def main(argv=None) -> int:
         archive_info.setdefault(p, {})["replay"] = {"calls": len(res.calls), "neutral_with_news": res.neutral,
                                                     "no_news": res.no_news, "unscored": res.unscored,
                                                     "seconds": round(time.time() - r0, 1)}
+    if len(available) == 1:                  # one archive: the combined arm IS that arm (not replayed twice)
+        only_arm = f"news_{next(iter(available))}"
+        trades += [backtest.Trade(**{**t.__dict__, "strategy": "news_combined"}) for t in trades if t.strategy == only_arm]
+        news_arms.append("news_combined")
+        archive_info["combined"] = {"status": "SAME_AS", "detail": f"only one archive available: identical to {only_arm}"}
     v2 = [t for t in trades if t.strategy == "v2"]
     if "news_combined" in news_arms:
         trades += se.overlay(v2, [t for t in trades if t.strategy == "news_combined"], "v2_plus_news")

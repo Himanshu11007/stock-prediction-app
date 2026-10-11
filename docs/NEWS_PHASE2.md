@@ -239,7 +239,77 @@ The **combined pipeline into v2** already existed:
 
 Harness: `scripts/research/news_signal_backtest.py` (logic in `catalysts/signal_eval.py`, tested).
 
-**Results: run in progress at this commit; they are added in the next commit.**
+**Setup:**
+- **Universe:** the 20 large caps of `INDIAN_ALIASES`, fixed in advance
+  for unambiguous names.
+- **Window:** 14 Oct 2025 to 9 Oct 2026, split chronologically into
+  development, validation and holdout, embargoed by 5 + 1 sessions.
+- **Outcome:** close(t) to close(t+1), with 30 bps round trip (20 cost +
+  10 slippage); sensitivity at 10 and 50 bps.
+- **Same stock-sessions for every arm.** Thresholds fixed a priori; nothing
+  tuned.
+- **Point in time:** each article is usable from the next full hour after
+  publication. Date-only articles (94% of the Google backfill) are usable
+  after the end of their day IST. The replay ingests point in time.
+
+**Archives:**
+
+| Arm | Status |
+|---|---|
+| Google News | 42,076 articles from 624 requests; 464 calls, 3,764 neutral-with-news. Not point in time: optimistic |
+| StockLens archive | **UNAVAILABLE**: no news tables in the local database |
+| Marketaux, Alpha Vantage | **NOT_CONFIGURED**: not tested |
+| GDELT | **NOT_RUN**: rate-limited from this network and only ~3 months deep |
+| Combined | identical to Google News (one archive) |
+
+**Development (145 sessions, 2,900 stock-sessions):**
+
+| Arm | Calls | Hit rate (95% CI) | Mean net per trade (session-bootstrap 95%) | Max drawdown |
+|---|---|---|---|---|
+| news_google_news | 278 | 0.50 (0.44–0.56) | −34 bps (−58 to −9) | 36% |
+| v2_plus_news | 377 | 0.50 (0.45–0.55) | −26 bps (−47 to −4) | 21% |
+| v2 | 122 | 0.48 (0.40–0.57) | −9 bps (−52 to +33) | 12% |
+| v1_rank | 594 | 0.50 (0.46–0.54) | −37 bps (−55 to −20) | 58% |
+| always_up | 2,780 | 0.49 (0.47–0.51) | −35 bps (−51 to −19) | 50% |
+| random_matched | 122 | 0.50 | −31 bps | 28% |
+
+**Holdout (43 sessions, 7 Aug to 8 Oct 2026, 860 stock-sessions):**
+
+| Arm | Calls | Hit rate (95% CI) | Mean net (session-bootstrap 95%) | Sample |
+|---|---|---|---|---|
+| news_google_news | 68 | 0.37 (0.26–0.49) | −40 bps (−79 to +2) | insufficient (< 100) |
+| v2_plus_news | 93 | 0.34 (0.26–0.45) | −55 bps (−93 to −18) | insufficient |
+| v2 | 25 | 0.28 (0.14–0.48) | −95 bps | insufficient |
+| v1_rank | 176 | 0.40 (0.33–0.47) | −55 bps (−76 to −35) | adequate |
+| always_up | 860 | 0.40 (0.37–0.43) | −52 bps (−70 to −33) | adequate |
+
+**By event category (news arm, all splits):** no category shows a
+dependable edge.
+- EARNINGS: 237 calls, hit 0.45, −40 bps.
+- LITIGATION: 49 calls, hit 0.39, −84 bps.
+- MONETARY_POLICY: 37 calls, hit 0.62, +10 bps. Too few calls, and not
+  tested beyond chance.
+
+**Verdict:** no news arm improves on v2 or on the baselines.
+- Every comparison is either INSUFFICIENT_SAMPLE or
+  NO_EVIDENCE_OF_IMPROVEMENT.
+- In development, with an adequate sample, the news arm's direction
+  accuracy equals a coin flip and its net return is negative with an
+  interval excluding zero.
+- This holds even though the Google arm is optimistic: Google's ranking and
+  possible headline edits are later information.
+- **News, as captured by these sources and rules, does not improve
+  StockLens's predictions.** Nothing here supports promoting news-driven
+  calls out of shadow mode.
+
+**What would change the conclusion:**
+- a genuinely point-in-time archive with exact times: StockLens's own
+  scheduled ingestion, or licensed exchange filings;
+- enough holdout calls (≥ 100);
+- a measured edge after costs.
+
+Rerun with `python scripts/research/news_signal_backtest.py` (cached
+backfill in the system temp directory, outside the repository).
 
 ## 7. End-to-end integration and web
 

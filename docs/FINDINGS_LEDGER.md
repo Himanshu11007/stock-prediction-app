@@ -192,5 +192,5 @@ working end-to-end feature; such items are never marked complete.
 | NP-08 | Explainable news screen (scores, horizon, sectors, risks, exclusion reasons, links, times) | IMPLEMENTED AND TESTED (shadow) | `catalysts/candidates.py`, `tests/test_news_candidates.py` |
 | NP-09 | News input status (provider health, coverage, staleness, data basis) | IMPLEMENTED AND TESTED | `catalysts/status.py`, `/admin/news/status` |
 | NP-10 | End-to-end ingestion → pipeline → v2 snapshot → API → web, with shared contract fixtures | IMPLEMENTED AND TESTED | `tests/test_news_e2e.py`; web `NewsCandidatesTests` |
-| NP-11 | Point-in-time backtest of news arms vs v1 / v2 / baselines | IMPLEMENTED AND TESTED (logic); results in `news_signal_backtest.json` | `catalysts/signal_eval.py`, `tests/test_signal_eval.py` |
+| NP-11 | Point-in-time backtest of news arms vs v1 / v2 / baselines | IMPLEMENTED AND TESTED. **Result: no improvement** (development: news hit 0.50, −34 bps net, CI below 0; holdout INSUFFICIENT_SAMPLE). Only the Google arm could run | `catalysts/signal_eval.py`, `tests/test_signal_eval.py` |
 | NP-12 | StockLens's own news archive | **BLOCKED**: local DB has no news tables; production ingestion not scheduled (REQUIRES_APPROVAL) | `news_signal_backtest.json` archives |

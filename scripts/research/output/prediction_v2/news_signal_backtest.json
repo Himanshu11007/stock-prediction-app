@@ -1,0 +1,1619 @@
+{
+ "generated_at": "2026-10-11T11:33:19.460694+00:00",
+ "research_only": true,
+ "universe": [
+  "TRENT.NS",
+  "TITAN.NS",
+  "ITC.NS",
+  "CANBK.NS",
+  "HCLTECH.NS",
+  "TCS.NS",
+  "INFY.NS",
+  "RELIANCE.NS",
+  "HDFCBANK.NS",
+  "ICICIBANK.NS",
+  "LT.NS",
+  "SBIN.NS",
+  "BAJFINANCE.NS",
+  "MARUTI.NS",
+  "ASIANPAINT.NS",
+  "TATASTEEL.NS",
+  "SUNPHARMA.NS",
+  "BHARTIARTL.NS",
+  "AXISBANK.NS",
+  "WIPRO.NS"
+ ],
+ "universe_with_prices": [
+  "ASIANPAINT.NS",
+  "AXISBANK.NS",
+  "BAJFINANCE.NS",
+  "BHARTIARTL.NS",
+  "CANBK.NS",
+  "HCLTECH.NS",
+  "HDFCBANK.NS",
+  "ICICIBANK.NS",
+  "INFY.NS",
+  "ITC.NS",
+  "LT.NS",
+  "MARUTI.NS",
+  "RELIANCE.NS",
+  "SBIN.NS",
+  "SUNPHARMA.NS",
+  "TATASTEEL.NS",
+  "TCS.NS",
+  "TITAN.NS",
+  "TRENT.NS",
+  "WIPRO.NS"
+ ],
+ "window": {
+  "start": "2025-10-14T14:00:00+00:00",
+  "end": "2026-10-09T14:00:00+00:00"
+ },
+ "costs_bps": {
+  "cost": 20.0,
+  "slippage": 10.0,
+  "total_round_trip": 30.0
+ },
+ "archives": {
+  "google_news": {
+   "requests": 624,
+   "ok": 624,
+   "rate_limited": 0,
+   "errors": 0,
+   "not_configured": null,
+   "articles": 42076,
+   "from_cache": true,
+   "status": "OK",
+   "point_in_time": "NO (published time; headlines may be revised; ranked results)",
+   "replay": {
+    "calls": 464,
+    "neutral_with_news": 3764,
+    "no_news": 632,
+    "unscored": 0,
+    "seconds": 1044.5
+   }
+  },
+  "stocklens_archive": {
+   "status": "UNAVAILABLE",
+   "detail": "no such table: news_articles",
+   "in_window": 0,
+   "point_in_time": "YES (recorded ingestion times)"
+  },
+  "marketaux": {
+   "status": "NOT_CONFIGURED",
+   "detail": "MARKETAUX_API_TOKEN is not set: arm not tested"
+  },
+  "alphavantage": {
+   "status": "NOT_CONFIGURED",
+   "detail": "ALPHAVANTAGE_API_KEY is not set: arm not tested"
+  },
+  "gdelt": {
+   "status": "NOT_RUN",
+   "detail": "not run: GDELT refused 82 of 99 benchmark requests from this network (rate limits) and its DOC API keeps only ~3 months; a 12-month arm is not possible"
+  },
+  "combined": {
+   "status": "SAME_AS",
+   "detail": "only one archive available: identical to news_google_news"
+  }
+ },
+ "comparison": {
+  "cost_bps": 30.0,
+  "min_calls": 100,
+  "splits": {
+   "development": {
+    "sessions": 145,
+    "first": "2025-10-14",
+    "last": "2026-05-19",
+    "evaluated_stock_sessions": 2900,
+    "arms": {
+     "always_up": {
+      "calls": 2780,
+      "sessions_with_calls": 139,
+      "hit_rate": 0.48992805755395685,
+      "hit_rate_ci95": [
+       0.471371789605675,
+       0.5085121233296013
+      ],
+      "net_hit_rate": 0.3946043165467626,
+      "mean_gross_return": -0.00047901619611716946,
+      "mean_net_return": -0.00347901619611717,
+      "mean_net_return_ci95": [
+       -0.004134047564699939,
+       -0.0028239848275344016
+      ],
+      "mean_excess_vs_nifty": 0.0001081952250458613,
+      "mean_net_return_ci95_clustered": [
+       -0.00510683595811883,
+       -0.0018801965430488153
+      ],
+      "coverage": 0.9586,
+      "sessions_traded": 139,
+      "cumulative_net": -0.48358,
+      "max_drawdown": 0.50056,
+      "status": "OK"
+     },
+     "news_combined": {
+      "calls": 278,
+      "sessions_with_calls": 113,
+      "hit_rate": 0.49640287769784175,
+      "hit_rate_ci95": [
+       0.43807885021099136,
+       0.5548249652655033
+      ],
+      "net_hit_rate": 0.39568345323741005,
+      "mean_gross_return": -0.0004158239165671645,
+      "mean_net_return": -0.0034158239165671643,
+      "mean_net_return_ci95": [
+       -0.005457978063698084,
+       -0.0013736697694362444
+      ],
+      "mean_excess_vs_nifty": -0.0015494994252767068,
+      "mean_net_return_ci95_clustered": [
+       -0.005805316027764767,
+       -0.0009167168667330364
+      ],
+      "coverage": 0.0959,
+      "sessions_traded": 113,
+      "cumulative_net": -0.36472,
+      "max_drawdown": 0.36472,
+      "status": "OK"
+     },
+     "news_google_news": {
+      "calls": 278,
+      "sessions_with_calls": 113,
+      "hit_rate": 0.49640287769784175,
+      "hit_rate_ci95": [
+       0.43807885021099136,
+       0.5548249652655033
+      ],
+      "net_hit_rate": 0.39568345323741005,
+      "mean_gross_return": -0.0004158239165671645,
+      "mean_net_return": -0.0034158239165671643,
+      "mean_net_return_ci95": [
+       -0.005457978063698084,
+       -0.0013736697694362444
+      ],
+      "mean_excess_vs_nifty": -0.0015494994252767068,
+      "mean_net_return_ci95_clustered": [
+       -0.005805316027764767,
+       -0.0009167168667330364
+      ],
+      "coverage": 0.0959,
+      "sessions_traded": 113,
+      "cumulative_net": -0.36472,
+      "max_drawdown": 0.36472,
+      "status": "OK"
+     },
+     "previous_day": {
+      "calls": 2777,
+      "sessions_with_calls": 139,
+      "hit_rate": 0.4796543032048974,
+      "hit_rate_ci95": [
+       0.4611138338256836,
+       0.49825098580302163
+      ],
+      "net_hit_rate": 0.3806265754411235,
+      "mean_gross_return": -0.0006635938729712138,
+      "mean_net_return": -0.0036635938729712137,
+      "mean_net_return_ci95": [
+       -0.004319014536429164,
+       -0.0030081732095132638
+      ],
+      "mean_excess_vs_nifty": -0.00030819351400997993,
+      "mean_net_return_ci95_clustered": [
+       -0.00486482826763602,
+       -0.002489479735795801
+      ],
+      "coverage": 0.9576,
+      "sessions_traded": 139,
+      "cumulative_net": -0.50949,
+      "max_drawdown": 0.50949,
+      "status": "OK"
+     },
+     "random_matched": {
+      "calls": 122,
+      "sessions_with_calls": 73,
+      "hit_rate": 0.5,
+      "hit_rate_ci95": [
+       0.41263973153756023,
+       0.5873602684624397
+      ],
+      "net_hit_rate": 0.4016393442622951,
+      "mean_gross_return": -4.6867415403771105e-05,
+      "mean_net_return": -0.003046867415403771,
+      "mean_net_return_ci95": [
+       -0.00621519291781635,
+       0.00012145808700880821
+      ],
+      "mean_excess_vs_nifty": 0.0005939599418864795,
+      "mean_net_return_ci95_clustered": [
+       -0.005984943447180618,
+       -1.4482141502514892e-05
+      ],
+      "coverage": 0.0421,
+      "sessions_traded": 73,
+      "cumulative_net": -0.24813,
+      "max_drawdown": 0.2779,
+      "status": "OK"
+     },
+     "sector": {
+      "calls": 1807,
+      "sessions_with_calls": 139,
+      "hit_rate": 0.484781405644715,
+      "hit_rate_ci95": [
+       0.4617947676283959,
+       0.5078326144684148
+      ],
+      "net_hit_rate": 0.38848920863309355,
+      "mean_gross_return": -0.0006831090692947375,
+      "mean_net_return": -0.0036831090692947357,
+      "mean_net_return_ci95": [
+       -0.004542979425289317,
+       -0.002823238713300155
+      ],
+      "mean_excess_vs_nifty": -0.00046838400997688224,
+      "mean_net_return_ci95_clustered": [
+       -0.005262093130913204,
+       -0.0020334208087772862
+      ],
+      "coverage": 0.6231,
+      "sessions_traded": 139,
+      "cumulative_net": -0.51195,
+      "max_drawdown": 0.52865,
+      "status": "OK"
+     },
+     "v1_rank": {
+      "calls": 594,
+      "sessions_with_calls": 139,
+      "hit_rate": 0.494949494949495,
+      "hit_rate_ci95": [
+       0.4549034911666937,
+       0.5350604056246973
+      ],
+      "net_hit_rate": 0.39225589225589225,
+      "mean_gross_return": -0.0006795626295905787,
+      "mean_net_return": -0.0036795626295905784,
+      "mean_net_return_ci95": [
+       -0.004996027150817556,
+       -0.002363098108363601
+      ],
+      "mean_excess_vs_nifty": -0.0001255331566922106,
+      "mean_net_return_ci95_clustered": [
+       -0.005502275987843684,
+       -0.0019617219473216847
+      ],
+      "coverage": 0.2048,
+      "sessions_traded": 139,
+      "cumulative_net": -0.55251,
+      "max_drawdown": 0.57645,
+      "status": "OK"
+     },
+     "v2": {
+      "calls": 122,
+      "sessions_with_calls": 73,
+      "hit_rate": 0.48360655737704916,
+      "hit_rate_ci95": [
+       0.39679226961314173,
+       0.5714217391089342
+      ],
+      "net_hit_rate": 0.38524590163934425,
+      "mean_gross_return": 0.0021268534291077417,
+      "mean_net_return": -0.0008731465708922583,
+      "mean_net_return_ci95": [
+       -0.00414816238332178,
+       0.0024018692415372638
+      ],
+      "mean_excess_vs_nifty": 0.00011773942233852948,
+      "mean_net_return_ci95_clustered": [
+       -0.005187689493171145,
+       0.0033036067513637023
+      ],
+      "coverage": 0.0421,
+      "sessions_traded": 73,
+      "cumulative_net": 0.06631,
+      "max_drawdown": 0.11945,
+      "status": "OK"
+     },
+     "v2_plus_news": {
+      "calls": 377,
+      "sessions_with_calls": 126,
+      "hit_rate": 0.4960212201591512,
+      "hit_rate_ci95": [
+       0.44584556769101763,
+       0.546277141592842
+      ],
+      "net_hit_rate": 0.3952254641909814,
+      "mean_gross_return": 0.00037222904322047046,
+      "mean_net_return": -0.0026277709567795295,
+      "mean_net_return_ci95": [
+       -0.00441461536412124,
+       -0.0008409265494378191
+      ],
+      "mean_excess_vs_nifty": -0.0008597756976737119,
+      "mean_net_return_ci95_clustered": [
+       -0.004681357862172659,
+       -0.0004393559332926975
+      ],
+      "coverage": 0.13,
+      "sessions_traded": 126,
+      "cumulative_net": -0.17522,
+      "max_drawdown": 0.2071,
+      "status": "OK"
+     }
+    }
+   },
+   "validation": {
+    "sessions": 43,
+    "first": "2026-05-29",
+    "last": "2026-07-29",
+    "evaluated_stock_sessions": 860,
+    "arms": {
+     "always_up": {
+      "calls": 740,
+      "sessions_with_calls": 37,
+      "hit_rate": 0.5337837837837838,
+      "hit_rate_ci95": [
+       0.49775862926886044,
+       0.569459982865766
+      ],
+      "net_hit_rate": 0.4135135135135135,
+      "mean_gross_return": 0.0008667620130397648,
+      "mean_net_return": -0.002133237986960235,
+      "mean_net_return_ci95": [
+       -0.0033009315902803255,
+       -0.0009655443836401444
+      ],
+      "mean_excess_vs_nifty": 0.0005330712241005545,
+      "mean_net_return_ci95_clustered": [
+       -0.0044979831153259325,
+       2.8488385421017224e-05
+      ],
+      "coverage": 0.8605,
+      "sessions_traded": 37,
+      "cumulative_net": -0.07893,
+      "max_drawdown": 0.10076,
+      "status": "OK"
+     },
+     "news_combined": {
+      "calls": 86,
+      "sessions_with_calls": 33,
+      "hit_rate": 0.3953488372093023,
+      "hit_rate_ci95": [
+       0.29862264637556246,
+       0.5010247330121598
+      ],
+      "net_hit_rate": 0.32558139534883723,
+      "mean_gross_return": -0.004596226484497236,
+      "mean_net_return": -0.007596226484497236,
+      "mean_net_return_ci95": [
+       -0.011105091367414928,
+       -0.004087361601579544
+      ],
+      "mean_excess_vs_nifty": -0.002110573065594821,
+      "mean_net_return_ci95_clustered": [
+       -0.011455498046555334,
+       -0.0035725145367269426
+      ],
+      "coverage": 0.1,
+      "sessions_traded": 33,
+      "cumulative_net": -0.25483,
+      "max_drawdown": 0.26046,
+      "status": "INSUFFICIENT_SAMPLE"
+     },
+     "news_google_news": {
+      "calls": 86,
+      "sessions_with_calls": 33,
+      "hit_rate": 0.3953488372093023,
+      "hit_rate_ci95": [
+       0.29862264637556246,
+       0.5010247330121598
+      ],
+      "net_hit_rate": 0.32558139534883723,
+      "mean_gross_return": -0.004596226484497236,
+      "mean_net_return": -0.007596226484497236,
+      "mean_net_return_ci95": [
+       -0.011105091367414928,
+       -0.004087361601579544
+      ],
+      "mean_excess_vs_nifty": -0.002110573065594821,
+      "mean_net_return_ci95_clustered": [
+       -0.011455498046555334,
+       -0.0035725145367269426
+      ],
+      "coverage": 0.1,
+      "sessions_traded": 33,
+      "cumulative_net": -0.25483,
+      "max_drawdown": 0.26046,
+      "status": "INSUFFICIENT_SAMPLE"
+     },
+     "previous_day": {
+      "calls": 740,
+      "sessions_with_calls": 37,
+      "hit_rate": 0.5324324324324324,
+      "hit_rate_ci95": [
+       0.49640784567757307,
+       0.5681220219716684
+      ],
+      "net_hit_rate": 0.42162162162162165,
+      "mean_gross_return": 0.00034747968045173514,
+      "mean_net_return": -0.002652520319548265,
+      "mean_net_return_ci95": [
+       -0.0038216165968109434,
+       -0.0014834240422855864
+      ],
+      "mean_excess_vs_nifty": 8.672985508252516e-05,
+      "mean_net_return_ci95_clustered": [
+       -0.004323930783667451,
+       -0.0010375410498406727
+      ],
+      "coverage": 0.8605,
+      "sessions_traded": 37,
+      "cumulative_net": -0.09814,
+      "max_drawdown": 0.10881,
+      "status": "OK"
+     },
+     "random_matched": {
+      "calls": 27,
+      "sessions_with_calls": 18,
+      "hit_rate": 0.5555555555555556,
+      "hit_rate_ci95": [
+       0.37312719479576884,
+       0.7241440232992717
+      ],
+      "net_hit_rate": 0.48148148148148145,
+      "mean_gross_return": 0.0020950034764128027,
+      "mean_net_return": -0.0009049965235871973,
+      "mean_net_return_ci95": [
+       -0.006846095238527708,
+       0.005036102191353314
+      ],
+      "mean_excess_vs_nifty": -0.00018880445048448431,
+      "mean_net_return_ci95_clustered": [
+       -0.00706099368127168,
+       0.005345060888431352
+      ],
+      "coverage": 0.0314,
+      "sessions_traded": 18,
+      "cumulative_net": -0.02874,
+      "max_drawdown": 0.04506,
+      "status": "INSUFFICIENT_SAMPLE"
+     },
+     "sector": {
+      "calls": 481,
+      "sessions_with_calls": 37,
+      "hit_rate": 0.5343035343035343,
+      "hit_rate_ci95": [
+       0.48962899383980396,
+       0.5784344726614203
+      ],
+      "net_hit_rate": 0.45322245322245325,
+      "mean_gross_return": 0.0015841166626238215,
+      "mean_net_return": -0.0014158833373761784,
+      "mean_net_return_ci95": [
+       -0.0030757568123644325,
+       0.00024399013761207573
+      ],
+      "mean_excess_vs_nifty": 0.0007164325047290447,
+      "mean_net_return_ci95_clustered": [
+       -0.00446922827129635,
+       0.001218404369898066
+      ],
+      "coverage": 0.5593,
+      "sessions_traded": 37,
+      "cumulative_net": -0.05239,
+      "max_drawdown": 0.09622,
+      "status": "OK"
+     },
+     "v1_rank": {
+      "calls": 111,
+      "sessions_with_calls": 37,
+      "hit_rate": 0.5495495495495496,
+      "hit_rate_ci95": [
+       0.4568786347151331,
+       0.6389054713927581
+      ],
+      "net_hit_rate": 0.43243243243243246,
+      "mean_gross_return": -0.0004105736451786424,
+      "mean_net_return": -0.0034105736451786424,
+      "mean_net_return_ci95": [
+       -0.005973190601269194,
+       -0.0008479566890880904
+      ],
+      "mean_excess_vs_nifty": -0.0007442644341178528,
+      "mean_net_return_ci95_clustered": [
+       -0.006795851345552274,
+       -0.00025989824781731907
+      ],
+      "coverage": 0.1291,
+      "sessions_traded": 37,
+      "cumulative_net": -0.12619,
+      "max_drawdown": 0.12836,
+      "status": "OK"
+     },
+     "v2": {
+      "calls": 27,
+      "sessions_with_calls": 18,
+      "hit_rate": 0.4444444444444444,
+      "hit_rate_ci95": [
+       0.2758559767007283,
+       0.6268728052042312
+      ],
+      "net_hit_rate": 0.4074074074074074,
+      "mean_gross_return": -0.0058098608757463375,
+      "mean_net_return": -0.008809860875746338,
+      "mean_net_return_ci95": [
+       -0.018545824764051824,
+       0.0009261030125591475
+      ],
+      "mean_excess_vs_nifty": -0.0057647100544943744,
+      "mean_net_return_ci95_clustered": [
+       -0.022614597557247002,
+       0.003164203168915498
+      ],
+      "coverage": 0.0314,
+      "sessions_traded": 18,
+      "cumulative_net": -0.10863,
+      "max_drawdown": 0.14663,
+      "status": "INSUFFICIENT_SAMPLE"
+     },
+     "v2_plus_news": {
+      "calls": 111,
+      "sessions_with_calls": 39,
+      "hit_rate": 0.40540540540540543,
+      "hit_rate_ci95": [
+       0.31871700779864365,
+       0.4984224259953822
+      ],
+      "net_hit_rate": 0.34234234234234234,
+      "mean_gross_return": -0.005145577966756588,
+      "mean_net_return": -0.008145577966756589,
+      "mean_net_return_ci95": [
+       -0.011697750268174574,
+       -0.004593405665338604
+      ],
+      "mean_excess_vs_nifty": -0.003171010316387828,
+      "mean_net_return_ci95_clustered": [
+       -0.01278381864083757,
+       -0.0040278015160942066
+      ],
+      "coverage": 0.1291,
+      "sessions_traded": 39,
+      "cumulative_net": -0.28361,
+      "max_drawdown": 0.29835,
+      "status": "OK"
+     }
+    }
+   },
+   "holdout": {
+    "sessions": 43,
+    "first": "2026-08-07",
+    "last": "2026-10-08",
+    "evaluated_stock_sessions": 860,
+    "arms": {
+     "always_up": {
+      "calls": 860,
+      "sessions_with_calls": 43,
+      "hit_rate": 0.39767441860465114,
+      "hit_rate_ci95": [
+       0.3654886786641018,
+       0.4307702651052188
+      ],
+      "net_hit_rate": 0.32209302325581396,
+      "mean_gross_return": -0.0022069895100776723,
+      "mean_net_return": -0.005206989510077673,
+      "mean_net_return_ci95": [
+       -0.00616505146249355,
+       -0.0042489275576617965
+      ],
+      "mean_excess_vs_nifty": -0.00020279225632095926,
+      "mean_net_return_ci95_clustered": [
+       -0.007013511439623393,
+       -0.003340180127423618
+      ],
+      "coverage": 1.0,
+      "sessions_traded": 43,
+      "cumulative_net": -0.2239,
+      "max_drawdown": 0.23744,
+      "status": "OK"
+     },
+     "news_combined": {
+      "calls": 68,
+      "sessions_with_calls": 33,
+      "hit_rate": 0.36764705882352944,
+      "hit_rate_ci95": [
+       0.26300294660514806,
+       0.48644584072698266
+      ],
+      "net_hit_rate": 0.3382352941176471,
+      "mean_gross_return": -0.0010459706191665928,
+      "mean_net_return": -0.004045970619166592,
+      "mean_net_return_ci95": [
+       -0.00750910674383697,
+       -0.0005828344944962148
+      ],
+      "mean_excess_vs_nifty": -0.0004533499796501665,
+      "mean_net_return_ci95_clustered": [
+       -0.007907901759664259,
+       0.0001737249533129006
+      ],
+      "coverage": 0.0791,
+      "sessions_traded": 33,
+      "cumulative_net": -0.16673,
+      "max_drawdown": 0.20634,
+      "status": "INSUFFICIENT_SAMPLE"
+     },
+     "news_google_news": {
+      "calls": 68,
+      "sessions_with_calls": 33,
+      "hit_rate": 0.36764705882352944,
+      "hit_rate_ci95": [
+       0.26300294660514806,
+       0.48644584072698266
+      ],
+      "net_hit_rate": 0.3382352941176471,
+      "mean_gross_return": -0.0010459706191665928,
+      "mean_net_return": -0.004045970619166592,
+      "mean_net_return_ci95": [
+       -0.00750910674383697,
+       -0.0005828344944962148
+      ],
+      "mean_excess_vs_nifty": -0.0004533499796501665,
+      "mean_net_return_ci95_clustered": [
+       -0.007907901759664259,
+       0.0001737249533129006
+      ],
+      "coverage": 0.0791,
+      "sessions_traded": 33,
+      "cumulative_net": -0.16673,
+      "max_drawdown": 0.20634,
+      "status": "INSUFFICIENT_SAMPLE"
+     },
+     "previous_day": {
+      "calls": 852,
+      "sessions_with_calls": 43,
+      "hit_rate": 0.4295774647887324,
+      "hit_rate_ci95": [
+       0.39672718058665396,
+       0.4630599575940561
+      ],
+      "net_hit_rate": 0.34976525821596244,
+      "mean_gross_return": -0.0018091937372492844,
+      "mean_net_return": -0.004809193737249284,
+      "mean_net_return_ci95": [
+       -0.005733260670233252,
+       -0.003885126804265316
+      ],
+      "mean_excess_vs_nifty": -0.0020234195383517705,
+      "mean_net_return_ci95_clustered": [
+       -0.006457489460015097,
+       -0.0031659278996426106
+      ],
+      "coverage": 0.9907,
+      "sessions_traded": 43,
+      "cumulative_net": -0.2057,
+      "max_drawdown": 0.2057,
+      "status": "OK"
+     },
+     "random_matched": {
+      "calls": 25,
+      "sessions_with_calls": 14,
+      "hit_rate": 0.52,
+      "hit_rate_ci95": [
+       0.334982179531473,
+       0.6996899607103998
+      ],
+      "net_hit_rate": 0.48,
+      "mean_gross_return": 0.00168414153511681,
+      "mean_net_return": -0.0013158584648831897,
+      "mean_net_return_ci95": [
+       -0.006013257258988628,
+       0.003381540329222248
+      ],
+      "mean_excess_vs_nifty": 0.001277649963071763,
+      "mean_net_return_ci95_clustered": [
+       -0.0051449190289156255,
+       0.0021963964373764152
+      ],
+      "coverage": 0.0291,
+      "sessions_traded": 14,
+      "cumulative_net": -0.02974,
+      "max_drawdown": 0.05483,
+      "status": "INSUFFICIENT_SAMPLE"
+     },
+     "sector": {
+      "calls": 559,
+      "sessions_with_calls": 43,
+      "hit_rate": 0.481216457960644,
+      "hit_rate_ci95": [
+       0.4400657352451946,
+       0.5226235897798215
+      ],
+      "net_hit_rate": 0.4007155635062612,
+      "mean_gross_return": -0.00018042727030200548,
+      "mean_net_return": -0.003180427270302005,
+      "mean_net_return_ci95": [
+       -0.004407631557161034,
+       -0.0019532229834429765
+      ],
+      "mean_excess_vs_nifty": -0.00026248766295003194,
+      "mean_net_return_ci95_clustered": [
+       -0.0051563005289721586,
+       -0.0009259793700322244
+      ],
+      "coverage": 0.65,
+      "sessions_traded": 43,
+      "cumulative_net": -0.13676,
+      "max_drawdown": 0.13676,
+      "status": "OK"
+     },
+     "v1_rank": {
+      "calls": 176,
+      "sessions_with_calls": 43,
+      "hit_rate": 0.3977272727272727,
+      "hit_rate_ci95": [
+       0.3283465846180823,
+       0.4714772603655031
+      ],
+      "net_hit_rate": 0.3125,
+      "mean_gross_return": -0.002534558231811542,
+      "mean_net_return": -0.0055345582318115415,
+      "mean_net_return_ci95": [
+       -0.007225328832190298,
+       -0.003843787631432785
+      ],
+      "mean_excess_vs_nifty": -0.00050836645032818,
+      "mean_net_return_ci95_clustered": [
+       -0.007602642668229444,
+       -0.0034806600133695975
+      ],
+      "coverage": 0.2047,
+      "sessions_traded": 43,
+      "cumulative_net": -0.23553,
+      "max_drawdown": 0.25223,
+      "status": "OK"
+     },
+     "v2": {
+      "calls": 25,
+      "sessions_with_calls": 14,
+      "hit_rate": 0.28,
+      "hit_rate_ci95": [
+       0.1428367383738157,
+       0.47576971896558296
+      ],
+      "net_hit_rate": 0.28,
+      "mean_gross_return": -0.006462147853252569,
+      "mean_net_return": -0.009462147853252568,
+      "mean_net_return_ci95": [
+       -0.016401441521699568,
+       -0.0025228541848055673
+      ],
+      "mean_excess_vs_nifty": -0.005485552002044569,
+      "mean_net_return_ci95_clustered": [
+       -0.017573703986668434,
+       -0.000354105640755915
+      ],
+      "coverage": 0.0291,
+      "sessions_traded": 14,
+      "cumulative_net": -0.0861,
+      "max_drawdown": 0.0903,
+      "status": "INSUFFICIENT_SAMPLE"
+     },
+     "v2_plus_news": {
+      "calls": 93,
+      "sessions_with_calls": 37,
+      "hit_rate": 0.34408602150537637,
+      "hit_rate_ci95": [
+       0.25544922494036565,
+       0.4450926909304998
+      ],
+      "net_hit_rate": 0.3225806451612903,
+      "mean_gross_return": -0.0025019322412327153,
+      "mean_net_return": -0.005501932241232715,
+      "mean_net_return_ci95": [
+       -0.008664834286619493,
+       -0.002339030195845937
+      ],
+      "mean_excess_vs_nifty": -0.0018060924587884467,
+      "mean_net_return_ci95_clustered": [
+       -0.009301990722152424,
+       -0.001834207624213145
+      ],
+      "coverage": 0.1081,
+      "sessions_traded": 37,
+      "cumulative_net": -0.21971,
+      "max_drawdown": 0.24459,
+      "status": "INSUFFICIENT_SAMPLE"
+     }
+    }
+   }
+  },
+  "by_category": {
+   "news_google_news": {
+    "BROKER_RATING": {
+     "calls": 21,
+     "sessions_with_calls": 19,
+     "hit_rate": 0.3333333333333333,
+     "hit_rate_ci95": [
+      0.17194536432683688,
+      0.5462692434278971
+     ],
+     "net_hit_rate": 0.2857142857142857,
+     "mean_gross_return": -0.0028804704404800257,
+     "mean_net_return": -0.005880470440480025,
+     "mean_net_return_ci95": [
+      -0.014481850048620345,
+      0.002720909167660295
+     ],
+     "mean_excess_vs_nifty": -0.002334399767991948,
+     "status": "INSUFFICIENT_SAMPLE"
+    },
+    "BUSINESS_UPDATE": {
+     "calls": 32,
+     "sessions_with_calls": 22,
+     "hit_rate": 0.5,
+     "hit_rate_ci95": [
+      0.33630614316859386,
+      0.6636938568314061
+     ],
+     "net_hit_rate": 0.4375,
+     "mean_gross_return": 0.0032463357937597206,
+     "mean_net_return": 0.00024633579375972096,
+     "mean_net_return_ci95": [
+      -0.005496400784421542,
+      0.005989072371940983
+     ],
+     "mean_excess_vs_nifty": 0.001762476792999259,
+     "status": "INSUFFICIENT_SAMPLE"
+    },
+    "CORPORATE_ACTION": {
+     "calls": 34,
+     "sessions_with_calls": 27,
+     "hit_rate": 0.47058823529411764,
+     "hit_rate_ci95": [
+      0.31451251633111366,
+      0.6326355957994516
+     ],
+     "net_hit_rate": 0.3235294117647059,
+     "mean_gross_return": -0.005591845706846216,
+     "mean_net_return": -0.008591845706846216,
+     "mean_net_return_ci95": [
+      -0.016611803085176024,
+      -0.0005718883285164081
+     ],
+     "mean_excess_vs_nifty": -0.007076287040062723,
+     "status": "INSUFFICIENT_SAMPLE"
+    },
+    "EARNINGS": {
+     "calls": 237,
+     "sessions_with_calls": 118,
+     "hit_rate": 0.4472573839662447,
+     "hit_rate_ci95": [
+      0.38529723851289754,
+      0.5109000961668256
+     ],
+     "net_hit_rate": 0.3628691983122363,
+     "mean_gross_return": -0.0010001788900977763,
+     "mean_net_return": -0.004000178890097776,
+     "mean_net_return_ci95": [
+      -0.006000196602012984,
+      -0.002000161178182568
+     ],
+     "mean_excess_vs_nifty": -0.00048409233691654993,
+     "status": "OK"
+    },
+    "GUIDANCE": {
+     "calls": 16,
+     "sessions_with_calls": 14,
+     "hit_rate": 0.4375,
+     "hit_rate_ci95": [
+      0.2309836333518552,
+      0.6682180439322347
+     ],
+     "net_hit_rate": 0.4375,
+     "mean_gross_return": -0.003996691813286317,
+     "mean_net_return": -0.006996691813286317,
+     "mean_net_return_ci95": [
+      -0.015833645694582118,
+      0.0018402620680094848
+     ],
+     "mean_excess_vs_nifty": -0.004502764836997748,
+     "status": "INSUFFICIENT_SAMPLE"
+    },
+    "LITIGATION": {
+     "calls": 49,
+     "sessions_with_calls": 43,
+     "hit_rate": 0.3877551020408163,
+     "hit_rate_ci95": [
+      0.26428814373960496,
+      0.5275425351194757
+     ],
+     "net_hit_rate": 0.32653061224489793,
+     "mean_gross_return": -0.005380825885753882,
+     "mean_net_return": -0.008380825885753881,
+     "mean_net_return_ci95": [
+      -0.013210524880800975,
+      -0.003551126890706787
+     ],
+     "mean_excess_vs_nifty": -0.004579444066094954,
+     "status": "INSUFFICIENT_SAMPLE"
+    },
+    "MONETARY_POLICY": {
+     "calls": 37,
+     "sessions_with_calls": 24,
+     "hit_rate": 0.6216216216216216,
+     "hit_rate_ci95": [
+      0.4610014255281996,
+      0.7593621253610898
+     ],
+     "net_hit_rate": 0.5405405405405406,
+     "mean_gross_return": 0.003981497451149621,
+     "mean_net_return": 0.0009814974511496214,
+     "mean_net_return_ci95": [
+      -0.0030698688704667923,
+      0.0050328637727660355
+     ],
+     "mean_excess_vs_nifty": 0.0006260607915067089,
+     "status": "INSUFFICIENT_SAMPLE"
+    },
+    "ORDER_CONTRACT": {
+     "calls": 2,
+     "sessions_with_calls": 2,
+     "hit_rate": 0.0,
+     "hit_rate_ci95": [
+      0.0,
+      0.6576280471103807
+     ],
+     "net_hit_rate": 0.0,
+     "mean_gross_return": -0.00843031926188409,
+     "mean_net_return": -0.011430319261884089,
+     "mean_net_return_ci95": [
+      -0.02029150889320666,
+      -0.002569129630561518
+     ],
+     "mean_excess_vs_nifty": -0.007720949156898693,
+     "status": "INSUFFICIENT_SAMPLE"
+    },
+    "TRADE_TARIFF": {
+     "calls": 4,
+     "sessions_with_calls": 4,
+     "hit_rate": 0.75,
+     "hit_rate_ci95": [
+      0.3006360524426366,
+      0.9544139373553637
+     ],
+     "net_hit_rate": 0.25,
+     "mean_gross_return": -0.0002688683735737607,
+     "mean_net_return": -0.0032688683735737603,
+     "mean_net_return_ci95": [
+      -0.015291258849048537,
+      0.008753522101901017
+     ],
+     "mean_excess_vs_nifty": -0.0016091239656037537,
+     "status": "INSUFFICIENT_SAMPLE"
+    }
+   },
+   "news_combined": {
+    "BROKER_RATING": {
+     "calls": 21,
+     "sessions_with_calls": 19,
+     "hit_rate": 0.3333333333333333,
+     "hit_rate_ci95": [
+      0.17194536432683688,
+      0.5462692434278971
+     ],
+     "net_hit_rate": 0.2857142857142857,
+     "mean_gross_return": -0.0028804704404800257,
+     "mean_net_return": -0.005880470440480025,
+     "mean_net_return_ci95": [
+      -0.014481850048620345,
+      0.002720909167660295
+     ],
+     "mean_excess_vs_nifty": -0.002334399767991948,
+     "status": "INSUFFICIENT_SAMPLE"
+    },
+    "BUSINESS_UPDATE": {
+     "calls": 32,
+     "sessions_with_calls": 22,
+     "hit_rate": 0.5,
+     "hit_rate_ci95": [
+      0.33630614316859386,
+      0.6636938568314061
+     ],
+     "net_hit_rate": 0.4375,
+     "mean_gross_return": 0.0032463357937597206,
+     "mean_net_return": 0.00024633579375972096,
+     "mean_net_return_ci95": [
+      -0.005496400784421542,
+      0.005989072371940983
+     ],
+     "mean_excess_vs_nifty": 0.001762476792999259,
+     "status": "INSUFFICIENT_SAMPLE"
+    },
+    "CORPORATE_ACTION": {
+     "calls": 34,
+     "sessions_with_calls": 27,
+     "hit_rate": 0.47058823529411764,
+     "hit_rate_ci95": [
+      0.31451251633111366,
+      0.6326355957994516
+     ],
+     "net_hit_rate": 0.3235294117647059,
+     "mean_gross_return": -0.005591845706846216,
+     "mean_net_return": -0.008591845706846216,
+     "mean_net_return_ci95": [
+      -0.016611803085176024,
+      -0.0005718883285164081
+     ],
+     "mean_excess_vs_nifty": -0.007076287040062723,
+     "status": "INSUFFICIENT_SAMPLE"
+    },
+    "EARNINGS": {
+     "calls": 237,
+     "sessions_with_calls": 118,
+     "hit_rate": 0.4472573839662447,
+     "hit_rate_ci95": [
+      0.38529723851289754,
+      0.5109000961668256
+     ],
+     "net_hit_rate": 0.3628691983122363,
+     "mean_gross_return": -0.0010001788900977763,
+     "mean_net_return": -0.004000178890097776,
+     "mean_net_return_ci95": [
+      -0.006000196602012984,
+      -0.002000161178182568
+     ],
+     "mean_excess_vs_nifty": -0.00048409233691654993,
+     "status": "OK"
+    },
+    "GUIDANCE": {
+     "calls": 16,
+     "sessions_with_calls": 14,
+     "hit_rate": 0.4375,
+     "hit_rate_ci95": [
+      0.2309836333518552,
+      0.6682180439322347
+     ],
+     "net_hit_rate": 0.4375,
+     "mean_gross_return": -0.003996691813286317,
+     "mean_net_return": -0.006996691813286317,
+     "mean_net_return_ci95": [
+      -0.015833645694582118,
+      0.0018402620680094848
+     ],
+     "mean_excess_vs_nifty": -0.004502764836997748,
+     "status": "INSUFFICIENT_SAMPLE"
+    },
+    "LITIGATION": {
+     "calls": 49,
+     "sessions_with_calls": 43,
+     "hit_rate": 0.3877551020408163,
+     "hit_rate_ci95": [
+      0.26428814373960496,
+      0.5275425351194757
+     ],
+     "net_hit_rate": 0.32653061224489793,
+     "mean_gross_return": -0.005380825885753882,
+     "mean_net_return": -0.008380825885753881,
+     "mean_net_return_ci95": [
+      -0.013210524880800975,
+      -0.003551126890706787
+     ],
+     "mean_excess_vs_nifty": -0.004579444066094954,
+     "status": "INSUFFICIENT_SAMPLE"
+    },
+    "MONETARY_POLICY": {
+     "calls": 37,
+     "sessions_with_calls": 24,
+     "hit_rate": 0.6216216216216216,
+     "hit_rate_ci95": [
+      0.4610014255281996,
+      0.7593621253610898
+     ],
+     "net_hit_rate": 0.5405405405405406,
+     "mean_gross_return": 0.003981497451149621,
+     "mean_net_return": 0.0009814974511496214,
+     "mean_net_return_ci95": [
+      -0.0030698688704667923,
+      0.0050328637727660355
+     ],
+     "mean_excess_vs_nifty": 0.0006260607915067089,
+     "status": "INSUFFICIENT_SAMPLE"
+    },
+    "ORDER_CONTRACT": {
+     "calls": 2,
+     "sessions_with_calls": 2,
+     "hit_rate": 0.0,
+     "hit_rate_ci95": [
+      0.0,
+      0.6576280471103807
+     ],
+     "net_hit_rate": 0.0,
+     "mean_gross_return": -0.00843031926188409,
+     "mean_net_return": -0.011430319261884089,
+     "mean_net_return_ci95": [
+      -0.02029150889320666,
+      -0.002569129630561518
+     ],
+     "mean_excess_vs_nifty": -0.007720949156898693,
+     "status": "INSUFFICIENT_SAMPLE"
+    },
+    "TRADE_TARIFF": {
+     "calls": 4,
+     "sessions_with_calls": 4,
+     "hit_rate": 0.75,
+     "hit_rate_ci95": [
+      0.3006360524426366,
+      0.9544139373553637
+     ],
+     "net_hit_rate": 0.25,
+     "mean_gross_return": -0.0002688683735737607,
+     "mean_net_return": -0.0032688683735737603,
+     "mean_net_return_ci95": [
+      -0.015291258849048537,
+      0.008753522101901017
+     ],
+     "mean_excess_vs_nifty": -0.0016091239656037537,
+     "status": "INSUFFICIENT_SAMPLE"
+    }
+   }
+  }
+ },
+ "cost_sensitivity": {
+  "10.0bps": {
+   "development": {
+    "always_up": {
+     "calls": 2780,
+     "hit_rate": 0.48992805755395685,
+     "mean_net_return": -0.0014790161961171708,
+     "max_drawdown": 0.27116
+    },
+    "news_combined": {
+     "calls": 278,
+     "hit_rate": 0.49640287769784175,
+     "mean_net_return": -0.0014158239165671651,
+     "max_drawdown": 0.19472
+    },
+    "news_google_news": {
+     "calls": 278,
+     "hit_rate": 0.49640287769784175,
+     "mean_net_return": -0.0014158239165671651,
+     "max_drawdown": 0.19472
+    },
+    "previous_day": {
+     "calls": 2777,
+     "hit_rate": 0.4796543032048974,
+     "mean_net_return": -0.0016635938729712145,
+     "max_drawdown": 0.24843
+    },
+    "random_matched": {
+     "calls": 122,
+     "hit_rate": 0.5,
+     "mean_net_return": -0.0010468674154037716,
+     "max_drawdown": 0.1519
+    },
+    "sector": {
+     "calls": 1807,
+     "hit_rate": 0.484781405644715,
+     "mean_net_return": -0.0016831090692947365,
+     "max_drawdown": 0.27045
+    },
+    "v1_rank": {
+     "calls": 594,
+     "hit_rate": 0.494949494949495,
+     "mean_net_return": -0.0016795626295905792,
+     "max_drawdown": 0.34467
+    },
+    "v2": {
+     "calls": 122,
+     "hit_rate": 0.48360655737704916,
+     "mean_net_return": 0.0011268534291077412,
+     "max_drawdown": 0.10545
+    },
+    "v2_plus_news": {
+     "calls": 377,
+     "hit_rate": 0.4960212201591512,
+     "mean_net_return": -0.00062777095677953,
+     "max_drawdown": 0.08421
+    }
+   },
+   "validation": {
+    "always_up": {
+     "calls": 740,
+     "hit_rate": 0.5337837837837838,
+     "mean_net_return": -0.00013323798696023565,
+     "max_drawdown": 0.03941
+    },
+    "news_combined": {
+     "calls": 86,
+     "hit_rate": 0.3953488372093023,
+     "mean_net_return": -0.005596226484497237,
+     "max_drawdown": 0.19846
+    },
+    "news_google_news": {
+     "calls": 86,
+     "hit_rate": 0.3953488372093023,
+     "mean_net_return": -0.005596226484497237,
+     "max_drawdown": 0.19846
+    },
+    "previous_day": {
+     "calls": 740,
+     "hit_rate": 0.5324324324324324,
+     "mean_net_return": -0.0006525203195482653,
+     "max_drawdown": 0.05472
+    },
+    "random_matched": {
+     "calls": 27,
+     "hit_rate": 0.5555555555555556,
+     "mean_net_return": 0.0010950034764128024,
+     "max_drawdown": 0.03688
+    },
+    "sector": {
+     "calls": 481,
+     "hit_rate": 0.5343035343035343,
+     "mean_net_return": 0.000584116662623821,
+     "max_drawdown": 0.0682
+    },
+    "v1_rank": {
+     "calls": 111,
+     "hit_rate": 0.5495495495495496,
+     "mean_net_return": -0.001410573645178643,
+     "max_drawdown": 0.07824
+    },
+    "v2": {
+     "calls": 27,
+     "hit_rate": 0.4444444444444444,
+     "mean_net_return": -0.006809860875746338,
+     "max_drawdown": 0.12063
+    },
+    "v2_plus_news": {
+     "calls": 111,
+     "hit_rate": 0.40540540540540543,
+     "mean_net_return": -0.006145577966756589,
+     "max_drawdown": 0.22435
+    }
+   },
+   "holdout": {
+    "always_up": {
+     "calls": 860,
+     "hit_rate": 0.39767441860465114,
+     "mean_net_return": -0.003206989510077674,
+     "max_drawdown": 0.15344
+    },
+    "news_combined": {
+     "calls": 68,
+     "hit_rate": 0.36764705882352944,
+     "mean_net_return": -0.0020459706191665933,
+     "max_drawdown": 0.15034
+    },
+    "news_google_news": {
+     "calls": 68,
+     "hit_rate": 0.36764705882352944,
+     "mean_net_return": -0.0020459706191665933,
+     "max_drawdown": 0.15034
+    },
+    "previous_day": {
+     "calls": 852,
+     "hit_rate": 0.4295774647887324,
+     "mean_net_return": -0.0028091937372492844,
+     "max_drawdown": 0.1197
+    },
+    "random_matched": {
+     "calls": 25,
+     "hit_rate": 0.52,
+     "mean_net_return": 0.0006841415351168094,
+     "max_drawdown": 0.04883
+    },
+    "sector": {
+     "calls": 559,
+     "hit_rate": 0.481216457960644,
+     "mean_net_return": -0.001180427270302006,
+     "max_drawdown": 0.05407
+    },
+    "v1_rank": {
+     "calls": 176,
+     "hit_rate": 0.3977272727272727,
+     "mean_net_return": -0.0035345582318115423,
+     "max_drawdown": 0.16911
+    },
+    "v2": {
+     "calls": 25,
+     "hit_rate": 0.28,
+     "mean_net_return": -0.00746214785325257,
+     "max_drawdown": 0.07253
+    },
+    "v2_plus_news": {
+     "calls": 93,
+     "hit_rate": 0.34408602150537637,
+     "mean_net_return": -0.003501932241232716,
+     "max_drawdown": 0.18259
+    }
+   }
+  },
+  "50.0bps": {
+   "development": {
+    "always_up": {
+     "calls": 2780,
+     "hit_rate": 0.48992805755395685,
+     "mean_net_return": -0.005479016196117171,
+     "max_drawdown": 0.77056
+    },
+    "news_combined": {
+     "calls": 278,
+     "hit_rate": 0.49640287769784175,
+     "mean_net_return": -0.005415823916567165,
+     "max_drawdown": 0.59072
+    },
+    "news_google_news": {
+     "calls": 278,
+     "hit_rate": 0.49640287769784175,
+     "mean_net_return": -0.005415823916567165,
+     "max_drawdown": 0.59072
+    },
+    "previous_day": {
+     "calls": 2777,
+     "hit_rate": 0.4796543032048974,
+     "mean_net_return": -0.005663593872971214,
+     "max_drawdown": 0.78749
+    },
+    "random_matched": {
+     "calls": 122,
+     "hit_rate": 0.5,
+     "mean_net_return": -0.005046867415403771,
+     "max_drawdown": 0.40932
+    },
+    "sector": {
+     "calls": 1807,
+     "hit_rate": 0.484781405644715,
+     "mean_net_return": -0.005683109069294736,
+     "max_drawdown": 0.79133
+    },
+    "v1_rank": {
+     "calls": 594,
+     "hit_rate": 0.494949494949495,
+     "mean_net_return": -0.005679562629590579,
+     "max_drawdown": 0.83818
+    },
+    "v2": {
+     "calls": 122,
+     "hit_rate": 0.48360655737704916,
+     "mean_net_return": -0.002873146570892259,
+     "max_drawdown": 0.18772
+    },
+    "v2_plus_news": {
+     "calls": 377,
+     "hit_rate": 0.4960212201591512,
+     "mean_net_return": -0.00462777095677953,
+     "max_drawdown": 0.42722
+    }
+   },
+   "validation": {
+    "always_up": {
+     "calls": 740,
+     "hit_rate": 0.5337837837837838,
+     "mean_net_return": -0.0041332379869602354,
+     "max_drawdown": 0.16676
+    },
+    "news_combined": {
+     "calls": 86,
+     "hit_rate": 0.3953488372093023,
+     "mean_net_return": -0.009596226484497237,
+     "max_drawdown": 0.32246
+    },
+    "news_google_news": {
+     "calls": 86,
+     "hit_rate": 0.3953488372093023,
+     "mean_net_return": -0.009596226484497237,
+     "max_drawdown": 0.32246
+    },
+    "previous_day": {
+     "calls": 740,
+     "hit_rate": 0.5324324324324324,
+     "mean_net_return": -0.004652520319548265,
+     "max_drawdown": 0.17881
+    },
+    "random_matched": {
+     "calls": 27,
+     "hit_rate": 0.5555555555555556,
+     "mean_net_return": -0.0029049965235871974,
+     "max_drawdown": 0.06931
+    },
+    "sector": {
+     "calls": 481,
+     "hit_rate": 0.5343035343035343,
+     "mean_net_return": -0.003415883337376179,
+     "max_drawdown": 0.14872
+    },
+    "v1_rank": {
+     "calls": 111,
+     "hit_rate": 0.5495495495495496,
+     "mean_net_return": -0.005410573645178642,
+     "max_drawdown": 0.20019
+    },
+    "v2": {
+     "calls": 27,
+     "hit_rate": 0.4444444444444444,
+     "mean_net_return": -0.010809860875746338,
+     "max_drawdown": 0.17263
+    },
+    "v2_plus_news": {
+     "calls": 111,
+     "hit_rate": 0.40540540540540543,
+     "mean_net_return": -0.010145577966756589,
+     "max_drawdown": 0.37235
+    }
+   },
+   "holdout": {
+    "always_up": {
+     "calls": 860,
+     "hit_rate": 0.39767441860465114,
+     "mean_net_return": -0.007206989510077674,
+     "max_drawdown": 0.32144
+    },
+    "news_combined": {
+     "calls": 68,
+     "hit_rate": 0.36764705882352944,
+     "mean_net_return": -0.006045970619166593,
+     "max_drawdown": 0.26234
+    },
+    "news_google_news": {
+     "calls": 68,
+     "hit_rate": 0.36764705882352944,
+     "mean_net_return": -0.006045970619166593,
+     "max_drawdown": 0.26234
+    },
+    "previous_day": {
+     "calls": 852,
+     "hit_rate": 0.4295774647887324,
+     "mean_net_return": -0.006809193737249284,
+     "max_drawdown": 0.2917
+    },
+    "random_matched": {
+     "calls": 25,
+     "hit_rate": 0.52,
+     "mean_net_return": -0.0033158584648831906,
+     "max_drawdown": 0.06083
+    },
+    "sector": {
+     "calls": 559,
+     "hit_rate": 0.481216457960644,
+     "mean_net_return": -0.005180427270302006,
+     "max_drawdown": 0.22276
+    },
+    "v1_rank": {
+     "calls": 176,
+     "hit_rate": 0.3977272727272727,
+     "mean_net_return": -0.007534558231811542,
+     "max_drawdown": 0.33623
+    },
+    "v2": {
+     "calls": 25,
+     "hit_rate": 0.28,
+     "mean_net_return": -0.011462147853252568,
+     "max_drawdown": 0.1141
+    },
+    "v2_plus_news": {
+     "calls": 93,
+     "hit_rate": 0.34408602150537637,
+     "mean_net_return": -0.0075019322412327154,
+     "max_drawdown": 0.30659
+    }
+   }
+  }
+ },
+ "verdicts": [
+  {
+   "arm": "news_google_news",
+   "against": "v2",
+   "result": "INSUFFICIENT_SAMPLE",
+   "calls": 68,
+   "comparator_calls": 25
+  },
+  {
+   "arm": "news_google_news",
+   "against": "always_up",
+   "result": "INSUFFICIENT_SAMPLE",
+   "calls": 68,
+   "comparator_calls": 860
+  },
+  {
+   "arm": "news_google_news",
+   "against": "random_matched",
+   "result": "INSUFFICIENT_SAMPLE",
+   "calls": 68,
+   "comparator_calls": 25
+  },
+  {
+   "arm": "news_combined",
+   "against": "v2",
+   "result": "INSUFFICIENT_SAMPLE",
+   "calls": 68,
+   "comparator_calls": 25
+  },
+  {
+   "arm": "news_combined",
+   "against": "always_up",
+   "result": "INSUFFICIENT_SAMPLE",
+   "calls": 68,
+   "comparator_calls": 860
+  },
+  {
+   "arm": "news_combined",
+   "against": "random_matched",
+   "result": "INSUFFICIENT_SAMPLE",
+   "calls": 68,
+   "comparator_calls": 25
+  },
+  {
+   "arm": "v2_plus_news",
+   "against": "v2",
+   "result": "INSUFFICIENT_SAMPLE",
+   "calls": 93,
+   "comparator_calls": 25
+  },
+  {
+   "arm": "v2_plus_news",
+   "against": "always_up",
+   "result": "INSUFFICIENT_SAMPLE",
+   "calls": 93,
+   "comparator_calls": 860
+  },
+  {
+   "arm": "v2_plus_news",
+   "against": "random_matched",
+   "result": "INSUFFICIENT_SAMPLE",
+   "calls": 93,
+   "comparator_calls": 25
+  },
+  {
+   "arm": "v2",
+   "against": "always_up",
+   "result": "INSUFFICIENT_SAMPLE",
+   "calls": 25,
+   "comparator_calls": 860
+  },
+  {
+   "arm": "v2",
+   "against": "random_matched",
+   "result": "INSUFFICIENT_SAMPLE",
+   "calls": 25,
+   "comparator_calls": 25
+  },
+  {
+   "arm": "v1_rank",
+   "against": "v2",
+   "result": "INSUFFICIENT_SAMPLE",
+   "calls": 176,
+   "comparator_calls": 25
+  },
+  {
+   "arm": "v1_rank",
+   "against": "always_up",
+   "result": "NO_EVIDENCE_OF_IMPROVEMENT",
+   "mean_net": -0.0055345582318115415,
+   "mean_net_ci95": [
+    -0.007602642668229444,
+    -0.0034806600133695975
+   ],
+   "comparator_mean_net": -0.005206989510077673,
+   "hit_rate": 0.3977272727272727,
+   "comparator_hit_rate": 0.39767441860465114
+  },
+  {
+   "arm": "v1_rank",
+   "against": "random_matched",
+   "result": "INSUFFICIENT_SAMPLE",
+   "calls": 176,
+   "comparator_calls": 25
+  }
+ ],
+ "limitations": [
+  "20 large caps only: results do not generalise to mid / small caps.",
+  "Google News is not point in time (edited headlines, ranking today): its arm is optimistic.",
+  "GDELT covers about 3 months and is rate-limited from this network.",
+  "StockLens's own archive is only as long as ingestion has run (scheduler not active).",
+  "Marketaux / Alpha Vantage arms are untested without keys; free quotas cannot backfill a year.",
+  "NSE / BSE filings are not used: exchange terms prohibit automated collection without permission.",
+  "Daily Yahoo bars; v1 baseline from month-end research snapshots; thresholds fixed a priori."
+ ],
+ "runtime_seconds": 1070.5
+}
