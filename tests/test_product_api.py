@@ -66,6 +66,7 @@ def _seed_run(db, now=None):
         s.add(EngineRun(run_id="RANKING-T", kind="RANKING", status="COMPLETED", started_at=now,
                         finished_at=now, engine_version="ranking-v1.0", fqvf_version="fqvf-v1.0",
                         total=3, processed=3, succeeded=3, errors=[]))
+        s.flush()   # parents first: PostgreSQL enforces the foreign keys SQLite ignores
         s.add(MarketRegimeSnapshot(run_id="RANKING-T", regime="Bullish", regime_score=0.5, as_of_date="2026-10-01"))
         s.add(MarketSnapshot(symbol="AAA.NS", fetched_at=now - timedelta(seconds=1), status="OK",
                              as_of_date=(now - timedelta(days=10)).date().isoformat(), close=100.0, technical={}))

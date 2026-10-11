@@ -29,7 +29,8 @@ def main(argv=None) -> int:
     dest = Path(args.web) / "tests" / "StockLens.Web.Tests" / "TestData"
     body = news_benchmark(include_outcomes=False)
     (dest / "news_benchmark.json").write_text(json.dumps(body, indent=1, default=str), encoding="utf-8")
-    for name in ("news_candidates_tomorrow.json", "news_status.json"):
+    for name in ("news_candidates_tomorrow.json", "news_status.json", "predictions_tomorrow.json",
+                 "prediction_detail.json"):
         shutil.copyfile(ROOT / "tests" / "contracts" / name, dest / name)
     print(f"wrote {dest}")
     return 0

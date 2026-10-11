@@ -46,9 +46,9 @@ jobs:
       - run: python -m pytest -q -p no:warnings
 
   tests-postgres:
-    name: Migrations and API tests (PostgreSQL 16)
+    name: Migrations and full test suite (PostgreSQL 16)
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 60
     services:
       postgres:
         image: postgres:16
@@ -73,13 +73,5 @@ jobs:
       - run: pip install --extra-index-url https://download.pytorch.org/whl/cpu -r requirements.txt
       - name: Alembic on PostgreSQL (single head, empty -> head, upgrade from the production schema, rollback)
         run: python -m pytest -q -p no:warnings tests/test_postgres_migrations.py
-      - name: Authentication, password reset, news, predictions and scheduler on PostgreSQL
-        run: >-
-          python -m pytest -q -p no:warnings
-          tests/test_auth.py tests/test_auth_routes.py tests/test_auth_otp_routes.py tests/test_auth_sso_routes.py
-          tests/test_authorization_security.py tests/test_business_endpoint_auth.py tests/test_google_id_token_security.py
-          tests/test_password_reset.py tests/test_set_admin_password.py tests/test_auth_concurrency.py
-          tests/test_engine_run_concurrency.py tests/test_migration_engine_run_guard.py
-          tests/test_news_api.py tests/test_news_e2e.py tests/test_news_candidates.py tests/test_catalysts.py
-          tests/test_news_replay.py tests/test_prediction_api.py tests/test_prediction_v2.py tests/test_prediction_jobs.py
-          tests/test_prediction_feedback.py tests/test_scheduler.py
+      - name: Full test suite on PostgreSQL (authentication, password reset, news, predictions, scheduler, ranking ...)
+        run: python -m pytest -q -p no:warnings

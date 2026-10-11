@@ -1,0 +1,248 @@
+{
+ "data": {
+  "freshness": {
+   "detail": "Forecast for the next trading session (2026-10-12).",
+   "status": "FRESH",
+   "target_session_date": "2026-10-12"
+  },
+  "notice": "Prediction Engine v2 is in shadow mode: experimental, unvalidated output for internal evaluation. It is not investment advice and not a recommendation to trade.",
+  "page": 1,
+  "page_size": 500,
+  "predictions": [
+   {
+    "calibration_version": null,
+    "confidence": null,
+    "created_at": "2026-10-09T14:00:00+00:00",
+    "direction": "UP",
+    "entry_condition": "next session opens within 0.5 ATR of the reference close (not gapping below the stop)",
+    "event_ids": [
+     2
+    ],
+    "horizon_sessions": 1,
+    "invalidation_condition": "close beyond the stop level, or the 5-session relative strength vs NIFTY turns negative; or a credible report contradicts or reverses the catalyst",
+    "name": "Sone Steelworks Limited",
+    "prediction_id": "7aa289309b6944d590139db4ac52bb72",
+    "quality_flags": [
+     "NEWS_DRIVEN"
+    ],
+    "reasons": [
+     "news evidence +0.54 from 1 event(s); strongest: Sone Steelworks quarterly results: net profit jumps to a record, beats estimates",
+     "no technical setup"
+    ],
+    "reference_date": "2026-10-09",
+    "reference_price": 102.51734117398313,
+    "run_id": "PRED-TOMORROW_EOD-20261009-2260e5",
+    "sector": "Energy",
+    "setup_type": "NEWS_CATALYST",
+    "stop_loss": 100.39,
+    "symbol": "S1.NS",
+    "target": 105.36,
+    "trailing_stop_rule": "trail 1 ATR from the best close after the target is reached"
+   },
+   {
+    "calibration_version": null,
+    "confidence": null,
+    "created_at": "2026-10-09T14:00:00+00:00",
+    "direction": "NEUTRAL",
+    "entry_condition": null,
+    "event_ids": [],
+    "horizon_sessions": 1,
+    "invalidation_condition": null,
+    "name": "S0.NS",
+    "prediction_id": "163576fecd984bf1b0a00a1b71da6ea1",
+    "quality_flags": [],
+    "reasons": [
+     "no setup matched"
+    ],
+    "reference_date": "2026-10-09",
+    "reference_price": 90.29992803441745,
+    "run_id": "PRED-TOMORROW_EOD-20261009-2260e5",
+    "sector": "Energy",
+    "setup_type": "NONE",
+    "stop_loss": null,
+    "symbol": "S0.NS",
+    "target": null,
+    "trailing_stop_rule": null
+   },
+   {
+    "calibration_version": null,
+    "confidence": null,
+    "created_at": "2026-10-09T14:00:00+00:00",
+    "direction": "NEUTRAL",
+    "entry_condition": null,
+    "event_ids": [],
+    "horizon_sessions": 1,
+    "invalidation_condition": null,
+    "name": "Stwo Pharma Limited",
+    "prediction_id": "395323f68a5a45c4bde156a82e7825cb",
+    "quality_flags": [],
+    "reasons": [
+     "no setup matched"
+    ],
+    "reference_date": "2026-10-09",
+    "reference_price": 102.74929603037994,
+    "run_id": "PRED-TOMORROW_EOD-20261009-2260e5",
+    "sector": "Energy",
+    "setup_type": "NONE",
+    "stop_loss": null,
+    "symbol": "S2.NS",
+    "target": null,
+    "trailing_stop_rule": null
+   },
+   {
+    "calibration_version": null,
+    "confidence": null,
+    "created_at": "2026-10-09T14:00:00+00:00",
+    "direction": "NEUTRAL",
+    "entry_condition": null,
+    "event_ids": [],
+    "horizon_sessions": 1,
+    "invalidation_condition": null,
+    "name": "S3.NS",
+    "prediction_id": "c39a13284ec0473283dc1695b0fa7481",
+    "quality_flags": [],
+    "reasons": [
+     "no setup matched"
+    ],
+    "reference_date": "2026-10-09",
+    "reference_price": 105.52799161398025,
+    "run_id": "PRED-TOMORROW_EOD-20261009-2260e5",
+    "sector": "Energy",
+    "setup_type": "NONE",
+    "stop_loss": null,
+    "symbol": "S3.NS",
+    "target": null,
+    "trailing_stop_rule": null
+   },
+   {
+    "calibration_version": null,
+    "confidence": null,
+    "created_at": "2026-10-09T14:00:00+00:00",
+    "direction": "NEUTRAL",
+    "entry_condition": null,
+    "event_ids": [],
+    "horizon_sessions": 1,
+    "invalidation_condition": null,
+    "name": "S4.NS",
+    "prediction_id": "9c8145f1f2394773bc092219160e4e1a",
+    "quality_flags": [],
+    "reasons": [
+     "no setup matched"
+    ],
+    "reference_date": "2026-10-09",
+    "reference_price": 98.18878811066027,
+    "run_id": "PRED-TOMORROW_EOD-20261009-2260e5",
+    "sector": "Energy",
+    "setup_type": "NONE",
+    "stop_loss": null,
+    "symbol": "S4.NS",
+    "target": null,
+    "trailing_stop_rule": null
+   },
+   {
+    "calibration_version": null,
+    "confidence": null,
+    "created_at": "2026-10-09T14:00:00+00:00",
+    "direction": "NEUTRAL",
+    "entry_condition": null,
+    "event_ids": [],
+    "horizon_sessions": 1,
+    "invalidation_condition": null,
+    "name": "S5.NS",
+    "prediction_id": "289f3e9362fb49f285ec9c246c5b87ea",
+    "quality_flags": [],
+    "reasons": [
+     "no setup matched"
+    ],
+    "reference_date": "2026-10-09",
+    "reference_price": 110.19364045385149,
+    "run_id": "PRED-TOMORROW_EOD-20261009-2260e5",
+    "sector": "IT",
+    "setup_type": "NONE",
+    "stop_loss": null,
+    "symbol": "S5.NS",
+    "target": null,
+    "trailing_stop_rule": null
+   },
+   {
+    "calibration_version": null,
+    "confidence": null,
+    "created_at": "2026-10-09T14:00:00+00:00",
+    "direction": "NEUTRAL",
+    "entry_condition": null,
+    "event_ids": [],
+    "horizon_sessions": 1,
+    "invalidation_condition": null,
+    "name": "S6.NS",
+    "prediction_id": "cc07a9a2a01740b1a2fc893b3cbe2cd2",
+    "quality_flags": [],
+    "reasons": [
+     "no setup matched"
+    ],
+    "reference_date": "2026-10-09",
+    "reference_price": 106.33062284541982,
+    "run_id": "PRED-TOMORROW_EOD-20261009-2260e5",
+    "sector": "IT",
+    "setup_type": "NONE",
+    "stop_loss": null,
+    "symbol": "S6.NS",
+    "target": null,
+    "trailing_stop_rule": null
+   },
+   {
+    "calibration_version": null,
+    "confidence": null,
+    "created_at": "2026-10-09T14:00:00+00:00",
+    "direction": "NEUTRAL",
+    "entry_condition": null,
+    "event_ids": [],
+    "horizon_sessions": 1,
+    "invalidation_condition": null,
+    "name": "S7.NS",
+    "prediction_id": "fdf7b273f11e4ac2a8fd23ac94c7047a",
+    "quality_flags": [],
+    "reasons": [
+     "no setup matched"
+    ],
+    "reference_date": "2026-10-09",
+    "reference_price": 94.0173021304099,
+    "run_id": "PRED-TOMORROW_EOD-20261009-2260e5",
+    "sector": "IT",
+    "setup_type": "NONE",
+    "stop_loss": null,
+    "symbol": "S7.NS",
+    "target": null,
+    "trailing_stop_rule": null
+   }
+  ],
+  "run": {
+   "completed_at": "2026-10-11T14:23:41.667996+00:00",
+   "counts": {
+    "DOWN": 0,
+    "NEUTRAL": 7,
+    "NO_CALL": 0,
+    "UP": 1
+   },
+   "data_cutoff_at": "2026-10-09T14:00:00+00:00",
+   "eligible_count": 8,
+   "engine_version": "prediction-v2.0-shadow",
+   "failure_reason": null,
+   "feature_set_version": "v2-features-0.1",
+   "holiday_calendar_configured": false,
+   "prediction_count": 8,
+   "rule_version": "baseline-v0.1",
+   "run_id": "PRED-TOMORROW_EOD-20261009-2260e5",
+   "run_type": "TOMORROW_EOD",
+   "started_at": "2026-10-09T14:00:00+00:00",
+   "status": "COMPLETED",
+   "target_session_date": "2026-10-12",
+   "trading_date": "2026-10-09",
+   "universe_count": 8
+  },
+  "session": "tomorrow",
+  "shadow": true,
+  "total": 8
+ },
+ "message": "Prediction snapshot retrieved",
+ "success": true
+}

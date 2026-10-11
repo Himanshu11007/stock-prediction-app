@@ -258,10 +258,11 @@ def test_processing_the_same_run_twice_never_duplicates(db, router):
         again = notify.process_ranking_run(s, "R2", now=NOON_IST, router=router)
         assert again.id == first.id and len(s.exec(select(Notification)).all()) == count
         # even if the run record were removed, (user, dedup_key) blocks duplicates
-        s.delete(s.get(NotificationRun, first.id))
-        for n in s.exec(select(Notification)).all():
+        for n in s.exec(select(Notification)).all():        # detach first: PostgreSQL enforces the foreign key
             n.notification_run_id = None
             s.add(n)
+        s.flush()
+        s.delete(s.get(NotificationRun, first.id))
         s.commit()
         notify.process_ranking_run(s, "R2", now=NOON_IST, router=router)
         assert len(s.exec(select(Notification)).all()) == count

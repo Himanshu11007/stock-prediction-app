@@ -1,0 +1,204 @@
+{
+ "data": {
+  "current_price": {
+   "current_price": null,
+   "current_price_as_of": null,
+   "current_price_date": null,
+   "current_price_source": null,
+   "current_price_status": "NOT_AVAILABLE",
+   "note": "current market price; the prediction used the reference price at its cutoff and is not recalculated"
+  },
+  "events": [
+   {
+    "effective_available_at": "2026-10-09T08:30:00+00:00",
+    "event_type": "EARNINGS_SURPRISE",
+    "id": 2,
+    "ingested_at": "2026-10-09T08:30:00+00:00",
+    "published_at": "2026-10-09T08:00:00+00:00",
+    "source": "news",
+    "source_event_id": "news:489e6a5f3bb8c2c3:202610090800",
+    "source_reference": "https://www.reuters.com/sone-results",
+    "symbol": "S1.NS",
+    "title": "Sone Steelworks quarterly results: net profit jumps to a record, beats estimates"
+   }
+  ],
+  "exit": {
+   "mode": "SHADOW (non-actionable)",
+   "state": null,
+   "transitions": []
+  },
+  "notice": "Prediction Engine v2 is in shadow mode: experimental, unvalidated output for internal evaluation. It is not investment advice and not a recommendation to trade.",
+  "outcomes": [],
+  "prediction": {
+   "calibration_version": null,
+   "confidence": null,
+   "created_at": "2026-10-09T14:00:00+00:00",
+   "direction": "UP",
+   "entry_condition": "next session opens within 0.5 ATR of the reference close (not gapping below the stop)",
+   "event_ids": [
+    2
+   ],
+   "features": {
+    "abnormal_volume": 1.0,
+    "atr_pct": 0.013856116520841904,
+    "close": 102.51734117398313,
+    "close_location": 0.5995995995996,
+    "cutoff_date": "2026-10-09",
+    "data_completeness": 1.0,
+    "dist_high_20": -0.013720409609991102,
+    "dist_low_20": 0.03510042677575265,
+    "feature_set_version": "v2-features-0.1",
+    "gap_pct": -0.006372819526741624,
+    "high": 103.02992787985303,
+    "history_sessions": 120,
+    "last_session_date": "2026-10-09",
+    "low": 101.74974258194294,
+    "news": {
+     "as_of": "2026-10-09T19:30:00+05:30",
+     "classifier_version": "news-rules-0.1",
+     "confidence": null,
+     "confidence_note": "not calibrated: the score is evidence strength, not a probability",
+     "direction": "UP",
+     "evidence": [
+      {
+       "articles": [
+        {
+         "available_at": "2026-10-09T08:30:00+00:00",
+         "corrected_at": null,
+         "ingested_at": "2026-10-09T08:30:00+00:00",
+         "provider": "marketaux",
+         "provider_first_seen_at": null,
+         "published_at": "2026-10-09T08:00:00+00:00",
+         "published_raw": "2026-10-09T08:00:00.000000Z",
+         "published_tz": "Z",
+         "quality_flags": [],
+         "source": "reuters.com",
+         "source_tier": "TIER1",
+         "title": "Sone Steelworks quarterly results: net profit jumps to a record, beats estimates",
+         "url": "https://www.reuters.com/sone-results"
+        },
+        {
+         "available_at": "2026-10-09T08:30:00+00:00",
+         "corrected_at": null,
+         "ingested_at": "2026-10-09T08:30:00+00:00",
+         "provider": "marketaux",
+         "provider_first_seen_at": null,
+         "published_at": "2026-10-09T08:00:00+00:00",
+         "published_raw": "2026-10-09T08:00:00.000000Z",
+         "published_tz": "Z",
+         "quality_flags": [
+          "AGGREGATOR_LINK"
+         ],
+         "source": "reuters.com",
+         "source_tier": "TIER1",
+         "title": "Sone Steelworks quarterly results: net profit jumps to a record, beats estimates",
+         "url": "https://www.livemint.com/sone-results-syndicated"
+        }
+       ],
+       "available_at": "2026-10-09T08:30:00+00:00",
+       "category": "EARNINGS",
+       "event_id": 2,
+       "expectedness": "UNEXPECTED",
+       "flags": [],
+       "hypothesis_id": "",
+       "impact_sessions": 3,
+       "inferred": false,
+       "mapping": {
+        "confidence": 1.0,
+        "evidence": {
+         "article_id": 2,
+         "matched": "S1.NS",
+         "source": "provider_tag"
+        },
+        "method": "PROVIDER",
+        "relation": "SUBJECT"
+       },
+       "materiality": 0.765,
+       "mechanism": null,
+       "novelty": "FOLLOW_UP",
+       "relation": "SUBJECT",
+       "sentiment": 0.857,
+       "sign": 1,
+       "source_tier": "TIER1",
+       "sources": [
+        "reuters.com"
+       ],
+       "title": "Sone Steelworks quarterly results: net profit jumps to a record, beats estimates",
+       "weight": 0.535
+      }
+     ],
+     "news_sentiment": 0.857,
+     "novelty": "FOLLOW_UP",
+     "reasons": [
+      "news evidence +0.54 from 1 event(s); strongest: Sone Steelworks quarterly results: net profit jumps to a record, beats estimates"
+     ],
+     "rule_version": "news-v0.1",
+     "score": 0.535,
+     "status": "DIRECTIONAL",
+     "surprise": "UNEXPECTED",
+     "symbol": "S1.NS",
+     "transmission_version": "transmission-0.1"
+    },
+    "open": 102.26104782104818,
+    "range_pct": 0.01243901695855601,
+    "ret_1": -0.0038825258413450747,
+    "ret_20": 0.011643060990140564,
+    "ret_3": 0.006492556620043111,
+    "ret_5": 0.0056754556814304635,
+    "rs_nifty_20": 0.04386313870320946,
+    "rs_nifty_5": 0.013173612573908478,
+    "sector_peer_count": 4,
+    "sector_rs_5": 0.0033943824702191705,
+    "traded_value_20": 101346080.23016922,
+    "vol_20": 0.10784698618529726
+   },
+   "horizon_sessions": 1,
+   "invalidation_condition": "close beyond the stop level, or the 5-session relative strength vs NIFTY turns negative; or a credible report contradicts or reverses the catalyst",
+   "name": "Sone Steelworks Limited",
+   "prediction_id": "7aa289309b6944d590139db4ac52bb72",
+   "quality_flags": [
+    "NEWS_DRIVEN"
+   ],
+   "reasons": [
+    "news evidence +0.54 from 1 event(s); strongest: Sone Steelworks quarterly results: net profit jumps to a record, beats estimates",
+    "no technical setup"
+   ],
+   "reference_date": "2026-10-09",
+   "reference_price": 102.51734117398313,
+   "run_id": "PRED-TOMORROW_EOD-20261009-2260e5",
+   "sector": "Energy",
+   "setup_type": "NEWS_CATALYST",
+   "stop_loss": 100.39,
+   "symbol": "S1.NS",
+   "target": 105.36,
+   "trailing_stop_rule": "trail 1 ATR from the best close after the target is reached"
+  },
+  "run": {
+   "completed_at": "2026-10-11T14:23:41.667996+00:00",
+   "counts": {
+    "DOWN": 0,
+    "NEUTRAL": 7,
+    "NO_CALL": 0,
+    "UP": 1
+   },
+   "data_cutoff_at": "2026-10-09T14:00:00+00:00",
+   "eligible_count": 8,
+   "engine_version": "prediction-v2.0-shadow",
+   "failure_reason": null,
+   "feature_set_version": "v2-features-0.1",
+   "holiday_calendar_configured": false,
+   "prediction_count": 8,
+   "rule_version": "baseline-v0.1",
+   "run_id": "PRED-TOMORROW_EOD-20261009-2260e5",
+   "run_type": "TOMORROW_EOD",
+   "started_at": "2026-10-09T14:00:00+00:00",
+   "status": "COMPLETED",
+   "target_session_date": "2026-10-12",
+   "trading_date": "2026-10-09",
+   "universe_count": 8
+  },
+  "shadow": true
+ },
+ "message": "Prediction retrieved",
+ "success": true
+}

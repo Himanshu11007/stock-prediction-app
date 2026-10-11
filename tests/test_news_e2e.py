@@ -162,6 +162,15 @@ def test_ingestion_to_screen_snapshot_api_and_contract(client, db):
     assert st["data"]["coverage"]["universe"] == len(SYMS) and "S1.NS" not in st["data"]["coverage"]["without_news"]
     _contract("news_candidates_tomorrow.json", body)
     _contract("news_status.json", st)
+    # the v2 snapshot and its explanation, as the web prediction pages receive them
+    snap_api = client.get("/api/v1/predictions?session=tomorrow&page_size=500", headers=ADMIN()).json()
+    assert {p["prediction_id"] for p in snap_api["data"]["predictions"]} >= {p1.prediction_id}
+    detail = client.get(f"/api/v1/predictions/{p1.prediction_id}", headers=ADMIN()).json()
+    news = detail["data"]["prediction"]["features"]["news"]
+    assert news["status"] == "DIRECTIONAL" and news["evidence"][0]["articles"][0]["url"] == a["url"]
+    assert news["confidence"] is None
+    _contract("predictions_tomorrow.json", snap_api)
+    _contract("prediction_detail.json", detail)
 
 
 def test_without_any_ingestion_the_screen_says_unavailable(client, db):

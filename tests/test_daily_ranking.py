@@ -112,6 +112,8 @@ def _publish(s, run_id, day, scores, ref_prices, status="COMPLETED", started=Non
     if run is None:
         run = EngineRun(run_id=run_id, kind="RANKING", started_at=started, engine_version="ranking-v1.0",
                         fqvf_version="fqvf-v1.0", config={})
+    s.add(run)
+    s.flush()       # the run row first, as the engine writes it: PostgreSQL enforces results.run_id
     ranked = sorted(scores, key=lambda x: -scores[x])
     for sym, sc in scores.items():
         s.add(StockAnalysisResult(
