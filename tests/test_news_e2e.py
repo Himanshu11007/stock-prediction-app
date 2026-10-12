@@ -108,7 +108,7 @@ def _contract(name: str, payload: dict):
     assert not missing, f"API no longer provides fields the web relies on ({name}): {missing}"
 
 
-def test_ingestion_to_screen_snapshot_api_and_contract(client, db):
+def test_ingestion_to_screen_snapshot_api_and_contract(client, db, monkeypatch):
     _universe(db)
 
     # 1. ingestion: every provider handled; nothing fabricated for the failing / unconfigured ones
@@ -158,6 +158,13 @@ def test_ingestion_to_screen_snapshot_api_and_contract(client, db):
     health = {p["provider"]: p["health"] for p in data["news_status"]["providers"]}
     assert health["gdelt"] == "FAILING" and health["alphavantage"] == "NOT_CONFIGURED"
     assert data["news_status"]["data_basis"] in ("REAL", "STALE")                # real ingestion, possibly old
+    # The admin status endpoint reads the wall clock and counts coverage over
+    # the last 72 h; pin it to this test's NOW so the fixed Oct 9 articles stay
+    # inside the window whatever day the suite runs (it failed from Oct 12).
+    import catalysts.status as news_status_mod
+    real_status = news_status_mod.news_status
+    monkeypatch.setattr(news_status_mod, "news_status",
+                        lambda session, now, *a, **k: real_status(session, NOW, *a, **k))
     st = client.get("/api/v1/admin/news/status", headers=ADMIN()).json()
     assert st["data"]["coverage"]["universe"] == len(SYMS) and "S1.NS" not in st["data"]["coverage"]["without_news"]
     _contract("news_candidates_tomorrow.json", body)
