@@ -541,6 +541,7 @@ def test_daily_ranking_runs_the_shared_ranking_job_in_the_shared_slot(api, db, m
 
 
 def test_daily_ranking_without_todays_nifty_bar_is_skipped_and_retried(api, db, monkeypatch):
+    _v1_run_not_today(db)
     import fundamentals.provider as provider
     _calendar(db)
     _at(monkeypatch, eod(MON, 17, 0))
@@ -552,6 +553,17 @@ def test_daily_ranking_without_todays_nifty_bar_is_skipped_and_retried(api, db, 
     _at(monkeypatch, eod(MON, 18, 30))
     _post(api, "DAILY_RANKING")
     assert remote.status(db, remote.JobType.DAILY_RANKING, MON.isoformat())["attempts"] == 2
+
+
+def _v1_run_not_today(eng):
+    """The shared fixture's completed v1 run (V1RUN) is stamped with the wall
+    clock; move it to the previous Friday so "did today's ranking complete?"
+    does not depend on the time of day the suite runs."""
+    with Session(eng) as s:
+        for r in s.exec(select(EngineRun).where(EngineRun.kind == "RANKING")).all():
+            r.started_at = eod(FRI, 17, 0)
+            s.add(r)
+        s.commit()
 
 
 def _ranking_slot(eng, status, result=None, started=None):
@@ -567,11 +579,13 @@ def _ranking_problems(eng, when):
 
 
 def test_monitor_ignores_the_ranking_until_the_scheduler_has_run_it(api, db):
+    _v1_run_not_today(db)
     _calendar(db)
     assert _ranking_problems(db, eod(MON, 21, 0)) == []                  # manual-only setups are not alerted
 
 
 def test_monitor_alerts_when_todays_ranking_did_not_complete(api, db):
+    _v1_run_not_today(db)
     _calendar(db)
     _ranking_slot(db, "SKIPPED", {"status": "SKIPPED", "reason": "NIFTY 50 data for today is not available yet"})
     assert _ranking_problems(db, eod(MON, 20, 0)) == []                  # not due before 20:30 IST
@@ -580,6 +594,7 @@ def test_monitor_alerts_when_todays_ranking_did_not_complete(api, db):
 
 
 def test_monitor_accepts_a_ranking_still_running_or_completed_by_any_trigger(api, db):
+    _v1_run_not_today(db)
     _calendar(db)
     _ranking_slot(db, "RUNNING", started=eod(MON, 20, 0))
     assert _ranking_problems(db, eod(MON, 20, 45)) == []                 # in progress, not stale
