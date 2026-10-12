@@ -26,3 +26,4 @@ textblob
 feedparser
 plotly
 streamlit
+streamlit-autorefresh   # app.py / admin_console/app.py (Streamlit UI); not used by the API or jobs

@@ -75,3 +75,47 @@ jobs:
         run: python -m pytest -q -p no:warnings tests/test_postgres_migrations.py
       - name: Full test suite on PostgreSQL (authentication, password reset, news, predictions, scheduler, ranking ...)
         run: python -m pytest -q -p no:warnings
+
+  production-dependencies:
+    name: Render dependency set on PostgreSQL 16 (requirements-cloud.txt, Python 3.11.9)
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: stocklens
+          POSTGRES_PASSWORD: ci-disposable-only      # throwaway container, not a credential
+          POSTGRES_DB: stocklens_test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U stocklens" --health-interval 5s --health-timeout 5s --health-retries 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11.9"                   # render.yaml PYTHON_VERSION
+      - name: Install exactly what Render installs (plus the test runner)
+        run: pip install -r requirements-cloud.txt pytest
+      - name: The production driver is psycopg2 (no second driver)
+        run: |
+          python -c "import psycopg2, importlib.util as u; assert u.find_spec('psycopg') is None, 'unexpected psycopg 3'"
+      - name: Render deploy sequence with a Render-style postgres:// URL
+        env:
+          DATABASE_URL: postgres://stocklens:ci-disposable-only@localhost:5432/stocklens_test
+        run: |
+          python -c "import config; from sqlalchemy.engine import make_url; assert make_url(config.DATABASE_URL).get_dialect().driver == 'psycopg2'"
+          alembic upgrade head
+          alembic check
+          python -c "import api.main"
+      - name: PostgreSQL migration tests with the production dependency set
+        env:
+          TEST_DATABASE_URL: postgresql://stocklens:ci-disposable-only@localhost:5432/stocklens_test
+        run: python -m pytest -q -p no:warnings tests/test_postgres_migrations.py tests/test_database_url.py
+      - name: Full test suite on PostgreSQL with the production dependency set
+        env:
+          TEST_DATABASE_URL: postgresql://stocklens:ci-disposable-only@localhost:5432/stocklens_test
+          STOCKLENS_TEST_ON_POSTGRES: "1"
+        run: python -m pytest -q -p no:warnings
