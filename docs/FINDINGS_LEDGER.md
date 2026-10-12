@@ -115,7 +115,7 @@ working end-to-end feature; such items are never marked complete.
 | B-02 | Local `agents/*` branches (5) are contained in `main`; 2 of their worktrees have 1 uncommitted file each | VERIFIED; untouched |
 | B-03 | The auth commit adds `GOOGLE_ALLOWED_AUDIENCES` and `FRONTEND_BASE_URL` (both `sync: false`, no values) to `render.yaml` | VERIFIED; kept as part of the security fix; takes effect only on blueprint sync after merge: REQUIRES_APPROVAL |
 | B-04 | Commit `c87c431` (test isolation) also contains the `render.yaml` restore and the template removal; both were already staged when it was made | VERIFIED; documented here. Not amended (no history rewrite) |
-| B-05 | The user's draft `.github/workflows/daily-ranking.yml` and `tests/test_github_actions_workflow.py` stay **untracked and uncommitted** | VERIFIED |
+| B-05 | The user's `.github/workflows/daily-ranking.yml` and `tests/test_github_actions_workflow.py` | Kept untracked until 12 Oct 2026; committed on the user's request (daily ranking automation) with an off-by-default switch `STOCKLENS_DAILY_RANKING_ENABLED` | IMPLEMENTED AND TESTED |
 
 ## Testing and environment
 

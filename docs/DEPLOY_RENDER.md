@@ -61,6 +61,36 @@ services afterwards. The app address stays the same if you reuse the name
 
 ---
 
+## GitHub Actions Daily Ranking Automation
+
+Render Free has no cron jobs, so on the free plan the daily ranking (Top
+Candidates) runs only when someone clicks *Run the daily ranking job now* in
+the admin console. `.github/workflows/daily-ranking.yml` automates exactly that
+job (`python scripts/scheduled_jobs.py ranking`):
+
+- weekdays at 16:30 IST, with backup triggers at 18:00 and 20:00 IST;
+- every market rule stays in the job: weekends and configured NSE holidays are
+  skipped, nothing runs before 16:00 IST, today's NIFTY 50 bar must exist, and
+  one ranking per trading day (a repeated trigger is a no-op);
+- it connects directly to the Render PostgreSQL database, so the web service
+  does not need to be awake.
+
+**Off by default.** Scheduled *and* manual runs both need:
+
+| Setting (backend repository, *Settings > Secrets and variables > Actions*) | Value |
+|---|---|
+| Secret `DATABASE_URL` | the **External Database URL** of `stocklens-db` (Render > stocklens-db > Connect). Paste it only into this secret field |
+| Variable `STOCKLENS_DAILY_RANKING_ENABLED` | `true` |
+
+To stop it, delete the variable or set it to anything other than `true`.
+After a database credential rotation, update the `DATABASE_URL` secret.
+
+On the **paid** plan (`render.yaml`) the `stocklens-ranking` cron already runs
+this job; keep the switch off there.
+
+Check a run: *Actions > StockLens Daily Ranking >* the run's summary shows the
+job result (`COMPLETED`, or `SKIPPED` with the reason).
+
 ## Step 1: Create your Render account (once)
 
 1. Open **https://render.com** and click **Get Started**.

@@ -24,7 +24,7 @@ statuses can apply, for example *TESTED; activation REQUIRES_APPROVAL*.
 | A5 | No production migrations, scheduling, credentials or user-facing predictions or alerts | IMPLEMENTED | Scheduler inactive (`docs/SCHEDULER.md`); `PREDICTION_V2_PUBLIC=false`; exit engine has no notifications (`test_exit_states_are_persisted_in_shadow_mode_only`) |
 | A6 | No destructive DB operations; stop if duplicate RUNNING rows exist | TESTED | `4e6773a9e7db` aborts without changes (`test_migration_engine_run_guard`); auth `c3f9d8e0a4b2` (auto-FAILED) dropped in integration (B-01) |
 | A7 | Never commit secrets; do not use the exposed DB URL | IMPLEMENTED | Credential scan of every pushed diff (section J); S-01 URL never used |
-| A8 | Preserve the untracked `.github/workflows/daily-ranking.yml` and `tests/test_github_actions_workflow.py`; do not modify mobile | IMPLEMENTED | B-05; mobile `master` `d24eaf5` unchanged |
+| A8 | The user's `.github/workflows/daily-ranking.yml` and `tests/test_github_actions_workflow.py` (committed on request 12 Oct 2026, off by default); do not modify mobile | IMPLEMENTED | B-05; mobile `master` `d24eaf5` unchanged |
 | A9 | Never treat missing values as favourable or zero | TESTED | `features.py` returns None plus a flag; `test_missing_history_gives_none_and_flags_never_zero`, `test_rules_no_call_when_a_required_feature_is_missing`, `test_rules_return_no_call_for_every_blocking_flag` |
 | A10 | Do not weaken or delete tests | IMPLEMENTED | Two test expectations changed with the design, both documented in their commits: `test_cloud_deploy` (one scheduler per job, still strict) and `test_status_slot_must_be_a_date` (also accepts 405). No test removed |
 

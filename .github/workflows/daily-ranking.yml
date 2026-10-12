@@ -1,0 +1,121 @@
+# StockLens Daily Ranking (docs/DEPLOY_RENDER.md, "GitHub Actions Daily Ranking Automation").
+#
+# Scheduler for the EXISTING daily ranking job while the backend runs on
+# Render Free (which cannot run cron jobs). It runs
+#     python scripts/scheduled_jobs.py ranking
+# -> scheduling.jobs.ranking_job: the same job as the admin console button
+# "Run the daily ranking job now" and the Render cron in render.yaml. The job
+# connects directly to the Render PostgreSQL database; the Render web service
+# does not need to be awake.
+#
+# All market rules live in the job, not here: weekends and NSE holidays
+# (market.holidays) are skipped, nothing runs before 16:00 IST, today's
+# NIFTY 50 bar must exist, and a per-day lock (scheduled_job_runs) allows one
+# ranking per trading day. A repeated trigger on the same day is a no-op.
+#
+# OFF by default. Scheduled AND manual runs both need the repository variable
+# STOCKLENS_DAILY_RANKING_ENABLED == 'true' (Settings -> Secrets and variables
+# -> Actions -> Variables) and the repository secret DATABASE_URL (the Render
+# PostgreSQL External Database URL). Delete the variable, or set it to
+# anything else, to stop both. Scheduled runs only happen from the default
+# branch (GitHub rule). On the paid Render plan the stocklens-ranking cron in
+# render.yaml runs the same job; leave this switch off there (the per-day
+# lock would make a second trigger a no-op anyway).
+
+name: StockLens Daily Ranking
+
+on:
+  schedule:
+    # Times are UTC (IST = UTC+05:30).
+    - cron: "0 11 * * 1-5"    # 16:30 IST: the daily ranking
+    # Backup triggers. They exit immediately once the day's ranking is
+    # COMPLETED (no data fetched, no engine work). They give the job's own
+    # retry a chance to run: a FAILED/SKIPPED day (e.g. NIFTY data late,
+    # provider outage) is retried by the next trigger, at most 3 attempts,
+    # and a run abandoned for 3 hours is recovered. They also cover a
+    # scheduled run that GitHub delays or drops.
+    - cron: "30 12 * * 1-5"   # 18:00 IST
+    - cron: "30 14 * * 1-5"   # 20:00 IST
+  # Manual run: GitHub -> Actions -> StockLens Daily Ranking -> Run workflow.
+  # Same job, same protections (no ranking on weekends/holidays, before
+  # 16:00 IST, or twice on one day).
+  workflow_dispatch:
+
+# Never two at once; a second trigger waits for the first to finish.
+concurrency:
+  group: stocklens-daily-ranking
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  daily-ranking:
+    name: Daily ranking
+    # Only the main repository has the database secret (not forks).
+    if: github.repository == 'Himanshu11007/stock-prediction-app' && vars.STOCKLENS_DAILY_RANKING_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    # A full run takes ~10-20 minutes. The job treats a RUNNING run older
+    # than 3 hours as abandoned, so a killed workflow never blocks later days.
+    timeout-minutes: 120
+    env:
+      PYTHONUNBUFFERED: "1"
+      APP_ENV: production
+      # Same engine settings as the Render deployment: the informational ML
+      # signal stays off (weight 0 in the score) and 2 worker threads.
+      ENGINE_RUN_ALLOW_ML: "false"
+      ENGINE_RUN_MAX_WORKERS: "2"
+    steps:
+      - name: Check out the backend
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: requirements-cloud.txt
+
+      - name: Install production dependencies
+        # The cloud requirement set used by Render (no torch/transformers).
+        run: pip install -r requirements-cloud.txt
+
+      - name: Run the daily ranking job
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          echo "StockLens Daily Ranking"
+          echo "Date (UTC): $(date -u '+%Y-%m-%d %H:%M')"
+          echo "Date (IST): $(TZ=Asia/Kolkata date '+%Y-%m-%d %H:%M')"
+          echo "Trigger: ${{ github.event_name }}"
+          echo "Environment: production (ML off, 2 workers)"
+          if [ -z "${DATABASE_URL}" ]; then
+            echo "::error::Repository secret DATABASE_URL is not set (Settings -> Secrets and variables -> Actions)."
+            exit 1
+          fi
+          case "${DATABASE_URL}" in
+            postgres://*|postgresql://*) ;;
+            *) echo "::error::Secret DATABASE_URL must be the Render PostgreSQL External Database URL."; exit 1 ;;
+          esac
+          echo "Starting daily ranking job: python scripts/scheduled_jobs.py ranking"
+          set +e
+          python scripts/scheduled_jobs.py ranking | tee ranking-result.txt
+          code=${PIPESTATUS[0]}
+          set -e
+          result="$(tail -n 1 ranking-result.txt)"
+          {
+            echo "### StockLens daily ranking"
+            echo ""
+            echo "Trigger: \`${{ github.event_name }}\` - exit code: \`${code}\`"
+            echo ""
+            echo '```json'
+            echo "${result}"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          if [ "${code}" -ne 0 ]; then
+            echo "::error::Daily ranking job FAILED (exit code ${code}). The previous ranking remains current; no new Top Picks notifications were sent."
+            exit "${code}"
+          fi
+          echo "Daily ranking job finished (exit code 0): ranking completed, or skipped for the reason shown above."

@@ -159,7 +159,13 @@ def test_ingestion_to_screen_snapshot_api_and_contract(client, db):
     assert health["gdelt"] == "FAILING" and health["alphavantage"] == "NOT_CONFIGURED"
     assert data["news_status"]["data_basis"] in ("REAL", "STALE")                # real ingestion, possibly old
     st = client.get("/api/v1/admin/news/status", headers=ADMIN()).json()
-    assert st["data"]["coverage"]["universe"] == len(SYMS) and "S1.NS" not in st["data"]["coverage"]["without_news"]
+    assert st["data"]["coverage"]["universe"] == len(SYMS)          # the endpoint counts against the real clock
+    # coverage at the test's own clock (the endpoint uses "now", so its window moves with real time)
+    from catalysts import status as news_status_mod
+    with Session(db) as s:
+        cov = news_status_mod.news_status(s, NOW + dt.timedelta(hours=2), {"enabled": [], "refused": {}},
+                                          list(SYMS))["coverage"]
+    assert cov["universe"] == len(SYMS) and "S1.NS" not in cov["without_news"] and cov["with_news"] >= 1
     _contract("news_candidates_tomorrow.json", body)
     _contract("news_status.json", st)
     # the v2 snapshot and its explanation, as the web prediction pages receive them
