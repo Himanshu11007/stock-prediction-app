@@ -32,7 +32,7 @@ GitHub Actions (cron, UTC)              StockLens API (Render)
 - **Interface off by default.** It is disabled (404) until
   `SCHEDULER_TOKEN_SHA256` is set.
 - **Strict job types.** `NEWS_INGESTION`, `TODAY_PREOPEN`, `TODAY_CONFIRMED`, `TOMORROW_EOD`,
-  `OUTCOME_EVALUATION`, `SNAPSHOT_MONITOR`. Anything else gets 422 before
+  `OUTCOME_EVALUATION`, `SNAPSHOT_MONITOR`, `DAILY_RANKING`. Anything else gets 422 before
   any work happens.
 - **Preflight** (no slot is used):
   - **Holiday calendar:** the job **fails** when `market.holidays` has no
@@ -65,14 +65,18 @@ GitHub Actions (cron, UTC)              StockLens API (Render)
 - **Closing data for TOMORROW_EOD:**
   - It runs only after 16:00 IST.
   - Today's NIFTY 50 bar must exist; otherwise `SKIPPED`, nothing is
-    published, and the 20:30 retry tries again.
+    published, and the 19:30 retry tries again.
   - Each stock without today's bar is flagged `STALE_PRICE` and gets
     NO_CALL.
   - The snapshot is published only if at least 50% of the v2 universe has
     usable data. It is written in one transaction.
 - **Monitoring** (`SNAPSHOT_MONITOR`) reports `ALERT` for stale news ingestion (no successful run in 3 h, once ingestion has started) and:
   - a missing, failed or still-running TODAY_PREOPEN after 09:30 IST;
-  - the same for TOMORROW_EOD after 20:30 IST;
+  - the same for TOMORROW_EOD after 20:30 IST (its last retry is at 19:30);
+  - no completed v1 daily ranking (from any trigger, the admin button
+    included) after 20:30 IST on a trading day. This check starts once the
+    scheduler has run `DAILY_RANKING` at least once, and a ranking that is
+    still running normally is not an alert;
   - the same for TODAY_CONFIRMED after 10:30 IST, only when intraday is
     enabled;
   - a failed or stale OUTCOME_EVALUATION.
@@ -100,6 +104,9 @@ weekend and holiday news feeds the next pre-open snapshot.
 | | | `0 14 * * 1-5` | 19:30 | retry for late or revised provider data |
 | `stocklens-outcome-evaluation.yml` | `OUTCOME_EVALUATION` | `0 11 * * 1-5` | 16:30 | 1/3/5-session outcomes and shadow exit states |
 | | | `30 15 * * 1-5` | 21:00 | retry |
+| `stocklens-daily-ranking.yml` | `DAILY_RANKING` | `30 11 * * 1-5` | 17:00 | **v1 daily ranking (Top Candidates)**, then ranking notifications and current prices |
+| | | `0 13 * * 1-5` | 18:30 | retry; no-op if done |
+| | | `30 14 * * 1-5` | 20:00 | last retry before the 20:45 monitor check |
 
 **Data readiness at 16:15:** Yahoo's daily bar for today usually exists soon
 after the 15:30 close, but it can still be revised in the following hours.
@@ -188,10 +195,12 @@ Each job is safe to repeat; a repeat is a no-op once the slot is COMPLETED.
 
 - **GitHub Actions cost:** the backend repository is public, so standard
   runners are free. If it becomes private, the free tier is 2,000 minutes a
-  month. Estimated use: 17 hourly news runs a day (about 1 minute each) plus
-  about 11 runs a trading day of 1–15 minutes while polling: roughly
-  800–1,300 minutes a month: free on a public repository, and within the
-  2,000-minute free tier if the repository became private.
+  month. Estimated use: 17 hourly news runs a day (about 1 minute each),
+  about 11 v2 and monitor runs a trading day of 1–15 minutes while polling,
+  and the daily ranking (one run of up to 40 minutes while polling, its two
+  retries about 1 minute each): roughly 1,300–2,200 minutes a month. Free on
+  a public repository; if the repository became private this could exceed
+  the 2,000-minute free tier.
 - **Timing:** scheduled runs can start late or, rarely, be dropped at busy
   times. GitHub also **disables scheduled workflows after 60 days without
   repository activity** in public repositories. The monitor and the retry
@@ -211,5 +220,24 @@ Each job is safe to repeat; a repeat is a no-op once the slot is COMPLETED.
   - Predictions stay admin-only (`PREDICTION_V2_PUBLIC=false`).
   - No exit alerts or notifications are sent.
   - The backtest shows no edge (`docs/research/PREDICTION_V2_BACKTEST_2026-10.md`).
-- **v1 is unaffected:** the v1 daily ranking keeps its own job
-  (`scripts/scheduled_jobs.py ranking`). It is not part of this scheduler.
+- **v1 daily ranking (`DAILY_RANKING`):** the scheduler calls the *same*
+  job as the Admin Console button "Run the daily ranking job now" and
+  `scripts/scheduled_jobs.py ranking` (`scheduling/jobs.ranking_job`). All
+  three share one slot per trading day (`scheduled_job_runs`, job
+  `ranking`), so a scheduled run after a manual one, or the reverse, is a
+  no-op. The methodology is unchanged.
+  - It runs only on trading days after 16:00 IST, and only once today's
+    NIFTY 50 bar exists; otherwise `SKIPPED`, and the next trigger tries
+    again (at most 3 attempts a day).
+  - The times (17:00, 18:30, 20:00) avoid the v2 jobs because on Render Free
+    every job runs inside the API process: a full ranking peaks at about
+    370 MB of the instance's 512 MB. The 17:00 run can still overlap a slow
+    16:15 or 16:30 v2 job; a paid instance removes that risk.
+  - A full run can take longer than the workflow's 40-minute wait on a slow
+    instance. The workflow then reports a failure while the backend
+    finishes; the retries see the slot RUNNING or COMPLETED, and the 20:45
+    monitor reports the outcome.
+  - The ranking job also refreshes current prices when it completes. During
+    the session, prices of the stocks on screen are refreshed on demand when
+    a client opens a page (`CURRENT_PRICE_ON_DEMAND`), so no separate price
+    job is scheduled here.

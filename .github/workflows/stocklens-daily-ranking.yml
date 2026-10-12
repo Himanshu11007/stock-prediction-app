@@ -1,0 +1,49 @@
+# StockLens scheduler: DAILY_RANKING
+#   v1 daily ranking (Top Candidates): the same calendar-aware job as the Admin
+#   Console button "Run the daily ranking job now" and `scheduled_jobs.py ranking`
+#   (one slot per trading day, shared by all three, so they never run twice).
+#   It runs only after 16:00 IST once today's NIFTY bar exists; otherwise SKIPPED
+#   and the next trigger tries again. Spaced away from the v2 jobs (16:15, 16:30,
+#   19:30) because on Render Free every job shares the API's 512 MB.
+#
+# Inactive by default. It never runs on push or pull_request. Scheduled AND
+# manual (workflow_dispatch) runs both need the repository variable
+# STOCKLENS_SCHEDULER_ENABLED == 'true': a manual run cannot bypass the switch.
+# Scheduled runs also only happen from the default branch (GitHub rule).
+# Times are UTC; IST = UTC+05:30.
+# Weekends are excluded here; NSE holidays and data readiness are checked by
+# the backend (SKIPPED, exit 0). The backend does all calculations: this
+# workflow only calls the authenticated job interface (docs/SCHEDULER.md).
+name: "StockLens scheduler: DAILY_RANKING"
+
+on:
+  schedule:
+    - cron: "30 11 * * 1-5"   # 17:00 IST, Mon-Fri
+    - cron: "0 13 * * 1-5"    # 18:30 IST, retry (no-op if done), Mon-Fri
+    - cron: "30 14 * * 1-5"   # 20:00 IST, last retry before the 20:45 monitor check, Mon-Fri
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: stocklens-daily-ranking
+  cancel-in-progress: false
+
+jobs:
+  trigger:
+    if: vars.STOCKLENS_SCHEDULER_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    environment: stocklens-scheduler
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: scripts/scheduler_client.py
+          sparse-checkout-cone-mode: false
+          persist-credentials: false
+      - name: Trigger DAILY_RANKING in the StockLens backend
+        env:
+          STOCKLENS_API_URL: ${{ vars.STOCKLENS_API_URL }}
+          STOCKLENS_SCHEDULER_TOKEN: ${{ secrets.STOCKLENS_SCHEDULER_TOKEN }}
+        run: python3 scripts/scheduler_client.py --job DAILY_RANKING --timeout-minutes 40

@@ -43,6 +43,7 @@ from utils.market_session import (DAILY_BAR_FINAL_AFTER, IST, is_daily_bar_compl
 logger = get_logger(__name__)
 
 MAX_ATTEMPTS = 3
+RANKING_DUE = dt.time(20, 30)      # IST; the monitor's 20:45 check expects today's v1 ranking by then
 STALE_RUNNING = dt.timedelta(hours=3)
 COMPLETED_RUN = ("COMPLETED", "COMPLETED_WITH_ERRORS")
 
@@ -378,6 +379,32 @@ def prediction_monitor_job(engine, now: Optional[dt.datetime] = None) -> dict:
                 problems.append({"run_type": "NEWS_INGESTION", "problem": "STALE",
                                  "reason": f"last successful ingestion: {latest.isoformat() if latest else 'never'}",
                                  "latest_status": news_runs[0].status})
+        # v1 daily ranking (Top Candidates), once the scheduler has ever run it
+        # (setups that still start it by hand are not alerted on): by 20:30 IST
+        # a full ranking must have completed today - from any trigger, the
+        # admin button included - unless the slot is still running normally.
+        if local.time() >= RANKING_DUE and session.exec(
+                select(ScheduledJobRun.id).where(ScheduledJobRun.job == "ranking")).first() is not None:
+            latest = detector.latest_full_run(session)
+            started = latest.started_at if latest is not None else None
+            if started is not None and started.tzinfo is None:
+                started = started.replace(tzinfo=dt.timezone.utc)
+            ran_today = (started is not None and started.astimezone(IST).date() == local.date()
+                         and started.astimezone(IST).time() >= DAILY_BAR_FINAL_AFTER)
+            if not ran_today:
+                rk = session.exec(select(ScheduledJobRun).where(ScheduledJobRun.job == "ranking",
+                                                                ScheduledJobRun.slot == local.date().isoformat())).first()
+                rk_started = (rk.started_at.replace(tzinfo=rk.started_at.tzinfo or dt.timezone.utc)
+                              if rk is not None and rk.started_at else None)
+                if rk is None:
+                    problems.append({"run_type": "DAILY_RANKING", "problem": "MISSING"})
+                elif rk.status == "RUNNING" and rk_started and now - rk_started <= STALE_RUNNING:
+                    pass                                          # still working; the next check will see it
+                else:
+                    problems.append({"run_type": "DAILY_RANKING",
+                                     "problem": "STALE_RUNNING" if rk.status == "RUNNING" else rk.status,
+                                     "reason": (rk.result or {}).get("error") or (rk.result or {}).get("reason"),
+                                     "attempts": rk.attempts})
         # Outcome evaluation has no snapshot of its own: report its slot when it
         # failed, or has been RUNNING past the stale limit (an interrupted worker).
         oc = session.exec(select(ScheduledJobRun).where(ScheduledJobRun.job == "prediction_outcomes",

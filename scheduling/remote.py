@@ -42,7 +42,7 @@ import masters.service as masters
 from db.models.market import ScheduledJobRun
 from scheduling import jobs
 from utils.logger import get_logger
-from utils.market_session import is_daily_bar_complete, is_trading_day, now_ist
+from utils.market_session import DAILY_BAR_FINAL_AFTER, is_daily_bar_complete, is_trading_day, now_ist
 
 logger = get_logger(__name__)
 
@@ -54,12 +54,14 @@ class JobType(str, Enum):
     OUTCOME_EVALUATION = "OUTCOME_EVALUATION"
     SNAPSHOT_MONITOR = "SNAPSHOT_MONITOR"
     NEWS_INGESTION = "NEWS_INGESTION"
+    DAILY_RANKING = "DAILY_RANKING"       # v1 ranking (Top Candidates); same job as the admin button and CLI
 
 
 # Slot-ledger job names (shared with the CLI, scripts/scheduled_jobs.py).
 SLOT_JOB = {JobType.TODAY_PREOPEN: "predict_preopen", JobType.TODAY_CONFIRMED: "predict_confirmed",
             JobType.TOMORROW_EOD: "predict_eod", JobType.OUTCOME_EVALUATION: "prediction_outcomes",
-            JobType.SNAPSHOT_MONITOR: "prediction_monitor", JobType.NEWS_INGESTION: "news_ingestion"}
+            JobType.SNAPSHOT_MONITOR: "prediction_monitor", JobType.NEWS_INGESTION: "news_ingestion",
+            JobType.DAILY_RANKING: "ranking"}
 PREDICTION_TYPES = (JobType.TODAY_PREOPEN, JobType.TODAY_CONFIRMED, JobType.TOMORROW_EOD)
 
 # In-process results of triggers that ended without a slot row (e.g. a job
@@ -101,6 +103,15 @@ def preflight(engine, job_type: JobType, now: dt.datetime) -> Optional[dict[str,
                           "until the official calendar is entered (Admin > Configuration)"}
     if job_type == JobType.SNAPSHOT_MONITOR:
         return None
+    if job_type == JobType.DAILY_RANKING:
+        # The same gates ranking_job applies itself, checked here so a trigger
+        # that is too early or on a holiday never claims the day's slot.
+        if not is_trading_day(local.date(), holidays):
+            return {"status": "SKIPPED", "code": "NOT_A_TRADING_DAY", "reason": f"{local.date()} is not a trading day"}
+        if local.time() < DAILY_BAR_FINAL_AFTER:
+            return {"status": "SKIPPED", "code": "OUTSIDE_WINDOW",
+                    "reason": f"before {DAILY_BAR_FINAL_AFTER:%H:%M} IST; closing data not final"}
+        return None
     if job_type == JobType.OUTCOME_EVALUATION:
         if is_trading_day(local.date(), holidays) and not is_daily_bar_complete(local.date(), now):
             return {"status": "SKIPPED", "code": "DATA_NOT_FINAL", "reason": "today's daily bars are not final yet"}
@@ -123,6 +134,8 @@ def _execute(engine, job_type: JobType, now: Optional[dt.datetime]) -> dict[str,
         return jobs.prediction_outcomes_job(engine, now)
     if job_type == JobType.NEWS_INGESTION:
         return jobs.news_ingestion_job(engine, now)
+    if job_type == JobType.DAILY_RANKING:
+        return jobs.ranking_job(engine, now)
     return jobs.prediction_monitor_job(engine, now)
 
 

@@ -31,7 +31,7 @@ import urllib.request
 from typing import Any, Callable, Optional
 
 JOB_TYPES = ("TODAY_PREOPEN", "TODAY_CONFIRMED", "TOMORROW_EOD", "OUTCOME_EVALUATION", "SNAPSHOT_MONITOR",
-             "NEWS_INGESTION")
+             "NEWS_INGESTION", "DAILY_RANKING")
 SUCCESS = ("COMPLETED", "DONE", "OK", "SKIPPED")
 FAILURE = ("FAILED", "ALERT")
 PENDING = ("ACCEPTED", "RUNNING")

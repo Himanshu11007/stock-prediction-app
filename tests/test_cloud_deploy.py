@@ -33,10 +33,13 @@ def test_blueprint_web_service_is_production_ready():
 
 
 def test_blueprint_cron_jobs_match_scheduled_jobs():
-    """Every CLI job has exactly one scheduler: the v1 jobs are Render cron
-    services in the paid blueprint; the Prediction v2 jobs are triggered by
-    the GitHub Actions workflows through the backend job interface
-    (docs/SCHEDULER.md) and are deliberately not Render cron services."""
+    """Every CLI job has a scheduler: the v1 jobs are Render cron services in
+    the paid blueprint; the Prediction v2 jobs are triggered by the GitHub
+    Actions workflows through the backend job interface (docs/SCHEDULER.md)
+    and are deliberately not Render cron services. The one job with both is
+    the v1 daily ranking: the GitHub DAILY_RANKING workflow is the free-plan
+    way to run it (Render Free has no cron), and both triggers claim the same
+    per-day slot, so the second is a no-op, never a second run."""
     from scheduling.remote import SLOT_JOB
     from scripts.scheduled_jobs import JOBS
     crons = [s for s in _blueprint()["services"] if s["type"] == "cron"]
@@ -44,7 +47,7 @@ def test_blueprint_cron_jobs_match_scheduled_jobs():
     v2_jobs = set(SLOT_JOB.values())
     workflows = {p.name for p in (ROOT / ".github" / "workflows").glob("stocklens-*.yml")}
     assert len(workflows) == len(SLOT_JOB)                       # one workflow per v2 job type
-    assert jobs.isdisjoint(v2_jobs)                              # never scheduled twice
+    assert jobs & v2_jobs == {"ranking"}                         # only the slot-shared v1 ranking overlaps
     assert jobs | v2_jobs == set(JOBS)                           # nothing left unscheduled
     for c in crons:
         assert c["startCommand"].startswith("python scripts/scheduled_jobs.py ")

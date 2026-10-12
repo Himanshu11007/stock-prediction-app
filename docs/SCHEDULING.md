@@ -106,8 +106,10 @@ Render runs cron jobs only on paid instance types.
 `deploy/render-free/render.yaml` therefore has **no cron jobs**. On the
 free plan:
 
-- **The daily ranking does not run automatically.** An administrator starts
-  it each trading day after 16:00 IST from the StockLens Streamlit app
+- **The daily ranking does not run automatically through Render.** Either
+  turn on the GitHub Actions scheduler (job `DAILY_RANKING`,
+  [SCHEDULER.md](SCHEDULER.md)), which runs this same job at 17:00, 18:30
+  and 20:00 IST, or an administrator starts it each trading day after 16:00 IST from the StockLens Streamlit app
   (https://ai-stock-predict-dashboard.streamlit.app/) → **Administration** →
   **Admin Console** → **Engine Runs** → **Daily schedule** → **Run the daily
   ranking job now**. This runs the same calendar-aware job: trading-day and

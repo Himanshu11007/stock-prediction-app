@@ -43,6 +43,8 @@ EXPECTED = {   # workflow file -> (job type, UTC crons, IST equivalents)
     "stocklens-snapshot-monitor.yml": ("SNAPSHOT_MONITOR", ["30 4 * * 1-5", "15 11 * * 1-5", "15 15 * * 1-5"],
                                        ["10:00", "16:45", "20:45"]),
     "stocklens-news-ingestion.yml": ("NEWS_INGESTION", ["40 0-16 * * *"], ["06:10"]),     # hourly to 22:10 IST
+    "stocklens-daily-ranking.yml": ("DAILY_RANKING", ["30 11 * * 1-5", "0 13 * * 1-5", "30 14 * * 1-5"],
+                                    ["17:00", "18:30", "20:00"]),
 }
 
 
@@ -483,3 +485,107 @@ def test_evaluator_reproduces_the_old_bypass():
     old = "github.event_name == 'workflow_dispatch' || vars.STOCKLENS_SCHEDULER_ENABLED == 'true'"
     assert _gh_if(old, "workflow_dispatch", {}) is True        # the defect this suite now prevents
     assert _gh_if(old, "schedule", {}) is False
+
+
+# ── v1 daily ranking (Top Candidates) ────────────────────────────────────────
+
+from db.models.market import EngineRun  # noqa: E402
+
+
+def test_every_backend_job_type_has_a_workflow_and_a_client_choice():
+    assert {jt for jt, _, _ in EXPECTED.values()} == {j.value for j in remote.JobType}
+    assert set(client_mod.JOB_TYPES) == {j.value for j in remote.JobType}
+
+
+def test_daily_ranking_waits_for_the_close_and_skips_non_trading_days(api, db, monkeypatch):
+    _calendar(db)
+    _at(monkeypatch, eod(MON, 15, 45))
+    out = _post(api, "DAILY_RANKING").json()["data"]
+    assert out["status"] == "SKIPPED" and out["code"] == "OUTSIDE_WINDOW"
+    _at(monkeypatch, eod(dt.date(2026, 10, 10), 17, 0))                  # Saturday
+    assert _post(api, "DAILY_RANKING").json()["data"]["code"] == "NOT_A_TRADING_DAY"
+    _at(monkeypatch, eod(dt.date(2026, 10, 20), 17, 0))                  # configured NSE holiday
+    assert _post(api, "DAILY_RANKING").json()["data"]["code"] == "NOT_A_TRADING_DAY"
+    with Session(db) as s:                                               # no slot was claimed by any of these
+        assert s.exec(select(ScheduledJobRun).where(ScheduledJobRun.job == "ranking")).all() == []
+
+
+def test_daily_ranking_needs_the_holiday_calendar(api, db, monkeypatch):
+    _at(monkeypatch, eod(MON, 17, 0))
+    out = _post(api, "DAILY_RANKING").json()["data"]
+    assert out["status"] == "FAILED" and out["code"] == "CALENDAR_NOT_CONFIGURED"
+
+
+def test_daily_ranking_runs_the_shared_ranking_job_in_the_shared_slot(api, db, monkeypatch):
+    _calendar(db)
+    when = eod(MON, 17, 0)
+    _at(monkeypatch, when)
+    calls = []
+
+    def fake_ranking(engine, now=None, *a, **k):
+        calls.append(now)
+        with Session(engine) as s:
+            claim = jobs.acquire_slot(s, "ranking", MON.isoformat(), now)
+            jobs.finish_slot(s, claim, "COMPLETED", {"status": "COMPLETED", "run_id": "RANKING-x"}, "RANKING-x")
+        return {"status": "COMPLETED", "run_id": "RANKING-x"}
+
+    monkeypatch.setattr(jobs, "ranking_job", fake_ranking)
+    first = _post(api, "DAILY_RANKING").json()["data"]
+    assert first["status"] == "ACCEPTED" and first["slot"] == MON.isoformat()
+    assert calls == [when.astimezone(dt.timezone.utc)]
+    st = api.get(f"/api/v1/scheduler/jobs/DAILY_RANKING/runs/{MON.isoformat()}",
+                 headers={"Authorization": f"Bearer {TOKEN}"}).json()["data"]
+    assert st["status"] == "COMPLETED" and st["run_id"] == "RANKING-x"
+    again = _post(api, "DAILY_RANKING").json()["data"]                  # the 18:30 retry is a no-op
+    assert again["duplicate"] is True and len(calls) == 1
+
+
+def test_daily_ranking_without_todays_nifty_bar_is_skipped_and_retried(api, db, monkeypatch):
+    import fundamentals.provider as provider
+    _calendar(db)
+    _at(monkeypatch, eod(MON, 17, 0))
+    monkeypatch.setattr(provider, "fetch_price_history", lambda symbols, period="2y": {})   # no network
+    _post(api, "DAILY_RANKING")
+    st = remote.status(db, remote.JobType.DAILY_RANKING, MON.isoformat())
+    assert st["status"] == "SKIPPED" and "NIFTY" in st["result"]["reason"]
+    # the slot stays retryable: a later trigger re-claims it (attempts 2)
+    _at(monkeypatch, eod(MON, 18, 30))
+    _post(api, "DAILY_RANKING")
+    assert remote.status(db, remote.JobType.DAILY_RANKING, MON.isoformat())["attempts"] == 2
+
+
+def _ranking_slot(eng, status, result=None, started=None):
+    with Session(eng) as s:
+        s.add(ScheduledJobRun(job="ranking", slot=MON.isoformat(), status=status, attempts=1,
+                              started_at=started or eod(MON, 17, 0), result=result or {"status": status}))
+        s.commit()
+
+
+def _ranking_problems(eng, when):
+    out = jobs.prediction_monitor_job(eng, when)
+    return [p for p in out["problems"] if p["run_type"] == "DAILY_RANKING"]
+
+
+def test_monitor_ignores_the_ranking_until_the_scheduler_has_run_it(api, db):
+    _calendar(db)
+    assert _ranking_problems(db, eod(MON, 21, 0)) == []                  # manual-only setups are not alerted
+
+
+def test_monitor_alerts_when_todays_ranking_did_not_complete(api, db):
+    _calendar(db)
+    _ranking_slot(db, "SKIPPED", {"status": "SKIPPED", "reason": "NIFTY 50 data for today is not available yet"})
+    assert _ranking_problems(db, eod(MON, 20, 0)) == []                  # not due before 20:30 IST
+    (p,) = _ranking_problems(db, eod(MON, 20, 45))
+    assert p["problem"] == "SKIPPED" and "NIFTY" in p["reason"]
+
+
+def test_monitor_accepts_a_ranking_still_running_or_completed_by_any_trigger(api, db):
+    _calendar(db)
+    _ranking_slot(db, "RUNNING", started=eod(MON, 20, 0))
+    assert _ranking_problems(db, eod(MON, 20, 45)) == []                 # in progress, not stale
+    assert _ranking_problems(db, eod(MON, 23, 30))[0]["problem"] == "STALE_RUNNING"
+    with Session(db) as s:                                               # e.g. the admin button ran it
+        s.add(EngineRun(run_id="RANKING-admin", kind="RANKING", status="COMPLETED", started_at=eod(MON, 16, 40),
+                        engine_version="v", fqvf_version="v", config={"symbols": None, "limit": None}))
+        s.commit()
+    assert _ranking_problems(db, eod(MON, 23, 30)) == []
