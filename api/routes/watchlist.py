@@ -14,6 +14,7 @@ import notifications.service as notify
 from api.schemas import success_envelope
 from api.schemas_watchlist import WatchlistAddRequest, WatchlistAlertUpdate, WatchlistItemResponse
 from auth.dependencies import get_current_user
+from ranking.watch_warnings import WARNINGS_NOTE
 from db.models.user import User
 from db.session import get_session
 
@@ -32,7 +33,7 @@ def watchlist_overview(current_user: User = Depends(get_current_user), session: 
     """Watched stocks with current StockLens Score, rank, FQVF, last price,
     score change since the previous full run, freshness and alert settings."""
     items = watchlist_service.overview(session, current_user)
-    return success_envelope({"items": items},
+    return success_envelope({"items": items, "warnings_note": WARNINGS_NOTE},
                             message="Your watchlist is empty." if not items else f"{len(items)} stock(s)")
 
 

@@ -11,6 +11,7 @@ authenticated User (from the JWT-backed auth dependency) and scopes every
 query/mutation to that user's own rows. No function here accepts a raw
 user_id from a caller.
 """
+import datetime
 from typing import Optional
 
 from sqlalchemy.exc import IntegrityError
@@ -98,16 +99,21 @@ def remove_watchlist_item(session: Session, user: User, item_id: int) -> bool:
     return True
 
 
-def overview(session: Session, user: User) -> list[dict]:
+def overview(session: Session, user: User, now: Optional[datetime.datetime] = None) -> list[dict]:
     """Each watched stock with its latest analysis, change since the previous
-    full ranking run, and alert settings. Missing data stays missing."""
+    full ranking run, recent credible news, factual warnings and alert
+    settings. Missing data stays missing."""
     from db.models.market import MarketSnapshot, StockAnalysisResult
     from engine_runs.service import latest_result
     from notifications import detector
     from notifications.service import alert_payload, alert_setting, get_preferences
     from ranking import presenter
+    from ranking.news_labels import news_for, news_labels
+    from ranking.watch_warnings import warnings_for
 
+    now = now or datetime.datetime.now(datetime.timezone.utc)
     items = list_watchlist(session, user)
+    news = news_for(session, [it.symbol for it in items], now) if items else {}
     pref = get_preferences(session, user)
     cur_run = detector.latest_full_run(session)
     prev_run = detector.previous_full_run(session, cur_run) if cur_run else None
@@ -130,6 +136,7 @@ def overview(session: Session, user: User) -> list[dict]:
             change = round(cur.stockai_score - prev.stockai_score, 1)
         fq = (latest.fqvf or {}) if latest else {}
         company = session.get(Company, it.symbol)
+        item_news = news.get(it.symbol, [])
         out.append({
             "id": it.id, "symbol": it.symbol, "stock_name": it.stock_name,
             "sector": company.sector if company else None,
@@ -145,7 +152,9 @@ def overview(session: Session, user: User) -> list[dict]:
             "price": snap.close if snap else None, "price_as_of": snap.as_of_date if snap else None,
             "analysis_computed_at": presenter._iso(latest.computed_at) if latest else None,
             "freshness_status": presenter.freshness_status(latest) if latest else None,
-            "labels": presenter.labels(latest, None) if latest else [],
+            "labels": (presenter.labels(latest, None) if latest else []) + news_labels(item_news),
+            "news": item_news,
+            "warnings": warnings_for(session, it.symbol, latest, change, item_news, now),
             "alerts": alert_payload(alerts),
             "alerts_active": bool(pref.watchlist_alerts and not alerts.muted),
         })
