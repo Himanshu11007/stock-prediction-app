@@ -10,6 +10,7 @@ from fastapi import APIRouter, Depends
 from sqlmodel import Session
 
 from analytics.performance_overview import overview
+from analytics.track_record import track_record
 from db.session import get_session
 
 from api import services
@@ -25,6 +26,14 @@ def performance_overview(session: Session = Depends(get_session)):
     tracking, its historical validation, and the legacy signal engine before
     and after the temporal-integrity fix."""
     return success_envelope(overview(session), message="Performance overview")
+
+
+@router.get("/performance/track-record")
+def performance_track_record(session: Session = Depends(get_session)):
+    """For each recent trading day (and 5-day period): how many of the top
+    gainers were in the Top Candidates list published before that day's
+    open, next to the number expected by chance. Point in time; read-only."""
+    return success_envelope(track_record(session), message="Track record")
 
 
 @router.get("/performance/summary")
