@@ -85,10 +85,46 @@ def labels(r: StockAnalysisResult, top_limit: Optional[int], fresh: Optional[dic
     risk = _comp(r, "risk")
     if risk is not None and risk <= WEAK:
         out.append({"key": "high_risk", "label": "High Risk", "tone": "negative"})
+    # Added 13 Oct 2026 (presentation only; same thresholds): the price trend and
+    # the downside of valuation, so each stock's position is readable at a glance.
+    trend = _comp(r, "technical_trend")
+    if trend is not None and trend >= STRONG:
+        out.append({"key": "uptrend", "label": "Uptrend", "tone": "positive"})
+    elif trend is not None and trend <= WEAK:
+        out.append({"key": "downtrend", "label": "Downtrend", "tone": "negative"})
+    valuation = _comp(r, "valuation")
+    if valuation is not None and valuation <= WEAK:
+        out.append({"key": "expensive", "label": "Expensive", "tone": "warning"})
     review = (r.score_coverage is not None and r.score_coverage < 0.8) or \
         ((r.fqvf or {}).get("coverage") or 0) < 0.6 or (fresh or {}).get("status") in ("STALE", "UNAVAILABLE")
     if review:
         out.append({"key": "needs_review", "label": "Needs Review", "tone": "warning"})
+    return out
+
+
+LABEL_COMPONENT = {"quality": "quality", "valuation": "valuation", "financial_health": "financial_health",
+                   "momentum": "momentum", "high_risk": "risk", "uptrend": "technical_trend",
+                   "downtrend": "technical_trend", "expensive": "valuation"}
+
+
+def label_details(r: StockAnalysisResult, items: list[dict]) -> dict[str, str]:
+    """key -> one-line explanation of why the label is shown (the score it is
+    based on and the threshold). Facts about the stored data, not advice."""
+    out = {}
+    for item in items:
+        comp = LABEL_COMPONENT.get(item["key"])
+        v = _comp(r, comp) if comp else None
+        if v is None:
+            continue
+        name = SHORT_NAMES.get(comp, comp)
+        if item["key"] == "high_risk":
+            out[item["key"]] = f"{name} score {v:.0f}/100 (30 or less = more volatile than most stocks)"
+        elif item["key"] in ("downtrend", "expensive"):
+            out[item["key"]] = f"{name} score {v:.0f}/100 (30 or less)"
+        else:
+            out[item["key"]] = f"{name} score {v:.0f}/100 (70 or more)"
+    if any(i["key"] == "top_candidate" for i in items) and r.rank is not None:
+        out["top_candidate"] = f"Rank {r.rank} by StockLens Score in the latest ranking"
     return out
 
 
@@ -174,6 +210,7 @@ def candidate_payload(r: StockAnalysisResult, company: Optional[Company], top_li
     """`extra`: ranking_date, reference price, current price and market status
     added by the Top Picks route (fields are added, never renamed)."""
     fresh = freshness_status(r)
+    items = labels(r, top_limit, fresh)
     return {
         "rank": r.rank,
         "symbol": r.symbol,
@@ -190,7 +227,8 @@ def candidate_payload(r: StockAnalysisResult, company: Optional[Company], top_li
         "risks": (r.risks or [])[:5],
         "freshness": r.freshness or {},
         "freshness_status": fresh,
-        "labels": labels(r, top_limit, fresh),
+        "labels": items,
+        "label_details": label_details(r, items),
         "components": key_components(r),
         "engine_version": r.engine_version,
         "computed_at": _iso(r.computed_at),
@@ -345,6 +383,7 @@ def analysis_payload(session: Session, r: StockAnalysisResult, company: Company,
         "freshness": r.freshness or {},
         "freshness_status": fresh,
         "labels": labels(r, top_limit, fresh),
+        "label_details": label_details(r, labels(r, top_limit, fresh)),
         "explanation": expl,
         "market_regime": regime_payload(regime),
         "reference_price": {"close": snap.close if snap else None, "as_of_date": snap.as_of_date if snap else None,

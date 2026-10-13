@@ -6,6 +6,8 @@ Picks action, not an admin-only operation.
 """
 from __future__ import annotations
 
+import datetime as dt
+
 from fastapi import APIRouter, Depends, Query
 from sqlmodel import Session, select
 
@@ -19,7 +21,7 @@ from db.models.stock import Company
 from db.session import get_session
 from notifications.detector import latest_full_run
 from prices import service as prices
-from ranking import presenter
+from ranking import news_labels, presenter
 from utils.market_session import market_status as nse_market_status
 
 router = APIRouter(dependencies=[Depends(get_current_user)])
@@ -71,6 +73,19 @@ def top_investment_candidates(
         "ranking_date": rdate, "run_id": r.run_id,
         **refs.get(r.symbol, {"reference_price": None, "reference_price_as_of": None, "reference_price_source": None}),
         **prices.quote_payload(quotes.get(r.symbol)), "market_status": status["status"]}) for r, c in shown]
+    # Factual news labels (credible, recent, clear-cut reports about the stock);
+    # never advice and never part of the score.
+    news = news_labels.news_for(session, symbols, dt.datetime.now(dt.timezone.utc))
+    for item in data["items"]:
+        items = news.get(item["symbol"], [])
+        item["news"] = items
+        for lab in news_labels.news_labels(items):
+            item["labels"].append(lab)
+            detail = news_labels.news_detail(items, lab["tone"])
+            if detail:
+                item["label_details"][lab["key"]] = detail
+    data["labels_note"] = ("Labels describe each company's current data and news. They are not predictions "
+                           "or buy/sell advice.")
     data["ranking_date"] = rdate
     data["ranking_freshness"] = presenter.ranking_freshness(rdate, masters.get_config(session, "market.holidays"))
     data["market_status"] = status
