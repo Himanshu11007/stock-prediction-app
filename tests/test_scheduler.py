@@ -36,12 +36,13 @@ WORKFLOWS = ROOT / ".github" / "workflows"
 TOKEN = "test-scheduler-token-0123456789abcdef"
 HOLIDAYS_2026 = ["2026-10-02", "2026-10-20", "2026-11-10"]      # dates used by these tests only
 EXPECTED = {   # workflow file -> (job type, UTC crons, IST equivalents)
-    "stocklens-today-preopen.yml": ("TODAY_PREOPEN", ["0 3 * * 1-5", "30 3 * * 1-5"], ["08:30", "09:00"]),
-    "stocklens-today-confirmed.yml": ("TODAY_CONFIRMED", ["15 4 * * 1-5", "45 4 * * 1-5"], ["09:45", "10:15"]),
-    "stocklens-tomorrow-eod.yml": ("TOMORROW_EOD", ["45 10 * * 1-5", "0 14 * * 1-5"], ["16:15", "19:30"]),
-    "stocklens-outcome-evaluation.yml": ("OUTCOME_EVALUATION", ["0 11 * * 1-5", "30 15 * * 1-5"], ["16:30", "21:00"]),
-    "stocklens-snapshot-monitor.yml": ("SNAPSHOT_MONITOR", ["30 4 * * 1-5", "15 11 * * 1-5", "15 15 * * 1-5"],
-                                       ["10:00", "16:45", "20:45"]),
+    "stocklens-today-preopen.yml": ("TODAY_PREOPEN", ["7 2 * * 1-5", "37 2 * * 1-5", "7 3 * * 1-5"],
+                                    ["07:37", "08:07", "08:37"]),
+    "stocklens-today-confirmed.yml": ("TODAY_CONFIRMED", ["22 4 * * 1-5", "52 4 * * 1-5"], ["09:52", "10:22"]),
+    "stocklens-tomorrow-eod.yml": ("TOMORROW_EOD", ["52 10 * * 1-5", "7 14 * * 1-5"], ["16:22", "19:37"]),
+    "stocklens-outcome-evaluation.yml": ("OUTCOME_EVALUATION", ["13 11 * * 1-5", "43 15 * * 1-5"], ["16:43", "21:13"]),
+    "stocklens-snapshot-monitor.yml": ("SNAPSHOT_MONITOR", ["53 4 * * 1-5", "23 11 * * 1-5", "23 15 * * 1-5"],
+                                       ["10:23", "16:53", "20:53"]),
     "stocklens-news-ingestion.yml": ("NEWS_INGESTION", ["40 0-16 * * *"], ["06:10"]),     # hourly to 22:10 IST
 }
 
@@ -66,6 +67,7 @@ def test_workflow_is_inactive_by_default_and_never_runs_on_push(name):
     job_type, crons, ist = EXPECTED[name]
     assert [c["cron"] for c in on["schedule"]] == crons
     assert [_ist(c) for c in crons] == ist                # documented IST equivalents match UTC
+    assert all(c.split()[0] not in ("0", "30") for c in crons)   # off GitHub's busiest minutes
     if job_type == "NEWS_INGESTION":
         assert crons == ["40 0-16 * * *"]                # every day: weekend news matters for Monday
     else:

@@ -122,7 +122,7 @@ Every prediction freezes the evidence, event ids, `news_sentiment`,
 **Snapshot timing:**
 - `TOMORROW_EOD` (16:15 IST) uses news available by its cutoff.
 - News published after it, and overnight global news, is used by the next
-  `TODAY_PREOPEN` (08:30 IST); hourly ingestion runs every day, including
+  `TODAY_PREOPEN` (07:37 IST, retries 08:07 and 08:37); hourly ingestion runs every day, including
   weekends and holidays.
 - The target is the next **trading** session (`prediction_v2.calendar`,
   holiday list).

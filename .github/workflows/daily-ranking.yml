@@ -27,15 +27,17 @@ name: StockLens Daily Ranking
 on:
   schedule:
     # Times are UTC (IST = UTC+05:30).
-    - cron: "0 11 * * 1-5"    # 16:30 IST: the daily ranking
+    # Minutes are off :00 / :30, when GitHub's scheduler is busiest and
+    # delays or drops runs.
+    - cron: "7 11 * * 1-5"    # 16:37 IST: the daily ranking
     # Backup triggers. They exit immediately once the day's ranking is
     # COMPLETED (no data fetched, no engine work). They give the job's own
     # retry a chance to run: a FAILED/SKIPPED day (e.g. NIFTY data late,
     # provider outage) is retried by the next trigger, at most 3 attempts,
     # and a run abandoned for 3 hours is recovered. They also cover a
     # scheduled run that GitHub delays or drops.
-    - cron: "30 12 * * 1-5"   # 18:00 IST
-    - cron: "30 14 * * 1-5"   # 20:00 IST
+    - cron: "37 12 * * 1-5"   # 18:07 IST
+    - cron: "37 14 * * 1-5"   # 20:07 IST
   # Manual run: GitHub -> Actions -> StockLens Daily Ranking -> Run workflow.
   # Same job, same protections (no ranking on weekends/holidays, before
   # 16:00 IST, or twice on one day).

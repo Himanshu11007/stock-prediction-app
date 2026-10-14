@@ -14,8 +14,8 @@ name: "StockLens scheduler: TOMORROW_EOD"
 
 on:
   schedule:
-    - cron: "45 10 * * 1-5"   # 16:15 IST, Mon-Fri
-    - cron: "0 14 * * 1-5"   # 19:30 IST, retry (late or revised EOD data), Mon-Fri
+    - cron: "52 10 * * 1-5"   # 16:22 IST, Mon-Fri
+    - cron: "7 14 * * 1-5"   # 19:37 IST, retry (late or revised EOD data), Mon-Fri
   workflow_dispatch: {}
 
 permissions:

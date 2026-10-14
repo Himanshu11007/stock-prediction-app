@@ -40,10 +40,11 @@ def test_workflow_exists_and_is_named():
 def test_scheduled_after_the_nse_close_on_weekdays_and_manually_runnable():
     on = _workflow()["on"]
     crons = [s["cron"] for s in on["schedule"]]
-    assert crons[0] == "0 11 * * 1-5"                               # 16:30 IST
+    assert crons[0] == "7 11 * * 1-5"                               # 16:37 IST
     for cron in crons:
         minute, hour, dom, month, dow = cron.split()
         assert (dom, month, dow) == ("*", "*", "1-5")
+        assert minute not in ("0", "30")                           # off GitHub's busiest minutes
         ist = dt.datetime(2026, 10, 5, int(hour), int(minute), tzinfo=dt.timezone.utc).astimezone(
             dt.timezone(dt.timedelta(hours=5, minutes=30)))
         assert dt.time(16, 0) <= ist.time() <= dt.time(21, 0)      # closing data final (16:00 IST)

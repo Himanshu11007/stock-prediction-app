@@ -88,30 +88,35 @@ weekend and holiday news feeds the next pre-open snapshot.
 
 | Workflow | Job type | UTC cron | IST | Purpose |
 |---|---|---|---|---|
-| `stocklens-news-ingestion.yml` | `NEWS_INGESTION` | `40 0-16 * * *` | 06:10, then hourly to 22:10 | official feeds (and any configured provider); runs before the 08:30 and 16:15 snapshots |
-| `stocklens-today-preopen.yml` | `TODAY_PREOPEN` | `0 3 * * 1-5` | 08:30 | snapshot from the previous close plus news ingested by then (must start before 09:15) |
-| | | `30 3 * * 1-5` | 09:00 | retry; no-op if done |
-| `stocklens-today-confirmed.yml` | `TODAY_CONFIRMED` | `15 4 * * 1-5` | 09:45 | intraday confirmation (**disabled**, see below) |
-| | | `45 4 * * 1-5` | 10:15 | retry |
-| `stocklens-snapshot-monitor.yml` | `SNAPSHOT_MONITOR` | `30 4 * * 1-5` | 10:00 | checks TODAY_PREOPEN and news freshness |
-| | | `15 11 * * 1-5` | 16:45 | checks failed outcomes and news freshness |
-| | | `15 15 * * 1-5` | 20:45 | checks TOMORROW_EOD after its retry, outcomes, news |
-| `stocklens-tomorrow-eod.yml` | `TOMORROW_EOD` | `45 10 * * 1-5` | 16:15 | next-session snapshot once today's validated closing data exists |
-| | | `0 14 * * 1-5` | 19:30 | retry for late or revised provider data |
-| `stocklens-outcome-evaluation.yml` | `OUTCOME_EVALUATION` | `0 11 * * 1-5` | 16:30 | 1/3/5-session outcomes and shadow exit states |
-| | | `30 15 * * 1-5` | 21:00 | retry |
+| `stocklens-news-ingestion.yml` | `NEWS_INGESTION` | `40 0-16 * * *` | 06:10, then hourly to 22:10 | official feeds (and any configured provider); runs before the pre-open and 16:22 snapshots |
+| `stocklens-today-preopen.yml` | `TODAY_PREOPEN` | `7 2 * * 1-5` | 07:37 | snapshot from the previous close plus news ingested by then (must start before 09:15) |
+| | | `37 2 * * 1-5` | 08:07 | retry; no-op if done |
+| | | `7 3 * * 1-5` | 08:37 | retry; no-op if done |
+| `stocklens-today-confirmed.yml` | `TODAY_CONFIRMED` | `22 4 * * 1-5` | 09:52 | intraday confirmation (**disabled**, see below) |
+| | | `52 4 * * 1-5` | 10:22 | retry |
+| `stocklens-snapshot-monitor.yml` | `SNAPSHOT_MONITOR` | `53 4 * * 1-5` | 10:23 | checks TODAY_PREOPEN and news freshness |
+| | | `23 11 * * 1-5` | 16:53 | checks failed outcomes and news freshness |
+| | | `23 15 * * 1-5` | 20:53 | checks TOMORROW_EOD after its retry, outcomes, news |
+| `stocklens-tomorrow-eod.yml` | `TOMORROW_EOD` | `52 10 * * 1-5` | 16:22 | next-session snapshot once today's validated closing data exists |
+| | | `7 14 * * 1-5` | 19:37 | retry for late or revised provider data |
+| `stocklens-outcome-evaluation.yml` | `OUTCOME_EVALUATION` | `13 11 * * 1-5` | 16:43 | 1/3/5-session outcomes and shadow exit states |
+| | | `43 15 * * 1-5` | 21:13 | retry |
 
-**Data readiness at 16:15:** Yahoo's daily bar for today usually exists soon
+**Data readiness at 16:22:** Yahoo's daily bar for today usually exists soon
 after the 15:30 close, but it can still be revised in the following hours.
-The 16:15 run publishes only if today's NIFTY bar exists and at least 50% of
+The 16:22 run publishes only if today's NIFTY bar exists and at least 50% of
 the universe has validated bars for today; otherwise it is SKIPPED and the
-19:30 run tries again. A revision after publication does not change a
+19:37 run tries again. A revision after publication does not change a
 published snapshot; outcomes are evaluated from final bars.
 
 GitHub starts scheduled runs late under load, often by 5–30 minutes and
-sometimes more. The pre-open triggers start early enough for that. A late
-TODAY_PREOPEN trigger after 09:15 IST is skipped rather than producing a
-snapshot after the open.
+sometimes by hours or not at all (13–14 Oct 2026: the 08:30 pre-open trigger
+started at 13:34 IST and the hourly news job ran twice in 16 hours). The
+schedules therefore avoid :00 and :30, GitHub's busiest minutes, and the
+pre-open job has three triggers from 07:37 IST. This reduces but does not
+remove the problem; a dedicated scheduler (Render cron, paid plan) is the
+planned fix. A late TODAY_PREOPEN trigger after 09:15 IST is skipped rather
+than producing a snapshot after the open.
 
 ## Pushing a branch does not run anything
 

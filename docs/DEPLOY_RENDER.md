@@ -68,7 +68,7 @@ Candidates) runs only when someone clicks *Run the daily ranking job now* in
 the admin console. `.github/workflows/daily-ranking.yml` automates exactly that
 job (`python scripts/scheduled_jobs.py ranking`):
 
-- weekdays at 16:30 IST, with backup triggers at 18:00 and 20:00 IST;
+- weekdays at 16:37 IST, with backup triggers at 18:07 and 20:07 IST;
 - every market rule stays in the job: weekends and configured NSE holidays are
   skipped, nothing runs before 16:00 IST, today's NIFTY 50 bar must exist, and
   one ranking per trading day (a repeated trigger is a no-op);

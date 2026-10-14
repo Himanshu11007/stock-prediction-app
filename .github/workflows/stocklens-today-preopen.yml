@@ -14,8 +14,9 @@ name: "StockLens scheduler: TODAY_PREOPEN"
 
 on:
   schedule:
-    - cron: "0 3 * * 1-5"   # 08:30 IST, Mon-Fri
-    - cron: "30 3 * * 1-5"   # 09:00 IST, retry (no-op if done), Mon-Fri
+    - cron: "7 2 * * 1-5"   # 07:37 IST, Mon-Fri (early: GitHub can start runs hours late)
+    - cron: "37 2 * * 1-5"   # 08:07 IST, retry (no-op if done), Mon-Fri
+    - cron: "7 3 * * 1-5"   # 08:37 IST, retry (no-op if done), Mon-Fri
   workflow_dispatch: {}
 
 permissions:

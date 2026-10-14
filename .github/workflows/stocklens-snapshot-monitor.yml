@@ -14,9 +14,9 @@ name: "StockLens scheduler: SNAPSHOT_MONITOR"
 
 on:
   schedule:
-    - cron: "30 4 * * 1-5"   # 10:00 IST, Mon-Fri
-    - cron: "15 11 * * 1-5"   # 16:45 IST, Mon-Fri
-    - cron: "15 15 * * 1-5"   # 20:45 IST, Mon-Fri
+    - cron: "53 4 * * 1-5"   # 10:23 IST, Mon-Fri
+    - cron: "23 11 * * 1-5"   # 16:53 IST, Mon-Fri
+    - cron: "23 15 * * 1-5"   # 20:53 IST, Mon-Fri
   workflow_dispatch: {}
 
 permissions:
