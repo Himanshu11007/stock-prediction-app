@@ -129,11 +129,67 @@ def page_stock_master(c):
                 st.success("Saved (audited)")
     st.subheader("Add stock")
     with st.form("add_stock"):
-        sym = st.text_input("New symbol")
+        sym = st.text_input("New symbol (e.g. VEDPOWER.NS)")
         nm = st.text_input("Company name")
+        include = st.checkbox("Include in the daily ranking", value=True)
         if st.form_submit_button("Create") and sym and nm:
-            if call(c.post, "/admin/stocks", {"symbol": sym, "name": nm}):
-                st.success("Created (audited)")
+            if include:
+                rep = call(c.post, "/admin/universe", {"items": [{"symbol": sym, "name": nm, "category": "Admin added"}]})
+                if rep:
+                    _universe_report(rep)
+            elif call(c.post, "/admin/stocks", {"symbol": sym, "name": nm}):
+                st.success("Created (audited); not included in the daily ranking")
+    page_universe(c)
+
+
+def _universe_report(rep: dict) -> None:
+    verb = "Would add" if rep.get("dry_run") else "Added"
+    st.success(f"{verb} {len(rep['added'])} stock(s) to the daily ranking "
+               f"({len(rep['created_companies'])} new in the Stock Master); "
+               f"{len(rep['already_included'])} already included; {len(rep['errors'])} error(s).")
+    if rep["errors"]:
+        table(rep["errors"])
+    if rep["added"]:
+        st.caption(", ".join(rep["added"][:60]) + (" ..." if len(rep["added"]) > 60 else ""))
+
+
+def page_universe(c):
+    """Stocks covered by the daily ranking: summary, CSV import, removal."""
+    st.subheader("Daily ranking coverage")
+    s = call(c.get, "/admin/universe")
+    if s:
+        st.caption(f"{s['members']} stocks in the ranking list ({s['ranked']} active and analysable): "
+                   + ", ".join(f"{k} {v}" for k, v in s["by_category"].items()))
+    st.markdown("**Import a list (CSV)** - columns `Symbol`, `Company` and optional `Category` "
+                "(Large Cap, Mid Cap, Small Cap, Nifty 500, Admin added). The repository's "
+                "`data/nifty500.csv` is the official NIFTY 500 list. New stocks are analysed from the next "
+                "daily ranking; their first run fetches financial data, so it takes longer.")
+    up = st.file_uploader("CSV file", type=["csv"], key="universe_csv")
+    if up is not None:
+        df = pd.read_csv(up)
+        df.columns = [str(col).strip().lower() for col in df.columns]
+        if "symbol" not in df.columns:
+            st.error("The file needs a Symbol column.")
+            return
+        name_col = "company" if "company" in df.columns else "name" if "name" in df.columns else None
+        items = [{"symbol": str(r["symbol"]).strip(),
+                  "name": str(r[name_col]).strip() if name_col and pd.notna(r[name_col]) else None,
+                  "category": str(r["category"]).strip() if "category" in df.columns and pd.notna(r["category"]) else "Admin added"}
+                 for _, r in df.iterrows() if pd.notna(r["symbol"])]
+        col1, col2 = st.columns(2)
+        if col1.button(f"Check {len(items)} rows (nothing is saved)"):
+            rep = call(c.post, "/admin/universe", {"items": items, "dry_run": True})
+            if rep:
+                _universe_report(rep)
+        if col2.button(f"Add to the daily ranking", type="primary"):
+            rep = call(c.post, "/admin/universe", {"items": items})
+            if rep:
+                _universe_report(rep)
+    with st.form("remove_universe"):
+        rm = st.text_input("Stop ranking a stock (symbol) - its history and watchlists are kept")
+        if st.form_submit_button("Remove from the daily ranking") and rm:
+            if call(c.delete, f"/admin/universe/{rm.strip().upper()}"):
+                st.success(f"{rm.strip().upper()} removed from the daily ranking (audited)")
 
 
 def page_sectors(c):

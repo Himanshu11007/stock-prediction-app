@@ -281,5 +281,106 @@ def create_stock(session: Session, admin_user: User, *, symbol: str, name: str, 
     return company
 
 
+# ── Ranked universe (stock_universe) ─────────────────────────────────────────
+# The daily ranking analyses every active, analysable, tradable company that
+# is a member of the universe (engine_runs.service.resolve_universe). Adding a
+# member never changes the ranking engine; removing one keeps the company, its
+# history and users' watchlists.
+
+UNIVERSE_CATEGORIES = ("Large Cap", "Mid Cap", "Small Cap", "Nifty 500", "Admin added")
+MAX_UNIVERSE_IMPORT = 1000
+
+
+def universe_summary(session: Session) -> dict:
+    from db.models.stock import StockUniverseMember
+
+    members = session.exec(select(StockUniverseMember)).all()
+    by_cat: dict[str, int] = {}
+    for m in members:
+        by_cat[m.category] = by_cat.get(m.category, 0) + 1
+    symbols = {m.symbol for m in members}
+    ranked = session.exec(select(func.count()).select_from(Company).where(
+        Company.symbol.in_(symbols), Company.active == True, Company.analysis_enabled == True,  # noqa: E712
+        Company.tradable == True)).one() if symbols else 0  # noqa: E712
+    return {"members": len(symbols), "ranked": ranked, "by_category": dict(sorted(by_cat.items())),
+            "categories": list(UNIVERSE_CATEGORIES)}
+
+
+def add_to_universe(session: Session, admin_user: User, items: list[dict], dry_run: bool = False) -> dict:
+    """Add stocks to the daily ranking. items: {symbol, name?, category?}.
+    A stock not yet in the Stock Master is created (name required); its
+    sector/industry are filled by the data provider on the next run. Invalid
+    rows are reported and skipped; dry_run reports without saving."""
+    import re
+    from db.models.stock import StockUniverseMember
+
+    if len(items) > MAX_UNIVERSE_IMPORT:
+        raise ValueError(f"at most {MAX_UNIVERSE_IMPORT} stocks per import")
+    existing = {m.symbol for m in session.exec(select(StockUniverseMember)).all()}
+    report: dict = {"added": [], "created_companies": [], "already_included": [], "errors": [], "dry_run": dry_run}
+    seen: set[str] = set()
+    for i, it in enumerate(items, start=1):
+        symbol = str(it.get("symbol") or "").strip().upper()
+        if symbol and "." not in symbol:
+            symbol += ".NS"                                   # NSE symbol as listed by NSE / niftyindices
+        name = str(it.get("name") or "").strip()
+        category = str(it.get("category") or "Admin added").strip()
+        if not re.match(SYMBOL_PATTERN, symbol):
+            report["errors"].append({"row": i, "symbol": symbol, "error": "symbol must look like RELIANCE.NS"})
+            continue
+        if category not in UNIVERSE_CATEGORIES:
+            report["errors"].append({"row": i, "symbol": symbol,
+                                     "error": f"category must be one of: {', '.join(UNIVERSE_CATEGORIES)}"})
+            continue
+        if symbol in seen or symbol in existing:
+            report["already_included"].append(symbol)
+            continue
+        seen.add(symbol)
+        company = session.get(Company, symbol)
+        if company is None:
+            if not name:
+                report["errors"].append({"row": i, "symbol": symbol, "error": "name is required for a new stock"})
+                continue
+            report["created_companies"].append(symbol)
+            if not dry_run:
+                session.add(Company(symbol=symbol, name=name, exchange="BSE" if symbol.endswith(".BO") else "NSE"))
+        if not dry_run:
+            session.add(StockUniverseMember(symbol=symbol, category=category))
+        report["added"].append(symbol)
+    if dry_run or not report["added"]:
+        session.rollback()
+        return report
+    try:
+        session.flush()
+        log_action(session, admin_user, action="add_to_universe", entity="stock_universe", entity_id=None,
+                   extra_data={"added": len(report["added"]), "created_companies": len(report["created_companies"]),
+                               "symbols": report["added"][:100]})
+        session.commit()
+    except Exception:
+        session.rollback()
+        raise
+    return report
+
+
+def remove_from_universe(session: Session, admin_user: User, symbol: str) -> int:
+    """Stop ranking a stock. The company, its history and watchlists stay."""
+    from db.models.stock import StockUniverseMember
+
+    symbol = symbol.strip().upper()
+    rows = session.exec(select(StockUniverseMember).where(StockUniverseMember.symbol == symbol)).all()
+    if not rows:
+        return 0
+    try:
+        for r in rows:
+            session.delete(r)
+        log_action(session, admin_user, action="remove_from_universe", entity="stock_universe", entity_id=symbol,
+                   extra_data={"categories": [r.category for r in rows]})
+        session.commit()
+    except Exception:
+        session.rollback()
+        raise
+    return len(rows)
+
+
 def list_roles(session: Session) -> list[Role]:
     return list(session.exec(select(Role).order_by(Role.name)).all())

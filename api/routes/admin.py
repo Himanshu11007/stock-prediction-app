@@ -8,7 +8,10 @@ admin_audit_logs row (admin/audit.py) in the same transaction.
 """
 from __future__ import annotations
 
+from typing import Optional
+
 from fastapi import APIRouter, Depends, HTTPException, status
+from pydantic import BaseModel
 from sqlmodel import Session
 
 import admin.service as admin_service
@@ -171,6 +174,46 @@ def create_stock(
 ):
     return admin_service.create_stock(session, current_admin, symbol=payload.symbol, name=payload.name,
                                       exchange=payload.exchange, sector=payload.sector, industry=payload.industry)
+
+
+# ── Ranked universe ──────────────────────────────────────────────────────────
+
+class UniverseItem(BaseModel):
+    symbol: str
+    name: Optional[str] = None
+    category: Optional[str] = None
+
+
+class UniverseAddRequest(BaseModel):
+    items: list[UniverseItem]
+    dry_run: bool = False
+
+
+@router.get("/universe")
+def get_universe_summary(session: Session = Depends(get_session)):
+    """How many stocks the daily ranking covers, by category."""
+    return admin_service.universe_summary(session)
+
+
+@router.post("/universe")
+def add_universe_members(payload: UniverseAddRequest, current_admin: User = Depends(require_admin),
+                         session: Session = Depends(get_session)):
+    """Add stocks to the daily ranking (creating Stock Master rows when
+    needed). Invalid rows are reported and skipped; dry_run saves nothing."""
+    try:
+        return admin_service.add_to_universe(session, current_admin, [i.model_dump() for i in payload.items],
+                                             dry_run=payload.dry_run)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+
+@router.delete("/universe/{symbol}")
+def remove_universe_member(symbol: str, current_admin: User = Depends(require_admin),
+                           session: Session = Depends(get_session)):
+    """Stop ranking a stock; its company record, history and watchlists stay."""
+    if not admin_service.remove_from_universe(session, current_admin, symbol):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"{symbol.upper()} is not in the ranking")
+    return {"removed": symbol.strip().upper()}
 
 
 @router.get("/roles", response_model=list[RoleResponse])
