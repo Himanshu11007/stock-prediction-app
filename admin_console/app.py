@@ -156,10 +156,15 @@ def _universe_report(rep: dict) -> None:
 def page_universe(c):
     """Stocks covered by the daily ranking: summary, CSV import, removal."""
     st.subheader("Daily ranking coverage")
+    slot = st.empty()          # filled last, so it shows the count after an import or removal below
+    _universe_actions(c)
     s = call(c.get, "/admin/universe")
     if s:
-        st.caption(f"{s['members']} stocks in the ranking list ({s['ranked']} active and analysable): "
-                   + ", ".join(f"{k} {v}" for k, v in s["by_category"].items()))
+        slot.caption(f"{s['members']} stocks in the ranking list ({s['ranked']} active and analysable): "
+                     + ", ".join(f"{k} {v}" for k, v in s["by_category"].items()))
+
+
+def _universe_actions(c):
     st.markdown("**Import a list (CSV)** - columns `Symbol`, `Company` and optional `Category` "
                 "(Large Cap, Mid Cap, Small Cap, Nifty 500, Admin added). The repository's "
                 "`data/nifty500.csv` is the official NIFTY 500 list. New stocks are analysed from the next "

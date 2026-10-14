@@ -89,3 +89,23 @@ def test_every_admin_page_renders_for_admin(backend):
         at.sidebar.radio[0].set_value(page).run()
         assert not at.exception, page
         assert not [e.value for e in at.error], (page, [e.value for e in at.error])
+
+
+def _coverage(at):
+    return next(c.value for c in at.caption if "stocks in the ranking list" in c.value)
+
+
+def test_ranking_coverage_count_updates_in_the_same_page_load(backend):
+    at = _login("admin@example.com", "AdminPass1!")
+    at.sidebar.radio[0].set_value("Stock Master").run()
+    before = int(_coverage(at).split()[0])
+    next(t for t in at.text_input if t.label.startswith("New symbol")).set_value("VEDPOWER.NS")
+    next(t for t in at.text_input if t.label == "Company name").set_value("Vedanta Power Ltd.")
+    next(b for b in at.button if b.label == "Create").click().run()
+    assert not at.exception and any("Added 1 stock(s)" in s.value for s in at.success)
+    assert int(_coverage(at).split()[0]) == before + 1
+    # removing (inside the coverage section) must update the count on the same page load
+    next(t for t in at.text_input if t.label.startswith("Stop ranking")).set_value("VEDPOWER.NS")
+    next(b for b in at.button if b.label == "Remove from the daily ranking").click().run()
+    assert not at.exception and any("VEDPOWER.NS removed" in s.value for s in at.success)
+    assert int(_coverage(at).split()[0]) == before                # not the count from before the change
