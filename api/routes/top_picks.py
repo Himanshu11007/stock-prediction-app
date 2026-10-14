@@ -22,6 +22,7 @@ from db.session import get_session
 from notifications.detector import latest_full_run
 from prices import service as prices
 from ranking import news_labels, presenter
+from ranking.top_changes import top_changes
 from utils.market_session import market_status as nse_market_status
 
 router = APIRouter(dependencies=[Depends(get_current_user)])
@@ -86,6 +87,8 @@ def top_investment_candidates(
                 item["label_details"][lab["key"]] = detail
     data["labels_note"] = ("Labels describe each company's current data and news. They are not predictions "
                            "or buy/sell advice.")
+    # What changed since the previous full ranking (entered, left with the reason, big moves).
+    data["changes"] = top_changes(session, run, limit)
     data["ranking_date"] = rdate
     data["ranking_freshness"] = presenter.ranking_freshness(rdate, masters.get_config(session, "market.holidays"))
     data["market_status"] = status
