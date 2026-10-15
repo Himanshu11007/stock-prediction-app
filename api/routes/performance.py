@@ -10,12 +10,13 @@ from fastapi import APIRouter, Depends
 from sqlmodel import Session
 
 from analytics.performance_overview import overview
+from analytics.gap_report import gap_report
 from analytics.track_record import track_record
 from db.session import get_session
 
 from api import services
 from api.schemas import success_envelope
-from auth.dependencies import get_current_user
+from auth.dependencies import get_current_user, require_admin
 
 router = APIRouter(dependencies=[Depends(get_current_user)])
 
@@ -34,6 +35,14 @@ def performance_track_record(session: Session = Depends(get_session)):
     gainers were in the Top Candidates list published before that day's
     open, next to the number expected by chance. Point in time; read-only."""
     return success_envelope(track_record(session), message="Track record")
+
+
+@router.get("/admin/gap-report", dependencies=[Depends(require_admin)])
+def admin_gap_report(session: Session = Depends(get_session)):
+    """Admin research: the day's top gainers that were not in the list
+    published before the open - excluded (why) or ranked too low (which
+    components held them back), and whether StockLens had news on them."""
+    return success_envelope(gap_report(session), message="Missed gainers")
 
 
 @router.get("/performance/summary")

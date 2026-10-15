@@ -63,7 +63,8 @@ def _runs(session: Session, since: str) -> dict[str, list[dict[str, Any]]]:
     by_run: dict[str, dict[str, Any]] = {}
     for r in rows:
         run = by_run.setdefault(r.run_id, {"run_id": r.run_id, "dates": defaultdict(int), "published_at": None,
-                                           "prices": {}, "ranks": {}})
+                                           "prices": {}, "ranks": {}, "rows": {}})
+        run["rows"][r.symbol] = r
         if r.reference_date:
             run["dates"][r.reference_date] += 1
         if r.reference_price and r.reference_price > 0:
