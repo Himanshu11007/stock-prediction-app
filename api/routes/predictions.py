@@ -331,6 +331,18 @@ def admin_v2_universe(session: Session = Depends(get_session)):
                                          "note": "Independent of the v1 ranking universe."}), message="v2 universe")
 
 
+@admin_router.post("/v2-universe/seed")
+def admin_v2_universe_seed(current_admin: User = Depends(require_admin), session: Session = Depends(get_session)):
+    """Copy the daily ranking's stock list (v1 members) into the experimental
+    engine's own list. Adds only missing stocks; v1 is read, never changed."""
+    added = universe.seed_from_v1(session)
+    active = len(session.exec(select(V2UniverseMember).where(V2UniverseMember.active == True)).all())  # noqa: E712
+    log_action(session, current_admin, "V2_UNIVERSE_SEEDED", "v2_universe", None, {"added": added, "active": active})
+    session.commit()
+    return success_envelope({"added": added, "active": active},
+                            message=f"{added} stock(s) copied from the daily ranking list; {active} active")
+
+
 @admin_router.post("/v2-universe")
 def admin_v2_universe_add(body: SymbolsRequest, current_admin: User = Depends(require_admin),
                           session: Session = Depends(get_session)):

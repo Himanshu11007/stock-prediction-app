@@ -109,3 +109,14 @@ def test_ranking_coverage_count_updates_in_the_same_page_load(backend):
     next(b for b in at.button if b.label == "Remove from the daily ranking").click().run()
     assert not at.exception and any("VEDPOWER.NS removed" in s.value for s in at.success)
     assert int(_coverage(at).split()[0]) == before                # not the count from before the change
+
+
+def test_experimental_engine_list_can_be_filled_from_the_console(backend):
+    at = _login("admin@example.com", "AdminPass1!")
+    at.sidebar.radio[0].set_value("Stock Master").run()
+    assert any("has 0 active stock(s) - empty" in c.value for c in at.caption)
+    next(b for b in at.button if b.label.startswith("Copy the daily ranking list")).click().run()
+    assert not at.exception
+    done = next(s.value for s in at.success if s.value.startswith("Copied "))
+    n = int(done.split()[1])
+    assert n > 0 and any(f"has {n} active stock(s)." in c.value for c in at.caption)   # count updated in the same load

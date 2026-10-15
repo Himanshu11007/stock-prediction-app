@@ -140,6 +140,27 @@ def page_stock_master(c):
             elif call(c.post, "/admin/stocks", {"symbol": sym, "name": nm}):
                 st.success("Created (audited); not included in the daily ranking")
     page_universe(c)
+    page_v2_universe(c)
+
+
+def page_v2_universe(c):
+    """The experimental engine (Prediction v2, admin-only) keeps its own stock
+    list; an empty list means its Today / Tomorrow calls pages stay empty."""
+    st.subheader("Experimental engine stocks")
+    slot = st.empty()          # filled last, so it shows the count after the button below
+    st.caption("The experimental engine (admin-only research pages) has its own stock list, separate from the "
+               "daily ranking. Copying adds only stocks it does not have yet; the daily ranking is not changed. "
+               "Run TOMORROW_EOD afterwards to get calls for the next trading day.")
+    if st.button("Copy the daily ranking list to the experimental engine"):
+        rep = call(c.post, "/admin/v2-universe/seed")
+        if rep:
+            st.success(f"Copied {rep['added']} stock(s); the experimental engine now has {rep['active']} active "
+                       "stock(s) (audited).")
+    v2 = call(c.get, "/admin/v2-universe")
+    if v2 is not None:
+        slot.caption(f"The experimental engine has {v2['active']} active stock(s)"
+                     + (" - empty: its calls pages will show nothing until you copy the list." if not v2["active"]
+                        else "."))
 
 
 def _universe_report(rep: dict) -> None:

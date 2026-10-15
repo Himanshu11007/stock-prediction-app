@@ -217,6 +217,16 @@ def test_admin_event_review_keeps_the_original(client, db):
         assert s.get(EventClassification, cid).direction == "POSITIVE"
 
 
+def test_v2_universe_can_be_filled_from_the_ranking_list(client, db):
+    assert client.post("/api/v1/admin/v2-universe/seed", headers=H()).status_code == 403
+    r = client.post("/api/v1/admin/v2-universe/seed", headers=ADMIN()).json()["data"]
+    assert r == {"added": 3, "active": 3}                                   # AAA, BBB, DEAD (v1 members)
+    assert client.post("/api/v1/admin/v2-universe/seed", headers=ADMIN()).json()["data"] == {"added": 0, "active": 3}
+    with Session(db) as s:
+        assert {m.symbol for m in s.exec(select(V2UniverseMember)).all()} == {"AAA.NS", "BBB.NS", "DEAD.NS"}
+        assert len(s.exec(select(StockUniverseMember)).all()) == 3            # v1 unchanged
+
+
 def test_v2_universe_admin_changes_never_touch_v1(client, db):
     r = client.post("/api/v1/admin/v2-universe", headers=ADMIN(), json={"symbols": ["OUT.NS", "NOPE.NS"]})
     assert r.json()["data"]["added"] == ["OUT.NS"] and r.json()["data"]["unknown"] == ["NOPE.NS"]
