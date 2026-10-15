@@ -121,6 +121,19 @@ def test_today_prefers_confirmed_and_returns_one_snapshot(client, db):
     assert t["run"]["run_id"] == "OLDEOD" and t["freshness"]["status"] == "STALE"
 
 
+def test_today_uses_last_evenings_forecast_when_no_morning_snapshot_exists(client, db):
+    with Session(db) as s:
+        _run(s, "EOD-TODAY", "TOMORROW_EOD", TODAY, 600)                  # made last evening for today
+        _run(s, "OLDPRE", "TODAY_PREOPEN", TODAY - dt.timedelta(days=7))
+    d = client.get("/api/v1/predictions?session=today", headers=ADMIN()).json()["data"]
+    assert d["run"]["run_id"] == "EOD-TODAY" and d["run"]["run_type"] == "TOMORROW_EOD"
+    assert d["freshness"]["status"] == "FRESH" and "no pre-open snapshot" in d["freshness"]["detail"]
+    with Session(db) as s:
+        _run(s, "PRE", "TODAY_PREOPEN", TODAY, 60)                        # a morning snapshot wins
+    d = client.get("/api/v1/predictions?session=today", headers=ADMIN()).json()["data"]
+    assert d["run"]["run_id"] == "PRE" and d["freshness"]["detail"] == "Snapshot for today's session."
+
+
 def test_no_snapshot_is_reported_not_invented(client):
     d = client.get("/api/v1/predictions?session=tomorrow", headers=ADMIN()).json()["data"]
     assert d["run"] is None and d["predictions"] == [] and d["freshness"]["status"] == "NONE"

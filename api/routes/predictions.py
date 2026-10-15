@@ -93,6 +93,9 @@ def freshness(run: Optional[PredictionRun], session_kind: str, holidays: list[st
     if session_kind == "today":
         fresh = target == today
         detail = "Snapshot for today's session." if fresh else f"Latest snapshot is for {target}, not today."
+        if fresh and run.run_type == "TOMORROW_EOD":
+            detail = ("Forecast made after the previous close for today's session; no pre-open snapshot was "
+                      "made today, so overnight news is not included.")
     else:
         upcoming = calendar.next_trading_day(today, holidays) if target > today else None
         fresh = target > today and (upcoming is None or target <= upcoming)
@@ -106,9 +109,13 @@ def _select_run(session: Session, kind: str) -> Optional[PredictionRun]:
     today = now_ist().date().isoformat()
     stmt = select(PredictionRun).where(PredictionRun.status == "COMPLETED", PredictionRun.run_type.in_(types))
     if kind == "today":
-        # today's confirmed snapshot wins over the pre-open one; else the newest
-        todays = session.exec(stmt.where(PredictionRun.target_session_date == today)).all()
-        for t in types:
+        # today's confirmed snapshot wins over the pre-open one; without either,
+        # last evening's forecast for today (same closing data, no overnight
+        # news); else the newest
+        todays = session.exec(select(PredictionRun).where(
+            PredictionRun.status == "COMPLETED", PredictionRun.target_session_date == today,
+            PredictionRun.run_type.in_(types + ("TOMORROW_EOD",)))).all()
+        for t in types + ("TOMORROW_EOD",):
             for r in sorted(todays, key=lambda r: r.completed_at, reverse=True):
                 if r.run_type == t:
                     return r
