@@ -516,7 +516,8 @@ def main() -> None:
         if pname == "marketaux":
             return list(ad.MarketauxProvider(search=ev.query.replace('"', ""), countries="in,us", get=counters[pname],
                                              sleep=lambda s: None, max_pages=1).fetch(lo, hi))
-        if pname == "drishti":                    # 1 credit per page with results
+        if pname == "drishti":                    # 1 credit per page with results; sandbox limit 10 requests/min
+            time.sleep(6.5)
             return list(ad.DrishtiNewsProvider(symbols=ev.expected_symbols, get=counters[pname], sleep=lambda s: None,
                                                max_pages=1).fetch(lo, hi))
         if pname == "alphavantage":

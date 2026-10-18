@@ -482,6 +482,8 @@ class DrishtiNewsProvider:
                 if pub is None or not title:
                     continue
                 sym = str(a.get("symbol") or "").strip().upper()
+                # several companies come joined, e.g. "HDFCAMC:ABSLAMC:NAM-INDIA" (seen 18 Oct 2026)
+                syms = tuple(dict.fromkeys(x.strip().removesuffix(".NS") for x in re.split(r"[:,;|]", sym) if x.strip()))
                 tag = {"symbol": sym or None, "scrip_code": a.get("scrip_code"), "name": a.get("company"),
                        "sentiment": a.get("sentiment"), "article_type": a.get("article_type")}
                 src = a.get("source")
@@ -489,7 +491,7 @@ class DrishtiNewsProvider:
                                  url=a.get("link") or "", title=tx.sanitize(title, tx.MAX_TITLE),
                                  published_at=pub, excerpt=tx.sanitize(a.get("summary")), source_name=src,
                                  source_domain=src if "." in str(src or "") else None, time_precision=precision,
-                                 symbols=(sym + ".NS",) if sym and not sym.isdigit() else (),
+                                 symbols=tuple(x + ".NS" for x in syms if not x.isdigit()),
                                  provider_entities=(tag,), published_raw=str(a.get("date")),
                                  published_tz=zone_of(str(a.get("date")), "UTC"),
                                  raw={"sentiment": a.get("sentiment"), "article_type": a.get("article_type")})

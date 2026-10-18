@@ -40,18 +40,20 @@ def test_parses_items_with_the_key_in_a_header_and_cautious_times():
     seen = []
     pages = [{"data": [_item(1, "2026-10-15T10:31:00Z"), _item(2, "2026-10-15T16:05:00"),     # no zone -> UTC
                        _item(3, "2026-10-15"), _item(4, "2026-10-15T11:00:00+05:30", symbol="532540"),
-                       _item(5, None), _item(6, "2026-10-15T10:00:00Z", title=None, specific_title=None)],
+                       _item(5, None), _item(6, "2026-10-15T10:00:00Z", title=None, specific_title=None),
+                       _item(8, "2026-10-12T07:48:36+00:00", symbol="HDFCAMC:ABSLAMC:NAM-INDIA:SBIFUNDS.NS")],
               "has_next": True},
              {"data": [_item(7, "2026-10-16T09:00:00Z")], "has_next": False}]
     items = list(ad.DrishtiNewsProvider(api_key=KEY, symbols=["HDFCAMC.NS", " tcs "], get=_getter(pages, seen),
                                         sleep=lambda s: None).fetch(NOW - dt.timedelta(days=7), NOW))
-    assert [a.provider_article_id for a in items] == ["n1", "n2", "n3", "n4", "n7"]       # no date / no title skipped
+    assert [a.provider_article_id for a in items] == ["n1", "n2", "n3", "n4", "n8", "n7"]  # no date / no title skipped
     a1, a2, a3, a4 = items[:4]
     assert a1.published_at == dt.datetime(2026, 10, 15, 10, 31, tzinfo=UTC) and a1.published_tz == "Z"
     assert a2.published_at == dt.datetime(2026, 10, 15, 16, 5, tzinfo=UTC) and a2.published_tz == "NONE->UTC"
     assert a3.time_precision == "date" and a3.published_at == dt.datetime(2026, 10, 15, 23, 59, 59, tzinfo=IST)
     assert a4.published_at == dt.datetime(2026, 10, 15, 5, 30, tzinfo=UTC) and a4.symbols == ()   # numeric code: no NSE symbol
     assert a1.symbols == ("HDFCAMC.NS",) and a1.raw == {"sentiment": "positive", "article_type": "results"}
+    assert items[4].symbols == ("HDFCAMC.NS", "ABSLAMC.NS", "NAM-INDIA.NS", "SBIFUNDS.NS")   # joined list split
     assert a1.provider_entities[0]["scrip_code"] == "541729" and a1.source_domain == "economictimes.indiatimes.com"
     assert len(seen) == 2                                                                   # followed has_next
     q = urllib.parse.parse_qs(urllib.parse.urlparse(seen[0][0]).query)
