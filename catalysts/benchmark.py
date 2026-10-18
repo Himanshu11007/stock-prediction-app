@@ -14,6 +14,8 @@ and every provider, the outcome is exactly one of:
   MISSED                      the provider was queried successfully and has none
   UNTESTABLE_NO_HISTORY       the event is older than the provider's history
   UNTESTABLE_NOT_CONFIGURED   no credential: the provider was not queried
+  UNTESTABLE_NOT_SUPPORTED    the provider cannot be asked this question (a symbol-only API
+                              and an event without a company symbol): never a miss
   SOURCE_OF_RECORD            the provider is the event's own official source
   OUTAGE / RATE_LIMITED       the query failed: not a miss, reported separately
 
@@ -76,6 +78,7 @@ INDIAN_ALIASES = {  # unambiguous names used in headlines (regex alternatives)
     "WIPRO": "Wipro"}
 DETECTED, MISSED, AMBIGUOUS = "DETECTED", "MISSED", "AMBIGUOUS"
 NO_HISTORY, NOT_CONFIGURED, OF_RECORD = "UNTESTABLE_NO_HISTORY", "UNTESTABLE_NOT_CONFIGURED", "SOURCE_OF_RECORD"
+NOT_SUPPORTED = "UNTESTABLE_NOT_SUPPORTED"     # e.g. a symbol-only API asked about an event with no company
 OUTAGE, RATE_LIMITED = "OUTAGE", "RATE_LIMITED"
 TESTED = (DETECTED, AMBIGUOUS, MISSED)
 SEGMENTS = {"indian_company": ("nse_filing", "bse_filing"), "indian_macro": ("rbi", "sebi", "india_policy"),
@@ -122,6 +125,7 @@ class Capability:
     max_age: Optional[dt.timedelta] = None       # None = no stated history limit
     live_since: Optional[dt.datetime] = None     # live-only feeds: oldest item available now
     of_record_kinds: tuple[str, ...] = ()        # kinds whose ground truth IS this provider
+    symbol_only: bool = False                    # can only search by company symbol (no keyword search)
 
 
 def market_reaction_time(t: dt.datetime, holidays: Iterable[str] = ()) -> dt.datetime:
@@ -143,6 +147,8 @@ def testability(cap: Capability, ev: Event, now: dt.datetime) -> Optional[str]:
         return OF_RECORD
     if not cap.configured:
         return NOT_CONFIGURED
+    if cap.symbol_only and not ev.expected_symbols:
+        return NOT_SUPPORTED
     if cap.max_age is not None and ev.window[0] < now - cap.max_age:
         return NO_HISTORY
     if cap.live_since is not None and ev.window[1] < cap.live_since:
@@ -295,7 +301,7 @@ def audit(outcomes: list[Outcome], events: dict[str, dict]) -> list[dict[str, An
     with the quality flags a reviewer needs."""
     rows = []
     for o in outcomes:
-        if o.status in (OF_RECORD, NOT_CONFIGURED):
+        if o.status in (OF_RECORD, NOT_CONFIGURED, NOT_SUPPORTED):
             continue
         e = events.get(o.event_id, {})
         flags = []

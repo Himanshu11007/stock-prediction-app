@@ -403,3 +403,96 @@ class MarketauxProvider:
             if not returned or page * max(returned, 1) >= found:
                 break
             self.sleep(1.0)
+
+
+class DrishtiNewsProvider:
+    """Drishti (Manasija Technologies) GET /v1/news - Indian company news
+    filterable by NSE symbol / BSE scrip code and date, with the provider's
+    own sentiment (https://drishti.manasija.in/docs; spec
+    https://developers.manasija.in/openapi.json, read 18 Oct 2026).
+
+    Needs DRISHTI_API_KEY, sent in the X-API-Key header (never in the URL, so
+    URLs carry no secret). Billing: 1 credit per page that returns items
+    (sandbox: 1,000 credits once). There is no keyword search, so it can only
+    answer "news about these symbols in this window". Research-only: terms
+    and data source not reviewed; time zone of `date` not documented - a
+    timestamp without a zone is read as UTC (never earlier than reality)."""
+    name = "drishti"
+    research_only = True
+    URL = "https://developers.manasija.in/v1/news"
+    PAGE_LIMIT = 50                                     # documented maximum
+
+    def __init__(self, api_key: Optional[str] = None, symbols: Optional[Iterable[str]] = None,
+                 sentiment: Optional[str] = None, get: HttpGet = http_get,
+                 sleep: Callable[[float], None] = time.sleep, max_pages: int = 2):
+        self.key = api_key if api_key is not None else os.environ.get("DRISHTI_API_KEY", "")
+        self.symbols = tuple(s.strip().upper().removesuffix(".NS") for s in (symbols or ()) if s and s.strip())
+        self.sentiment, self.get, self.sleep, self.max_pages = sentiment, get, sleep, max_pages
+
+    @staticmethod
+    def _when(raw: Optional[str]) -> tuple[Optional[dt.datetime], str]:
+        """(UTC time, precision). Date-only values count as available at the
+        END of that IST day; values without a zone are read as UTC."""
+        s = str(raw or "").strip()
+        if not s:
+            return None, "exact"
+        if len(s) == 10:
+            try:
+                d = dt.date.fromisoformat(s)
+            except ValueError:
+                return None, "exact"
+            return dt.datetime.combine(d, dt.time(23, 59, 59), tzinfo=IST).astimezone(dt.timezone.utc), "date"
+        try:
+            t = dt.datetime.fromisoformat(s.replace("Z", "+00:00"))
+        except ValueError:
+            return None, "exact"
+        return (t if t.tzinfo else t.replace(tzinfo=dt.timezone.utc)).astimezone(dt.timezone.utc), "exact"
+
+    def fetch(self, since: dt.datetime, until: dt.datetime) -> Iterable[RawArticle]:
+        if not self.key:
+            raise NotConfigured("DRISHTI_API_KEY is not set")
+        headers = {"X-API-Key": self.key, "Accept": "application/json"}
+        for page in range(1, self.max_pages + 1):
+            params = {"from": f"{since.astimezone(dt.timezone.utc):%Y-%m-%dT%H:%M:%SZ}",
+                      "to": f"{until.astimezone(dt.timezone.utc):%Y-%m-%dT%H:%M:%SZ}",
+                      "page": page, "limit": self.PAGE_LIMIT}
+            if self.symbols:
+                params["symbols"] = ",".join(self.symbols)
+            if self.sentiment:
+                params["sentiment"] = self.sentiment
+            try:
+                status, body = self.get(f"{self.URL}?{urllib.parse.urlencode(params)}", 20.0, headers)
+            except OSError as e:                        # never surface request details (the header carries the key)
+                raise ProviderError(f"Drishti connection error: {type(e).__name__}") from None
+            if status == 401:
+                raise NotConfigured("Drishti rejected the API key (401)")
+            if status == 403:
+                raise NotPermitted("Drishti: the news product is not enabled for this key (403)")
+            if status in (402, 429):
+                raise RateLimited(f"Drishti HTTP {status} ({'insufficient credits' if status == 402 else 'rate limit'})")
+            if status != 200:
+                raise ProviderError(f"Drishti HTTP {status}")
+            try:
+                data = json.loads(body or b"{}")
+            except ValueError as e:
+                raise ProviderError("Drishti returned non-JSON") from e
+            for a in data.get("data") or []:
+                pub, precision = self._when(a.get("date"))
+                title = a.get("title") or a.get("specific_title")
+                if pub is None or not title:
+                    continue
+                sym = str(a.get("symbol") or "").strip().upper()
+                tag = {"symbol": sym or None, "scrip_code": a.get("scrip_code"), "name": a.get("company"),
+                       "sentiment": a.get("sentiment"), "article_type": a.get("article_type")}
+                src = a.get("source")
+                yield RawArticle(provider_article_id=str(a.get("id") or a.get("link") or "")[:300],
+                                 url=a.get("link") or "", title=tx.sanitize(title, tx.MAX_TITLE),
+                                 published_at=pub, excerpt=tx.sanitize(a.get("summary")), source_name=src,
+                                 source_domain=src if "." in str(src or "") else None, time_precision=precision,
+                                 symbols=(sym + ".NS",) if sym and not sym.isdigit() else (),
+                                 provider_entities=(tag,), published_raw=str(a.get("date")),
+                                 published_tz=zone_of(str(a.get("date")), "UTC"),
+                                 raw={"sentiment": a.get("sentiment"), "article_type": a.get("article_type")})
+            if not data.get("has_next"):
+                break
+            self.sleep(1.0)

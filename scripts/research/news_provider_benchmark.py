@@ -32,9 +32,10 @@ official time stored with every event):
   crude, gold, currency     Brent, gold and USD/INR daily moves >= 2 sd of the
                             prior 60 days (Yahoo; date only)
 
-Providers: google_news, gdelt, marketaux, alphavantage, newsapi,
+Providers: google_news, gdelt, marketaux, alphavantage, newsapi, drishti,
 publisher_rss, official_rss. Keyed providers use MARKETAUX_API_TOKEN,
-ALPHAVANTAGE_API_KEY, NEWSAPI_KEY from the environment (never printed);
+ALPHAVANTAGE_API_KEY, NEWSAPI_KEY, DRISHTI_API_KEY from the environment (never printed);
+drishti has no keyword search, so it is tested only on events with a company symbol;
 without a key they are UNTESTABLE_NOT_CONFIGURED - never "missed". The
 exposed NewsAPI key from Git history is never used.
 
@@ -480,12 +481,14 @@ def main() -> None:
     only = {p.strip() for p in (args.providers or "").split(",") if p.strip()} or None
     holidays = nse_holidays()
     index = ent.CompanyIndex(list(con.execute("SELECT symbol, name FROM companies")))
-    counters = {p: Counter() for p in ("google_news", "gdelt", "marketaux", "alphavantage", "newsapi", "publisher_rss")}
+    counters = {p: Counter() for p in ("google_news", "gdelt", "marketaux", "alphavantage", "newsapi", "drishti",
+                                       "publisher_rss")}
     env = os.environ
     caps = {
         "google_news": bm.Capability("google_news", True),
         "gdelt": bm.Capability("gdelt", True, max_age=dt.timedelta(days=88)),
         "marketaux": bm.Capability("marketaux", bool(env.get("MARKETAUX_API_TOKEN"))),
+        "drishti": bm.Capability("drishti", bool(env.get("DRISHTI_API_KEY")), symbol_only=True),
         "alphavantage": bm.Capability("alphavantage", bool(env.get("ALPHAVANTAGE_API_KEY")),
                                       max_age=now - dt.datetime(2022, 3, 1, tzinfo=UTC)),
         "newsapi": bm.Capability("newsapi", prov.newsapi_enabled(env) and bool(env.get(prov.NEWSAPI_KEY_ENV)),
@@ -513,6 +516,9 @@ def main() -> None:
         if pname == "marketaux":
             return list(ad.MarketauxProvider(search=ev.query.replace('"', ""), countries="in,us", get=counters[pname],
                                              sleep=lambda s: None, max_pages=1).fetch(lo, hi))
+        if pname == "drishti":                    # 1 credit per page with results
+            return list(ad.DrishtiNewsProvider(symbols=ev.expected_symbols, get=counters[pname], sleep=lambda s: None,
+                                               max_pages=1).fetch(lo, hi))
         if pname == "alphavantage":
             tick = [s.replace(".NS", ".BSE") for s in ev.expected_symbols]
             time.sleep(12.5)
@@ -560,7 +566,7 @@ def main() -> None:
     summary, rec = derived["providers"], derived["recommendation"]
     health = {}
     for name in ("official_rss", "federal_register", "nse_announcements", "nse_rss", "google_news", "publisher_rss",
-                 "gdelt", "marketaux", "alphavantage", "newsapi"):
+                 "gdelt", "marketaux", "alphavantage", "newsapi", "drishti"):
         try:
             health[name] = registry.health(name)
         except Exception as e:  # noqa: BLE001 - report, never crash the benchmark on a health probe

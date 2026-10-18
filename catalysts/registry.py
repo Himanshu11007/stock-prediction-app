@@ -100,6 +100,14 @@ SPECS: dict[str, ProviderSpec] = {s.name: s for s in (
                  "published_after / published_before supported per documentation; depth, Indian coverage and "
                  "timestamp quality NOT verified (no token)", "exact", 1.0, 100, 3,
                  "plan terms not reviewed", "free plan (signup) / paid tiers"),
+    ProviderSpec("drishti", a.DrishtiNewsProvider, "API",
+                 "Indian company news by NSE symbol / BSE scrip code, with the provider's sentiment (Manasija "
+                 "Technologies); no keyword search", True, "DRISHTI_API_KEY", "LIMITED",
+                 "from / to filters per documentation; history depth and the time zone of 'date' NOT verified "
+                 "(a time without a zone is read as UTC, never earlier than reality)", "exact", 1.0, None, 2,
+                 "terms and data source not reviewed; display to app users needs the vendor's written confirmation",
+                 "free sandbox 1,000 credits once (1 credit per news page with results); Starter Rs 2,000/month",
+                 enable_env="DRISHTI_ENABLED"),
     ProviderSpec("gdelt", p.GdeltProvider, "AGGREGATOR", "global news, first-seen times", True, None, "LIMITED",
                  "DOC API: about 3 months, first-seen 'seendate' would be point-in-time, but refused from this "
                  "network (shared carrier IP); raw event files lack headlines", "exact", 6.0, None, 1,
