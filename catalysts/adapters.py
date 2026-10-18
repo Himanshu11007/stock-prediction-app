@@ -498,3 +498,99 @@ class DrishtiNewsProvider:
             if not data.get("has_next"):
                 break
             self.sleep(1.0)
+
+
+class DrishtiAnnouncementsProvider:
+    """Drishti GET /v1/announcements - NSE/BSE corporate filings (results,
+    orders, board outcomes, corporate actions) relayed by Drishti, for the
+    stocks StockLens analyses. In the 18 Oct 2026 check it delivered 10 of 10
+    recent verified NSE filings within minutes of the exchange time.
+
+    Billing: 1 credit per RETURNED item, so the request is limited to our own
+    stock list (bound by the pipeline via bind_universe), to important filings
+    by default (DRISHTI_ANNOUNCEMENTS_IMPORTANT_ONLY, default true) and to at
+    most DRISHTI_ANNOUNCEMENTS_MAX_ITEMS items per run (default 40). Requests
+    are spaced for the sandbox limit of 10 a minute. The key is sent in the
+    X-API-Key header only. Summary rows carry no document link, so each item
+    gets a stable non-web identifier (urn:drishti:announcement:<id>) and the
+    exchange as its publisher (an exchange disclosure, relayed by a vendor)."""
+    name = "drishti_announcements"
+    research_only = True
+    URL = "https://developers.manasija.in/v1/announcements"
+    PAGE_LIMIT = 50
+    CHUNK = 100                                         # symbols per request (URL length)
+
+    def __init__(self, api_key: Optional[str] = None, symbols: Optional[Iterable[str]] = None,
+                 important: Optional[bool] = None, max_items: Optional[int] = None, get: HttpGet = http_get,
+                 sleep: Callable[[float], None] = time.sleep, pause: float = 6.5):
+        self.key = api_key if api_key is not None else os.environ.get("DRISHTI_API_KEY", "")
+        env_imp = (os.environ.get("DRISHTI_ANNOUNCEMENTS_IMPORTANT_ONLY") or "true").strip().lower() != "false"
+        self.important = env_imp if important is None else important
+        self.max_items = max_items if max_items is not None else int(os.environ.get("DRISHTI_ANNOUNCEMENTS_MAX_ITEMS") or 40)
+        self.get, self.sleep, self.pause = get, sleep, pause
+        self.symbols: tuple[str, ...] = ()
+        self.bind_universe(symbols or ())
+
+    def bind_universe(self, symbols: Iterable[str]) -> None:
+        self.symbols = tuple(dict.fromkeys(s.strip().upper().removesuffix(".NS") for s in symbols
+                                           if s and s.strip() and not s.strip().upper().endswith(".BO")))
+
+    def fetch(self, since: dt.datetime, until: dt.datetime) -> Iterable[RawArticle]:
+        if not self.key:
+            raise NotConfigured("DRISHTI_API_KEY is not set")
+        if not self.symbols:
+            raise NotConfigured("no stock list bound: announcements are only fetched for the analysed stocks")
+        headers = {"X-API-Key": self.key, "Accept": "application/json"}
+        left, first = self.max_items, True
+        for i in range(0, len(self.symbols), self.CHUNK):
+            page = 1
+            while left > 0:
+                if not first:
+                    self.sleep(self.pause)
+                first = False
+                params = {"symbols": ",".join(self.symbols[i:i + self.CHUNK]),
+                          "from": f"{since.astimezone(dt.timezone.utc):%Y-%m-%dT%H:%M:%SZ}",
+                          "to": f"{until.astimezone(dt.timezone.utc):%Y-%m-%dT%H:%M:%SZ}",
+                          "important": "true" if self.important else "false",
+                          "page": page, "limit": min(self.PAGE_LIMIT, left)}
+                try:
+                    status, body = self.get(f"{self.URL}?{urllib.parse.urlencode(params)}", 20.0, headers)
+                except OSError as e:
+                    raise ProviderError(f"Drishti connection error: {type(e).__name__}") from None
+                if status == 401:
+                    raise NotConfigured("Drishti rejected the API key (401)")
+                if status == 403:
+                    raise NotPermitted("Drishti: the announcements product is not enabled for this key (403)")
+                if status in (402, 429):
+                    raise RateLimited(f"Drishti HTTP {status} ({'insufficient credits' if status == 402 else 'rate limit'})")
+                if status != 200:
+                    raise ProviderError(f"Drishti HTTP {status}")
+                try:
+                    data = json.loads(body or b"{}")
+                except ValueError as e:
+                    raise ProviderError("Drishti returned non-JSON") from e
+                rows = data.get("data") or []
+                left -= len(rows)
+                for a in rows:
+                    pub, precision = DrishtiNewsProvider._when(a.get("date"))
+                    sym = str(a.get("symbol") or "").strip().upper().removesuffix(".NS")
+                    summary = tx.sanitize(a.get("summary"))
+                    if pub is None or not summary or not a.get("id"):
+                        continue
+                    company = a.get("company_name") or sym
+                    cat = a.get("category")
+                    yield RawArticle(provider_article_id=f"ann:{a['id']}"[:300], url=f"urn:drishti:announcement:{a['id']}",
+                                     title=tx.sanitize(f"{company}: {summary}", tx.MAX_TITLE), published_at=pub,
+                                     excerpt=summary, source_name="NSE/BSE filing (via Drishti)",
+                                     source_domain="nseindia.com", time_precision=precision,
+                                     symbols=(sym + ".NS",) if sym and not sym.isdigit() else (),
+                                     provider_entities=({"symbol": sym or None, "name": company, "category": cat,
+                                                         "related_categories": a.get("related_categories")},),
+                                     published_raw=str(a.get("date")), published_tz=zone_of(str(a.get("date")), "UTC"),
+                                     raw={"category": cat, "related_categories": a.get("related_categories"),
+                                          "kind": "exchange_filing"})
+                if not data.get("has_next") or not rows:
+                    break
+                page += 1
+            if left <= 0:
+                break

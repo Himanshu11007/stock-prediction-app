@@ -108,6 +108,14 @@ SPECS: dict[str, ProviderSpec] = {s.name: s for s in (
                  "terms and data source not reviewed; display to app users needs the vendor's written confirmation",
                  "free sandbox 1,000 credits once (1 credit per news page with results); Starter Rs 2,000/month",
                  enable_env="DRISHTI_ENABLED"),
+    ProviderSpec("drishti_announcements", a.DrishtiAnnouncementsProvider, "API",
+                 "NSE/BSE corporate filings (results, orders, board outcomes, corporate actions) relayed by "
+                 "Drishti, for the analysed stocks only; important filings by default", True, "DRISHTI_API_KEY",
+                 "LIMITED", "from / to filters; 10 of 10 recent verified NSE filings delivered within minutes "
+                 "(18 Oct 2026 check); history depth not verified", "exact", 6.5, 1000, 8,
+                 "terms and exchange licensing not reviewed; internal use needs the vendor's written confirmation",
+                 "1 credit per returned filing (capped by DRISHTI_ANNOUNCEMENTS_MAX_ITEMS, default 40 per run)",
+                 enable_env="DRISHTI_ANNOUNCEMENTS_ENABLED"),
     ProviderSpec("gdelt", p.GdeltProvider, "AGGREGATOR", "global news, first-seen times", True, None, "LIMITED",
                  "DOC API: about 3 months, first-seen 'seendate' would be point-in-time, but refused from this "
                  "network (shared carrier IP); raw event files lack headlines", "exact", 6.0, None, 1,

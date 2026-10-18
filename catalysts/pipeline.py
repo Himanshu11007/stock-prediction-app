@@ -239,6 +239,8 @@ def ingest(session: Session, provider, since: dt.datetime, until: dt.datetime,
     holidays = masters.get_config(session, "market.holidays") or []
     universe = _universe(session)
     index = ent.CompanyIndex([(c.symbol, c.name) for c in universe])
+    if hasattr(provider, "bind_universe"):          # providers that bill per item ask only about our stocks
+        provider.bind_universe([c.symbol for c in universe])
     try:
         articles: list[RawArticle] = sorted(provider.fetch(_utc(since), _utc(until)), key=lambda a: a.published_at)
     except NotConfigured as e:
