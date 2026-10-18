@@ -28,6 +28,7 @@ import argparse
 import datetime as dt
 import json
 import sys
+import time
 from pathlib import Path
 from statistics import median
 from typing import Any, Optional
@@ -90,6 +91,7 @@ def main(argv=None) -> int:
     ap.add_argument("--max-events", type=int, default=10)
     ap.add_argument("--report", default=str(REPORT))
     ap.add_argument("--no-calendar", action="store_true")
+    ap.add_argument("--calendar-only", action="store_true", help="skip the filings, check only the results calendar")
     ap.add_argument("--out", default=None)
     args = ap.parse_args(argv)
     client = VENDORS[args.vendor]()
@@ -97,8 +99,11 @@ def main(argv=None) -> int:
         print(f"{client.env} is not set in this environment (nothing was called).")
         return 2
     before = client.usage()
+    # drishti sandbox: 10 requests a minute across all routes
+    pause = (lambda: time.sleep(6.5)) if args.vendor == "drishti" else (lambda: None)
     rows = []
-    for e in recent_filings(Path(args.report), args.since, args.max_events):
+    for e in ([] if args.calendar_only else recent_filings(Path(args.report), args.since, args.max_events)):
+        pause()
         official = dt.datetime.fromisoformat(e["official_time"]).astimezone(UTC)
         sym = e["expected_symbols"][0]
         if args.vendor == "drishti":                         # 1 credit per returned item: keep it narrow
@@ -120,6 +125,7 @@ def main(argv=None) -> int:
     calendar = []
     if not args.no_calendar:
         try:
+            pause()
             got = {c.symbol.removesuffix(".NS"): c for c in client.results_calendar(CALENDAR_SYMBOLS)}
             yfd = yfinance_dates(CALENDAR_SYMBOLS)
             for s in CALENDAR_SYMBOLS:
@@ -131,6 +137,7 @@ def main(argv=None) -> int:
         print("\nresults calendar (vendor vs yfinance):")
         for c in calendar:
             print(f"  {c}")
+    pause()
     after = client.usage()
     n = len(rows)
     summary = {
@@ -143,7 +150,8 @@ def main(argv=None) -> int:
         "calls": client.calls, "credits_before": before, "credits_after": after,
     }
     print(f"\nsummary: {json.dumps(summary)}")
-    out = Path(args.out) if args.out else OUT_DIR / f"filings_vendor_{args.vendor}.json"
+    out = Path(args.out) if args.out else OUT_DIR / (f"filings_vendor_{args.vendor}"
+                                                     + ("_calendar" if args.calendar_only else "") + ".json")
     out.write_text(json.dumps({"vendor": args.vendor, "generated_at": dt.datetime.now(UTC).isoformat(),
                                "research_only": True, "since": args.since, "summary": summary,
                                "filings": rows, "results_calendar": calendar}, indent=1), encoding="utf-8")
