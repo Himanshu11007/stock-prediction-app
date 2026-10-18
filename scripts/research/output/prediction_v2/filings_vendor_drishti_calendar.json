@@ -1,0 +1,65 @@
+{
+ "vendor": "drishti",
+ "generated_at": "2026-10-18T15:01:42.526054+00:00",
+ "research_only": true,
+ "since": "2026-09-01",
+ "summary": {
+  "filings_checked": 0,
+  "matched": 0,
+  "late": 0,
+  "not_found": 0,
+  "errors": 0,
+  "median_delay_minutes": null,
+  "before_reaction": 0,
+  "calls": 1,
+  "credits_before": 976,
+  "credits_after": 976
+ },
+ "filings": [],
+ "results_calendar": [
+  {
+   "symbol": "HDFCAMC",
+   "vendor_date": null,
+   "yfinance_date": "2027-01-14"
+  },
+  {
+   "symbol": "CANBK",
+   "vendor_date": null,
+   "yfinance_date": "2026-10-29"
+  },
+  {
+   "symbol": "RELIANCE",
+   "vendor_date": null,
+   "yfinance_date": "2026-10-21"
+  },
+  {
+   "symbol": "AARTIIND",
+   "vendor_date": null,
+   "yfinance_date": "2026-11-05"
+  },
+  {
+   "symbol": "TCS",
+   "vendor_date": null,
+   "yfinance_date": "2026-10-08"
+  },
+  {
+   "symbol": "INFY",
+   "vendor_date": "2026-10-23",
+   "yfinance_date": "2026-10-23",
+   "detail": {
+    "quarter": "q2_27",
+    "purpose": "Financial Results/Dividend"
+   }
+  },
+  {
+   "symbol": "HDFCBANK",
+   "vendor_date": null,
+   "yfinance_date": "2027-01-16"
+  },
+  {
+   "symbol": "ICICIBANK",
+   "vendor_date": null,
+   "yfinance_date": "2027-01-14"
+  }
+ ]
+}

@@ -1,0 +1,205 @@
+{
+ "vendor": "stockinsights",
+ "generated_at": "2026-10-18T14:58:12.548717+00:00",
+ "research_only": true,
+ "since": "2026-09-01",
+ "summary": {
+  "filings_checked": 10,
+  "matched": 10,
+  "late": 0,
+  "not_found": 0,
+  "errors": 0,
+  "median_delay_minutes": -0.5,
+  "before_reaction": 10,
+  "calls": 11,
+  "credits_before": null,
+  "credits_after": null
+ },
+ "filings": [
+  {
+   "symbol": "TATASTEEL.NS",
+   "official_time": "2026-10-07T16:22:56+00:00",
+   "event": "Tata Steel Limited: Press Release",
+   "status": "matched",
+   "returned": 2,
+   "delay_minutes": -0.1,
+   "before_reaction": true,
+   "precision": "exact",
+   "title": "Operating update",
+   "category": "Other Situations",
+   "sentiment": "neutral",
+   "link": true
+  },
+  {
+   "symbol": "TRENT.NS",
+   "official_time": "2026-10-05T13:12:54+00:00",
+   "event": "Trent Limited: Press Release",
+   "status": "matched",
+   "returned": 3,
+   "delay_minutes": 0.4,
+   "before_reaction": true,
+   "precision": "exact",
+   "title": "Revenue and Stores",
+   "category": "Earnings Reports",
+   "sentiment": "positive",
+   "link": true
+  },
+  {
+   "symbol": "BAJFINANCE.NS",
+   "official_time": "2026-10-01T17:47:03+00:00",
+   "event": "Bajaj Finance Limited: Outcome of Board Meeting",
+   "status": "matched",
+   "returned": 3,
+   "delay_minutes": -6.3,
+   "before_reaction": true,
+   "precision": "exact",
+   "title": "Equity issuance plan",
+   "category": "Capital Structure Changes",
+   "sentiment": "positive",
+   "link": true
+  },
+  {
+   "symbol": "HCLTECH.NS",
+   "official_time": "2026-09-28T13:31:38+00:00",
+   "event": "HCL Technologies Limited: Press Release",
+   "status": "matched",
+   "returned": 3,
+   "delay_minutes": -6.2,
+   "before_reaction": true,
+   "precision": "exact",
+   "title": "Asset acquisition",
+   "category": "Company Mergers",
+   "sentiment": "positive",
+   "link": true
+  },
+  {
+   "symbol": "SUNPHARMA.NS",
+   "official_time": "2026-09-28T02:50:41+00:00",
+   "event": "Sun Pharmaceutical Industries Limited: Press Release",
+   "status": "matched",
+   "returned": 3,
+   "delay_minutes": -0.7,
+   "before_reaction": true,
+   "precision": "exact",
+   "title": "Product Expansion",
+   "category": "Expansion Plans",
+   "sentiment": "positive",
+   "link": true
+  },
+  {
+   "symbol": "TCS.NS",
+   "official_time": "2026-09-23T08:00:17+00:00",
+   "event": "Tata Consultancy Services Limited: Updates",
+   "status": "matched",
+   "returned": 2,
+   "delay_minutes": 1.0,
+   "before_reaction": true,
+   "precision": "exact",
+   "title": "Strategic alliance",
+   "category": "Expansion Plans",
+   "sentiment": "positive",
+   "link": true
+  },
+  {
+   "symbol": "BHARTIARTL.NS",
+   "official_time": "2026-09-22T05:30:28+00:00",
+   "event": "Bharti Airtel Limited: Press Release",
+   "status": "matched",
+   "returned": 1,
+   "delay_minutes": -0.3,
+   "before_reaction": true,
+   "precision": "exact",
+   "title": "Postpaid bundle upgrade",
+   "category": "Product Launches",
+   "sentiment": "positive",
+   "link": true
+  },
+  {
+   "symbol": "MARUTI.NS",
+   "official_time": "2026-09-18T15:09:18+00:00",
+   "event": "Maruti Suzuki India Limited: Press Release",
+   "status": "matched",
+   "returned": 1,
+   "delay_minutes": 1.5,
+   "before_reaction": true,
+   "precision": "exact",
+   "title": "Product Expansion",
+   "category": "Expansion Plans",
+   "sentiment": "positive",
+   "link": true
+  },
+  {
+   "symbol": "LT.NS",
+   "official_time": "2026-09-18T05:24:40+00:00",
+   "event": "Larsen & Toubro Limited: Press Release",
+   "status": "matched",
+   "returned": 1,
+   "delay_minutes": -2.8,
+   "before_reaction": true,
+   "precision": "exact",
+   "title": "Product showcase milestone",
+   "category": "Product Launches",
+   "sentiment": "positive",
+   "link": true
+  },
+  {
+   "symbol": "WIPRO.NS",
+   "official_time": "2026-09-17T10:09:16+00:00",
+   "event": "Wipro Limited: Press Release",
+   "status": "matched",
+   "returned": 3,
+   "delay_minutes": -2.5,
+   "before_reaction": true,
+   "precision": "exact",
+   "title": "Product launch",
+   "category": "Expansion Plans",
+   "sentiment": "positive",
+   "link": true
+  }
+ ],
+ "results_calendar": [
+  {
+   "symbol": "HDFCAMC",
+   "vendor_date": null,
+   "yfinance_date": "2027-01-14"
+  },
+  {
+   "symbol": "CANBK",
+   "vendor_date": null,
+   "yfinance_date": "2026-10-29"
+  },
+  {
+   "symbol": "RELIANCE",
+   "vendor_date": null,
+   "yfinance_date": "2026-10-21"
+  },
+  {
+   "symbol": "AARTIIND",
+   "vendor_date": null,
+   "yfinance_date": "2026-11-05"
+  },
+  {
+   "symbol": "TCS",
+   "vendor_date": null,
+   "yfinance_date": "2026-10-08"
+  },
+  {
+   "symbol": "INFY",
+   "vendor_date": "2026-10-23",
+   "yfinance_date": "2026-10-23",
+   "detail": {
+    "security_code": "500209"
+   }
+  },
+  {
+   "symbol": "HDFCBANK",
+   "vendor_date": null,
+   "yfinance_date": "2027-01-16"
+  },
+  {
+   "symbol": "ICICIBANK",
+   "vendor_date": null,
+   "yfinance_date": "2027-01-14"
+  }
+ ]
+}
