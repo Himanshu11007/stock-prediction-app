@@ -513,12 +513,15 @@ class DrishtiAnnouncementsProvider:
     are spaced for the sandbox limit of 10 a minute. The key is sent in the
     X-API-Key header only. Summary rows carry no document link, so each item
     gets a stable non-web identifier (urn:drishti:announcement:<id>) and the
-    exchange as its publisher (an exchange disclosure, relayed by a vendor)."""
+    exchange as its publisher (an exchange disclosure, relayed by a vendor).
+    At most 20 symbols per request (documented), so the stock list is asked
+    in groups of 20, starting from a different group each hour."""
     name = "drishti_announcements"
     research_only = True
     URL = "https://developers.manasija.in/v1/announcements"
     PAGE_LIMIT = 50
-    CHUNK = 100                                         # symbols per request (URL length)
+    CHUNK = 20                                          # documented maximum symbols per request
+    OVERLAP_SKIP = dt.timedelta(minutes=25)             # the job re-reads 30 min; filings arrive at once
 
     def __init__(self, api_key: Optional[str] = None, symbols: Optional[Iterable[str]] = None,
                  important: Optional[bool] = None, max_items: Optional[int] = None, get: HttpGet = http_get,
@@ -541,14 +544,18 @@ class DrishtiAnnouncementsProvider:
         if not self.symbols:
             raise NotConfigured("no stock list bound: announcements are only fetched for the analysed stocks")
         headers = {"X-API-Key": self.key, "Accept": "application/json"}
+        if until - since > self.OVERLAP_SKIP + dt.timedelta(minutes=15):
+            since = since + self.OVERLAP_SKIP            # do not pay again for filings already stored
+        chunks = [self.symbols[i:i + self.CHUNK] for i in range(0, len(self.symbols), self.CHUNK)]
+        start = int(until.timestamp() // 3600) % len(chunks)  # rotate: a capped hour never always skips the same stocks
         left, first = self.max_items, True
-        for i in range(0, len(self.symbols), self.CHUNK):
+        for chunk in chunks[start:] + chunks[:start]:
             page = 1
             while left > 0:
                 if not first:
                     self.sleep(self.pause)
                 first = False
-                params = {"symbols": ",".join(self.symbols[i:i + self.CHUNK]),
+                params = {"symbols": ",".join(chunk),
                           "from": f"{since.astimezone(dt.timezone.utc):%Y-%m-%dT%H:%M:%SZ}",
                           "to": f"{until.astimezone(dt.timezone.utc):%Y-%m-%dT%H:%M:%SZ}",
                           "important": "true" if self.important else "false",

@@ -112,7 +112,8 @@ SPECS: dict[str, ProviderSpec] = {s.name: s for s in (
                  "NSE/BSE corporate filings (results, orders, board outcomes, corporate actions) relayed by "
                  "Drishti, for the analysed stocks only; important filings by default", True, "DRISHTI_API_KEY",
                  "LIMITED", "from / to filters; 10 of 10 recent verified NSE filings delivered within minutes "
-                 "(18 Oct 2026 check); history depth not verified", "exact", 6.5, 1000, 8,
+                 "(18 Oct 2026 check); history depth not verified; max 20 symbols per request", "exact", 6.5,
+                 1000, 32,
                  "terms and exchange licensing not reviewed; internal use needs the vendor's written confirmation",
                  "1 credit per returned filing (capped by DRISHTI_ANNOUNCEMENTS_MAX_ITEMS, default 40 per run)",
                  enable_env="DRISHTI_ANNOUNCEMENTS_ENABLED"),

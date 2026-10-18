@@ -51,11 +51,22 @@ def test_asks_only_about_our_stocks_with_a_cap_and_the_key_in_a_header():
     items = list(p.fetch(NOW - dt.timedelta(hours=1), NOW))
     assert len(items) == 60                                                    # capped: 1 credit per item
     q1 = urllib.parse.parse_qs(urllib.parse.urlparse(http.seen[0][0]).query)
-    assert len(q1["symbols"][0].split(",")) == 100 and "OLD" not in http.seen[-1][0]   # chunks of 100; no BSE-only
-    assert q1["important"] == ["true"] and q1["limit"] == ["50"] and q1["from"] == ["2026-10-18T11:00:00Z"]
+    syms = q1["symbols"][0].split(",")
+    assert len(syms) == 20 and not any("OLD" in u for u, _ in http.seen)       # documented max 20; no BSE-only
+    groups = [p.symbols[i:i + 20] for i in range(0, len(p.symbols), 20)]
+    assert syms == list(groups[int(NOW.timestamp() // 3600) % len(groups)])   # this hour's starting group
+    assert q1["important"] == ["true"] and q1["limit"] == ["50"]
+    assert q1["from"] == ["2026-10-18T11:25:00Z"] and q1["to"] == ["2026-10-18T12:00:00Z"]   # overlap not re-billed
     assert urllib.parse.parse_qs(urllib.parse.urlparse(http.seen[1][0]).query)["limit"] == ["10"]   # what is left
     assert sleeps == [6.5]                                                     # paced for 10 requests a minute
     assert all(KEY not in u and h["X-API-Key"] == KEY for u, h in http.seen)
+    later = Http(lambda q: {"data": [], "has_next": False})
+    p2 = ad.DrishtiAnnouncementsProvider(api_key=KEY, get=later, sleep=lambda x: None)
+    p2.bind_universe(p.symbols)
+    list(p2.fetch(NOW, NOW + dt.timedelta(hours=1)))
+    assert len(later.seen) == len(groups)                                      # every group asked once
+    nxt = urllib.parse.parse_qs(urllib.parse.urlparse(later.seen[0][0]).query)["symbols"][0].split(",")
+    assert nxt != syms                                                         # the next hour starts elsewhere
     a = items[0]
     assert a.url.startswith("urn:drishti:announcement:") and a.provider_article_id.startswith("ann:")
     assert a.symbols == ("TRENT.NS",) and a.source_domain == "nseindia.com" and a.title.startswith("Trent Limited: Trent")
