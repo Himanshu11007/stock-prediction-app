@@ -53,7 +53,7 @@ case "$JOB" in
       after="$(sha256sum requirements-cloud.txt | cut -d' ' -f1)"
       if [ "$before" != "$after" ]; then
         echo "requirements changed: reinstalling"
-        /usr/local/bin/uv pip install -q --python "$VENV/bin/python" -r requirements-cloud.txt || rc=1
+        /usr/local/bin/uv pip install -q --no-config --python "$VENV/bin/python" -r requirements-cloud.txt || rc=1
       fi
       git log -1 --format='now at %h %s'
     fi

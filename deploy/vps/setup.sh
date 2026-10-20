@@ -42,8 +42,11 @@ chmod +x "$APP"/deploy/vps/*.sh
 
 echo "== Python 3.11 and packages (a few minutes)"
 [ -x /usr/local/bin/uv ] || curl -LsSf https://astral.sh/uv/install.sh | env UV_INSTALL_DIR=/usr/local/bin UV_NO_MODIFY_PATH=1 sh
-sudo -u stocklens -H env HOME="$HOME_DIR" /usr/local/bin/uv venv -q --python 3.11 "$VENV" --allow-existing
-sudo -u stocklens -H env HOME="$HOME_DIR" /usr/local/bin/uv pip install -q --python "$VENV/bin/python" -r "$APP/requirements-cloud.txt"
+# run uv as 'stocklens' from a directory it can read (uv looks for uv.toml in
+# the working directory; /root is not readable) and ignore config files
+cd "$HOME_DIR"
+sudo -u stocklens -H env HOME="$HOME_DIR" /usr/local/bin/uv venv -q --no-config --python 3.11 "$VENV" --allow-existing
+sudo -u stocklens -H env HOME="$HOME_DIR" /usr/local/bin/uv pip install -q --no-config --python "$VENV/bin/python" -r "$APP/requirements-cloud.txt"
 
 echo "== settings file (secrets are added by you, never by this script)"
 if [ ! -f /etc/stocklens/stocklens.env ]; then
