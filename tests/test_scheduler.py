@@ -133,6 +133,17 @@ def _post(api, job, token=TOKEN):
     return api.post(f"/api/v1/scheduler/jobs/{job}", headers={"Authorization": f"Bearer {token}"} if token else {})
 
 
+def test_each_scheduler_can_have_its_own_token(api, monkeypatch):
+    other = "vps-scheduler-token-fedcba9876543210"
+    both = ",".join(hashlib.sha256(t.encode()).hexdigest() for t in (TOKEN, other))
+    monkeypatch.setattr(config, "SCHEDULER_TOKEN_SHA256", f" {both} ")                  # spaces tolerated
+    assert _post(api, "BOGUS", token=TOKEN).status_code == 422                       # both accepted (past auth)
+    assert _post(api, "BOGUS", token=other).status_code == 422
+    assert _post(api, "BOGUS", token="wrong-token").status_code == 401
+    monkeypatch.setattr(config, "SCHEDULER_TOKEN_SHA256", hashlib.sha256(TOKEN.encode()).hexdigest() + ",not-a-digest")
+    assert _post(api, "BOGUS", token=TOKEN).status_code == 404                       # a malformed entry disables it
+
+
 def test_interface_is_disabled_without_a_configured_token(api, monkeypatch):
     monkeypatch.setattr(config, "SCHEDULER_TOKEN_SHA256", "")
     assert _post(api, "TOMORROW_EOD").status_code == 404

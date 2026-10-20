@@ -1,0 +1,9 @@
+/var/log/stocklens/*.log {
+    weekly
+    rotate 8
+    compress
+    missingok
+    notifempty
+    copytruncate
+    su stocklens stocklens
+}

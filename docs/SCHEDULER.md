@@ -118,6 +118,40 @@ remove the problem; a dedicated scheduler (Render cron, paid plan) is the
 planned fix. A late TODAY_PREOPEN trigger after 09:15 IST is skipped rather
 than producing a snapshot after the open.
 
+## VPS scheduler (primary, from 20 Oct 2026)
+
+GitHub delayed or dropped scheduled runs for hours (13–19 Oct 2026), so the
+same jobs also run from a small VPS (IONOS VPS S+, Ubuntu 24.04, time zone
+Asia/Kolkata) with plain cron: `deploy/vps/stocklens.cron`, IST times, the
+unprivileged `stocklens` user. GitHub Actions keeps its schedules as a
+backup; repeats are no-ops (slot ledger, the ranking's own once-a-day guard).
+
+- `deploy/vps/setup.sh`: one-time setup (firewall SSH only, automatic security
+  updates, 2 GB swap, Python 3.11 via uv, `requirements-cloud.txt`, cron, log
+  rotation). It writes no secret.
+- `deploy/vps/make-token.sh`: creates the VPS's own scheduler token in
+  `/etc/stocklens/stocklens.env` (root:stocklens 0640) and prints only its
+  SHA-256 digest. `SCHEDULER_TOKEN_SHA256` on Render accepts several digests,
+  comma-separated (GitHub's and the VPS's), so each can be revoked alone.
+- `deploy/vps/run-job.sh JOB`: one run per job at a time (flock), log in
+  `/var/log/stocklens/JOB.log`, env file read literally. `check` reports which
+  settings are present (never their values) and whether the API answers;
+  `update` (05:30 daily) fast-forwards the code from `main` and reinstalls
+  packages only when `requirements-cloud.txt` changed.
+
+| IST (Mon–Fri unless noted) | Job |
+|---|---|
+| 06:10–22:10 hourly, every day | NEWS_INGESTION |
+| 08:05, 08:35 | TODAY_PREOPEN |
+| 10:20, 16:55, 20:55 | SNAPSHOT_MONITOR |
+| 16:20, 19:35 | TOMORROW_EOD |
+| 16:35, 18:05, 20:05 | daily ranking (`scripts/scheduled_jobs.py ranking`, needs `DATABASE_URL`) |
+| 16:45, 21:15 | OUTCOME_EVALUATION |
+| 05:30, every day | code update |
+
+Disable: `sudo rm /etc/cron.d/stocklens` (GitHub's schedules keep running);
+revoke the VPS token by removing its digest from `SCHEDULER_TOKEN_SHA256`.
+
 ## Pushing a branch does not run anything
 
 | Check | Result (10 Oct 2026) |

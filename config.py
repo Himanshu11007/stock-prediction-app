@@ -110,7 +110,9 @@ PREDICTION_V2_NEWS_ENABLED = os.environ.get("PREDICTION_V2_NEWS_ENABLED", "true"
 
 # External scheduler credential (docs/SCHEDULER.md). Only the SHA-256 hex
 # digest of the scheduler's bearer token is configured on the server; the
-# token itself lives in the scheduler's secret store (GitHub Actions secret).
+# token itself lives in the scheduler's secret store (GitHub Actions secret,
+# the VPS scheduler's root-only env file). Several schedulers: comma-separated
+# digests, one per scheduler, so each token can be revoked on its own.
 # Unset (default): the /scheduler job interface is disabled (404).
 SCHEDULER_TOKEN_SHA256 = os.environ.get("SCHEDULER_TOKEN_SHA256", "").strip().lower()
 

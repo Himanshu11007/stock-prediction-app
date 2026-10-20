@@ -1,0 +1,6 @@
+# Files run on Linux servers must keep LF line endings (a CRLF cron file is ignored,
+# a CRLF shell script fails with "bad interpreter").
+*.sh text eol=lf
+deploy/vps/stocklens.cron text eol=lf
+deploy/vps/stocklens.logrotate text eol=lf
+deploy/vps/stocklens.env.example text eol=lf

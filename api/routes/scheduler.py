@@ -52,8 +52,9 @@ def require_scheduler_token(request: Request, engine=Depends(get_engine)) -> Non
     from sqlmodel import Session
 
     from auth import throttle
-    expected = config.SCHEDULER_TOKEN_SHA256
-    if not expected or not re.fullmatch(r"[0-9a-f]{64}", expected):
+    # one SHA-256 digest per scheduler (GitHub Actions, VPS), comma-separated
+    allowed = [d.strip() for d in (config.SCHEDULER_TOKEN_SHA256 or "").split(",") if d.strip()]
+    if not allowed or not all(re.fullmatch(r"[0-9a-f]{64}", d) for d in allowed):
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Not Found")
     ip = _ip(request)
     with Session(engine) as session:
@@ -64,7 +65,7 @@ def require_scheduler_token(request: Request, engine=Depends(get_engine)) -> Non
         header = request.headers.get("authorization", "")
         scheme, _, token = header.partition(" ")
         digest = hashlib.sha256(token.strip().encode("utf-8")).hexdigest() if token.strip() else ""
-        if scheme.lower() != "bearer" or not digest or not hmac.compare_digest(digest, expected):
+        if scheme.lower() != "bearer" or not digest or not any([hmac.compare_digest(digest, d) for d in allowed]):
             throttle.record(session, "scheduler_auth_fail", ip)
             session.commit()
             logger.warning("SCHEDULER_AUTH_REJECTED | %s | %s", ip, "missing" if not digest else "invalid")

@@ -1,0 +1,26 @@
+# /etc/cron.d/stocklens - StockLens schedules on the VPS (installed by deploy/vps/setup.sh).
+# Times are IST: setup.sh sets the server time zone to Asia/Kolkata.
+# Mon-Fri for market jobs; the backend skips NSE holidays itself. News runs
+# every day (weekend news feeds Monday's pre-open snapshot). Same jobs as the
+# GitHub Actions workflows, which stay enabled as a backup (repeats are no-ops).
+# TODAY_CONFIRMED stays off (it needs an intraday feed).
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+MAILTO=""
+J=/opt/stocklens/app/deploy/vps/run-job.sh
+
+# m   h     dom mon dow  user       command
+10    6-22  *   *   *    stocklens  $J NEWS_INGESTION
+5     8     *   *   1-5  stocklens  $J TODAY_PREOPEN
+35    8     *   *   1-5  stocklens  $J TODAY_PREOPEN
+20    10    *   *   1-5  stocklens  $J SNAPSHOT_MONITOR
+20    16    *   *   1-5  stocklens  $J TOMORROW_EOD
+35    16    *   *   1-5  stocklens  $J ranking
+45    16    *   *   1-5  stocklens  $J OUTCOME_EVALUATION
+55    16    *   *   1-5  stocklens  $J SNAPSHOT_MONITOR
+5     18    *   *   1-5  stocklens  $J ranking
+35    19    *   *   1-5  stocklens  $J TOMORROW_EOD
+5     20    *   *   1-5  stocklens  $J ranking
+55    20    *   *   1-5  stocklens  $J SNAPSHOT_MONITOR
+15    21    *   *   1-5  stocklens  $J OUTCOME_EVALUATION
+30    5     *   *   *    stocklens  $J update
