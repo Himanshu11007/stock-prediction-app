@@ -28,6 +28,9 @@ ufw allow OpenSSH >/dev/null
 ufw --force enable >/dev/null
 dpkg-reconfigure -f noninteractive unattended-upgrades >/dev/null || true
 
+echo "== prefer IPv4 (IPv6 to Render did not answer from this VPS, 20 Oct 2026; Python then hangs)"
+grep -q '^precedence ::ffff:0:0/96' /etc/gai.conf 2>/dev/null || echo 'precedence ::ffff:0:0/96  100' >> /etc/gai.conf
+
 echo "== swap (the ranking briefly needs more than 2 GB RAM)"
 if ! swapon --show | grep -q /swapfile; then
   fallocate -l 2G /swapfile && chmod 600 /swapfile && mkswap /swapfile >/dev/null && swapon /swapfile
