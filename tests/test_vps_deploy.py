@@ -70,8 +70,9 @@ def test_runner_reads_the_env_file_literally_and_reports_only_presence(tmp_path)
         d.mkdir(parents=True)
     (venv / "python").symlink_to(sys.executable)
     env_file = tmp_path / "stocklens.env"
+    fake_db = "postgresql://" + "u:" + "p&a$b;c" + "@" + "h/db"     # built in pieces: no credential-shaped literal
     env_file.write_text("# comment\nSTOCKLENS_SCHEDULER_TOKEN=tok-$(touch PWNED)&x\n"
-                        "DATABASE_URL=postgresql://u:p&a$b;c@h/db\nlower=ignored\n", encoding="utf-8")
+                        f"DATABASE_URL={fake_db}\nlower=ignored\n", encoding="utf-8")
     env = {**os.environ, "STOCKLENS_APP": str(app), "STOCKLENS_VENV": str(tmp_path / "venv"),
            "STOCKLENS_ENV_FILE": str(env_file), "STOCKLENS_LOG_DIR": str(logs), "STOCKLENS_LOCK_DIR": str(locks)}
     env.pop("STOCKLENS_API_URL", None)
