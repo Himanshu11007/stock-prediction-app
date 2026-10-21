@@ -1,0 +1,488 @@
+{
+ "generated_at": "2026-10-21T07:57:13.386678+00:00",
+ "research_only": true,
+ "events": 7968,
+ "known_before_open": 5044,
+ "by_year": {
+  "2021": {
+   "beat_d20": {
+    "n": 107,
+    "net_pct": 0.43,
+    "ci95_net_pct": [
+     -1.67,
+     2.52
+    ],
+    "hit_pct": 47.7
+   },
+   "miss_d20": {
+    "n": 118,
+    "net_pct": -0.03,
+    "ci95_net_pct": [
+     -1.51,
+     1.45
+    ],
+    "hit_pct": 50.8
+   }
+  },
+  "2022": {
+   "beat_d20": {
+    "n": 103,
+    "net_pct": 0.17,
+    "ci95_net_pct": [
+     -1.41,
+     1.76
+    ],
+    "hit_pct": 49.5
+   },
+   "miss_d20": {
+    "n": 163,
+    "net_pct": -1.52,
+    "ci95_net_pct": [
+     -2.7,
+     -0.34
+    ],
+    "hit_pct": 42.9
+   }
+  },
+  "2023": {
+   "beat_d20": {
+    "n": 141,
+    "net_pct": 3.23,
+    "ci95_net_pct": [
+     1.65,
+     4.81
+    ],
+    "hit_pct": 54.6
+   },
+   "miss_d20": {
+    "n": 126,
+    "net_pct": 1.05,
+    "ci95_net_pct": [
+     -0.25,
+     2.35
+    ],
+    "hit_pct": 57.1
+   }
+  },
+  "2024": {
+   "beat_d20": {
+    "n": 139,
+    "net_pct": 0.88,
+    "ci95_net_pct": [
+     -0.6,
+     2.36
+    ],
+    "hit_pct": 51.1
+   },
+   "miss_d20": {
+    "n": 188,
+    "net_pct": -1.57,
+    "ci95_net_pct": [
+     -2.81,
+     -0.33
+    ],
+    "hit_pct": 42.6
+   }
+  },
+  "2025": {
+   "beat_d20": {
+    "n": 159,
+    "net_pct": 0.21,
+    "ci95_net_pct": [
+     -1.28,
+     1.71
+    ],
+    "hit_pct": 47.8
+   },
+   "miss_d20": {
+    "n": 212,
+    "net_pct": -1.25,
+    "ci95_net_pct": [
+     -2.28,
+     -0.22
+    ],
+    "hit_pct": 42.9
+   }
+  },
+  "2026": {
+   "beat_d20": {
+    "n": 151,
+    "net_pct": 2.09,
+    "ci95_net_pct": [
+     0.64,
+     3.53
+    ],
+    "hit_pct": 61.6
+   },
+   "miss_d20": {
+    "n": 116,
+    "net_pct": 0.02,
+    "ci95_net_pct": [
+     -1.44,
+     1.48
+    ],
+    "hit_pct": 50.9
+   }
+  }
+ },
+ "by_liquidity": {
+  "more liquid half": {
+   "beat_d20": {
+    "n": 431,
+    "net_pct": 1.17,
+    "ci95_net_pct": [
+     0.3,
+     2.04
+    ],
+    "hit_pct": 53.4
+   },
+   "miss_d20": {
+    "n": 488,
+    "net_pct": -0.2,
+    "ci95_net_pct": [
+     -0.91,
+     0.5
+    ],
+    "hit_pct": 48.8
+   }
+  },
+  "less liquid half": {
+   "beat_d20": {
+    "n": 399,
+    "net_pct": 1.14,
+    "ci95_net_pct": [
+     0.18,
+     2.09
+    ],
+    "hit_pct": 50.9
+   },
+   "miss_d20": {
+    "n": 454,
+    "net_pct": -1.23,
+    "ci95_net_pct": [
+     -1.97,
+     -0.48
+    ],
+    "hit_pct": 44.9
+   }
+  }
+ },
+ "by_sector": {
+  "Basic Materials": {
+   "beat_d20": {
+    "n": 71,
+    "net_pct": 0.08,
+    "ci95_net_pct": [
+     -2.0,
+     2.16
+    ],
+    "hit_pct": 53.5
+   },
+   "miss_d20": {
+    "n": 69,
+    "net_pct": -1.01,
+    "ci95_net_pct": [
+     -2.89,
+     0.86
+    ],
+    "hit_pct": 49.3
+   }
+  },
+  "Communication Services": {
+   "beat_d20": {
+    "n": 27,
+    "net_pct": 2.13,
+    "ci95_net_pct": [
+     -1.46,
+     5.72
+    ],
+    "hit_pct": 48.1
+   },
+   "miss_d20": {
+    "n": 34,
+    "net_pct": -1.91,
+    "ci95_net_pct": [
+     -4.36,
+     0.54
+    ],
+    "hit_pct": 32.4
+   }
+  },
+  "Consumer Cyclical": {
+   "beat_d20": {
+    "n": 58,
+    "net_pct": 0.86,
+    "ci95_net_pct": [
+     -1.04,
+     2.76
+    ],
+    "hit_pct": 53.4
+   },
+   "miss_d20": {
+    "n": 68,
+    "net_pct": -0.34,
+    "ci95_net_pct": [
+     -2.05,
+     1.38
+    ],
+    "hit_pct": 51.5
+   }
+  },
+  "Consumer Defensive": {
+   "beat_d20": {
+    "n": 42,
+    "net_pct": -0.96,
+    "ci95_net_pct": [
+     -2.53,
+     0.6
+    ],
+    "hit_pct": 40.5
+   },
+   "miss_d20": {
+    "n": 33,
+    "net_pct": -1.08,
+    "ci95_net_pct": [
+     -3.24,
+     1.08
+    ],
+    "hit_pct": 42.4
+   }
+  },
+  "Energy": {
+   "beat_d20": {
+    "n": 25,
+    "net_pct": 0.9,
+    "ci95_net_pct": [
+     -1.55,
+     3.36
+    ],
+    "hit_pct": 40.0
+   },
+   "miss_d20": {
+    "n": 20,
+    "net_pct": 1.59,
+    "ci95_net_pct": [
+     -1.63,
+     4.81
+    ],
+    "hit_pct": 45.0
+   }
+  },
+  "Financial Services": {
+   "beat_d20": {
+    "n": 94,
+    "net_pct": 1.35,
+    "ci95_net_pct": [
+     -0.61,
+     3.32
+    ],
+    "hit_pct": 52.1
+   },
+   "miss_d20": {
+    "n": 99,
+    "net_pct": -1.31,
+    "ci95_net_pct": [
+     -2.81,
+     0.19
+    ],
+    "hit_pct": 43.4
+   }
+  },
+  "Healthcare": {
+   "beat_d20": {
+    "n": 51,
+    "net_pct": 2.84,
+    "ci95_net_pct": [
+     0.57,
+     5.11
+    ],
+    "hit_pct": 62.7
+   },
+   "miss_d20": {
+    "n": 59,
+    "net_pct": -1.24,
+    "ci95_net_pct": [
+     -2.82,
+     0.35
+    ],
+    "hit_pct": 47.5
+   }
+  },
+  "Industrials": {
+   "beat_d20": {
+    "n": 53,
+    "net_pct": 2.9,
+    "ci95_net_pct": [
+     0.27,
+     5.53
+    ],
+    "hit_pct": 56.6
+   },
+   "miss_d20": {
+    "n": 88,
+    "net_pct": -0.79,
+    "ci95_net_pct": [
+     -2.23,
+     0.65
+    ],
+    "hit_pct": 45.5
+   }
+  },
+  "Real Estate": {
+   "beat_d20": {
+    "n": 13
+   },
+   "miss_d20": {
+    "n": 27,
+    "net_pct": 1.57,
+    "ci95_net_pct": [
+     -1.53,
+     4.67
+    ],
+    "hit_pct": 59.3
+   }
+  },
+  "Technology": {
+   "beat_d20": {
+    "n": 56,
+    "net_pct": -0.59,
+    "ci95_net_pct": [
+     -3.33,
+     2.16
+    ],
+    "hit_pct": 42.9
+   },
+   "miss_d20": {
+    "n": 72,
+    "net_pct": -0.34,
+    "ci95_net_pct": [
+     -2.21,
+     1.54
+    ],
+    "hit_pct": 47.2
+   }
+  },
+  "Utilities": {
+   "beat_d20": {
+    "n": 34,
+    "net_pct": 1.2,
+    "ci95_net_pct": [
+     -1.2,
+     3.6
+    ],
+    "hit_pct": 58.8
+   },
+   "miss_d20": {
+    "n": 37,
+    "net_pct": -0.32,
+    "ci95_net_pct": [
+     -2.3,
+     1.65
+    ],
+    "hit_pct": 48.6
+   }
+  }
+ },
+ "clustered_by_week": {
+  "2021-2023": {
+   "beat_d20": {
+    "net_pct": 1.46,
+    "ci95_net_pct": [
+     0.13,
+     2.79
+    ],
+    "hit_pct": 58.7,
+    "weeks": 75
+   },
+   "miss_d20": {
+    "net_pct": -0.12,
+    "ci95_net_pct": [
+     -1.11,
+     0.87
+    ],
+    "hit_pct": 46.1,
+    "weeks": 76
+   },
+   "beat_d5": {
+    "net_pct": 0.47,
+    "ci95_net_pct": [
+     -0.34,
+     1.27
+    ],
+    "hit_pct": 58.7,
+    "weeks": 75
+   }
+  },
+  "2024-2026": {
+   "beat_d20": {
+    "net_pct": 0.46,
+    "ci95_net_pct": [
+     -0.66,
+     1.58
+    ],
+    "hit_pct": 57.4,
+    "weeks": 68
+   },
+   "miss_d20": {
+    "net_pct": -0.15,
+    "ci95_net_pct": [
+     -1.34,
+     1.03
+    ],
+    "hit_pct": 40.3,
+    "weeks": 67
+   },
+   "beat_d5": {
+    "net_pct": -0.13,
+    "ci95_net_pct": [
+     -0.88,
+     0.62
+    ],
+    "hit_pct": 45.6,
+    "weeks": 68
+   }
+  }
+ },
+ "pre_results": {
+  "2021-2023": {
+   "beat_3_or_4_of_last_4": {
+    "n": 1267,
+    "net_pct": 0.19,
+    "ci95_net_pct": [
+     -0.04,
+     0.42
+    ],
+    "hit_pct": 52.3
+   },
+   "beat_0_or_1_of_last_4": {
+    "n": 988,
+    "net_pct": 0.16,
+    "ci95_net_pct": [
+     -0.1,
+     0.41
+    ],
+    "hit_pct": 49.6
+   }
+  },
+  "2024-2026": {
+   "beat_3_or_4_of_last_4": {
+    "n": 1333,
+    "net_pct": 0.28,
+    "ci95_net_pct": [
+     0.03,
+     0.52
+    ],
+    "hit_pct": 52.3
+   },
+   "beat_0_or_1_of_last_4": {
+    "n": 1307,
+    "net_pct": 0.06,
+    "ci95_net_pct": [
+     -0.18,
+     0.29
+    ],
+    "hit_pct": 49.1
+   }
+  }
+ }
+}
