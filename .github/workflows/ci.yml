@@ -78,7 +78,7 @@ jobs:
 
   production-dependencies:
     name: Render dependency set on PostgreSQL 16 (requirements-cloud.txt, Python 3.11.9)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04                     # exact 3.11.9 builds exist for 24.04, not for 26.04 (ubuntu-latest since 19 Oct 2026)
     timeout-minutes: 60
     services:
       postgres:
