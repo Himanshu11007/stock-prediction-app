@@ -113,6 +113,28 @@ def test_low_liquidity_and_low_coverage_are_ineligible():
     assert any("FQVF coverage" in x for x in r["ineligible_reasons"])
 
 
+def test_liquidity_in_rupees_admits_expensive_heavily_traded_stocks():
+    def stock(sym, close, volume):
+        t = _tech(1)
+        t.update(close=close, avg_volume_20d=volume)
+        return _input(sym, technical=t)
+    expensive = stock("LTTS.NS", 4500.0, 150_000)        # Rs 67.5 crore a day, but only 150,000 shares
+    cheap_thin = stock("THIN.NS", 40.0, 600_000)          # 600,000 shares, but only Rs 2.4 crore a day
+    by_shares = {r["symbol"]: r for r in StockRankingService().rank([expensive, cheap_thin] + _universe(10))}
+    assert not by_shares["LTTS.NS"]["eligible"] and by_shares["THIN.NS"]["eligible"]          # v1.0 default
+    rupees = {"min_avg_volume_20d": 0, "min_avg_traded_value_20d": 1e8}                         # Rs 10 crore
+    by_value = {r["symbol"]: r for r in StockRankingService(rules=rupees).rank([expensive, cheap_thin] + _universe(10))}
+    assert by_value["LTTS.NS"]["eligible"]
+    assert not by_value["THIN.NS"]["eligible"]
+    assert any("traded value below Rs 10 crore" in x for x in by_value["THIN.NS"]["ineligible_reasons"])
+    no_close = stock("NOC.NS", None, 900_000)
+    out = StockRankingService(rules=rupees).rank([no_close])[0]
+    assert not out["eligible"]                                                      # no price -> never assumed liquid
+    from ranking.tracking import tracked_engine_version
+    assert tracked_engine_version() == "ranking-v1.0"
+    assert tracked_engine_version(rules=rupees) == "ranking-v1.0+custom-config"     # tracked separately
+
+
 def test_ranks_are_dense_over_eligible_only_and_deterministic():
     out = StockRankingService().rank(_universe(12) + [_input("Z.NS", 3, market_status="UNAVAILABLE")])
     ranked = sorted((r for r in out if r["eligible"]), key=lambda r: r["rank"])
@@ -215,3 +237,28 @@ def test_sector_outlook_flows_into_fqvf(eng):
         r = s.exec(select(StockAnalysisResult).where(StockAnalysisResult.run_id == run.run_id,
                                                      StockAnalysisResult.symbol == "T00.NS")).one()
         assert r.fqvf["checks"][17]["status"] == "PASS"
+
+
+def test_incomplete_fundamentals_fetch_keeps_the_previous_snapshot(eng, monkeypatch):
+    from datetime import datetime, timedelta, timezone
+    _run(eng)
+
+    def partial(sym):                                           # Yahoo answering with part of the data
+        return {"status": "PARTIAL", "error": "no annual statements", "fiscal_period_end": None,
+                "data": {"sector": "S", "industry": "I", "trailing_pe": 10.0, "annual": [], "issues": []},
+                "fetched_at": datetime.now(timezone.utc)}
+    monkeypatch.setattr(runs.provider, "fetch_fundamentals", partial)
+    run = _run(eng, refresh_fundamentals=True)
+    with Session(eng) as s:
+        latest = runs._latest_fundamentals(s, "T00.NS")
+        assert latest.status == "OK" and latest.data["annual"]                      # previous kept
+        r = s.exec(select(StockAnalysisResult).where(StockAnalysisResult.run_id == run.run_id,
+                                                     StockAnalysisResult.symbol == "T00.NS")).one()
+        assert r.eligible
+        for snap in s.exec(select(FundamentalSnapshot).where(FundamentalSnapshot.symbol == "T00.NS")).all():
+            snap.fetched_at = datetime.now(timezone.utc) - timedelta(days=8)           # previous now stale
+            s.add(snap)
+        s.commit()
+    _run(eng, refresh_fundamentals=True)
+    with Session(eng) as s:
+        assert runs._latest_fundamentals(s, "T00.NS").status == "PARTIAL"            # stale: new answer used

@@ -267,4 +267,5 @@ def test_ranking_engine_v1_is_frozen():
                                "momentum": 10, "risk": 10, "sector_outlook": 5, "market_regime": 5,
                                "ml_signal": 0}
     assert DEFAULT_RULES == {"min_score_coverage": 0.60, "min_fqvf_coverage": 0.50, "min_avg_volume_20d": 500_000,
-                             "max_market_data_age_days": 4, "strong_component": 70, "weak_component": 30}
+                             "max_market_data_age_days": 4, "strong_component": 70, "weak_component": 30,
+                             "min_avg_traded_value_20d": 0}           # 0 = off: v1.0 behaviour unchanged

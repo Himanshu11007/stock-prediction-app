@@ -247,3 +247,19 @@ def test_normalise_dividend_yield_percent_fallback():
     d = normalise({"dividendYield": 0.51}, {})
     assert d["dividend_yield"] == pytest.approx(0.0051) and d["dividend_yield_basis"] == "dividendYield / 100"
     assert normalise({}, {})["dividend_yield"] is None
+
+
+def test_normalise_converts_statements_reported_in_another_currency():
+    # INFY.NS: price in INR, statements in USD; Yahoo's P/S is INR market cap / USD revenue (227)
+    info = {"currency": "INR", "financialCurrency": "USD", "priceToSalesTrailing12Months": 227.0, "trailingPE": 15.2}
+    stmt = pd.DataFrame({pd.Timestamp("2026-03-31"): [0.85, 3e9]}, index=["Diluted EPS", "Net Income"])
+    d = normalise(info, {"income_stmt": stmt}, fx_rate=88.0)
+    assert d["annual"][0]["diluted_eps"] == pytest.approx(74.8) and d["annual"][0]["net_income"] == pytest.approx(2.64e11)
+    assert d["price_to_sales"] == pytest.approx(227.0 / 88.0) and d["trailing_pe"] == 15.2   # INR-based: unchanged
+    assert d["statement_currency"] == "USD" and d["statement_fx_rate"] == 88.0
+    no_rate = normalise(info, {"income_stmt": stmt})                    # never mix currencies
+    assert no_rate["annual"] == [] and no_rate["price_to_sales"] is None
+    assert any("statements in USD" in i for i in no_rate["issues"])
+    same = normalise({"currency": "INR", "financialCurrency": "INR", "priceToSalesTrailing12Months": 1.9},
+                     {"income_stmt": stmt}, fx_rate=88.0)
+    assert same["price_to_sales"] == 1.9 and same["annual"][0]["diluted_eps"] == 0.85           # same currency: untouched

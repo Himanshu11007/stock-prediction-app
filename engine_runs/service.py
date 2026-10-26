@@ -6,7 +6,8 @@ One run:
      default the Large/Mid/Small Cap universe, or an explicit symbol list)
   2. fetches 2 years of daily prices (batched) and the NIFTY 50 regime
   3. fetches fundamentals (re-using snapshots younger than
-     FUNDAMENTALS_TTL_HOURS unless refresh is requested)
+     FUNDAMENTALS_TTL_HOURS unless refresh is requested; a fetch clearly less
+     complete than the still-fresh previous snapshot is not stored)
   4. computes technical/risk metrics and, optionally, the ML signal
   5. derives industry median PE from real peer snapshots
   6. evaluates FQVF and the StockLens Score; stores one StockAnalysisResult per stock
@@ -186,6 +187,28 @@ def _latest_fundamentals(session: Session, symbol: str) -> Optional[FundamentalS
                         .order_by(FundamentalSnapshot.fetched_at.desc())).first()
 
 
+def _completeness(data: Optional[dict]) -> int:
+    """Number of reported values in a fundamentals payload (summary + annual)."""
+    if not data:
+        return 0
+    summary = sum(1 for k, v in data.items() if isinstance(v, (int, float)) and not isinstance(v, bool))
+    annual = sum(1 for row in data.get("annual") or [] for k, v in row.items() if k != "fiscal_year_end" and v is not None)
+    return summary + annual
+
+
+def keep_previous_fundamentals(prev: Optional[FundamentalSnapshot], new: dict) -> bool:
+    """True when a fresh fetch is clearly less complete than the previous
+    snapshot that is still fresh (Yahoo sometimes answers with part of the data:
+    WIPRO.NS 21 Oct 2026, FQVF coverage 44%). The previous snapshot then stays
+    the latest; the next run fetches again. Once it is older than
+    FUNDAMENTALS_STALE_DAYS the new answer is used, however incomplete."""
+    if prev is None or prev.status not in ("OK", "PARTIAL"):
+        return False
+    if _aware(prev.fetched_at) < _now() - timedelta(days=FUNDAMENTALS_STALE_DAYS):
+        return False
+    return _completeness(new.get("data")) < 0.9 * _completeness(prev.data)
+
+
 def _build_market(symbol: str, df, run_errors: list, include_ml: bool) -> MarketSnapshot:
     """Compute (not persist) a market snapshot. Pure CPU work, safe in a thread."""
     if df is None or df.empty:
@@ -302,12 +325,13 @@ def execute_run(engine, run_id: str) -> None:
 
             # 3. fundamentals (fresh snapshot reused unless refresh requested)
             ttl_cutoff = _now() - timedelta(hours=FUNDAMENTALS_TTL_HOURS)
-            to_fetch = []
+            to_fetch, previous = [], {}
             for s in symbols:
                 snap = _latest_fundamentals(session, s)
                 if cfg.get("refresh_fundamentals") or snap is None or _aware(snap.fetched_at) < ttl_cutoff \
                         or snap.status in ("ERROR", "UNAVAILABLE"):
                     to_fetch.append(s)
+                    previous[s] = snap
             def _safe_fetch(sym):
                 # The provider adapter reports errors as status ERROR, but any
                 # unexpected exception must stay confined to this one stock.
@@ -320,11 +344,15 @@ def execute_run(engine, run_id: str) -> None:
             with ThreadPoolExecutor(max_workers=ENGINE_RUN_MAX_WORKERS) as pool:
                 fetched = dict(zip(to_fetch, pool.map(_safe_fetch, to_fetch)))
             for s, f in fetched.items():
+                if f["status"] == "ERROR":
+                    errors.append({"symbol": s, "stage": "fundamentals", "error": f["error"]})
+                if keep_previous_fundamentals(previous.get(s), f):
+                    logger.info("FUNDAMENTALS_KEPT_PREVIOUS | %s | new fetch %s, %d values vs %d", s, f["status"],
+                                _completeness(f.get("data")), _completeness(previous[s].data))
+                    continue
                 session.add(FundamentalSnapshot(symbol=s, fetched_at=f["fetched_at"], status=f["status"],
                                                 error=f["error"], fiscal_period_end=f["fiscal_period_end"],
                                                 data=f["data"]))
-                if f["status"] == "ERROR":
-                    errors.append({"symbol": s, "stage": "fundamentals", "error": f["error"]})
                 d = f["data"] or {}
                 try:
                     upsert_classification(session, d.get("sector"), d.get("industry"))

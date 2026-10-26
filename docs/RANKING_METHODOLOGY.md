@@ -72,6 +72,7 @@ Eligibility rules (`ranking.rules`, administrator-configurable):
 | FQVF coverage ≥ `min_fqvf_coverage` | 50% |
 | Score coverage ≥ `min_score_coverage` | 60% |
 | 20-day average volume ≥ `min_avg_volume_20d` (liquidity) | 500,000 shares |
+| 20-day average traded value (volume × last close) ≥ `min_avg_traded_value_20d` (liquidity in rupees; optional) | 0 = off in v1.0. Suggested: `1e8` (₹10 crore a day) with `min_avg_volume_20d` = 0, so expensive, heavily traded stocks (₹4,500 × 150,000 shares = ₹67 crore) are no longer excluded. A non-default value is tracked as `ranking-v1.0+custom-config` |
 
 Ineligible stocks still have a score in their own analysis, with the reasons
 listed (`ineligible_reasons`).

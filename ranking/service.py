@@ -67,6 +67,10 @@ DEFAULT_RULES: dict[str, float] = {
     "min_score_coverage": 0.60,       # share of total weight that must be available
     "min_fqvf_coverage": 0.50,        # share of the 16 scored FQVF checks evaluated
     "min_avg_volume_20d": float(MIN_AVG_VOLUME),
+    # Liquidity in rupees: 20-day average volume x last close, e.g. 1e8 = Rs 10 crore
+    # a day. 0 = off (the frozen v1.0 configuration). A share count alone excludes
+    # expensive, heavily traded stocks (Rs 4,000 x 200,000 shares = Rs 80 crore).
+    "min_avg_traded_value_20d": 0.0,
     "max_market_data_age_days": float(MARKET_DATA_STALE_DAYS),
     "strong_component": 70.0,         # component score shown as a positive factor
     "weak_component": 30.0,           # component score shown as a risk
@@ -236,8 +240,14 @@ class StockRankingService:
         if score is None or coverage < r["min_score_coverage"]:
             reasons.append(f"score coverage {coverage:.0%} below {r['min_score_coverage']:.0%}")
         vol = t.get("avg_volume_20d")
-        if vol is None or vol < r["min_avg_volume_20d"]:
+        if r["min_avg_volume_20d"] > 0 and (vol is None or vol < r["min_avg_volume_20d"]):
             reasons.append(f"20-day average volume below {r['min_avg_volume_20d']:,.0f} (liquidity)")
+        if r["min_avg_traded_value_20d"] > 0:
+            close = t.get("close")
+            traded = vol * close if vol is not None and close else None
+            if traded is None or traded < r["min_avg_traded_value_20d"]:
+                reasons.append(f"20-day average traded value below Rs {r['min_avg_traded_value_20d'] / 1e7:,.0f} crore"
+                               " (liquidity)")
         return reasons
 
     def _positives(self, i: RankingInput, comps) -> list[str]:

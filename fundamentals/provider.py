@@ -10,6 +10,11 @@ Unit conversions (verified against provider output, see docs/FQVF.md):
   debtToEquity      provider reports a percentage (46.3 = 0.463) -> ratio / 100
   dividendYield     provider reports a percentage (0.51 = 0.51%) -> / 100,
                     used only when dividendRate (absolute, per share) is absent
+  financialCurrency statements reported in another currency than the price
+                    (INFY.NS: USD statements, INR price; Yahoo's own
+                    priceToSalesTrailing12Months is then INR / USD, e.g. 227)
+                    -> annual figures x FX rate and price_to_sales / FX rate;
+                    without a rate both are None, never mixed currencies
 """
 from __future__ import annotations
 
@@ -82,8 +87,18 @@ def _annual_series(frames: dict[str, pd.DataFrame], issues: list[str]) -> list[d
     return sorted(rows, key=lambda r: r["fiscal_year_end"], reverse=True)
 
 
-def normalise(info: dict, frames: dict[str, pd.DataFrame]) -> dict:
-    """Pure transformation of provider payloads (testable without network)."""
+def statement_currency_mismatch(info: dict) -> tuple[str, str] | None:
+    """(statement currency, price currency) when they differ, else None."""
+    fin, cur = info.get("financialCurrency"), info.get("currency")
+    if isinstance(fin, str) and isinstance(cur, str) and fin.strip() and cur.strip()             and fin.strip().upper() != cur.strip().upper():
+        return fin.strip().upper(), cur.strip().upper()
+    return None
+
+
+def normalise(info: dict, frames: dict[str, pd.DataFrame], fx_rate: float | None = None) -> dict:
+    """Pure transformation of provider payloads (testable without network).
+    fx_rate: price-currency units per statement-currency unit, used only when
+    the statements are in another currency (statement_currency_mismatch)."""
     issues: list[str] = []
     data: dict[str, Any] = {}
     for key, provider_key in INFO_FIELDS.items():
@@ -108,7 +123,23 @@ def normalise(info: dict, frames: dict[str, pd.DataFrame]) -> dict:
         data["dividend_yield"] = dy_pct / 100 if dy_pct is not None else None
         data["dividend_yield_basis"] = "dividendYield / 100" if dy_pct is not None else None
 
-    data["annual"] = _annual_series(frames, issues)
+    annual = _annual_series(frames, issues)
+    mismatch = statement_currency_mismatch(info)
+    data["statement_currency"] = mismatch[0] if mismatch else data.get("currency")
+    if mismatch:
+        rate = clean_number(fx_rate)
+        if rate and rate > 0:
+            annual = [{k: (v * rate if k != "fiscal_year_end" and v is not None else v) for k, v in row.items()}
+                      for row in annual]
+            if data.get("price_to_sales") is not None:
+                data["price_to_sales"] = data["price_to_sales"] / rate
+            data["statement_fx_rate"] = rate
+        else:
+            annual = []
+            data["price_to_sales"] = None
+            issues.append(f"statements in {mismatch[0]}, price in {mismatch[1]}, no exchange rate:"
+                          " annual figures and price/sales not used")
+    data["annual"] = annual
     data["issues"] = issues
     return data
 
@@ -135,7 +166,14 @@ def fetch_fundamentals(symbol: str) -> dict:
         return {"status": "ERROR", "error": f"{type(e).__name__}: {e}"[:500],
                 "fiscal_period_end": None, "data": None, "fetched_at": fetched_at}
 
-    data = normalise(info, frames)
+    fx_rate = None
+    mismatch = statement_currency_mismatch(info)
+    if mismatch:
+        try:
+            fx_rate = clean_number(yf.Ticker(f"{mismatch[0]}{mismatch[1]}=X").fast_info["last_price"])
+        except Exception:  # no rate: normalise drops the mixed-currency figures
+            fx_rate = None
+    data = normalise(info, frames, fx_rate)
     has_summary = any(data.get(k) is not None for k in ("trailing_pe", "price_to_book", "market_cap"))
     has_annual = bool(data["annual"])
     if not has_summary and not has_annual:
