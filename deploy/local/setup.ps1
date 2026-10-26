@@ -47,11 +47,9 @@ if (-not (Test-Path -LiteralPath $EnvFile)) {
         "LOCAL_DB_PASSWORD=$dbPassword",
         "DATABASE_URL=postgresql://stocklens:$dbPassword@127.0.0.1:5432/stocklens",
         "JWT_SECRET_KEY=$(New-Secret 48)",
-        "CORS_ALLOWED_ORIGINS=$WebUrl,http://127.0.0.1:8080",
-        "FRONTEND_BASE_URL=$WebUrl",
         'ENGINE_RUN_MAX_WORKERS=4',
         'ENGINE_RUN_ALLOW_ML=false',
-        '# Google sign-in (the public web client id; also add http://localhost:8080 as an',
+        "# Google sign-in (the public web client id; also add $WebUrl as an",
         '# authorised JavaScript origin of this client in Google Cloud Console)',
         'GOOGLE_OAUTH_CLIENT_ID=160173631539-ed5fq3rtvvsdob80g8f2k54631kc7pud.apps.googleusercontent.com',
         '# jobs on this laptop call the local API with this token; the API keeps only its SHA-256',
@@ -71,6 +69,9 @@ if (-not (Test-Path -LiteralPath $EnvFile)) {
 } else {
     Write-Host "   kept existing $EnvFile"
 }
+# website address: kept in step with $WebPort (common.ps1) on every run
+Set-EnvValue 'CORS_ALLOWED_ORIGINS' "$WebUrl,http://127.0.0.1:$WebPort"
+Set-EnvValue 'FRONTEND_BASE_URL' $WebUrl
 
 Write-Host '== database (PostgreSQL 16 in Docker)'
 $exists = docker ps -a --filter "name=^$DbName$" --format '{{.Names}}'

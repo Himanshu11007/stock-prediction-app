@@ -13,9 +13,10 @@ param([switch]$Remove)
 . "$PSScriptRoot\common.ps1"
 
 $prefix = 'StockLens '
+Stop-StockLensApi                                     # before removing its task, or it keeps running
 Get-ScheduledTask -TaskName "$prefix*" -ErrorAction SilentlyContinue |
     ForEach-Object { Unregister-ScheduledTask -TaskName $_.TaskName -Confirm:$false }
-if ($Remove) { Stop-StockLensApi; Write-Host 'StockLens tasks removed.'; return }
+if ($Remove) { Write-Host 'StockLens tasks removed.'; return }
 
 $user = "$env:USERDOMAIN\$env:USERNAME"
 $principal = New-ScheduledTaskPrincipal -UserId $user -LogonType Interactive -RunLevel Limited

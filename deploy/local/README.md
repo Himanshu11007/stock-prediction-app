@@ -6,7 +6,7 @@ Runs everything on this laptop instead of Render and the IONOS server:
 |---|---|---|
 | Database | PostgreSQL 16 in Docker (container `stocklens-db`, volume `stocklens-pgdata`) | 127.0.0.1:5432, this laptop only |
 | API | Python 3.11, task "StockLens API" (starts at log-on, restarts itself) | http://localhost:8000 |
-| Website | IIS site "StockLens" | http://localhost:8080 |
+| Website | IIS site "StockLens" | http://localhost:8585 |
 | Daily jobs | Windows Task Scheduler, same India times as `deploy/vps/stocklens.cron` | logs in `%LOCALAPPDATA%\StockLens\logs` |
 
 The jobs only run while the laptop is on. A job missed while it was off or
@@ -39,8 +39,8 @@ and once more in the normal window:
 powershell -ExecutionPolicy Bypass -File deploy\local\publish-web.ps1
 ```
 
-Open http://localhost:8080. Sign in with email and password. For Google
-sign-in, add `http://localhost:8080` to the "Authorised JavaScript origins" of
+Open http://localhost:8585. Sign in with email and password. For Google
+sign-in, add `http://localhost:8585` to the "Authorised JavaScript origins" of
 the web client in Google Cloud Console (APIs & Services > Credentials).
 
 ## Everyday

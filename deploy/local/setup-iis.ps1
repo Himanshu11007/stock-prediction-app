@@ -6,7 +6,7 @@
 # 1. switches on IIS (static files only: the website is Blazor WebAssembly)
 # 2. installs the Microsoft IIS URL Rewrite module (needed by the site's web.config)
 # 3. creates C:\inetpub\stocklens (you may update it without admin rights) and the
-#    site "StockLens" on http://localhost:8080 (this laptop only)
+#    site "StockLens" on http://localhost:8585 ($WebPort in common.ps1) (this laptop only)
 # Then build and copy the website in a NORMAL PowerShell window: publish-web.ps1
 # (run as administrator, git would later refuse the folders it created).
 . "$PSScriptRoot\common.ps1"
@@ -39,9 +39,11 @@ if (-not (Test-Path 'IIS:\AppPools\StockLens')) {
     Set-ItemProperty 'IIS:\AppPools\StockLens' -Name managedRuntimeVersion -Value ''    # static files: no .NET in IIS
 }
 if (-not (Get-Website -Name 'StockLens')) {
-    # Windows Firewall blocks 8080 from other computers by default: this laptop only
-    New-Website -Name 'StockLens' -Port 8080 -IPAddress '*' -PhysicalPath $SitePath `
+    # Windows Firewall blocks this port from other computers by default: this laptop only
+    New-Website -Name 'StockLens' -Port $WebPort -IPAddress '*' -PhysicalPath $SitePath `
         -ApplicationPool 'StockLens' | Out-Null
+} else {
+    Set-ItemProperty 'IIS:\Sites\StockLens' -Name bindings -Value @{ protocol = 'http'; bindingInformation = "*:${WebPort}:" }
 }
 Start-Website -Name 'StockLens'
 Write-Host ''

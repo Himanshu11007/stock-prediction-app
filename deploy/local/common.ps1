@@ -7,7 +7,7 @@
 #   %LOCALAPPDATA%\StockLens\logs           api.log and one log per job
 #   %LOCALAPPDATA%\StockLens\backups        database copies
 #   Docker container stocklens-db           PostgreSQL 16 on 127.0.0.1:5432 (volume stocklens-pgdata)
-#   C:\inetpub\stocklens                    the website, served by IIS on http://localhost:8080
+#   C:\inetpub\stocklens                    the website, served by IIS on http://localhost:8585
 #
 # Secrets are never printed: the env file is read literally (no expansion).
 
@@ -22,7 +22,8 @@ $Logs      = Join-Path $Root 'logs'
 $Backups   = Join-Path $Root 'backups'
 $DbName    = 'stocklens-db'
 $ApiUrl    = 'http://localhost:8000'
-$WebUrl    = 'http://localhost:8080'
+$WebPort   = 8585                          # website port (change here only, then run setup.ps1 and setup-iis.ps1)
+$WebUrl    = "http://localhost:$WebPort"
 $SitePath  = 'C:\inetpub\stocklens'
 $ApiTask   = 'StockLens API'
 
@@ -83,9 +84,13 @@ function Test-Native([string]$CommandLine) {
 }
 
 function Stop-StockLensApi {
-    # the scheduled task's process, then whatever still listens on port 8000
-    # (ending a task does not end the Python process it started)
+    # the scheduled task, any run-api.ps1 loop still running (also one whose task
+    # was removed), then whatever still listens on port 8000 (ending a task does
+    # not end the Python process it started)
     if (Get-ScheduledTask -TaskName $ApiTask -ErrorAction SilentlyContinue) { Stop-ScheduledTask -TaskName $ApiTask }
+    Get-CimInstance Win32_Process -Filter "Name = 'powershell.exe'" -ErrorAction SilentlyContinue |
+        Where-Object { $_.CommandLine -like '*run-api.ps1*' -and $_.ProcessId -ne $PID } |
+        ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }
     Get-NetTCPConnection -LocalPort 8000 -State Listen -ErrorAction SilentlyContinue |
         ForEach-Object { Stop-Process -Id $_.OwningProcess -Force -ErrorAction SilentlyContinue }
 }
